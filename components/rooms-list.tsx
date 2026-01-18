@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface RoomsListProps {
 }
 
 const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -66,6 +68,12 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/");
+    }
+  }, [isLoading, user, router]);
 
   useEffect(() => {
     if (user) {
@@ -274,15 +282,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
   }
 
   if (!user) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            Пожалуйста, авторизуйтесь для просмотра помещений.
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   if (user.email !== "dzorogh@gmail.com") {

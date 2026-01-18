@@ -107,14 +107,10 @@ const Sidebar = () => {
     );
   }
 
-  // Всегда рендерим мобильное меню для резервирования места и избежания layout shift
-  // Скрываем его для неавторизованных пользователей
+  // Sidebar рендерится только для авторизованных пользователей
+  // Для неавторизованных используется отдельный layout в AuthLayout
   if (!user) {
-    return (
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-14 opacity-0 pointer-events-none">
-        {/* Пустое мобильное меню для резервирования места */}
-      </div>
-    );
+    return null;
   }
 
   return (

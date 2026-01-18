@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/sidebar";
-import { MainWrapper } from "@/components/main-wrapper";
+import { AuthLayout } from "@/components/auth-layout";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -31,8 +30,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning className={`${geistSans.className} ${geistMono.variable} h-full bg-background`}>
       <body className="antialiased h-full bg-background">
-        <Sidebar />
-        <MainWrapper>{children}</MainWrapper>
+        <AuthLayout>{children}</AuthLayout>
         <Toaster />
       </body>
     </html>

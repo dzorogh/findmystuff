@@ -61,6 +61,12 @@ export default function ItemDetailPage() {
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
   useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/");
+    }
+  }, [isUserLoading, user, router]);
+
+  useEffect(() => {
     if (user && !isUserLoading) {
       loadItemData();
     }
@@ -282,17 +288,7 @@ export default function ItemDetailPage() {
   }
 
   if (!user) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              Пожалуйста, авторизуйтесь для просмотра вещи.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   if (error || !item) {

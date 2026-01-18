@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSettings } from "@/hooks/use-settings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,13 +19,20 @@ import PlaceMarkingTemplateManager from "@/components/place-marking-template-man
 import AdminEmailsManager from "@/components/admin-emails-manager";
 
 export default function SettingsPage() {
-  const { user } = useUser();
+  const router = useRouter();
+  const { user, isLoading: isUserLoading } = useUser();
   const { isLoading, error, getAdminEmails } = useSettings();
   const { isAdmin } = useAdmin();
 
   const adminEmails = getAdminEmails();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/");
+    }
+  }, [isUserLoading, user, router]);
+
+  if (isLoading || isUserLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="mx-auto max-w-4xl space-y-6">
@@ -43,7 +51,11 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user) {
+    return null;
+  }
+
+  if (!isAdmin) {
     return (
       <div className="container mx-auto py-8 px-4">
         <Card>

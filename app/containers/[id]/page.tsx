@@ -57,6 +57,12 @@ export default function ContainerDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/");
+    }
+  }, [isUserLoading, user, router]);
+
+  useEffect(() => {
     if (user && !isUserLoading) {
       loadContainerData();
     }
@@ -276,17 +282,7 @@ export default function ContainerDetailPage() {
   }
 
   if (!user) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              Пожалуйста, авторизуйтесь для просмотра контейнера.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   if (error || !container) {

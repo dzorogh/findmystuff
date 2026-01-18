@@ -244,7 +244,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto flex min-h-screen items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-background">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-muted-foreground">Загрузка...</p>
