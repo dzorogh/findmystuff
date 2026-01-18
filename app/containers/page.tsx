@@ -16,7 +16,7 @@ export default function ContainersPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader
           icon={Container}

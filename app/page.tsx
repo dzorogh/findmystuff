@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
 import Logo from "@/components/common/logo";
+import { useUser } from "@/hooks/use-user";
 
 interface SearchResult {
   type: "item" | "place" | "container" | "room";
@@ -21,41 +21,11 @@ interface SearchResult {
 }
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const performSearch = async (queryToSearch: string) => {
     if (!user || !queryToSearch.trim()) {
@@ -235,14 +205,7 @@ export default function Home() {
 
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 bg-background">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!user) {
@@ -315,7 +278,7 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Заголовок и поиск */}
         <div className="space-y-4">

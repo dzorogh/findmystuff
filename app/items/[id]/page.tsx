@@ -270,7 +270,7 @@ export default function ItemDetailPage() {
 
   if (isUserLoading || isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
         <div className="mx-auto max-w-4xl space-y-6">
           <Skeleton className="h-10 w-32" />
           <Card>
@@ -293,7 +293,7 @@ export default function ItemDetailPage() {
 
   if (error || !item) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
         <div className="mx-auto max-w-4xl space-y-6">
           <Button variant="ghost" onClick={() => router.push("/items")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -310,7 +310,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="container py-8 px-4">
+    <div className="container pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-4xl space-y-6">
         <Button variant="ghost" onClick={() => router.push("/items")}>
           <ArrowLeft className="mr-2 h-4 w-4" />

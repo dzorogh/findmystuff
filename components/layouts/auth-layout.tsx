@@ -46,7 +46,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   // Для неавторизованных пользователей - layout без sidebar и отступов
   if (!isLoading && !user) {
     return (
-      <main className="h-screen bg-background overflow-y-auto pt-14 md:pt-0">
+      <main className="h-screen bg-background overflow-y-auto">
         {children}
       </main>
     );
@@ -57,7 +57,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   return (
     <>
       {!isLoading && user && <Sidebar />}
-      <main className="h-screen bg-background overflow-y-auto pt-14 md:ml-64 md:pt-0">
+      <main className="h-screen bg-background overflow-y-auto md:ml-64">
         {children}
       </main>
     </>

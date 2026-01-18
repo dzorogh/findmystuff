@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings } from "lucide-react";
+import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun } from "lucide-react";
 import Logo from "@/components/common/logo";
 import GoogleSignIn from "@/components/auth/google-signin";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { useTheme } from "next-themes";
 import {
   Sheet,
   SheetContent,
@@ -23,8 +23,14 @@ const Sidebar = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const supabase = createClient();
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -57,35 +63,59 @@ const Sidebar = () => {
     await supabase.auth.signOut();
   };
 
+  const handleThemeToggle = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   const NavContent = () => {
-    const navItems = [
-      { href: "/", label: "Поиск", icon: Search },
+    const searchItem = { href: "/", label: "Поиск", icon: Search };
+    
+    const storageItems = [
       { href: "/rooms", label: "Помещения", icon: Building2 },
       { href: "/places", label: "Места", icon: MapPin },
       { href: "/containers", label: "Контейнеры", icon: Container },
       { href: "/items", label: "Вещи", icon: Box },
+    ];
+
+    const managementItems = [
+      { href: "/users", label: "Пользователи", icon: Users },
       { href: "/settings", label: "Настройки", icon: Settings },
     ];
 
+    const renderNavItem = (item: { href: string; label: string; icon: any }) => {
+      const Icon = item.icon;
+      const isActive = pathname === item.href;
+      return (
+        <Link key={item.href} href={item.href}>
+          <Button
+            variant={isActive ? "secondary" : "ghost"}
+            className="w-full justify-start gap-3 h-10 px-3"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium">{item.label}</span>
+          </Button>
+        </Link>
+      );
+    };
+
     return (
-    <nav className="flex flex-col gap-1">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = pathname === item.href;
-        return (
-          <Link key={item.href} href={item.href}>
-            <Button
-              variant={isActive ? "secondary" : "ghost"}
-              className="w-full justify-start gap-3 h-10 px-3"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="text-sm font-medium">{item.label}</span>
-            </Button>
-          </Link>
-        );
-      })}
-    </nav>
+      <nav className="flex flex-col gap-1">
+        {/* Поиск */}
+        {renderNavItem(searchItem)}
+        
+        {/* Разделитель */}
+        <div className="h-[1px] bg-border my-1" />
+        
+        {/* Помещения, Места, Контейнеры, Вещи */}
+        {storageItems.map(renderNavItem)}
+        
+        {/* Разделитель */}
+        <div className="h-[1px] bg-border my-1" />
+        
+        {/* Управление */}
+        {managementItems.map(renderNavItem)}
+      </nav>
     );
   };
 
@@ -124,14 +154,27 @@ const Sidebar = () => {
         <div className="flex-1 p-4 overflow-y-auto">
           <NavContent />
         </div>
-        <div className="border-t p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="border-t p-4 space-y-2">
+          <div className="px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
               <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground truncate">{user.email}</span>
+              <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
             </div>
-            <ThemeToggle />
+            <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleThemeToggle}
+            className="w-full justify-start gap-2"
+          >
+            {mounted && theme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+            <span>Смена темы</span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -148,33 +191,39 @@ const Sidebar = () => {
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetTrigger asChild>
           <Button
-            variant="ghost"
+            variant="default"
             size="icon"
-            className="md:hidden fixed top-4 left-4 z-50"
+            className="md:hidden fixed bottom-4 left-4 z-50 h-14 w-14 rounded-full shadow-lg"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-6 w-6" />
             <span className="sr-only">Открыть меню</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-          <SheetHeader>
-            <SheetTitle>
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                <Logo size="sm" showText={true} />
-              </Link>
-            </SheetTitle>
-          </SheetHeader>
           <div className="flex-1 mt-6">
             <NavContent />
           </div>
-          <div className="border-t pt-4 mt-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="border-t pt-4 mt-4 space-y-2">
+            <div className="px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground truncate">{user.email}</span>
+                <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
               </div>
-              <ThemeToggle />
+              <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleThemeToggle}
+              className="w-full justify-start gap-2"
+            >
+              {mounted && theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              <span>Смена темы</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
