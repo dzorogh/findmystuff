@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 interface Container {
   id: number;
   name: string | null;
+  container_type: string | null;
+  marking_number: number | null;
 }
 
 export const useContainers = (includeDeleted = false) => {
@@ -20,7 +22,7 @@ export const useContainers = (includeDeleted = false) => {
       const supabase = createClient();
       let query = supabase
         .from("containers")
-        .select("id, name")
+        .select("id, name, container_type, marking_number")
         .order("name", { ascending: true, nullsFirst: false });
 
       if (!includeDeleted) {

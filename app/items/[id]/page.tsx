@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,10 +242,10 @@ export default function ItemDetailPage() {
         ? {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,
-            destination_name: lastTransition.destination_name,
+            destination_name: lastTransition.destination_name ?? null,
             moved_at: lastTransition.created_at,
-            place_name: lastTransition.place_name,
-            room_name: lastTransition.room_name,
+            place_name: lastTransition.place_name ?? null,
+            room_name: lastTransition.room_name ?? null,
           }
         : null;
 

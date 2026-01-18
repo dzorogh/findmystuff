@@ -122,18 +122,21 @@ const Navbar = () => {
                       );
                     })}
                     <div className="border-t pt-4 mt-4">
-                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                        <UserIcon className="h-4 w-4" />
-                        <span className="truncate">{user.email}</span>
+                      <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <UserIcon className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleSignOut}
+                          title="Выйти"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span className="sr-only">Выйти</span>
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 h-auto py-3 mt-2"
-                        onClick={handleSignOut}
-                      >
-                        <LogOut className="h-5 w-5" />
-                        <span className="text-base">Выйти</span>
-                      </Button>
                     </div>
                   </nav>
                 </SheetContent>
@@ -150,9 +153,9 @@ const Navbar = () => {
                 <UserIcon className="h-4 w-4" />
                 <span className="max-w-[150px] truncate">{user.email}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Выйти</span>
+              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Выйти">
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Выйти</span>
               </Button>
             </>
           ) : (

@@ -7,6 +7,8 @@ import { MapPin, Container, Building2 } from "lucide-react";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
+import { useContainerMarking } from "@/hooks/use-container-marking";
+import { type ContainerType } from "@/lib/utils";
 
 interface LocationSelectorProps {
   destinationType: "room" | "place" | "container" | null;
@@ -32,6 +34,7 @@ const LocationSelector = ({
   const { rooms } = useRooms();
   const { places } = usePlaces();
   const { containers } = useContainers();
+  const { generateMarking } = useContainerMarking();
 
   const destinations =
     destinationType === "container"
@@ -98,12 +101,20 @@ const LocationSelector = ({
             disabled={disabled || destinations.length === 0}
           >
             <option value="">-- Выберите {destinationLabel} --</option>
-            {destinations.map((dest) => (
-              <option key={dest.id} value={dest.id}>
-                {dest.name ||
-                  `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${dest.id}`}
-              </option>
-            ))}
+            {destinations.map((dest) => {
+              const containerMarking = destinationType === "container" && "container_type" in dest && "marking_number" in dest
+                ? generateMarking(dest.container_type as ContainerType, dest.marking_number as number | null)
+                : null;
+              
+              const displayName = dest.name ||
+                `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${dest.id}`;
+              
+              return (
+                <option key={dest.id} value={dest.id}>
+                  {containerMarking ? `${displayName} (${containerMarking})` : displayName}
+                </option>
+              );
+            })}
           </Select>
           {destinations.length === 0 && (
             <p className="text-xs text-muted-foreground">

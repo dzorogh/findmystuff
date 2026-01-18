@@ -134,19 +134,22 @@ const Sidebar = () => {
         </div>
 
         {/* User Section */}
-        <div className="border-t p-4 shrink-0 space-y-2">
-          <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-md bg-muted/50">
-            <UserIcon className="h-4 w-4 shrink-0" />
-            <span className="truncate text-xs">{user.email}</span>
+        <div className="border-t p-4 shrink-0">
+          <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <UserIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate text-xs">{user.email}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              title="Выйти"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Выйти</span>
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3 h-10 px-3"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-medium">Выйти</span>
-          </Button>
         </div>
       </aside>
 
@@ -172,19 +175,22 @@ const Sidebar = () => {
                 <div className="flex-1 overflow-y-auto p-4">
                   <NavContent />
                 </div>
-                <div className="border-t p-4 space-y-2">
-                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-md bg-muted/50">
-                    <UserIcon className="h-4 w-4 shrink-0" />
-                    <span className="truncate text-xs">{user.email}</span>
+                <div className="border-t p-4">
+                  <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <UserIcon className="h-4 w-4 shrink-0" />
+                      <span className="truncate text-xs">{user.email}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSignOut}
+                      title="Выйти"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span className="sr-only">Выйти</span>
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start gap-3 h-10 px-3"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="h-4 w-4 shrink-0" />
-                    <span className="text-sm font-medium">Выйти</span>
-                  </Button>
                 </div>
               </div>
             </SheetContent>
