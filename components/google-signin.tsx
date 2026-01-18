@@ -21,6 +21,9 @@ const GoogleSignIn = () => {
         provider: "google",
         options: {
           redirectTo: `${baseUrl}/auth/callback`,
+          queryParams: {
+            prompt: "select_account",
+          },
         },
       });
     } catch (error) {

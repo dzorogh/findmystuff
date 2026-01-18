@@ -71,13 +71,22 @@ const PlaceMarkingTemplateManager = () => {
     }
 
     setIsSaving(true);
-    const result = await updateSetting("place_marking_template", templateToSave.trim());
-    setIsSaving(false);
-
-    if (result.success) {
-      toast.success("Шаблон маркировки мест обновлен");
-    } else {
-      toast.error(result.error || "Ошибка при сохранении");
+    try {
+      const result = await updateSetting("place_marking_template", templateToSave.trim());
+      
+      if (result.success) {
+        toast.success("Шаблон маркировки мест обновлен");
+        // Обновляем локальное состояние после успешного сохранения
+        if (!useCustom) {
+          setTemplate(templateToSave.trim());
+        } else {
+          setCustomTemplate(templateToSave.trim());
+        }
+      } else {
+        toast.error(result.error || "Ошибка при сохранении");
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 

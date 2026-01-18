@@ -160,22 +160,22 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
       );
 
       // Объединяем данные
-      const placesWithRooms = placesData.map((place) => {
+      const placesWithRooms = placesData.map((place: any) => {
         const transition = lastTransitionsByPlace.get(place.id);
         
-        if (transition) {
-          return {
-            ...place,
-            room: {
-              room_id: transition.destination_id,
-              room_name: roomsMap.get(transition.destination_id) || null,
-            },
-          };
-        }
-        
         return {
-          ...place,
-          room: null,
+          id: place.id,
+          name: place.name,
+          place_type: place.place_type || null,
+          marking_number: place.marking_number ?? null,
+          created_at: place.created_at,
+          deleted_at: place.deleted_at,
+          room: transition
+            ? {
+                room_id: transition.destination_id,
+                room_name: roomsMap.get(transition.destination_id) || null,
+              }
+            : null,
         };
       });
 
@@ -401,64 +401,25 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
           {places.map((place) => (
             <Card key={place.id} className={place.deleted_at ? "opacity-60 border-destructive/50" : ""}>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <CardTitle className="text-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <CardTitle className="text-lg truncate">
                         {place.name || `Место #${place.id}`}
                       </CardTitle>
-                      {generateMarking(place.place_type as any, place.marking_number) && (
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                          {generateMarking(place.place_type as any, place.marking_number)}
+                      {place.place_type && place.marking_number != null && (
+                        <p className="text-sm font-semibold font-mono text-primary mt-0.5">
+                          {generateMarking(place.place_type, place.marking_number) || `${place.place_type}${place.marking_number}`}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
                     {place.deleted_at && (
-                      <Badge variant="destructive">Удалено</Badge>
+                      <Badge variant="destructive" className="text-xs">Удалено</Badge>
                     )}
-                    {generateMarking(place.place_type as any, place.marking_number) ? (
-                      <Badge variant="secondary">
-                        {generateMarking(place.place_type as any, place.marking_number)}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">#{place.id}</Badge>
-                    )}
-                    {isAdmin && (
-                      <>
-                        {!place.deleted_at ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingPlaceId(place.id)}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeletePlace(place.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestorePlace(place.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </>
-                    )}
+                    <Badge variant="secondary" className="text-xs">#{place.id}</Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -480,6 +441,44 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
                   })}
                 </p>
               </CardContent>
+              {isAdmin && (
+                <div className="border-t px-6 py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    {!place.deleted_at ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingPlaceId(place.id)}
+                          className="h-8 px-3"
+                        >
+                          <Pencil className="h-4 w-4 mr-1.5" />
+                          <span className="text-xs">Изменить</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeletePlace(place.id)}
+                          className="h-8 px-3 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1.5" />
+                          <span className="text-xs">Удалить</span>
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRestorePlace(place.id)}
+                        className="h-8 px-3 text-green-600 hover:text-green-700"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Восстановить</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
           ))}
         </div>

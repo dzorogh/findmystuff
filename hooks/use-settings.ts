@@ -46,13 +46,42 @@ export const useSettings = () => {
   const updateSetting = async (key: string, value: string) => {
     try {
       const supabase = createClient();
-      const { error: updateError } = await supabase
+      
+      // Проверяем, существует ли настройка
+      const { data: existing, error: checkError } = await supabase
         .from("settings")
-        .update({ value })
-        .eq("key", key);
+        .select("id")
+        .eq("key", key)
+        .maybeSingle();
 
-      if (updateError) {
-        throw updateError;
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError;
+      }
+
+      if (existing) {
+        // Обновляем существующую настройку
+        const { error: updateError } = await supabase
+          .from("settings")
+          .update({ value, updated_at: new Date().toISOString() })
+          .eq("key", key);
+
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        // Создаем новую настройку
+        const { error: insertError } = await supabase
+          .from("settings")
+          .insert({
+            key,
+            value,
+            category: "marking",
+            description: null,
+          });
+
+        if (insertError) {
+          throw insertError;
+        }
       }
 
       await loadSettings();
