@@ -5,13 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { placeTypesToOptions } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
+import RoomCombobox from "@/components/location/room-combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -31,7 +31,6 @@ interface AddPlaceFormProps {
 
 const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const { user, isLoading } = useUser();
-  const { rooms } = useRooms();
   const { getPlaceTypes, getDefaultPlaceType } = useSettings();
   const [name, setName] = useState("");
   const [placeType, setPlaceType] = useState(getDefaultPlaceType());
@@ -128,18 +127,15 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
             <>
               <div className="space-y-2">
                 <Label htmlFor="place-type">Тип места</Label>
-                <Select
-                  id="place-type"
+                <Combobox
+                  options={placeTypesToOptions(getPlaceTypes())}
                   value={placeType}
-                  onChange={(e) => setPlaceType(e.target.value)}
+                  onValueChange={setPlaceType}
+                  placeholder="Выберите тип места..."
+                  searchPlaceholder="Поиск типа места..."
+                  emptyText="Типы мест не найдены"
                   disabled={isSubmitting}
-                >
-                  {placeTypesToOptions(getPlaceTypes()).map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </Select>
+                />
                 <p className="text-xs text-muted-foreground">
                   Маркировка будет сгенерирована автоматически (например, Ш1)
                 </p>
@@ -162,30 +158,14 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
 
               {/* Выбор помещения (обязательно) */}
               <div className="space-y-3 border-t pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="place-room-select">
-                    Выберите помещение <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    id="place-room-select"
-                    value={selectedRoomId}
-                    onChange={(e) => setSelectedRoomId(e.target.value)}
-                    disabled={isSubmitting || rooms.length === 0}
-                    required
-                  >
-                    <option value="">-- Выберите помещение --</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.name || `Помещение #${room.id}`}
-                      </option>
-                    ))}
-                  </Select>
-                  {rooms.length === 0 && (
-                    <p className="text-xs text-destructive">
-                      Помещения не найдены. Сначала создайте помещение.
-                    </p>
-                  )}
-                </div>
+                <RoomCombobox
+                  selectedRoomId={selectedRoomId}
+                  onRoomIdChange={setSelectedRoomId}
+                  disabled={isSubmitting}
+                  label="Выберите помещение"
+                  id="place-room-select"
+                  required
+                />
               </div>
 
               <ImageUpload

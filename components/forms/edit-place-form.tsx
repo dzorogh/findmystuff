@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/use-user";
 import { useSettings } from "@/hooks/use-settings";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { placeTypesToOptions } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";

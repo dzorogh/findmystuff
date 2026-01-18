@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationCombobox from "@/components/location/location-combobox";
@@ -13,6 +12,7 @@ import ImageUpload from "@/components/common/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -161,18 +161,15 @@ const EditContainerForm = ({
 
           <div className="space-y-2">
             <Label htmlFor={`container-type-${containerId}`}>Тип контейнера</Label>
-            <Select
-              id={`container-type-${containerId}`}
+            <Combobox
+              options={containerTypesToOptions(getContainerTypes())}
               value={containerType}
-              onChange={(e) => setContainerType(e.target.value as ContainerType)}
+              onValueChange={(value) => setContainerType(value as ContainerType)}
+              placeholder="Выберите тип контейнера..."
+              searchPlaceholder="Поиск типа контейнера..."
+              emptyText="Типы контейнеров не найдены"
               disabled={isSubmitting}
-            >
-              {containerTypesToOptions(getContainerTypes()).map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </Select>
+            />
           </div>
 
           <div className="space-y-2">
