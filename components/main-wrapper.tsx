@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js";
 
 export const MainWrapper = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
@@ -18,6 +19,8 @@ export const MainWrapper = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser);
       } catch (error) {
         console.error("Ошибка получения пользователя:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -27,6 +30,7 @@ export const MainWrapper = ({ children }: { children: React.ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsLoading(false);
     });
 
     return () => {
@@ -34,11 +38,11 @@ export const MainWrapper = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Всегда применяем отступы, чтобы избежать layout shift
+  // Отступы применяются сразу, без ожидания определения пользователя
   return (
     <main
-      className={`h-screen bg-background overflow-y-auto ${
-        user ? "pt-14 md:ml-64" : ""
-      } md:pt-0`}
+      className="h-screen bg-background overflow-y-auto pt-14 md:ml-64 md:pt-0"
     >
       {children}
     </main>

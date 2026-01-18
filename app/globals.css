@@ -67,8 +67,6 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --radius: var(--radius);
 }
 
@@ -81,6 +79,6 @@
   }
   body {
     @apply bg-background text-foreground h-full;
-    font-family: var(--font-geist-sans);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
