@@ -47,10 +47,11 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isUserLoading) {
       loadRooms(undefined, true);
     }
-  }, [user, refreshTrigger, showDeleted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, refreshTrigger, showDeleted]);
 
   const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;

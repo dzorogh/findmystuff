@@ -63,10 +63,11 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isUserLoading) {
       loadContainers(undefined, true);
     }
-  }, [user, refreshTrigger, showDeleted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, refreshTrigger, showDeleted]);
 
   const loadContainers = async (query?: string, isInitialLoad = false) => {
     if (!user) return;

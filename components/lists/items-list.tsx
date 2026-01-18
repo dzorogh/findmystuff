@@ -63,10 +63,11 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isUserLoading) {
       loadItems(undefined, true);
     }
-  }, [user, showDeleted, refreshTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, showDeleted, refreshTrigger]);
 
   const loadItems = async (query?: string, isInitialLoad = false) => {
     if (!user) return;

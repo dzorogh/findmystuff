@@ -1,4 +1,6 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import https from "https";
 
 if (!process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
   console.error("S3 credentials are not set in environment variables");
@@ -12,6 +14,19 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
   },
   forcePathStyle: true,
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 30000, // 30 секунд на установку соединения
+    socketTimeout: 300000, // 5 минут на передачу данных (для больших файлов)
+    requestTimeout: 300000, // 5 минут общий таймаут запроса
+    httpsAgent: new https.Agent({
+      keepAlive: true,
+      keepAliveMsecs: 1000,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: 300000,
+    }),
+  }),
+  maxAttempts: 3, // Количество попыток при ошибке
 });
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "b536986d-storage";

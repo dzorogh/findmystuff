@@ -52,10 +52,11 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isUserLoading) {
       loadPlaces(undefined, true);
     }
-  }, [user, refreshTrigger, showDeleted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, refreshTrigger, showDeleted]);
 
   const loadPlaces = async (query?: string, isInitialLoad = false) => {
     if (!user) return;

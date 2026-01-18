@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { UserProvider } from "@/contexts/user-context";
+import { SettingsProvider } from "@/contexts/settings-context";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -37,8 +39,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthLayout>{children}</AuthLayout>
-          <Toaster />
+          <UserProvider>
+            <SettingsProvider>
+              <AuthLayout>{children}</AuthLayout>
+              <Toaster />
+            </SettingsProvider>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>
