@@ -381,6 +381,7 @@ export default function ItemDetailPage() {
                   width={800}
                   height={450}
                   className="w-full h-full object-cover"
+                  unoptimized={item.photo_url.includes("storage.supabase.co")}
                 />
               </div>
             )}

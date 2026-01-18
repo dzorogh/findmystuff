@@ -470,6 +470,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                                 fill
                                 className="object-cover"
                                 sizes="40px"
+                                unoptimized={container.photo_url.includes("storage.supabase.co")}
                               />
                             </div>
                           ) : (

@@ -390,32 +390,32 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
                     <>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => setEditingRoomId(room.id)}
-                        className="h-8 w-8"
-                        aria-label="Изменить помещение"
+                        className="h-8 px-3"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Изменить</span>
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => handleDeleteRoom(room.id)}
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        aria-label="Удалить помещение"
+                        className="h-8 px-3 text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Удалить</span>
                       </Button>
                     </>
                   ) : (
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleRestoreRoom(room.id)}
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
-                      aria-label="Восстановить помещение"
+                      className="h-8 px-3 text-green-600 hover:text-green-700"
                     >
-                      <RotateCcw className="h-4 w-4" />
+                      <RotateCcw className="h-4 w-4 mr-1.5" />
+                      <span className="text-xs">Восстановить</span>
                     </Button>
                   )}
                 </div>

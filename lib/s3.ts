@@ -37,13 +37,33 @@ export const uploadToS3 = async (
 
     await s3Client.send(command);
 
-    // Возвращаем публичный URL
-    // Формат для path-style: https://s3.twcstorage.ru/bucket-name/key
-    // Формат для virtual-hosted-style: https://bucket-name.s3.twcstorage.ru/key
-    // Используем virtual-hosted-style для лучшей совместимости
+    // Формируем публичный URL
     const endpoint = process.env.S3_ENDPOINT || "https://s3.twcstorage.ru";
-    const baseUrl = endpoint.replace("https://", "").replace("http://", "");
-    return `https://${BUCKET_NAME}.${baseUrl}/${key}`;
+    
+    // Для Supabase Storage используем Supabase Storage API формат
+    if (endpoint.includes("storage.supabase.co") || endpoint.includes("supabase.co")) {
+      // Если есть NEXT_PUBLIC_SUPABASE_URL, используем его для формирования публичного URL
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (supabaseUrl) {
+        // Формат для Supabase Storage API: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[key]
+        return `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${key}`;
+      }
+      
+      // Если нет NEXT_PUBLIC_SUPABASE_URL, пытаемся извлечь project-ref из endpoint
+      const endpointMatch = endpoint.match(/https?:\/\/([^.]+)\.storage\.supabase\.co/);
+      if (endpointMatch) {
+        const projectRef = endpointMatch[1];
+        return `https://${projectRef}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${key}`;
+      }
+      
+      // Fallback: используем endpoint напрямую (убираем /storage/v1/s3 если есть)
+      const baseEndpoint = endpoint.replace(/\/storage\/v1\/s3\/?$/, "");
+      return `${baseEndpoint}/${BUCKET_NAME}/${key}`;
+    }
+    
+    // Для обычного S3 используем path-style формат
+    const publicUrl = `${endpoint}/${BUCKET_NAME}/${key}`;
+    return publicUrl;
   } catch (error) {
     console.error("S3 upload error:", error);
     throw new Error(
