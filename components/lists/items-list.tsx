@@ -496,11 +496,11 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px] hidden sm:table-cell">ID</TableHead>
-                    <TableHead>Название</TableHead>
-                    <TableHead className="hidden md:table-cell">Местоположение</TableHead>
-                    <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    <TableHead className="w-[150px] text-right">Действия</TableHead>
+                    <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
+                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
+                    <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
+                    <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
