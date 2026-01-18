@@ -165,9 +165,10 @@ const Sidebar = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0">
               <div className="flex flex-col h-full">
-                <div className="px-4 h-14 flex items-center border-b">
+                <SheetHeader className="px-4 h-14 flex-row items-center border-b shrink-0 space-y-0">
+                  <SheetTitle className="sr-only">Меню</SheetTitle>
                   <Logo size="sm" showText={true} />
-                </div>
+                </SheetHeader>
                 <div className="flex-1 overflow-y-auto p-4">
                   <NavContent />
                 </div>
