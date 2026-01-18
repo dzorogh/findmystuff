@@ -253,7 +253,7 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="container flex min-h-screen items-center justify-center px-4">
+      <div className="container mx-auto flex min-h-screen items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">FindMyStuff</CardTitle>
