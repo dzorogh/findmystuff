@@ -39,97 +39,17 @@ const EditContainerForm = ({
   onOpenChange,
   onSuccess,
 }: EditContainerFormProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
   const [name, setName] = useState(containerName || "");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
     currentLocation?.destination_type as "place" | "container" | "room" | null
   );
-  const [containers, setContainers] = useState<Array<{ id: number; name: string | null }>>([]);
-  const [places, setPlaces] = useState<Array<{ id: number; name: string | null }>>([]);
-  const [rooms, setRooms] = useState<Array<{ id: number; name: string | null }>>([]);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>(
     currentLocation?.destination_id?.toString() || ""
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-  }, []);
-
-  useEffect(() => {
-    if (user && user.email === "dzorogh@gmail.com") {
-      loadContainers();
-      loadPlaces();
-      loadRooms();
-    }
-  }, [user]);
-
-  const loadContainers = async () => {
-    try {
-      const supabase = createClient();
-      // Исключаем текущий контейнер из списка, чтобы избежать циклических ссылок
-      const { data, error: fetchError } = await supabase
-        .from("containers")
-        .select("id, name")
-        .neq("id", containerId)
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setContainers(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки контейнеров:", err);
-    }
-  };
-
-  const loadPlaces = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("places")
-        .select("id, name")
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setPlaces(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки местоположений:", err);
-    }
-  };
-
-  const loadRooms = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("rooms")
-        .select("id, name")
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setRooms(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки помещений:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

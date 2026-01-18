@@ -64,17 +64,21 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
       }
 
       // Получаем название места назначения для toast
-      const destinationName = 
-        destinationType === "container" 
-          ? containers.find((c) => c.id === parseInt(selectedDestinationId))?.name
-          : destinationType === "place"
-          ? places.find((p) => p.id === parseInt(selectedDestinationId))?.name
-          : rooms.find((r) => r.id === parseInt(selectedDestinationId))?.name ||
+      let destinationName: string | undefined;
+      if (destinationType === "container") {
+        destinationName = containers.find((c) => c.id === parseInt(selectedDestinationId))?.name ?? undefined;
+      } else if (destinationType === "place") {
+        destinationName = places.find((p) => p.id === parseInt(selectedDestinationId))?.name ?? undefined;
+      } else {
+        destinationName = rooms.find((r) => r.id === parseInt(selectedDestinationId))?.name ?? undefined;
+      }
+      
+      const finalDestinationName = destinationName || 
         `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${selectedDestinationId}`;
 
       toast({
         title: "Вещь перемещена",
-        description: `Вещь успешно перемещена в ${destinationName}`,
+        description: `Вещь успешно перемещена в ${finalDestinationName}`,
       });
 
       setSelectedDestinationId("");
