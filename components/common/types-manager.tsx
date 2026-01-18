@@ -1,36 +1,50 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 
-const PlaceTypesManager = () => {
-  const { getPlaceTypes, updateSetting, isLoading, settings } = useSettings();
+interface TypesManagerProps {
+  types: string[];
+  onSave: (types: string[]) => Promise<{ success: boolean; error?: string }>;
+  isLoading: boolean;
+  settingKey: string;
+  label: string;
+  placeholder: string;
+  description: string;
+  minTypes?: number;
+}
+
+export const TypesManager = ({
+  types: initialTypes,
+  onSave,
+  isLoading,
+  label,
+  placeholder,
+  description,
+  minTypes = 1,
+}: TypesManagerProps) => {
   const [types, setTypes] = useState<string[]>([]);
   const [newType, setNewType] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Мемоизируем типы мест, чтобы избежать бесконечного цикла
-  const placeTypes = useMemo(() => getPlaceTypes(), [settings]);
-
   useEffect(() => {
     if (!isLoading) {
-      setTypes(placeTypes);
+      setTypes(initialTypes);
     }
-  }, [isLoading, placeTypes]);
+  }, [isLoading, initialTypes]);
 
   const handleAddType = () => {
     if (!newType.trim()) {
-      toast.error("Введите тип места");
+      toast.error(`Введите ${label.toLowerCase()}`);
       return;
     }
 
     const trimmedType = newType.trim().toUpperCase();
-    
+
     if (types.includes(trimmedType)) {
       toast.error("Такой тип уже существует");
       return;
@@ -51,25 +65,24 @@ const PlaceTypesManager = () => {
   };
 
   const handleSave = async () => {
-    if (types.length === 0) {
-      toast.error("Должен быть хотя бы один тип места");
+    if (types.length < minTypes) {
+      toast.error(`Должен быть хотя бы ${minTypes} ${minTypes === 1 ? "тип" : "типа"}`);
       return;
     }
 
     setIsSaving(true);
-    const result = await updateSetting("place_types", JSON.stringify(types));
+    const result = await onSave(types);
     setIsSaving(false);
 
     if (result.success) {
-      toast.success("Типы мест обновлены");
+      toast.success(`${label} обновлены`);
     } else {
       toast.error(result.error || "Ошибка при сохранении");
-      // Восстанавливаем исходные типы при ошибке
-      setTypes(placeTypes);
+      setTypes(initialTypes);
     }
   };
 
-  const hasChanges = JSON.stringify(types) !== JSON.stringify(placeTypes);
+  const hasChanges = JSON.stringify(types) !== JSON.stringify(initialTypes);
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Загрузка...</div>;
@@ -78,7 +91,7 @@ const PlaceTypesManager = () => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Типы мест</Label>
+        <Label>{label}</Label>
         <div className="flex flex-wrap gap-2">
           {types.map((type, index) => (
             <div
@@ -91,7 +104,7 @@ const PlaceTypesManager = () => {
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => handleRemoveType(index)}
-                disabled={types.length === 1}
+                disabled={types.length < minTypes}
               >
                 <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
@@ -105,7 +118,7 @@ const PlaceTypesManager = () => {
           type="text"
           value={newType}
           onChange={(e) => setNewType(e.target.value.toUpperCase())}
-          placeholder="Введите новый тип (например, Ш)"
+          placeholder={placeholder}
           maxLength={10}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -121,10 +134,7 @@ const PlaceTypesManager = () => {
       </div>
 
       <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || isSaving}
-        >
+        <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -139,11 +149,7 @@ const PlaceTypesManager = () => {
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Типы мест используются для генерации маркировки (например, Ш1, С1, П1)
-      </p>
+      <p className="text-xs text-muted-foreground">{description}</p>
     </div>
   );
 };
-
-export default PlaceTypesManager;

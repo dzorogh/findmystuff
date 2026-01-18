@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCc
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import EditContainerForm from "./edit-container-form";
+import EditContainerForm from "@/components/forms/edit-container-form";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import {
   Table,
@@ -45,7 +46,8 @@ interface ContainersListProps {
 
 const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading: isUserLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [containers, setContainers] = useState<Container[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,39 +59,10 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
   const { generateMarking } = useContainerMarking();
 
   useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isUserLoading && !user) {
       router.push("/");
     }
-  }, [isLoading, user, router]);
+  }, [isUserLoading, user, router]);
 
   useEffect(() => {
     if (user) {
@@ -101,6 +74,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
     if (!user) return;
 
     setIsSearching(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -152,6 +126,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       if (!containersData || containersData.length === 0) {
         setContainers([]);
         setIsSearching(false);
+        setIsLoading(false);
         return;
       }
 
@@ -274,6 +249,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       setContainers([]);
     } finally {
       setIsSearching(false);
+      setIsLoading(false);
     }
   };
 
@@ -341,7 +317,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
     };
   }, [debounceTimer]);
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <div className="space-y-6">
         <Card>
@@ -387,7 +363,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
     return null;
   }
 
-  if (user.email !== "dzorogh@gmail.com") {
+  if (!isAdmin) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -502,7 +478,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                     <TableHead>Маркировка / Название</TableHead>
                     <TableHead className="hidden md:table-cell">Местоположение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    {user.email === "dzorogh@gmail.com" && (
+                    {isAdmin && (
                       <TableHead className="w-[150px] text-right">Действия</TableHead>
                     )}
                   </TableRow>
@@ -636,7 +612,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      {user.email === "dzorogh@gmail.com" && (
+                      {isAdmin && (
                         <TableCell>
                           <div className="flex items-center justify-end gap-1 sm:gap-2">
                             {!container.deleted_at ? (

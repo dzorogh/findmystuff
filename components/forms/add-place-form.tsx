@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
@@ -14,11 +14,12 @@ import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { placeTypesToOptions } from "@/lib/utils";
 import ImageUpload from "@/components/image-upload";
+import { ErrorMessage } from "@/components/common/error-message";
+import { FormFooter } from "@/components/common/form-footer";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -49,16 +50,6 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
     try {
       const supabase = createClient();
       
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-
-      if (!currentUser) {
-        setError("Вы не авторизованы");
-        setIsSubmitting(false);
-        return;
-      }
-
       if (!isAdmin) {
         setError("У вас нет прав для добавления мест");
         setIsSubmitting(false);
@@ -143,7 +134,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !user || !isAdmin ? (
+          ) : !isAdmin ? (
             <div className="py-8 text-center text-destructive">
               У вас нет прав для добавления мест
             </div>
@@ -221,35 +212,14 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 label="Фотография места (необязательно)"
               />
 
-              {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+              <ErrorMessage message={error || ""} />
 
-              <SheetFooter className="mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Отмена
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Добавление...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Добавить место
-                    </>
-                  )}
-                </Button>
-              </SheetFooter>
+              <FormFooter
+                isSubmitting={isSubmitting}
+                onCancel={() => onOpenChange(false)}
+                submitLabel="Добавить место"
+                submitIcon={Plus}
+              />
             </>
           )}
         </form>

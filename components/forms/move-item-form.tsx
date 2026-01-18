@@ -4,18 +4,19 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
 import LocationSelector from "@/components/location-selector";
+import { ErrorMessage } from "@/components/common/error-message";
+import { FormFooter } from "@/components/common/form-footer";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -30,6 +31,7 @@ interface MoveItemFormProps {
 
 const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveItemFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const { rooms } = useRooms();
   const { places } = usePlaces();
   const { containers } = useContainers();
@@ -97,7 +99,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
     }
   };
 
-  if (isLoading || !user || user.email !== "dzorogh@gmail.com") {
+  if (isLoading || !isAdmin) {
     return null;
   }
 
@@ -125,35 +127,14 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
             id={`move-item-${itemId}`}
           />
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          <ErrorMessage message={error || ""} />
 
-          <SheetFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Отмена
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !selectedDestinationId}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Перемещение...
-                </>
-              ) : (
-                "Переместить"
-              )}
-            </Button>
-          </SheetFooter>
+          <FormFooter
+            isSubmitting={isSubmitting}
+            onCancel={() => onOpenChange(false)}
+            submitLabel="Переместить"
+            disabled={!selectedDestinationId}
+          />
         </form>
       </SheetContent>
     </Sheet>

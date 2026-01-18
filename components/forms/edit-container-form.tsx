@@ -5,23 +5,30 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
 import ImageUpload from "@/components/image-upload";
+import { useSettings } from "@/hooks/use-settings";
+import { useContainerMarking } from "@/hooks/use-container-marking";
+import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
+import { ErrorMessage } from "@/components/common/error-message";
+import { FormFooter } from "@/components/common/form-footer";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 
-interface EditItemFormProps {
-  itemId: number;
-  itemName: string | null;
+interface EditContainerFormProps {
+  containerId: number;
+  containerName: string | null;
+  containerType?: ContainerType | null;
+  markingNumber?: number | null;
   currentLocation?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -32,18 +39,24 @@ interface EditItemFormProps {
   onSuccess?: () => void;
 }
 
-const EditItemForm = ({
-  itemId,
-  itemName,
+const EditContainerForm = ({
+  containerId,
+  containerName,
+  containerType: initialContainerType,
+  markingNumber,
   currentLocation,
   open,
   onOpenChange,
   onSuccess,
-}: EditItemFormProps) => {
+}: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
-  const [name, setName] = useState(itemName || "");
-  const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(
-    currentLocation?.destination_type as "container" | "place" | "room" | null
+  const { isAdmin } = useAdmin();
+  const { getContainerTypes, getDefaultContainerType } = useSettings();
+  const { generateMarking } = useContainerMarking();
+  const [name, setName] = useState(containerName || "");
+  const [containerType, setContainerType] = useState<ContainerType>(initialContainerType || getDefaultContainerType());
+  const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
+    currentLocation?.destination_type as "place" | "container" | "room" | null
   );
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>(
     currentLocation?.destination_id?.toString() || ""
@@ -54,13 +67,13 @@ const EditItemForm = ({
 
   // Загружаем текущее фото при открытии формы
   useEffect(() => {
-    if (open && itemId) {
+    if (open && containerId) {
       const loadPhoto = async () => {
         const supabase = createClient();
         const { data } = await supabase
-          .from("items")
+          .from("containers")
           .select("photo_url")
-          .eq("id", itemId)
+          .eq("id", containerId)
           .single();
         
         if (data?.photo_url) {
@@ -71,7 +84,7 @@ const EditItemForm = ({
       };
       loadPhoto();
     }
-  }, [open, itemId]);
+  }, [open, containerId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,25 +94,21 @@ const EditItemForm = ({
     try {
       const supabase = createClient();
 
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-
-      if (!currentUser || currentUser.email !== "dzorogh@gmail.com") {
-        setError("У вас нет прав для редактирования вещей");
+      if (!isAdmin) {
+        setError("У вас нет прав для редактирования контейнеров");
         setIsSubmitting(false);
         return;
       }
 
-      // Обновляем название вещи и фото
-      console.log("Updating item with photo_url:", photoUrl);
+      // Обновляем название, тип контейнера и фото
       const { error: updateError } = await supabase
-        .from("items")
+        .from("containers")
         .update({
           name: name.trim() || null,
+          container_type: containerType,
           photo_url: photoUrl || null,
         })
-        .eq("id", itemId);
+        .eq("id", containerId);
 
       if (updateError) {
         throw updateError;
@@ -108,7 +117,7 @@ const EditItemForm = ({
       // Если указано новое местоположение, создаем transition
       if (destinationType && selectedDestinationId) {
         const { error: transitionError } = await supabase.from("transitions").insert({
-          item_id: itemId,
+          container_id: containerId,
           destination_type: destinationType,
           destination_id: parseInt(selectedDestinationId),
         });
@@ -118,8 +127,7 @@ const EditItemForm = ({
         }
       }
 
-      // Сначала показываем toast
-      toast.success("Вещь успешно обновлена");
+      toast.success("Контейнер успешно обновлен");
 
       // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -131,14 +139,14 @@ const EditItemForm = ({
       onOpenChange(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Произошла ошибка при редактировании вещи"
+        err instanceof Error ? err.message : "Произошла ошибка при редактировании контейнера"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading || !user || user.email !== "dzorogh@gmail.com") {
+  if (isLoading || !isAdmin) {
     return null;
   }
 
@@ -146,18 +154,42 @@ const EditItemForm = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Редактировать вещь</SheetTitle>
+          <SheetTitle>Редактировать контейнер</SheetTitle>
           <SheetDescription>Измените название или местоположение</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {markingNumber && (
+            <div className="rounded-md bg-muted p-3">
+              <p className="text-sm font-medium">
+                Маркировка: {generateMarking(containerType, markingNumber) || "Не задана"}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor={`item-name-${itemId}`}>Название вещи</Label>
+            <Label htmlFor={`container-type-${containerId}`}>Тип контейнера</Label>
+            <Select
+              id={`container-type-${containerId}`}
+              value={containerType}
+              onChange={(e) => setContainerType(e.target.value as ContainerType)}
+              disabled={isSubmitting}
+            >
+              {containerTypesToOptions(getContainerTypes()).map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`container-name-${containerId}`}>Название контейнера (необязательно)</Label>
             <Input
-              id={`item-name-${itemId}`}
+              id={`container-name-${containerId}`}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название вещи"
+              placeholder="Введите название контейнера"
               disabled={isSubmitting}
             />
           </div>
@@ -170,14 +202,14 @@ const EditItemForm = ({
             disabled={isSubmitting}
             showRoomFirst={true}
             label="Изменить местоположение (необязательно)"
-            id={`edit-item-location-${itemId}`}
+            id={`edit-container-location-${containerId}`}
           />
 
           <ImageUpload
             value={photoUrl}
             onChange={setPhotoUrl}
             disabled={isSubmitting}
-            label="Фотография вещи (необязательно)"
+            label="Фотография контейнера (необязательно)"
           />
 
           {currentLocation && (
@@ -188,36 +220,17 @@ const EditItemForm = ({
             </div>
           )}
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          <ErrorMessage message={error || ""} />
 
-          <SheetFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Отмена
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
-                </>
-              ) : (
-                "Сохранить"
-              )}
-            </Button>
-          </SheetFooter>
+          <FormFooter
+            isSubmitting={isSubmitting}
+            onCancel={() => onOpenChange(false)}
+            submitLabel="Сохранить"
+          />
         </form>
       </SheetContent>
     </Sheet>
   );
 };
 
-export default EditItemForm;
+export default EditContainerForm;

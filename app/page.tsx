@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, Plus, ArrowRight } from "lucide-react";
-import AddItemForm from "@/components/add-item-form";
+import AddItemForm from "@/components/forms/add-item-form";
 import GoogleSignIn from "@/components/google-signin";
 import Logo from "@/components/logo";
 

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import MoveItemForm from "./move-item-form";
-import EditItemForm from "./edit-item-form";
+import MoveItemForm from "@/components/forms/move-item-form";
+import EditItemForm from "@/components/forms/edit-item-form";
 
 interface Item {
   id: number;
@@ -45,7 +46,8 @@ interface ItemsListProps {
 
 const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading: isUserLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,39 +59,10 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   const [showDeleted, setShowDeleted] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isUserLoading && !user) {
       router.push("/");
     }
-  }, [isLoading, user, router]);
+  }, [isUserLoading, user, router]);
 
   useEffect(() => {
     if (user) {
@@ -98,9 +71,10 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   }, [user, showDeleted, refreshTrigger]);
 
   const loadItems = async (query?: string) => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
 
     setIsSearching(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -132,6 +106,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       if (!itemsData || itemsData.length === 0) {
         setItems([]);
         setIsSearching(false);
+        setIsLoading(false);
         return;
       }
 
@@ -408,6 +383,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       setItems([]);
     } finally {
       setIsSearching(false);
+      setIsLoading(false);
     }
   };
 
@@ -475,7 +451,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
     };
   }, [debounceTimer]);
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <div className="space-y-6">
         <Card>
@@ -521,7 +497,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
     return null;
   }
 
-  if (user.email !== "dzorogh@gmail.com") {
+  if (!isAdmin) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -635,7 +611,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                     <TableHead>Название</TableHead>
                     <TableHead className="hidden md:table-cell">Местоположение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    {user.email === "dzorogh@gmail.com" && (
+                    {isAdmin && (
                       <TableHead className="w-[150px] text-right">Действия</TableHead>
                     )}
                   </TableRow>
@@ -808,7 +784,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    {user.email === "dzorogh@gmail.com" && (
+                    {isAdmin && (
                       <TableCell>
                         <div className="flex items-center justify-end gap-1 sm:gap-2">
                           {!item.deleted_at ? (

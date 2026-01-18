@@ -5,16 +5,18 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
 import ImageUpload from "@/components/image-upload";
+import { ErrorMessage } from "@/components/common/error-message";
+import { FormFooter } from "@/components/common/form-footer";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -27,6 +29,7 @@ interface AddItemFormProps {
 
 const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const [name, setName] = useState("");
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
@@ -42,17 +45,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
     try {
       const supabase = createClient();
       
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-
-      if (!currentUser) {
-        setError("Вы не авторизованы");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (currentUser.email !== "dzorogh@gmail.com") {
+      if (!isAdmin) {
         setError("У вас нет прав для добавления вещей");
         setIsSubmitting(false);
         return;
@@ -140,7 +133,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !user || user.email !== "dzorogh@gmail.com" ? (
+          ) : !isAdmin ? (
             <div className="py-8 text-center text-destructive">
               У вас нет прав для добавления вещей
             </div>
@@ -179,35 +172,14 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 label="Фотография вещи (необязательно)"
               />
 
-              {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+              <ErrorMessage message={error || ""} />
 
-              <SheetFooter className="mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Отмена
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Добавление...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Добавить вещь
-                    </>
-                  )}
-                </Button>
-              </SheetFooter>
+              <FormFooter
+                isSubmitting={isSubmitting}
+                onCancel={() => onOpenChange(false)}
+                submitLabel="Добавить вещь"
+                submitIcon={Plus}
+              />
             </>
           )}
         </form>

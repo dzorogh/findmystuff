@@ -12,11 +12,11 @@ import { Settings, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import ContainerTypesManager from "@/components/container-types-manager";
-import MarkingTemplateManager from "@/components/marking-template-manager";
-import PlaceTypesManager from "@/components/place-types-manager";
-import PlaceMarkingTemplateManager from "@/components/place-marking-template-manager";
-import AdminEmailsManager from "@/components/admin-emails-manager";
+import ContainerTypesManager from "@/components/managers/container-types-manager";
+import MarkingTemplateManager from "@/components/managers/marking-template-manager";
+import PlaceTypesManager from "@/components/managers/place-types-manager";
+import PlaceMarkingTemplateManager from "@/components/managers/place-marking-template-manager";
+import AdminEmailsManager from "@/components/managers/admin-emails-manager";
 
 export default function SettingsPage() {
   const router = useRouter();

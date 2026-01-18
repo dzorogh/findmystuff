@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
-import EditItemForm from "@/components/edit-item-form";
-import MoveItemForm from "@/components/move-item-form";
+import EditItemForm from "@/components/forms/edit-item-form";
+import MoveItemForm from "@/components/forms/move-item-form";
 import {
   Table,
   TableBody,
