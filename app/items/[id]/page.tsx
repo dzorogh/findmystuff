@@ -121,19 +121,48 @@ export default function ItemDetailPage() {
         .filter((t) => t.destination_type === "room" && t.destination_id)
         .map((t) => t.destination_id);
 
-      const [placesData, containersData, roomsData] = await Promise.all([
-        placeIds.length > 0
+      // Сначала загружаем контейнеры, чтобы получить их transitions и узнать места
+      const containersData = containerIds.length > 0
+        ? await supabase
+            .from("containers")
+            .select("id, name")
+            .in("id", containerIds)
+            .is("deleted_at", null)
+        : { data: [] };
+
+      const containersMap = new Map(
+        (containersData.data || []).map((c) => [c.id, c.name])
+      );
+
+      // Получаем transitions для контейнеров, чтобы узнать их места
+      const allContainerIds = Array.from(containersMap.keys());
+      const { data: containersTransitionsData } = allContainerIds.length > 0
+        ? await supabase
+            .from("transitions")
+            .select("*")
+            .in("container_id", allContainerIds)
+            .order("created_at", { ascending: false })
+        : { data: [] };
+
+      const lastContainerTransitions = new Map<number, any>();
+      (containersTransitionsData || []).forEach((t) => {
+        if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
+          lastContainerTransitions.set(t.container_id, t);
+        }
+      });
+
+      // Добавляем места из transitions контейнеров к списку мест
+      const containerPlaceIds = Array.from(lastContainerTransitions.values())
+        .filter((t) => t.destination_type === "place" && t.destination_id)
+        .map((t) => t.destination_id);
+      const allPlaceIds = Array.from(new Set([...placeIds, ...containerPlaceIds]));
+
+      const [placesData, roomsData] = await Promise.all([
+        allPlaceIds.length > 0
           ? supabase
               .from("places")
               .select("id, name")
-              .in("id", placeIds)
-              .is("deleted_at", null)
-          : { data: [] },
-        containerIds.length > 0
-          ? supabase
-              .from("containers")
-              .select("id, name")
-              .in("id", containerIds)
+              .in("id", allPlaceIds)
               .is("deleted_at", null)
           : { data: [] },
         roomIds.length > 0
@@ -148,15 +177,11 @@ export default function ItemDetailPage() {
       const placesMap = new Map(
         (placesData.data || []).map((p) => [p.id, p.name])
       );
-      const containersMap = new Map(
-        (containersData.data || []).map((c) => [c.id, c.name])
-      );
       const roomsMap = new Map(
         (roomsData.data || []).map((r) => [r.id, r.name])
       );
 
       // Для мест получаем их помещения
-      const allPlaceIds = Array.from(placesMap.keys());
       const { data: placesTransitionsData } = allPlaceIds.length > 0
         ? await supabase
             .from("transitions")
@@ -188,23 +213,6 @@ export default function ItemDetailPage() {
       const placeRoomsMap = new Map(
         (placeRoomsData || []).map((r) => [r.id, r.name])
       );
-
-      // Для контейнеров получаем их местоположения
-      const allContainerIds = Array.from(containersMap.keys());
-      const { data: containersTransitionsData } = allContainerIds.length > 0
-        ? await supabase
-            .from("transitions")
-            .select("*")
-            .in("container_id", allContainerIds)
-            .order("created_at", { ascending: false })
-        : { data: [] };
-
-      const lastContainerTransitions = new Map<number, any>();
-      (containersTransitionsData || []).forEach((t) => {
-        if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
-          lastContainerTransitions.set(t.container_id, t);
-        }
-      });
 
       // Формируем transitions с названиями
       const transitionsWithNames: Transition[] = (transitionsData || []).map((t) => {
@@ -397,59 +405,63 @@ export default function ItemDetailPage() {
               )}
             </div>
             <div>
-              <h3 className="text-sm font-medium mb-2">Текущее местоположение</h3>
+              <h3 className="text-sm font-medium mb-2">Местоположение</h3>
               {item.last_location ? (
-                <div className="space-y-2">
-                  {item.last_location.destination_type === "room" && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
-                      <span>
-                        {item.last_location.destination_name ||
-                          `Помещение #${item.last_location.destination_id}`}
-                      </span>
-                    </div>
-                  )}
-                  {item.last_location.destination_type === "place" && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span>
-                          {item.last_location.destination_name ||
-                            `Место #${item.last_location.destination_id}`}
-                        </span>
+                <div className="space-y-3">
+                  <div className="rounded-md border bg-muted/50 p-4 space-y-2">
+                    {item.last_location.destination_type === "room" && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span>
+                            {item.last_location.destination_name ||
+                              `Помещение #${item.last_location.destination_id}`}
+                          </span>
+                        </div>
                       </div>
-                      {item.last_location.room_name && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                          <Building2 className="h-3 w-3 flex-shrink-0" />
-                          <span>{item.last_location.room_name}</span>
+                    )}
+                    {item.last_location.destination_type === "place" && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span>
+                            {item.last_location.destination_name ||
+                              `Место #${item.last_location.destination_id}`}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  {item.last_location.destination_type === "container" && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Container className="h-4 w-4 text-primary flex-shrink-0" />
-                        <span>
-                          {item.last_location.destination_name ||
-                            `Контейнер #${item.last_location.destination_id}`}
-                        </span>
+                        {item.last_location.room_name && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
+                            <Building2 className="h-3 w-3 flex-shrink-0" />
+                            <span>Помещение: {item.last_location.room_name}</span>
+                          </div>
+                        )}
                       </div>
-                      {item.last_location.place_name && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span>{item.last_location.place_name}</span>
+                    )}
+                    {item.last_location.destination_type === "container" && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Container className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span>
+                            {item.last_location.destination_name ||
+                              `Контейнер #${item.last_location.destination_id}`}
+                          </span>
                         </div>
-                      )}
-                      {item.last_location.room_name && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                          <Building2 className="h-3 w-3 flex-shrink-0" />
-                          <span>{item.last_location.room_name}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">
+                        {item.last_location.place_name && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span>Место: {item.last_location.place_name}</span>
+                          </div>
+                        )}
+                        {item.last_location.room_name && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
+                            <Building2 className="h-3 w-3 flex-shrink-0" />
+                            <span>Помещение: {item.last_location.room_name}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
                     Перемещено:{" "}
                     {new Date(item.last_location.moved_at).toLocaleString("ru-RU", {
                       year: "numeric",
