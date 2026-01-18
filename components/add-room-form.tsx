@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface AddRoomFormProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface AddRoomFormProps {
 const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
   const { user, isLoading } = useUser();
   const [name, setName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +59,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
         .from("rooms")
         .insert({
           name: name.trim() || null,
+          photo_url: photoUrl || null,
         });
 
       if (insertError) {
@@ -64,6 +67,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
       }
 
       setName("");
+      setPhotoUrl(null);
       
       toast.success("Помещение успешно добавлено в склад", {
         description: "Помещение добавлено",
@@ -86,15 +90,15 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Добавить новое помещение</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Добавить новое помещение</SheetTitle>
+          <SheetDescription>
             Введите название помещения
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
@@ -120,13 +124,20 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                 </p>
               </div>
 
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография помещения (необязательно)"
+              />
+
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
 
-              <DialogFooter>
+          <SheetFooter className="mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -148,12 +159,12 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+          </SheetFooter>
             </>
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

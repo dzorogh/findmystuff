@@ -14,14 +14,15 @@ import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { placeTypesToOptions } from "@/lib/utils";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface EditPlaceFormProps {
   placeId: number;
@@ -52,6 +53,7 @@ const EditPlaceForm = ({
   const [name, setName] = useState(placeName || "");
   const [placeType, setPlaceType] = useState(initialPlaceType || getDefaultPlaceType());
   const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,8 +66,25 @@ const EditPlaceForm = ({
       } else {
         setSelectedRoomId("");
       }
+      
+      // Загружаем текущее фото
+      const loadPhoto = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("places")
+          .select("photo_url")
+          .eq("id", placeId)
+          .single();
+        
+        if (data?.photo_url) {
+          setPhotoUrl(data.photo_url);
+        } else {
+          setPhotoUrl(null);
+        }
+      };
+      loadPhoto();
     }
-  }, [open, placeName, initialPlaceType, currentRoomId, getDefaultPlaceType]);
+  }, [open, placeName, initialPlaceType, currentRoomId, getDefaultPlaceType, placeId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,6 +109,7 @@ const EditPlaceForm = ({
         .update({
           name: name.trim() || null,
           place_type: placeType,
+          photo_url: photoUrl || null,
         })
         .eq("id", placeId);
 
@@ -138,13 +158,13 @@ const EditPlaceForm = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать место</DialogTitle>
-          <DialogDescription>Измените название места</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать место</SheetTitle>
+          <SheetDescription>Измените название места</SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
             <Label htmlFor={`place-name-${placeId}`}>Название места (маркировка)</Label>
             <Input
@@ -202,13 +222,20 @@ const EditPlaceForm = ({
                 </div>
               </div>
 
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография места (необязательно)"
+              />
+
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button
               type="button"
               variant="outline"
@@ -227,10 +254,10 @@ const EditPlaceForm = ({
                 "Сохранить"
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

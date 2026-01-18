@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Package, MapPin, Container, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ interface Item {
   name: string | null;
   created_at: string;
   deleted_at: string | null;
+  photo_url: string | null;
   last_location?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -98,7 +100,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       
       let queryBuilder = supabase
         .from("items")
-        .select("*")
+        .select("id, name, created_at, deleted_at, photo_url")
         .order("created_at", { ascending: false });
 
       // Фильтр по удаленным
@@ -315,6 +317,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
             name: item.name,
             created_at: item.created_at,
             deleted_at: item.deleted_at,
+            photo_url: item.photo_url,
             last_location: null,
           };
         }
@@ -372,6 +375,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
           name: item.name,
           created_at: item.created_at,
           deleted_at: item.deleted_at,
+          photo_url: item.photo_url,
           last_location: {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,
@@ -383,6 +387,11 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         };
       });
 
+      // Отладочная информация
+      const itemsWithPhotos = itemsWithLocation.filter(i => i.photo_url);
+      if (itemsWithPhotos.length > 0) {
+        console.log("Items with photos:", itemsWithPhotos.map(i => ({ id: i.id, name: i.name, photo_url: i.photo_url })));
+      }
       setItems(itemsWithLocation);
     } catch (err) {
       setError(
@@ -647,7 +656,22 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 min-w-0">
-                        <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        {item.photo_url ? (
+                          <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                            <Image
+                              src={item.photo_url}
+                              alt={item.name || `Вещь #${item.id}`}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
                           <Link
                             href={`/items/${item.id}`}

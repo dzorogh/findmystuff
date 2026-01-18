@@ -11,16 +11,17 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
+import ImageUpload from "@/components/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface AddContainerFormProps {
   open: boolean;
@@ -36,6 +37,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
   const [containerType, setContainerType] = useState<ContainerType>(getDefaultContainerType());
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +78,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         .insert({
           name: name.trim() || null,
           container_type: containerType,
+          photo_url: photoUrl || null,
         })
         .select()
         .single();
@@ -104,6 +107,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
       setContainerType(getDefaultContainerType());
       setDestinationType(null);
       setSelectedDestinationId("");
+      setPhotoUrl(null);
       
       toast.success(
         destinationType && selectedDestinationId
@@ -131,15 +135,15 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Добавить новый контейнер</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Добавить новый контейнер</SheetTitle>
+          <SheetDescription>
             Введите название контейнера и при необходимости укажите местоположение
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
@@ -193,7 +197,14 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         showRoomFirst={true}
         label="Указать местоположение (необязательно)"
         id="add-container-location"
-      />
+              />
+
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография контейнера (необязательно)"
+              />
 
               {error && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -201,7 +212,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 </div>
               )}
 
-              <DialogFooter>
+              <SheetFooter className="mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -223,12 +234,12 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </>
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

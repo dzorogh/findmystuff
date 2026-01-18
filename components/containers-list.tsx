@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import EditContainerForm from "./edit-container-form";
@@ -28,6 +29,7 @@ interface Container {
   marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
+  photo_url: string | null;
   last_location?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -97,7 +99,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       const supabase = createClient();
       let queryBuilder = supabase
         .from("containers")
-        .select("id, name, container_type, marking_number, created_at, deleted_at")
+        .select("id, name, container_type, marking_number, created_at, deleted_at, photo_url")
         .order("created_at", { ascending: false });
 
       // Фильтр по удаленным
@@ -225,6 +227,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
             marking_number: container.marking_number,
             created_at: container.created_at,
             deleted_at: container.deleted_at,
+            photo_url: container.photo_url,
             last_location: null,
           };
         }
@@ -245,6 +248,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           marking_number: container.marking_number,
           created_at: container.created_at,
           deleted_at: container.deleted_at,
+          photo_url: container.photo_url,
           last_location: {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,
@@ -519,7 +523,22 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 min-w-0">
-                          <Container className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {container.photo_url ? (
+                            <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                              <Image
+                                src={container.photo_url}
+                                alt={container.name || `Контейнер #${container.id}`}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                              <Container className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <Link
                               href={`/containers/${container.id}`}

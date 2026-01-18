@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/sidebar";
+import { MainWrapper } from "@/components/main-wrapper";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -25,12 +26,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning className="h-full bg-background">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full bg-background`}
       >
         <Sidebar />
-        <main className="md:ml-64 min-h-screen pt-14 md:pt-0">{children}</main>
+        <MainWrapper>{children}</MainWrapper>
         <Toaster />
       </body>
     </html>

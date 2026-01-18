@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,17 +11,18 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
+import ImageUpload from "@/components/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface EditContainerFormProps {
   containerId: number;
@@ -60,8 +61,30 @@ const EditContainerForm = ({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>(
     currentLocation?.destination_id?.toString() || ""
   );
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Загружаем текущее фото при открытии формы
+  useEffect(() => {
+    if (open && containerId) {
+      const loadPhoto = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("containers")
+          .select("photo_url")
+          .eq("id", containerId)
+          .single();
+        
+        if (data?.photo_url) {
+          setPhotoUrl(data.photo_url);
+        } else {
+          setPhotoUrl(null);
+        }
+      };
+      loadPhoto();
+    }
+  }, [open, containerId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,12 +104,13 @@ const EditContainerForm = ({
         return;
       }
 
-      // Обновляем название и тип контейнера
+      // Обновляем название, тип контейнера и фото
       const { error: updateError } = await supabase
         .from("containers")
         .update({
           name: name.trim() || null,
           container_type: containerType,
+          photo_url: photoUrl || null,
         })
         .eq("id", containerId);
 
@@ -131,13 +155,13 @@ const EditContainerForm = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать контейнер</DialogTitle>
-          <DialogDescription>Измените название или местоположение</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать контейнер</SheetTitle>
+          <SheetDescription>Измените название или местоположение</SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           {markingNumber && (
             <div className="rounded-md bg-muted p-3">
               <p className="text-sm font-medium">
@@ -185,6 +209,13 @@ const EditContainerForm = ({
             id={`edit-container-location-${containerId}`}
           />
 
+          <ImageUpload
+            value={photoUrl}
+            onChange={setPhotoUrl}
+            disabled={isSubmitting}
+            label="Фотография контейнера (необязательно)"
+          />
+
           {currentLocation && (
             <div className="rounded-md bg-muted p-3">
               <p className="text-xs text-muted-foreground">
@@ -193,13 +224,13 @@ const EditContainerForm = ({
             </div>
           )}
 
-              {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+          {error && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button
               type="button"
               variant="outline"
@@ -218,10 +249,10 @@ const EditContainerForm = ({
                 "Сохранить"
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

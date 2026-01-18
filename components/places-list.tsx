@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPlaceForm from "./edit-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
@@ -20,6 +21,7 @@ interface Place {
   marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
+  photo_url: string | null;
   room?: {
     room_id: number | null;
     room_name: string | null;
@@ -88,7 +90,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
       const supabase = createClient();
       let queryBuilder = supabase
         .from("places")
-        .select("id, name, place_type, marking_number, created_at, deleted_at")
+        .select("id, name, place_type, marking_number, created_at, deleted_at, photo_url")
         .order("created_at", { ascending: false });
 
       // Фильтр по удаленным
@@ -403,7 +405,22 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <MapPin className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    {place.photo_url ? (
+                      <div className="relative h-12 w-12 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                        <Image
+                          src={place.photo_url}
+                          alt={place.name || `Место #${place.id}`}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-12 w-12 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                        <MapPin className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
                     <div className="flex flex-col min-w-0 flex-1">
                       <CardTitle className="text-lg truncate">
                         {place.name || `Место #${place.id}`}

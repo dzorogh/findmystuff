@@ -13,14 +13,15 @@ import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { placeTypesToOptions } from "@/lib/utils";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface AddPlaceFormProps {
   open: boolean;
@@ -36,6 +37,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const [name, setName] = useState("");
   const [placeType, setPlaceType] = useState(getDefaultPlaceType());
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +70,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         .insert({
           name: name.trim() || null,
           place_type: placeType,
+          photo_url: photoUrl || null,
         })
         .select()
         .single();
@@ -99,6 +102,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       setName("");
       setPlaceType(getDefaultPlaceType());
       setSelectedRoomId("");
+      setPhotoUrl(null);
       
       toast.success("Место успешно добавлено и размещено в помещении", {
         description: "Место добавлено",
@@ -121,15 +125,15 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Добавить новое место</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Добавить новое место</SheetTitle>
+          <SheetDescription>
             Введите название места. Рекомендуемый формат: Ш1П1 (Шкаф 1 Полка 1), С1П1 (Стеллаж 1 Полка 1)
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
@@ -202,13 +206,20 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 </div>
               </div>
 
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография места (необязательно)"
+              />
+
               {error && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
                   {error}
                 </div>
               )}
 
-              <DialogFooter>
+              <SheetFooter className="mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -230,12 +241,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </>
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

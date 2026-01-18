@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, Plus, ArrowRight } from "lucide-react";
 import AddItemForm from "@/components/add-item-form";
+import GoogleSignIn from "@/components/google-signin";
+import Logo from "@/components/logo";
 
 interface SearchResult {
   type: "item" | "place" | "container" | "room";
@@ -253,10 +255,12 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="container mx-auto flex min-h-screen items-center justify-center px-4">
+      <div className="container mx-auto flex h-full items-center justify-center px-4">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">FindMyStuff</CardTitle>
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Logo size="lg" showText={true} />
+            </div>
             <CardDescription>
               Войдите, чтобы начать вести учет ваших вещей
             </CardDescription>
@@ -266,6 +270,9 @@ export default function Home() {
               <p className="text-sm text-muted-foreground text-center">
                 Приложение для быстрого поиска и учета вещей в домашнем складе
               </p>
+              <div className="flex justify-center pt-2">
+                <GoogleSignIn />
+              </div>
             </div>
           </CardContent>
         </Card>

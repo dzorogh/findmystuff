@@ -76,8 +76,11 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply h-full;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground h-full;
     font-family: var(--font-geist-sans);
   }
 }

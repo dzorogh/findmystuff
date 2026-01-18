@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Building2, Loader2, Pencil, MapPin, Container, Package, Trash2, RotateCcw } from "lucide-react";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditRoomForm from "./edit-room-form";
 
@@ -16,6 +17,7 @@ interface Room {
   name: string | null;
   created_at: string;
   deleted_at: string | null;
+  photo_url: string | null;
   items_count?: number;
   places_count?: number;
   containers_count?: number;
@@ -389,51 +391,33 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
           {rooms.map((room) => (
             <Card key={room.id} className={room.deleted_at ? "opacity-60 border-destructive/50" : ""}>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    {room.photo_url ? (
+                      <div className="relative h-12 w-12 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                        <Image
+                          src={room.photo_url}
+                          alt={room.name || `Помещение #${room.id}`}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-12 w-12 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <CardTitle className="text-lg truncate">
                       {room.name || `Помещение #${room.id}`}
                     </CardTitle>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
                     {room.deleted_at && (
-                      <Badge variant="destructive">Удалено</Badge>
+                      <Badge variant="destructive" className="text-xs">Удалено</Badge>
                     )}
-                    <Badge variant="secondary">#{room.id}</Badge>
-                    {user.email === "dzorogh@gmail.com" && (
-                      <>
-                        {!room.deleted_at ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingRoomId(room.id)}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteRoom(room.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestoreRoom(room.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </>
-                    )}
+                    <Badge variant="secondary" className="text-xs">#{room.id}</Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -461,6 +445,44 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
                   })}
                 </p>
               </CardContent>
+              {user.email === "dzorogh@gmail.com" && (
+                <div className="border-t pl-6 pr-6 pt-3 pb-3">
+                  <div className="flex items-center justify-end gap-2">
+                    {!room.deleted_at ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingRoomId(room.id)}
+                          className="h-8 px-3"
+                        >
+                          <Pencil className="h-4 w-4 mr-1.5" />
+                          <span className="text-xs">Изменить</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteRoom(room.id)}
+                          className="h-8 px-3 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1.5" />
+                          <span className="text-xs">Удалить</span>
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRestoreRoom(room.id)}
+                        className="h-8 px-3 text-green-600 hover:text-green-700"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Восстановить</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
           ))}
         </div>

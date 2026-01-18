@@ -1,7 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s3.twcstorage.ru",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "b536986d-storage.s3.twcstorage.ru",
+        pathname: "/**",
+      },
+    ],
+    // Используем unoptimized для внешних изображений, чтобы избежать проблем с оптимизацией
+    unoptimized: false,
+  },
 };
 
 export default nextConfig;

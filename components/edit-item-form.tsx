@@ -9,14 +9,15 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface EditItemFormProps {
   itemId: number;
@@ -47,8 +48,30 @@ const EditItemForm = ({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>(
     currentLocation?.destination_id?.toString() || ""
   );
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Загружаем текущее фото при открытии формы
+  useEffect(() => {
+    if (open && itemId) {
+      const loadPhoto = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("items")
+          .select("photo_url")
+          .eq("id", itemId)
+          .single();
+        
+        if (data?.photo_url) {
+          setPhotoUrl(data.photo_url);
+        } else {
+          setPhotoUrl(null);
+        }
+      };
+      loadPhoto();
+    }
+  }, [open, itemId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,11 +91,13 @@ const EditItemForm = ({
         return;
       }
 
-      // Обновляем название вещи
+      // Обновляем название вещи и фото
+      console.log("Updating item with photo_url:", photoUrl);
       const { error: updateError } = await supabase
         .from("items")
         .update({
           name: name.trim() || null,
+          photo_url: photoUrl || null,
         })
         .eq("id", itemId);
 
@@ -118,13 +143,13 @@ const EditItemForm = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать вещь</DialogTitle>
-          <DialogDescription>Измените название или местоположение</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать вещь</SheetTitle>
+          <SheetDescription>Измените название или местоположение</SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
             <Label htmlFor={`item-name-${itemId}`}>Название вещи</Label>
             <Input
@@ -148,6 +173,13 @@ const EditItemForm = ({
             id={`edit-item-location-${itemId}`}
           />
 
+          <ImageUpload
+            value={photoUrl}
+            onChange={setPhotoUrl}
+            disabled={isSubmitting}
+            label="Фотография вещи (необязательно)"
+          />
+
           {currentLocation && (
             <div className="rounded-md bg-muted p-3">
               <p className="text-xs text-muted-foreground">
@@ -156,13 +188,13 @@ const EditItemForm = ({
             </div>
           )}
 
-              {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+          {error && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button
               type="button"
               variant="outline"
@@ -181,10 +213,10 @@ const EditItemForm = ({
                 "Сохранить"
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

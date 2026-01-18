@@ -108,18 +108,7 @@ const Sidebar = () => {
   }
 
   if (!user) {
-    return (
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col">
-        <div className="h-16 flex items-center px-4 border-b">
-          <Link href="/" className="flex items-center">
-            <Logo size="md" showText={true} />
-          </Link>
-        </div>
-        <div className="flex-1 p-4 flex items-center justify-center">
-          <GoogleSignIn />
-        </div>
-      </aside>
-    );
+    return null;
   }
 
   return (

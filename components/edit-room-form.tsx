@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface EditRoomFormProps {
   roomId: number;
@@ -34,8 +35,30 @@ const EditRoomForm = ({
 }: EditRoomFormProps) => {
   const { user, isLoading } = useUser();
   const [name, setName] = useState(roomName || "");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Загружаем текущее фото при открытии формы
+  useEffect(() => {
+    if (open && roomId) {
+      const loadPhoto = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("rooms")
+          .select("photo_url")
+          .eq("id", roomId)
+          .single();
+        
+        if (data?.photo_url) {
+          setPhotoUrl(data.photo_url);
+        } else {
+          setPhotoUrl(null);
+        }
+      };
+      loadPhoto();
+    }
+  }, [open, roomId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,6 +82,7 @@ const EditRoomForm = ({
         .from("rooms")
         .update({
           name: name.trim() || null,
+          photo_url: photoUrl || null,
         })
         .eq("id", roomId);
 
@@ -90,13 +114,13 @@ const EditRoomForm = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Редактировать помещение</DialogTitle>
-          <DialogDescription>Измените название помещения</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Редактировать помещение</SheetTitle>
+          <SheetDescription>Измените название помещения</SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
             <Label htmlFor={`room-name-${roomId}`}>Название помещения</Label>
             <Input
@@ -109,13 +133,20 @@ const EditRoomForm = ({
             />
           </div>
 
+          <ImageUpload
+            value={photoUrl}
+            onChange={setPhotoUrl}
+            disabled={isSubmitting}
+            label="Фотография помещения (необязательно)"
+          />
+
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button
               type="button"
               variant="outline"
@@ -134,10 +165,10 @@ const EditRoomForm = ({
                 "Сохранить"
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

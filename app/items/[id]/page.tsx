@@ -36,6 +36,7 @@ interface Item {
   name: string | null;
   created_at: string;
   deleted_at: string | null;
+  photo_url: string | null;
   last_location?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -76,7 +77,7 @@ export default function ItemDetailPage() {
       // Загружаем вещь
       const { data: itemData, error: itemError } = await supabase
         .from("items")
-        .select("*")
+        .select("id, name, created_at, deleted_at, photo_url")
         .eq("id", itemId)
         .single();
 
@@ -323,7 +324,19 @@ export default function ItemDetailPage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                {item.photo_url ? (
+                  <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden border border-border">
+                    <Image
+                      src={item.photo_url}
+                      alt={item.name || `Вещь #${item.id}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 64px, 80px"
+                    />
+                  </div>
+                ) : (
+                  <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                )}
                 <div className="min-w-0 flex-1">
                   <CardTitle className="text-xl sm:text-2xl break-words">
                     {item.name || `Вещь #${item.id}`}
@@ -363,6 +376,17 @@ export default function ItemDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {item.photo_url && (
+              <div className="w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+                <Image
+                  src={item.photo_url}
+                  alt={item.name || `Вещь #${item.id}`}
+                  width={800}
+                  height={450}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             <div>
               <h3 className="text-sm font-medium mb-2">Текущее местоположение</h3>
               {item.last_location ? (

@@ -9,14 +9,15 @@ import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
+import ImageUpload from "@/components/image-upload";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface AddItemFormProps {
   open: boolean;
@@ -29,6 +30,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const [name, setName] = useState("");
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,10 +66,12 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       }
 
       // Добавляем вещь
+      console.log("Adding item with photo_url:", photoUrl);
       const { data: newItem, error: insertError } = await supabase
         .from("items")
         .insert({
           name: name.trim() || null,
+          photo_url: photoUrl || null,
         })
         .select()
         .single();
@@ -95,6 +99,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       setName("");
       setDestinationType(null);
       setSelectedDestinationId("");
+      setPhotoUrl(null);
       
       toast.success(
         destinationType && selectedDestinationId
@@ -122,15 +127,15 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Добавить новую вещь</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Добавить новую вещь</SheetTitle>
+          <SheetDescription>
             Введите название вещи и при необходимости укажите местоположение
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
@@ -167,13 +172,20 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 id="add-item-location"
               />
 
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография вещи (необязательно)"
+              />
+
               {error && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
                   {error}
                 </div>
               )}
 
-              <DialogFooter>
+              <SheetFooter className="mt-6">
                 <Button
                   type="button"
                   variant="outline"
@@ -195,12 +207,12 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </>
           )}
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 
