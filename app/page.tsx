@@ -8,8 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, MapPin, Container, Building2, Plus, ArrowRight } from "lucide-react";
-import AddItemForm from "@/components/forms/add-item-form";
+import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
 import Logo from "@/components/common/logo";
 
@@ -27,7 +26,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -235,12 +233,6 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery, user]);
 
-  const handleItemAdded = () => {
-    // Обновляем поиск, если есть активный запрос
-    if (searchQuery.trim()) {
-      performSearch(searchQuery);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -334,26 +326,22 @@ export default function Home() {
             </p>
           </div>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Введите название вещи, места, контейнера или помещения..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 text-base"
-                  autoFocus
-                />
-                {isSearching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  </div>
-                )}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Введите название вещи, места, контейнера или помещения..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12 text-base"
+              autoFocus
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
 
         {/* Результаты поиска */}
@@ -428,84 +416,69 @@ export default function Home() {
         {/* Быстрые действия */}
         {!searchQuery && (
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" onClick={() => router.push("/items")}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  <CardTitle>Вещи</CardTitle>
+            <Card 
+              className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1" 
+              onClick={() => router.push("/items")}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Package className="h-5 w-5 text-primary" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-                <CardDescription>Просмотр всех вещей</CardDescription>
+                <CardTitle className="text-lg">Вещи</CardTitle>
+                <CardDescription className="text-sm">Просмотр всех вещей</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="ghost" className="w-full justify-between">
-                  Открыть
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
             </Card>
 
-            <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" onClick={() => router.push("/places")}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  <CardTitle>Места</CardTitle>
+            <Card 
+              className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1" 
+              onClick={() => router.push("/places")}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-                <CardDescription>Просмотр всех мест</CardDescription>
+                <CardTitle className="text-lg">Места</CardTitle>
+                <CardDescription className="text-sm">Просмотр всех мест</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="ghost" className="w-full justify-between">
-                  Открыть
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
             </Card>
 
-            <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" onClick={() => router.push("/containers")}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Container className="h-5 w-5" />
-                  <CardTitle>Контейнеры</CardTitle>
+            <Card 
+              className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1" 
+              onClick={() => router.push("/containers")}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Container className="h-5 w-5 text-primary" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-                <CardDescription>Просмотр всех контейнеров</CardDescription>
+                <CardTitle className="text-lg">Контейнеры</CardTitle>
+                <CardDescription className="text-sm">Просмотр всех контейнеров</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="ghost" className="w-full justify-between">
-                  Открыть
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
             </Card>
 
-            <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" onClick={() => router.push("/rooms")}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  <CardTitle>Помещения</CardTitle>
+            <Card 
+              className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1" 
+              onClick={() => router.push("/rooms")}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Building2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
-                <CardDescription>Просмотр всех помещений</CardDescription>
+                <CardTitle className="text-lg">Помещения</CardTitle>
+                <CardDescription className="text-sm">Просмотр всех помещений</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="ghost" className="w-full justify-between">
-                  Открыть
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
             </Card>
-          </div>
-        )}
-
-        {/* Форма добавления вещи */}
-        {user.email === "dzorogh@gmail.com" && (
-          <div className="flex justify-center">
-            <Button onClick={() => setIsAddItemDialogOpen(true)} size="lg">
-              <Plus className="mr-2 h-5 w-5" />
-              Добавить новую вещь
-            </Button>
-            <AddItemForm
-              open={isAddItemDialogOpen}
-              onOpenChange={setIsAddItemDialogOpen}
-              onSuccess={handleItemAdded}
-            />
           </div>
         )}
       </div>
