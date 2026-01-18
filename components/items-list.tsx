@@ -1,0 +1,756 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Search, Package, MapPin, Container, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import MoveItemForm from "./move-item-form";
+import EditItemForm from "./edit-item-form";
+
+interface Item {
+  id: number;
+  name: string | null;
+  created_at: string;
+  deleted_at: string | null;
+  last_location?: {
+    destination_type: string | null;
+    destination_id: number | null;
+    destination_name: string | null;
+    moved_at: string;
+    place_name?: string | null;
+    room_name?: string | null;
+  } | null;
+}
+
+interface ItemsListProps {
+  refreshTrigger?: number;
+}
+
+const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [movingItemId, setMovingItemId] = useState<number | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const getUser = async () => {
+      try {
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error("Ошибка получения пользователя:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadItems();
+    }
+  }, [user, showDeleted, refreshTrigger]);
+
+  const loadItems = async (query?: string) => {
+    if (!user) return;
+
+    setIsSearching(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      
+      let queryBuilder = supabase
+        .from("items")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      // Фильтр по удаленным
+      if (!showDeleted) {
+        queryBuilder = queryBuilder.is("deleted_at", null);
+      } else {
+        queryBuilder = queryBuilder.not("deleted_at", "is", null);
+      }
+
+      if (query && query.trim()) {
+        const searchTerm = query.trim();
+        queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
+      }
+
+      const { data: itemsData, error: itemsError } = await queryBuilder;
+
+      if (itemsError) {
+        throw itemsError;
+      }
+
+      if (!itemsData || itemsData.length === 0) {
+        setItems([]);
+        setIsSearching(false);
+        return;
+      }
+
+      const itemIds = itemsData.map((item) => item.id);
+      const { data: transitionsData, error: transitionsError } = await supabase
+        .from("transitions")
+        .select("*")
+        .in("item_id", itemIds)
+        .order("created_at", { ascending: false });
+
+      if (transitionsError) {
+        throw transitionsError;
+      }
+
+      const lastTransitionsByItem = new Map<number, any>();
+      (transitionsData || []).forEach((transition) => {
+        if (!lastTransitionsByItem.has(transition.item_id)) {
+          lastTransitionsByItem.set(transition.item_id, transition);
+        }
+      });
+
+      const placeIds = Array.from(lastTransitionsByItem.values())
+        .filter((t) => t.destination_type === "place" && t.destination_id)
+        .map((t) => t.destination_id);
+
+      const containerIds = Array.from(lastTransitionsByItem.values())
+        .filter((t) => t.destination_type === "container" && t.destination_id)
+        .map((t) => t.destination_id);
+
+      const roomIds = Array.from(lastTransitionsByItem.values())
+        .filter((t) => t.destination_type === "room" && t.destination_id)
+        .map((t) => t.destination_id);
+
+      const [placesData, containersData, roomsData] = await Promise.all([
+        placeIds.length > 0
+          ? supabase
+              .from("places")
+              .select("id, name")
+              .in("id", placeIds)
+              .is("deleted_at", null)
+          : { data: [], error: null },
+        containerIds.length > 0
+          ? supabase
+              .from("containers")
+              .select("id, name")
+              .in("id", containerIds)
+              .is("deleted_at", null)
+          : { data: [], error: null },
+        roomIds.length > 0
+          ? supabase
+              .from("rooms")
+              .select("id, name")
+              .in("id", roomIds)
+              .is("deleted_at", null)
+          : { data: [], error: null },
+      ]);
+
+      const placesMap = new Map(
+        (placesData.data || []).map((p) => [p.id, p.name])
+      );
+      const containersMap = new Map(
+        (containersData.data || []).map((c) => [c.id, c.name])
+      );
+      const roomsMap = new Map(
+        (roomsData.data || []).map((r) => [r.id, r.name])
+      );
+
+      // Загружаем transitions для мест, чтобы узнать их помещения
+      const allPlaceIds = Array.from(placesMap.keys());
+      const { data: placesTransitionsData } = allPlaceIds.length > 0
+        ? await supabase
+            .from("transitions")
+            .select("*")
+            .eq("destination_type", "room")
+            .in("place_id", allPlaceIds)
+            .order("created_at", { ascending: false })
+        : { data: [] };
+
+      const lastPlaceTransitions = new Map<number, any>();
+      (placesTransitionsData || []).forEach((t) => {
+        if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
+          lastPlaceTransitions.set(t.place_id, t);
+        }
+      });
+
+      const placeRoomIds = Array.from(lastPlaceTransitions.values())
+        .map((t) => t.destination_id)
+        .filter((id) => id !== null);
+
+      const { data: placeRoomsData } = placeRoomIds.length > 0
+        ? await supabase
+            .from("rooms")
+            .select("id, name")
+            .in("id", placeRoomIds)
+            .is("deleted_at", null)
+        : { data: [] };
+
+      const placeRoomsMap = new Map(
+        (placeRoomsData || []).map((r) => [r.id, r.name])
+      );
+
+      // Загружаем transitions для контейнеров
+      const allContainerIds = Array.from(containersMap.keys());
+      const { data: containersTransitionsData } = allContainerIds.length > 0
+        ? await supabase
+            .from("transitions")
+            .select("*")
+            .in("container_id", allContainerIds)
+            .order("created_at", { ascending: false })
+        : { data: [] };
+
+      const lastContainerTransitions = new Map<number, any>();
+      (containersTransitionsData || []).forEach((t) => {
+        if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
+          lastContainerTransitions.set(t.container_id, t);
+        }
+      });
+
+      // Для контейнеров, которые находятся в местах, получаем помещения этих мест
+      const containerPlaceIds = Array.from(lastContainerTransitions.values())
+        .filter((t) => t.destination_type === "place" && t.destination_id)
+        .map((t) => t.destination_id);
+
+      const containerPlaceRoomIds = containerPlaceIds
+        .map((placeId) => {
+          const placeTransition = lastPlaceTransitions.get(placeId);
+          return placeTransition?.destination_id;
+        })
+        .filter((id) => id !== null);
+
+      const { data: containerPlaceRoomsData } = containerPlaceRoomIds.length > 0
+        ? await supabase
+            .from("rooms")
+            .select("id, name")
+            .in("id", containerPlaceRoomIds)
+            .is("deleted_at", null)
+        : { data: [] };
+
+      const containerPlaceRoomsMap = new Map(
+        (containerPlaceRoomsData || []).map((r) => [r.id, r.name])
+      );
+
+      // Для контейнеров, которые находятся в помещениях
+      const containerRoomIds = Array.from(lastContainerTransitions.values())
+        .filter((t) => t.destination_type === "room" && t.destination_id)
+        .map((t) => t.destination_id);
+
+      const containerRoomsMap = new Map<number, string | null>();
+      containerRoomIds.forEach((roomId) => {
+        containerRoomsMap.set(roomId, roomsMap.get(roomId) || null);
+      });
+
+      const itemsWithLocation = itemsData.map((item) => {
+        const lastTransition = lastTransitionsByItem.get(item.id);
+
+        if (!lastTransition) {
+          return {
+            id: item.id,
+            name: item.name,
+            created_at: item.created_at,
+            deleted_at: item.deleted_at,
+            last_location: null,
+          };
+        }
+
+        let destinationName: string | null = null;
+        let placeName: string | null = null;
+        let roomName: string | null = null;
+
+        if (lastTransition.destination_type === "room") {
+          // Вещь в помещении
+          destinationName = roomsMap.get(lastTransition.destination_id) || null;
+          roomName = destinationName;
+        } else if (lastTransition.destination_type === "place") {
+          // Вещь в месте - показываем место и помещение
+          destinationName = placesMap.get(lastTransition.destination_id) || null;
+          placeName = destinationName;
+          const placeTransition = lastPlaceTransitions.get(lastTransition.destination_id);
+          if (placeTransition) {
+            roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
+          }
+        } else if (lastTransition.destination_type === "container") {
+          // Вещь в контейнере - показываем контейнер, место (если есть) и помещение
+          destinationName = containersMap.get(lastTransition.destination_id) || null;
+          const containerTransition = lastContainerTransitions.get(lastTransition.destination_id);
+          if (containerTransition) {
+            if (containerTransition.destination_type === "place") {
+              placeName = placesMap.get(containerTransition.destination_id) || null;
+              const placeTransition = lastPlaceTransitions.get(containerTransition.destination_id);
+              if (placeTransition) {
+                roomName = containerPlaceRoomsMap.get(placeTransition.destination_id) || null;
+              }
+            } else if (containerTransition.destination_type === "room") {
+              roomName = containerRoomsMap.get(containerTransition.destination_id) || null;
+            }
+          }
+        }
+
+        return {
+          id: item.id,
+          name: item.name,
+          created_at: item.created_at,
+          deleted_at: item.deleted_at,
+          last_location: {
+            destination_type: lastTransition.destination_type,
+            destination_id: lastTransition.destination_id,
+            destination_name: destinationName,
+            moved_at: lastTransition.created_at,
+            place_name: placeName,
+            room_name: roomName,
+          },
+        };
+      });
+
+      setItems(itemsWithLocation);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Произошла ошибка при загрузке вещей"
+      );
+      setItems([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    if (!value.trim()) {
+      loadItems();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      loadItems(value);
+    }, 300);
+
+    setDebounceTimer(timer);
+  };
+
+  const handleDeleteItem = async (itemId: number) => {
+    if (!confirm("Вы уверены, что хотите удалить эту вещь?")) {
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("items")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", itemId);
+
+      if (error) throw error;
+      loadItems();
+    } catch (err) {
+      console.error("Ошибка при удалении вещи:", err);
+      alert("Произошла ошибка при удалении вещи");
+    }
+  };
+
+  const handleRestoreItem = async (itemId: number) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("items")
+        .update({ deleted_at: null })
+        .eq("id", itemId);
+
+      if (error) throw error;
+      loadItems();
+    } catch (err) {
+      console.error("Ошибка при восстановлении вещи:", err);
+      alert("Произошла ошибка при восстановлении вещи");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [debounceTimer]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
+                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-muted-foreground">
+            Пожалуйста, авторизуйтесь для просмотра вещей.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (user.email !== "dzorogh@gmail.com") {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-muted-foreground">
+            У вас нет прав для просмотра вещей.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Поиск вещей</CardTitle>
+          <CardDescription>
+            Введите название для поиска по всем вещам
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Введите название вещи..."
+              className="pl-10"
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            {searchQuery && (
+              <p className="text-sm text-muted-foreground">
+                Найдено: {items.length} {items.length === 1 ? "вещь" : "вещей"}
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={showDeleted ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowDeleted(!showDeleted)}
+              >
+                {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="pt-6">
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {isSearching && items.length === 0 ? (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
+                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : items.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <p className="text-muted-foreground">
+              {searchQuery
+                ? "По вашему запросу ничего не найдено"
+                : "Вещи не найдены"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">ID</TableHead>
+                  <TableHead>Название</TableHead>
+                  <TableHead>Местоположение</TableHead>
+                  <TableHead className="w-[120px]">Дата перемещения</TableHead>
+                  {user.email === "dzorogh@gmail.com" && (
+                    <TableHead className="w-[150px] text-right">Действия</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    className={item.deleted_at ? "opacity-60" : ""}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {item.deleted_at && (
+                          <Badge variant="destructive" className="text-xs">Удалено</Badge>
+                        )}
+                        <span className="text-muted-foreground">#{item.id}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium">{item.name || `Вещь #${item.id}`}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {item.last_location ? (
+                        <div className="space-y-1">
+                          {item.last_location.destination_type === "room" && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
+                              <span>
+                                {item.last_location.destination_name ||
+                                  `Помещение #${item.last_location.destination_id}`}
+                              </span>
+                            </div>
+                          )}
+                          {item.last_location.destination_type === "place" && (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span>
+                                  {item.last_location.destination_name ||
+                                    `Место #${item.last_location.destination_id}`}
+                                </span>
+                              </div>
+                              {item.last_location.room_name && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
+                                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                                  <span>{item.last_location.room_name}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {item.last_location.destination_type === "container" && (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Container className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span>
+                                  {item.last_location.destination_name ||
+                                    `Контейнер #${item.last_location.destination_id}`}
+                                </span>
+                              </div>
+                              {item.last_location.place_name && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  <span>{item.last_location.place_name}</span>
+                                </div>
+                              )}
+                              {item.last_location.room_name && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
+                                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                                  <span>{item.last_location.room_name}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Не указано</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.last_location ? (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(item.last_location.moved_at).toLocaleDateString("ru-RU", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    {user.email === "dzorogh@gmail.com" && (
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          {!item.deleted_at ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingItemId(item.id)}
+                                className="h-8 w-8"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setMovingItemId(item.id)}
+                                className="h-8 w-8"
+                                title="Переместить"
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRestoreItem(item.id)}
+                              className="h-8 w-8 text-green-600 hover:text-green-700"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {editingItemId && (
+        <EditItemForm
+          itemId={editingItemId}
+          itemName={items.find((i) => i.id === editingItemId)?.name || null}
+          currentLocation={items.find((i) => i.id === editingItemId)?.last_location}
+          open={!!editingItemId}
+          onOpenChange={(open) => !open && setEditingItemId(null)}
+          onSuccess={() => {
+            setEditingItemId(null);
+            loadItems(searchQuery);
+          }}
+        />
+      )}
+
+      {movingItemId && (
+        <MoveItemForm
+          itemId={movingItemId}
+          itemName={items.find((i) => i.id === movingItemId)?.name || null}
+          open={!!movingItemId}
+          onOpenChange={(open) => !open && setMovingItemId(null)}
+          onSuccess={() => {
+            setMovingItemId(null);
+            loadItems(searchQuery);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ItemsList;
