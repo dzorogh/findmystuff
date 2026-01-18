@@ -70,9 +70,16 @@ const EditPlaceForm = ({
   }, [user]);
 
   useEffect(() => {
-    // Обновляем selectedRoomId при изменении currentRoomId
-    setSelectedRoomId(currentRoomId?.toString() || "");
-  }, [currentRoomId]);
+    // Обновляем selectedRoomId при изменении currentRoomId или открытии формы
+    if (open) {
+      if (currentRoomId) {
+        setSelectedRoomId(currentRoomId.toString());
+      } else {
+        // Если форма открыта, но помещения нет - сбрасываем выбор
+        setSelectedRoomId("");
+      }
+    }
+  }, [currentRoomId, open]);
 
   const loadRooms = async () => {
     try {
@@ -93,7 +100,6 @@ const EditPlaceForm = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
     setIsSubmitting(true);
 
     try {
@@ -120,17 +126,22 @@ const EditPlaceForm = ({
         throw updateError;
       }
 
-      // Если указано новое помещение, создаем transition
-      if (selectedRoomId) {
-        const { error: transitionError } = await supabase.from("transitions").insert({
-          place_id: placeId,
-          destination_type: "room",
-          destination_id: parseInt(selectedRoomId),
-        });
+      // Помещение обязательно
+      if (!selectedRoomId) {
+        setError("Необходимо выбрать помещение");
+        setIsSubmitting(false);
+        return;
+      }
 
-        if (transitionError) {
-          console.error("Ошибка при создании transition:", transitionError);
-        }
+      // Создаем transition для помещения (всегда создаем новую запись, даже если помещение не изменилось)
+      const { error: transitionError } = await supabase.from("transitions").insert({
+        place_id: placeId,
+        destination_type: "room",
+        destination_id: parseInt(selectedRoomId),
+      });
+
+      if (transitionError) {
+        throw transitionError;
       }
 
       toast({
@@ -167,46 +178,61 @@ const EditPlaceForm = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor={`place-name-${placeId}`}>Название места</Label>
+            <Label htmlFor={`place-name-${placeId}`}>Название места (маркировка)</Label>
             <Input
               id={`place-name-${placeId}`}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название места"
+              placeholder="Например: Ш1П1, С1П2"
               disabled={isSubmitting}
             />
-          </div>
-
-          {/* Выбор помещения (опционально) */}
-          <div className="space-y-3 border-t pt-4">
-            <div className="space-y-2">
-              <Label htmlFor={`place-room-select-${placeId}`}>Изменить помещение (необязательно)</Label>
-              <Select
-                id={`place-room-select-${placeId}`}
-                value={selectedRoomId}
-                onChange={(e) => setSelectedRoomId(e.target.value)}
-                disabled={isSubmitting || rooms.length === 0}
-              >
-                <option value="">-- Выберите помещение --</option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name || `Помещение #${room.id}`}
-                  </option>
-                ))}
-              </Select>
-              {rooms.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Помещения не найдены
-                </p>
-              )}
-              {currentRoomId && (
-                <p className="text-xs text-muted-foreground">
-                  Текущее помещение будет заменено при сохранении
-                </p>
-              )}
+            <div className="rounded-md bg-muted p-3 space-y-2">
+              <p className="text-xs font-medium text-foreground">Система маркировки:</p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
+                <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
+                <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
+                <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
+              </ul>
+              <p className="text-xs text-muted-foreground pt-1">
+                Формат: [Ш/С][номер][П][номер полки]
+              </p>
             </div>
           </div>
+
+              {/* Выбор помещения (обязательно) */}
+              <div className="space-y-3 border-t pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`place-room-select-${placeId}`}>
+                    Выберите помещение <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    id={`place-room-select-${placeId}`}
+                    value={selectedRoomId}
+                    onChange={(e) => setSelectedRoomId(e.target.value)}
+                    disabled={isSubmitting || rooms.length === 0}
+                    required
+                  >
+                    <option value="">-- Выберите помещение --</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.name || `Помещение #${room.id}`}
+                      </option>
+                    ))}
+                  </Select>
+                  {rooms.length === 0 && (
+                    <p className="text-xs text-destructive">
+                      Помещения не найдены. Сначала создайте помещение.
+                    </p>
+                  )}
+                  {currentRoomId && !selectedRoomId && (
+                    <p className="text-xs text-muted-foreground">
+                      Текущее помещение будет удалено. Выберите новое помещение.
+                    </p>
+                  )}
+                </div>
+              </div>
 
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">

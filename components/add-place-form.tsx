@@ -121,8 +121,15 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         throw insertError;
       }
 
-      // Если указано помещение, создаем transition
-      if (selectedRoomId && newPlace) {
+      // Помещение обязательно
+      if (!selectedRoomId) {
+        setError("Необходимо выбрать помещение");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Создаем transition для помещения
+      if (newPlace) {
         const { error: transitionError } = await supabase.from("transitions").insert({
           place_id: newPlace.id,
           destination_type: "room",
@@ -130,7 +137,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         });
 
         if (transitionError) {
-          console.error("Ошибка при создании transition:", transitionError);
+          throw transitionError;
         }
       }
 
@@ -139,9 +146,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       
       toast({
         title: "Место добавлено",
-        description: selectedRoomId
-          ? "Место успешно добавлено и размещено в помещении"
-          : "Место успешно добавлено в склад",
+        description: "Место успешно добавлено и размещено в помещении",
       });
       
       if (onSuccess) {
@@ -166,7 +171,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         <DialogHeader>
           <DialogTitle>Добавить новое место</DialogTitle>
           <DialogDescription>
-            Введите название места для добавления в склад
+            Введите название места. Рекомендуемый формат: Ш1П1 (Шкаф 1 Полка 1), С1П1 (Стеллаж 1 Полка 1)
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -181,29 +186,41 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="place-name">Название места</Label>
+                <Label htmlFor="place-name">Название места (маркировка)</Label>
                 <Input
                   id="place-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Введите название места"
+                  placeholder="Например: Ш1П1, С1П2"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Поле необязательное. ID и дата создания заполнятся автоматически.
-                </p>
+                <div className="rounded-md bg-muted p-3 space-y-2">
+                  <p className="text-xs font-medium text-foreground">Система маркировки:</p>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
+                    <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
+                    <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
+                    <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground pt-1">
+                    Формат: [Ш/С][номер][П][номер полки]
+                  </p>
+                </div>
               </div>
 
-              {/* Выбор помещения (опционально) */}
+              {/* Выбор помещения (обязательно) */}
               <div className="space-y-3 border-t pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="place-room-select">Указать помещение (необязательно)</Label>
+                  <Label htmlFor="place-room-select">
+                    Выберите помещение <span className="text-destructive">*</span>
+                  </Label>
                   <Select
                     id="place-room-select"
                     value={selectedRoomId}
                     onChange={(e) => setSelectedRoomId(e.target.value)}
                     disabled={isSubmitting || rooms.length === 0}
+                    required
                   >
                     <option value="">-- Выберите помещение --</option>
                     {rooms.map((room) => (
@@ -213,8 +230,8 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                     ))}
                   </Select>
                   {rooms.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Помещения не найдены
+                    <p className="text-xs text-destructive">
+                      Помещения не найдены. Сначала создайте помещение.
                     </p>
                   )}
                 </div>
