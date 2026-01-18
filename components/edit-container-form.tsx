@@ -174,14 +174,19 @@ const EditContainerForm = ({
         }
       }
 
-      setSuccess(true);
+      toast({
+        title: "Контейнер обновлен",
+        description: "Контейнер успешно обновлен",
+      });
+
+      // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-          onOpenChange(false);
-          setSuccess(false);
-        }, 1000);
+        onSuccess();
       }
+      
+      onOpenChange(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Произошла ошибка при редактировании контейнера"

@@ -160,6 +160,13 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
               .in("id", containerDestinationIds)
               .is("deleted_at", null)
           : { data: [], error: null },
+        roomIds.length > 0
+          ? supabase
+              .from("rooms")
+              .select("id, name")
+              .in("id", roomIds)
+              .is("deleted_at", null)
+          : { data: [], error: null },
       ]);
 
       // Создаем мапы для быстрого поиска
@@ -182,6 +189,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
             id: container.id,
             name: container.name,
             created_at: container.created_at,
+            deleted_at: container.deleted_at,
             last_location: null,
           };
         }
@@ -199,6 +207,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           id: container.id,
           name: container.name,
           created_at: container.created_at,
+          deleted_at: container.deleted_at,
           last_location: {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,

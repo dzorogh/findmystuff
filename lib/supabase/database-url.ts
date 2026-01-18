@@ -28,6 +28,12 @@ export const getDatabaseUrl = (): string => {
     }
   }
 
+  // При сборке возвращаем placeholder, чтобы не ломать build
+  // В runtime это вызовет ошибку, что правильно
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return "postgresql://placeholder:placeholder@localhost:5432/placeholder";
+  }
+
   // Если не удалось построить, выбрасываем ошибку с инструкциями
   throw new Error(
     "DATABASE_URL не установлен. Установите одну из следующих переменных:\n" +

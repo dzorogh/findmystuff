@@ -61,7 +61,6 @@ const EditRoomForm = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
     setIsSubmitting(true);
 
     try {
@@ -93,13 +92,14 @@ const EditRoomForm = ({
         description: "Помещение успешно обновлено",
       });
 
+      // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       if (onSuccess) {
         onSuccess();
       }
       
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 100);
+      onOpenChange(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Произошла ошибка при редактировании помещения"
