@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { Plus, Loader2, Building2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/use-user";
+import { useRooms } from "@/hooks/use-rooms";
 import {
   Dialog,
   DialogContent,
@@ -25,65 +26,13 @@ interface AddPlaceFormProps {
 }
 
 const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
+  const { rooms } = useRooms();
   const [name, setName] = useState("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
-  const [rooms, setRooms] = useState<Array<{ id: number; name: string | null }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user && user.email === "dzorogh@gmail.com") {
-      loadRooms();
-    }
-  }, [user]);
-
-  const loadRooms = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("rooms")
-        .select("id, name")
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setRooms(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки помещений:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

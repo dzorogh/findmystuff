@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { Loader2, MapPin, Container, Building2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/use-user";
+import LocationSelector from "@/components/location-selector";
 import {
   Dialog,
   DialogContent,
@@ -200,16 +200,6 @@ const EditContainerForm = ({
     return null;
   }
 
-  const destinations = 
-    destinationType === "container" ? containers :
-    destinationType === "place" ? places :
-    destinationType === "room" ? rooms : [];
-  
-  const destinationLabel = 
-    destinationType === "container" ? "контейнер" :
-    destinationType === "place" ? "место" :
-    destinationType === "room" ? "помещение" : "";
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -230,100 +220,24 @@ const EditContainerForm = ({
             />
           </div>
 
-          {/* Выбор местоположения */}
-          <div className="space-y-3 border-t pt-4">
-            <div className="space-y-2">
-              <Label>Изменить местоположение (необязательно)</Label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={destinationType === "place" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setDestinationType("place");
-                    setSelectedDestinationId("");
-                  }}
-                  disabled={isSubmitting}
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Место
-                </Button>
-                <Button
-                  type="button"
-                  variant={destinationType === "container" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setDestinationType("container");
-                    setSelectedDestinationId("");
-                  }}
-                  disabled={isSubmitting}
-                >
-                  <Container className="mr-2 h-4 w-4" />
-                  Контейнер
-                </Button>
-                <Button
-                  type="button"
-                  variant={destinationType === "room" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setDestinationType("room");
-                    setSelectedDestinationId("");
-                  }}
-                  disabled={isSubmitting}
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  Помещение
-                </Button>
-                {destinationType && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setDestinationType(null);
-                      setSelectedDestinationId("");
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    ✕
-                  </Button>
-                )}
-              </div>
+          <LocationSelector
+            destinationType={destinationType}
+            selectedDestinationId={selectedDestinationId}
+            onDestinationTypeChange={setDestinationType}
+            onDestinationIdChange={setSelectedDestinationId}
+            disabled={isSubmitting}
+            showRoomFirst={true}
+            label="Изменить местоположение (необязательно)"
+            id={`edit-container-location-${containerId}`}
+          />
+
+          {currentLocation && (
+            <div className="rounded-md bg-muted p-3">
+              <p className="text-xs text-muted-foreground">
+                Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
+              </p>
             </div>
-
-            {destinationType && (
-              <div className="space-y-2">
-                <Label htmlFor={`container-destination-select-${containerId}`}>
-                  Выберите {destinationLabel}
-                </Label>
-                <Select
-                  id={`container-destination-select-${containerId}`}
-                  value={selectedDestinationId}
-                  onChange={(e) => setSelectedDestinationId(e.target.value)}
-                  disabled={isSubmitting || destinations.length === 0}
-                >
-                  <option value="">-- Выберите {destinationLabel} --</option>
-                  {destinations.map((dest) => (
-                    <option key={dest.id} value={dest.id}>
-                      {dest.name ||
-                        `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${dest.id}`}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
-
-            {currentLocation && (
-              <div className="rounded-md bg-muted p-3">
-                <p className="text-xs text-muted-foreground">
-                  Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
-                </p>
-              </div>
-            )}
-          </div>
+          )}
 
               {error && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">

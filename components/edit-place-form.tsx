@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { Loader2, Building2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/use-user";
+import { useRooms } from "@/hooks/use-rooms";
 import {
   Dialog,
   DialogContent,
@@ -35,67 +36,23 @@ const EditPlaceForm = ({
   onOpenChange,
   onSuccess,
 }: EditPlaceFormProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
+  const { rooms } = useRooms();
   const [name, setName] = useState(placeName || "");
   const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
-  const [rooms, setRooms] = useState<Array<{ id: number; name: string | null }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-  }, []);
-
-  useEffect(() => {
-    if (user && user.email === "dzorogh@gmail.com") {
-      loadRooms();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    // Обновляем selectedRoomId при изменении currentRoomId или открытии формы
     if (open) {
       if (currentRoomId) {
         setSelectedRoomId(currentRoomId.toString());
       } else {
-        // Если форма открыта, но помещения нет - сбрасываем выбор
         setSelectedRoomId("");
       }
     }
-  }, [currentRoomId, open]);
-
-  const loadRooms = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("rooms")
-        .select("id, name")
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setRooms(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки помещений:", err);
-    }
-  };
+  }, [open, currentRoomId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

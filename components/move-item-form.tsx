@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { MapPin, Container, Building2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/use-user";
+import { useRooms } from "@/hooks/use-rooms";
+import { usePlaces } from "@/hooks/use-places";
+import { useContainers } from "@/hooks/use-containers";
+import LocationSelector from "@/components/location-selector";
 import {
   Dialog,
   DialogContent,
@@ -26,90 +29,15 @@ interface MoveItemFormProps {
 }
 
 const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveItemFormProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
+  const { rooms } = useRooms();
+  const { places } = usePlaces();
+  const { containers } = useContainers();
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room">("room");
-  const [containers, setContainers] = useState<Array<{ id: number; name: string | null }>>([]);
-  const [places, setPlaces] = useState<Array<{ id: number; name: string | null }>>([]);
-  const [rooms, setRooms] = useState<Array<{ id: number; name: string | null }>>([]);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getUser();
-  }, []);
-
-  useEffect(() => {
-    if (user && user.email === "dzorogh@gmail.com") {
-      loadContainers();
-      loadPlaces();
-      loadRooms();
-    }
-  }, [user]);
-
-  const loadContainers = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("containers")
-        .select("id, name")
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setContainers(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки контейнеров:", err);
-    }
-  };
-
-  const loadPlaces = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("places")
-        .select("id, name")
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setPlaces(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки местоположений:", err);
-    }
-  };
-
-  const loadRooms = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("rooms")
-        .select("id, name")
-        .is("deleted_at", null)
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (fetchError) throw fetchError;
-      setRooms(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки помещений:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -136,10 +64,13 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
       }
 
       // Получаем название места назначения для toast
-      const destinationName = destinations.find(
-        (d) => d.id === parseInt(selectedDestinationId)
-      )?.name || 
-      `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${selectedDestinationId}`;
+      const destinationName = 
+        destinationType === "container" 
+          ? containers.find((c) => c.id === parseInt(selectedDestinationId))?.name
+          : destinationType === "place"
+          ? places.find((p) => p.id === parseInt(selectedDestinationId))?.name
+          : rooms.find((r) => r.id === parseInt(selectedDestinationId))?.name ||
+        `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${selectedDestinationId}`;
 
       toast({
         title: "Вещь перемещена",
@@ -168,16 +99,6 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
     return null;
   }
 
-  const destinations = 
-    destinationType === "container" ? containers :
-    destinationType === "place" ? places :
-    destinationType === "room" ? rooms : [];
-  
-  const destinationLabel = 
-    destinationType === "container" ? "контейнер" :
-    destinationType === "place" ? "местоположение" :
-    destinationType === "room" ? "помещение" : "";
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -188,77 +109,19 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Тип назначения</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={destinationType === "room" ? "default" : "outline"}
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setDestinationType("room");
-                  setSelectedDestinationId("");
-                }}
-              >
-                <Building2 className="mr-2 h-4 w-4" />
-                Помещение
-              </Button>
-              <Button
-                type="button"
-                variant={destinationType === "place" ? "default" : "outline"}
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setDestinationType("place");
-                  setSelectedDestinationId("");
-                }}
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                Место
-              </Button>
-              <Button
-                type="button"
-                variant={destinationType === "container" ? "default" : "outline"}
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setDestinationType("container");
-                  setSelectedDestinationId("");
-                }}
-              >
-                <Container className="mr-2 h-4 w-4" />
-                Контейнер
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`destination-${itemId}`}>
-              Выберите {destinationLabel}
-            </Label>
-            <Select
-              id={`destination-${itemId}`}
-              value={selectedDestinationId}
-              onChange={(e) => setSelectedDestinationId(e.target.value)}
-              disabled={isSubmitting || destinations.length === 0}
-            >
-              <option value="">-- Выберите {destinationLabel} --</option>
-              {destinations.map((dest) => (
-                <option key={dest.id} value={dest.id}>
-                  {dest.name ||
-                    `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${dest.id}`}
-                </option>
-              ))}
-            </Select>
-            {destinations.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                {destinationType === "container"
-                  ? "Контейнеры не найдены"
-                  : "Местоположения не найдены"}
-              </p>
-            )}
-          </div>
+          <LocationSelector
+            destinationType={destinationType}
+            selectedDestinationId={selectedDestinationId}
+            onDestinationTypeChange={(type) => {
+              setDestinationType(type || "room");
+              setSelectedDestinationId("");
+            }}
+            onDestinationIdChange={setSelectedDestinationId}
+            disabled={isSubmitting}
+            showRoomFirst={true}
+            label="Тип назначения"
+            id={`move-item-${itemId}`}
+          />
 
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
@@ -277,7 +140,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !selectedDestinationId || destinations.length === 0}
+              disabled={isSubmitting || !selectedDestinationId}
             >
               {isSubmitting ? (
                 <>
