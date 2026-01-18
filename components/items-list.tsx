@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Package, MapPin, Container, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -598,7 +599,12 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="font-medium">{item.name || `Вещь #${item.id}`}</span>
+                        <Link
+                          href={`/items/${item.id}`}
+                          className="font-medium hover:underline break-words leading-tight"
+                        >
+                          {item.name || `Вещь #${item.id}`}
+                        </Link>
                       </div>
                     </TableCell>
                     <TableCell>

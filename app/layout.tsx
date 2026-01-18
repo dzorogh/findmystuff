@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Домашний склад - Быстрый поиск вещей",
+  title: "FindMyStuff - Быстрый поиск вещей",
   description: "Приложение для учета домашнего склада и быстрого поиска вещей",
 };
 

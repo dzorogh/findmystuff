@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 import EditContainerForm from "./edit-container-form";
 
 interface Container {
@@ -434,7 +435,12 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                   <div className="flex items-center gap-2">
                     <Container className="h-5 w-5 text-muted-foreground" />
                     <CardTitle className="text-lg">
-                      {container.name || `Контейнер #${container.id}`}
+                      <Link
+                        href={`/containers/${container.id}`}
+                        className="hover:underline"
+                      >
+                        {container.name || `Контейнер #${container.id}`}
+                      </Link>
                     </CardTitle>
                   </div>
                   <div className="flex items-center gap-2">

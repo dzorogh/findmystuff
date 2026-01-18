@@ -256,7 +256,7 @@ export default function Home() {
       <div className="container flex min-h-screen items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Домашний склад</CardTitle>
+            <CardTitle className="text-2xl">FindMyStuff</CardTitle>
             <CardDescription>
               Войдите, чтобы начать вести учет ваших вещей
             </CardDescription>

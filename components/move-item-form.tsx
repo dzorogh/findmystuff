@@ -6,7 +6,8 @@ import type { User } from "@supabase/supabase-js";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { MapPin, Container, Building2, Loader2, CheckCircle2 } from "lucide-react";
+import { MapPin, Container, Building2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const supabase = createClient();
@@ -113,7 +114,6 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
     setIsSubmitting(true);
 
     try {
@@ -135,15 +135,26 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
         throw insertError;
       }
 
-      setSuccess(true);
+      // Получаем название места назначения для toast
+      const destinationName = destinations.find(
+        (d) => d.id === parseInt(selectedDestinationId)
+      )?.name || 
+      `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${selectedDestinationId}`;
+
+      toast({
+        title: "Вещь перемещена",
+        description: `Вещь успешно перемещена в ${destinationName}`,
+      });
+
       setSelectedDestinationId("");
+      
       if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-          onOpenChange(false);
-          setSuccess(false);
-        }, 1000);
+        onSuccess();
       }
+      
+      // Небольшая задержка перед закрытием, чтобы toast был виден
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      onOpenChange(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Произошла ошибка при перемещении вещи"
@@ -252,13 +263,6 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
               {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2 text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Вещь успешно перемещена!
             </div>
           )}
 
