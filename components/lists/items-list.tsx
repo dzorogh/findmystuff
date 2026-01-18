@@ -1,15 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/hooks/use-user";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, MapPin, Container, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
-import { SearchForm } from "@/components/common/search-form";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Package, MapPin, Container, Building2, Pencil, Trash2, RotateCcw, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -22,6 +18,14 @@ import {
 } from "@/components/ui/table";
 import MoveItemForm from "@/components/forms/move-item-form";
 import EditItemForm from "@/components/forms/edit-item-form";
+import { useListState } from "@/hooks/use-list-state";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { applyDeletedFilter, applyNameSearch } from "@/lib/query-builder";
+import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { ListSkeleton } from "@/components/common/list-skeleton";
+import { EmptyState } from "@/components/common/empty-state";
+import { ErrorCard } from "@/components/common/error-card";
+import { toast } from "sonner";
 
 interface Item {
   id: number;
@@ -41,42 +45,39 @@ interface Item {
 
 interface ItemsListProps {
   refreshTrigger?: number;
+  searchQuery?: string;
+  showDeleted?: boolean;
+  onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
 }
 
-const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
-  const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUser();
-  const [isLoading, setIsLoading] = useState(true);
+const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: ItemsListProps = {}) => {
+  const {
+    user,
+    isUserLoading,
+    isLoading,
+    isSearching,
+    error,
+    searchQuery,
+    showDeleted,
+    setError,
+    startLoading,
+    finishLoading,
+    handleError,
+  } = useListState({
+    externalSearchQuery,
+    externalShowDeleted,
+    refreshTrigger,
+    onSearchStateChange,
+  });
+
   const [items, setItems] = useState<Item[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [movingItemId, setMovingItemId] = useState<number | null>(null);
-  const [showDeleted, setShowDeleted] = useState(false);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/");
-    }
-  }, [isUserLoading, user, router]);
-
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      loadItems(undefined, true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger]);
 
   const loadItems = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
-    setIsSearching(true);
-    if (isInitialLoad) {
-      setIsLoading(true);
-    }
-    setError(null);
+    startLoading(isInitialLoad);
 
     try {
       const supabase = createClient();
@@ -86,17 +87,8 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         .select("id, name, created_at, deleted_at, photo_url")
         .order("created_at", { ascending: false });
 
-      // Фильтр по удаленным
-      if (!showDeleted) {
-        queryBuilder = queryBuilder.is("deleted_at", null);
-      } else {
-        queryBuilder = queryBuilder.not("deleted_at", "is", null);
-      }
-
-      if (query && query.trim()) {
-        const searchTerm = query.trim();
-        queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
-      }
+      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
+      queryBuilder = applyNameSearch(queryBuilder, query, ["name"]);
 
       const { data: itemsData, error: itemsError } = await queryBuilder;
 
@@ -106,10 +98,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
 
       if (!itemsData || itemsData.length === 0) {
         setItems([]);
-        setIsSearching(false);
-        if (isInitialLoad) {
-          setIsLoading(false);
-        }
+        finishLoading(isInitialLoad, 0);
         return;
       }
 
@@ -374,41 +363,28 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       });
 
       setItems(itemsWithLocation);
+      finishLoading(isInitialLoad, itemsWithLocation.length);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Произошла ошибка при загрузке вещей"
-      );
+      handleError(err, isInitialLoad);
       setItems([]);
-    } finally {
-      setIsSearching(false);
-      if (isInitialLoad) {
-        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      loadItems(searchQuery, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, showDeleted, refreshTrigger]);
+
+  useDebouncedSearch({
+    searchQuery,
+    onSearch: (query) => {
+      if (user && !isUserLoading) {
+        loadItems(query || undefined, false);
       }
-    }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    if (!value.trim()) {
-      const timer = setTimeout(() => {
-        loadItems(undefined, false);
-      }, 300);
-      setDebounceTimer(timer);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      loadItems(value, false);
-    }, 300);
-
-    setDebounceTimer(timer);
-  };
+    },
+  });
 
   const handleDeleteItem = async (itemId: number) => {
     if (!confirm("Вы уверены, что хотите удалить эту вещь?")) {
@@ -416,82 +392,30 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("items")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", itemId);
-
-      if (error) throw error;
+      await softDelete("items", itemId);
+      toast.success("Вещь успешно удалена");
       loadItems(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении вещи:", err);
-      alert("Произошла ошибка при удалении вещи");
+      toast.error("Произошла ошибка при удалении вещи");
     }
   };
 
   const handleRestoreItem = async (itemId: number) => {
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("items")
-        .update({ deleted_at: null })
-        .eq("id", itemId);
-
-      if (error) throw error;
+      await restoreDeleted("items", itemId);
+      toast.success("Вещь успешно восстановлена");
       loadItems(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении вещи:", err);
-      alert("Произошла ошибка при восстановлении вещи");
+      toast.error("Произошла ошибка при восстановлении вещи");
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-    };
-  }, [debounceTimer]);
 
   if (isLoading || isUserLoading) {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
-                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
-                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
-                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[...Array(6)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <ListSkeleton variant="table" rows={6} columns={5} />
       </div>
     );
   }
@@ -502,65 +426,15 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <SearchForm
-        title="Поиск вещей"
-        description="Введите название для поиска по всем вещам"
-        placeholder="Введите название вещи..."
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        isSearching={isSearching}
-        resultsCount={items.length}
-        resultsLabel={{ singular: "вещь", plural: "вещей" }}
-        showDeleted={showDeleted}
-        onToggleDeleted={() => setShowDeleted(!showDeleted)}
-      />
-
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
+      <ErrorCard message={error || ""} />
 
       {isSearching && items.length === 0 ? (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
-                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
-                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
-                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[...Array(6)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <ListSkeleton variant="table" rows={6} columns={5} />
       ) : items.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">
-              {searchQuery
-                ? "По вашему запросу ничего не найдено"
-                : "Вещи не найдены"}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Package}
+          title={searchQuery ? "По вашему запросу ничего не найдено" : "Вещи не найдены"}
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -764,7 +638,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                               className="h-8 w-8"
                               title="Переместить"
                             >
-                              <MapPin className="h-4 w-4" />
+                              <ArrowRightLeft className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"

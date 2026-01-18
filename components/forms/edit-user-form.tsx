@@ -32,7 +32,8 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
       setEmail(user.email || "");
       setError(null);
     }
-  }, [open, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

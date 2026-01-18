@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
@@ -70,7 +70,8 @@ export default function ItemDetailPage() {
     if (user && !isUserLoading) {
       loadItemData();
     }
-  }, [user, isUserLoading, itemId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isUserLoading, itemId]);
 
   const loadItemData = async () => {
     if (!user) return;
@@ -365,7 +366,7 @@ export default function ItemDetailPage() {
                     onClick={() => setIsMoveDialogOpen(true)}
                     className="flex-1 sm:flex-initial"
                   >
-                    <MapPin className="mr-2 h-4 w-4" />
+                    <ArrowRightLeft className="mr-2 h-4 w-4" />
                     Переместить
                   </Button>
                 </div>
@@ -373,18 +374,28 @@ export default function ItemDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {item.photo_url && (
-              <div className="w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
-                <Image
-                  src={item.photo_url}
-                  alt={item.name || `Вещь #${item.id}`}
-                  width={800}
-                  height={450}
-                  className="w-full h-full object-cover"
-                  unoptimized={item.photo_url.includes("storage.supabase.co")}
-                />
-              </div>
-            )}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Фотография</h3>
+              {item.photo_url ? (
+                <div className="w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+                  <Image
+                    src={item.photo_url}
+                    alt={item.name || `Вещь #${item.id}`}
+                    width={800}
+                    height={450}
+                    className="w-full h-full object-cover"
+                    unoptimized={item.photo_url.includes("storage.supabase.co")}
+                  />
+                </div>
+              ) : (
+                <div className="w-full aspect-video rounded-lg border-2 border-dashed border-border bg-muted/50 flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Фотография не загружена</p>
+                  </div>
+                </div>
+              )}
+            </div>
             <div>
               <h3 className="text-sm font-medium mb-2">Текущее местоположение</h3>
               {item.last_location ? (

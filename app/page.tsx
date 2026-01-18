@@ -201,7 +201,8 @@ export default function Home() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, user?.id]);
 
 
   if (isLoading) {

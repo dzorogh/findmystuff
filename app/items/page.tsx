@@ -6,13 +6,27 @@ import AddItemForm from "@/components/forms/add-item-form";
 import { Button } from "@/components/ui/button";
 import { Package, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 export default function ItemsPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [resultsCount, setResultsCount] = useState(0);
 
   const handleItemAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchStateChange = (state: { isSearching: boolean; resultsCount: number }) => {
+    setIsSearching(state.isSearching);
+    setResultsCount(state.resultsCount);
   };
 
   return (
@@ -29,7 +43,22 @@ export default function ItemsPage() {
             </Button>
           }
         />
-        <ItemsList refreshTrigger={refreshTrigger} />
+        <CompactSearchBar
+          placeholder="Введите название вещи..."
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          isSearching={isSearching}
+          resultsCount={resultsCount}
+          resultsLabel={{ singular: "вещь", plural: "вещей" }}
+          showDeleted={showDeleted}
+          onToggleDeleted={() => setShowDeleted(!showDeleted)}
+        />
+        <ItemsList 
+          refreshTrigger={refreshTrigger}
+          searchQuery={searchQuery}
+          showDeleted={showDeleted}
+          onSearchStateChange={handleSearchStateChange}
+        />
         <AddItemForm
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}

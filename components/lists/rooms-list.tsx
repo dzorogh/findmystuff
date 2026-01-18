@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/hooks/use-user";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Pencil, MapPin, Container, Package, Trash2, RotateCcw } from "lucide-react";
-import { SearchForm } from "@/components/common/search-form";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
 import EditRoomForm from "@/components/forms/edit-room-form";
+import { useListState } from "@/hooks/use-list-state";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { applyDeletedFilter, applyNameSearch } from "@/lib/query-builder";
+import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { ListSkeleton } from "@/components/common/list-skeleton";
+import { EmptyState } from "@/components/common/empty-state";
+import { ErrorCard } from "@/components/common/error-card";
+import { toast } from "sonner";
 
 interface Room {
   id: number;
@@ -26,41 +30,37 @@ interface Room {
 
 interface RoomsListProps {
   refreshTrigger?: number;
+  searchQuery?: string;
+  showDeleted?: boolean;
+  onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
 }
 
-const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
-  const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUser();
-  const [isLoading, setIsLoading] = useState(true);
+const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: RoomsListProps = {}) => {
+  const {
+    user,
+    isUserLoading,
+    isLoading,
+    isSearching,
+    error,
+    searchQuery,
+    showDeleted,
+    startLoading,
+    finishLoading,
+    handleError,
+  } = useListState({
+    externalSearchQuery,
+    externalShowDeleted,
+    refreshTrigger,
+    onSearchStateChange,
+  });
+
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
-  const [showDeleted, setShowDeleted] = useState(false);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/");
-    }
-  }, [isUserLoading, user, router]);
-
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      loadRooms(undefined, true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, refreshTrigger, showDeleted]);
 
   const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
-    setIsSearching(true);
-    if (isInitialLoad) {
-      setIsLoading(true);
-    }
-    setError(null);
+    startLoading(isInitialLoad);
 
     try {
       const supabase = createClient();
@@ -69,17 +69,8 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // Фильтр по удаленным
-      if (!showDeleted) {
-        queryBuilder = queryBuilder.is("deleted_at", null);
-      } else {
-        queryBuilder = queryBuilder.not("deleted_at", "is", null);
-      }
-
-      if (query && query.trim()) {
-        const searchTerm = query.trim();
-        queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
-      }
+      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
+      queryBuilder = applyNameSearch(queryBuilder, query, ["name"]);
 
       const { data: roomsData, error: fetchError } = await queryBuilder;
 
@@ -89,10 +80,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
 
       if (!roomsData || roomsData.length === 0) {
         setRooms([]);
-        setIsSearching(false);
-        if (isInitialLoad) {
-          setIsLoading(false);
-        }
+        finishLoading(isInitialLoad, 0);
         return;
       }
 
@@ -146,41 +134,28 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
       });
 
       setRooms(roomsWithCounts);
+      finishLoading(isInitialLoad, roomsWithCounts.length);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Произошла ошибка при загрузке помещений"
-      );
+      handleError(err, isInitialLoad);
       setRooms([]);
-    } finally {
-      setIsSearching(false);
-      if (isInitialLoad) {
-        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      loadRooms(searchQuery, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, showDeleted, refreshTrigger]);
+
+  useDebouncedSearch({
+    searchQuery,
+    onSearch: (query) => {
+      if (user && !isUserLoading) {
+        loadRooms(query || undefined, false);
       }
-    }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    if (!value.trim()) {
-      const timer = setTimeout(() => {
-        loadRooms(undefined, false);
-      }, 300);
-      setDebounceTimer(timer);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      loadRooms(value, false);
-    }, 300);
-
-    setDebounceTimer(timer);
-  };
+    },
+  });
 
   const handleDeleteRoom = async (roomId: number) => {
     if (!confirm("Вы уверены, что хотите удалить это помещение?")) {
@@ -188,79 +163,30 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("rooms")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", roomId);
-
-      if (error) throw error;
+      await softDelete("rooms", roomId);
+      toast.success("Помещение успешно удалено");
       loadRooms(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении помещения:", err);
-      alert("Произошла ошибка при удалении помещения");
+      toast.error("Произошла ошибка при удалении помещения");
     }
   };
 
   const handleRestoreRoom = async (roomId: number) => {
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("rooms")
-        .update({ deleted_at: null })
-        .eq("id", roomId);
-
-      if (error) throw error;
+      await restoreDeleted("rooms", roomId);
+      toast.success("Помещение успешно восстановлено");
       loadRooms(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении помещения:", err);
-      alert("Произошла ошибка при восстановлении помещения");
+      toast.error("Произошла ошибка при восстановлении помещения");
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-    };
-  }, [debounceTimer]);
 
   if (isLoading || isUserLoading) {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton variant="grid" rows={6} />
       </div>
     );
   }
@@ -271,62 +197,15 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <SearchForm
-        title="Поиск помещений"
-        description="Введите название для поиска по всем помещениям"
-        placeholder="Введите название помещения..."
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        isSearching={isSearching}
-        resultsCount={rooms.length}
-        resultsLabel={{ singular: "помещение", plural: "помещений" }}
-        showDeleted={showDeleted}
-        onToggleDeleted={() => setShowDeleted(!showDeleted)}
-      />
-
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
+      <ErrorCard message={error || ""} />
 
       {isSearching && rooms.length === 0 ? (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton variant="grid" rows={6} />
       ) : rooms.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">
-              {searchQuery
-                ? "По вашему запросу ничего не найдено"
-                : "Помещения не найдены"}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Building2}
+          title={searchQuery ? "По вашему запросу ничего не найдено" : "Помещения не найдены"}
+        />
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (

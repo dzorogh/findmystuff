@@ -6,13 +6,27 @@ import AddPlaceForm from "@/components/forms/add-place-form";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 export default function PlacesPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [resultsCount, setResultsCount] = useState(0);
 
   const handlePlaceAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchStateChange = (state: { isSearching: boolean; resultsCount: number }) => {
+    setIsSearching(state.isSearching);
+    setResultsCount(state.resultsCount);
   };
 
   return (
@@ -29,7 +43,22 @@ export default function PlacesPage() {
             </Button>
           }
         />
-        <PlacesList refreshTrigger={refreshTrigger} />
+        <CompactSearchBar
+          placeholder="Название, тип или маркировка (Ш1)..."
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          isSearching={isSearching}
+          resultsCount={resultsCount}
+          resultsLabel={{ singular: "место", plural: "мест" }}
+          showDeleted={showDeleted}
+          onToggleDeleted={() => setShowDeleted(!showDeleted)}
+        />
+        <PlacesList 
+          refreshTrigger={refreshTrigger}
+          searchQuery={searchQuery}
+          showDeleted={showDeleted}
+          onSearchStateChange={handleSearchStateChange}
+        />
         <AddPlaceForm
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}

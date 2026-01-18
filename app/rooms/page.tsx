@@ -6,13 +6,27 @@ import AddRoomForm from "@/components/forms/add-room-form";
 import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 export default function RoomsPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [resultsCount, setResultsCount] = useState(0);
 
   const handleRoomAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchStateChange = (state: { isSearching: boolean; resultsCount: number }) => {
+    setIsSearching(state.isSearching);
+    setResultsCount(state.resultsCount);
   };
 
   return (
@@ -29,7 +43,22 @@ export default function RoomsPage() {
             </Button>
           }
         />
-        <RoomsList refreshTrigger={refreshTrigger} />
+        <CompactSearchBar
+          placeholder="Введите название помещения..."
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          isSearching={isSearching}
+          resultsCount={resultsCount}
+          resultsLabel={{ singular: "помещение", plural: "помещений" }}
+          showDeleted={showDeleted}
+          onToggleDeleted={() => setShowDeleted(!showDeleted)}
+        />
+        <RoomsList 
+          refreshTrigger={refreshTrigger}
+          searchQuery={searchQuery}
+          showDeleted={showDeleted}
+          onSearchStateChange={handleSearchStateChange}
+        />
         <AddRoomForm
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}

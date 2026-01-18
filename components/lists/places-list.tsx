@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/hooks/use-user";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
-import { SearchForm } from "@/components/common/search-form";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
 import EditPlaceForm from "@/components/forms/edit-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
+import { useListState } from "@/hooks/use-list-state";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { applyDeletedFilter, applyNameSearch } from "@/lib/query-builder";
+import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { ListSkeleton } from "@/components/common/list-skeleton";
+import { EmptyState } from "@/components/common/empty-state";
+import { ErrorCard } from "@/components/common/error-card";
+import { toast } from "sonner";
 
 interface Place {
   id: number;
@@ -30,42 +34,38 @@ interface Place {
 
 interface PlacesListProps {
   refreshTrigger?: number;
+  searchQuery?: string;
+  showDeleted?: boolean;
+  onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
 }
 
-const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
-  const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUser();
-  const [isLoading, setIsLoading] = useState(true);
+const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: PlacesListProps = {}) => {
+  const {
+    user,
+    isUserLoading,
+    isLoading,
+    isSearching,
+    error,
+    searchQuery,
+    showDeleted,
+    startLoading,
+    finishLoading,
+    handleError,
+  } = useListState({
+    externalSearchQuery,
+    externalShowDeleted,
+    refreshTrigger,
+    onSearchStateChange,
+  });
+
   const [places, setPlaces] = useState<Place[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
-  const [showDeleted, setShowDeleted] = useState(false);
   const { generateMarking } = usePlaceMarking();
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/");
-    }
-  }, [isUserLoading, user, router]);
-
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      loadPlaces(undefined, true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, refreshTrigger, showDeleted]);
 
   const loadPlaces = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
-    setIsSearching(true);
-    if (isInitialLoad) {
-      setIsLoading(true);
-    }
-    setError(null);
+    startLoading(isInitialLoad);
 
     try {
       const supabase = createClient();
@@ -74,16 +74,10 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
         .select("id, name, place_type, marking_number, created_at, deleted_at, photo_url")
         .order("created_at", { ascending: false });
 
-      // Фильтр по удаленным
-      if (!showDeleted) {
-        queryBuilder = queryBuilder.is("deleted_at", null);
-      } else {
-        queryBuilder = queryBuilder.not("deleted_at", "is", null);
-      }
+      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
 
       if (query && query.trim()) {
         const searchTerm = query.trim();
-        // Поиск по названию, типу места или номеру маркировки
         const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
         if (searchNumber !== null) {
           queryBuilder = queryBuilder.or(
@@ -104,10 +98,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
 
       if (!placesData || placesData.length === 0) {
         setPlaces([]);
-        setIsSearching(false);
-        if (isInitialLoad) {
-          setIsLoading(false);
-        }
+        finishLoading(isInitialLoad, 0);
         return;
       }
 
@@ -167,41 +158,28 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
       });
 
       setPlaces(placesWithRooms);
+      finishLoading(isInitialLoad, placesWithRooms.length);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Произошла ошибка при загрузке местоположений"
-      );
+      handleError(err, isInitialLoad);
       setPlaces([]);
-    } finally {
-      setIsSearching(false);
-      if (isInitialLoad) {
-        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      loadPlaces(searchQuery, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, showDeleted, refreshTrigger]);
+
+  useDebouncedSearch({
+    searchQuery,
+    onSearch: (query) => {
+      if (user && !isUserLoading) {
+        loadPlaces(query || undefined, false);
       }
-    }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    if (!value.trim()) {
-      const timer = setTimeout(() => {
-        loadPlaces(undefined, false);
-      }, 300);
-      setDebounceTimer(timer);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      loadPlaces(value, false);
-    }, 300);
-
-    setDebounceTimer(timer);
-  };
+    },
+  });
 
   const handleDeletePlace = async (placeId: number) => {
     if (!confirm("Вы уверены, что хотите удалить это место?")) {
@@ -209,74 +187,30 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("places")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", placeId);
-
-      if (error) throw error;
+      await softDelete("places", placeId);
+      toast.success("Место успешно удалено");
       loadPlaces(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении места:", err);
-      alert("Произошла ошибка при удалении места");
+      toast.error("Произошла ошибка при удалении места");
     }
   };
 
   const handleRestorePlace = async (placeId: number) => {
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("places")
-        .update({ deleted_at: null })
-        .eq("id", placeId);
-
-      if (error) throw error;
+      await restoreDeleted("places", placeId);
+      toast.success("Место успешно восстановлено");
       loadPlaces(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении места:", err);
-      alert("Произошла ошибка при восстановлении места");
+      toast.error("Произошла ошибка при восстановлении места");
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-    };
-  }, [debounceTimer]);
 
   if (isLoading || isUserLoading) {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton variant="grid" rows={6} />
       </div>
     );
   }
@@ -287,57 +221,15 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <SearchForm
-        title="Поиск местоположений"
-        description="Поиск по названию, типу места или маркировке (например, Ш1)"
-        placeholder="Название, тип или маркировка (Ш1)..."
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        isSearching={isSearching}
-        resultsCount={places.length}
-        resultsLabel={{ singular: "место", plural: "мест" }}
-        showDeleted={showDeleted}
-        onToggleDeleted={() => setShowDeleted(!showDeleted)}
-      />
-
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
+      <ErrorCard message={error || ""} />
 
       {isSearching && places.length === 0 ? (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ListSkeleton variant="grid" rows={6} />
       ) : places.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground">
-              {searchQuery
-                ? "По вашему запросу ничего не найдено"
-                : "Местоположения не найдены"}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={MapPin}
+          title={searchQuery ? "По вашему запросу ничего не найдено" : "Местоположения не найдены"}
+        />
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {places.map((place) => (

@@ -66,7 +66,8 @@ export default function ContainerDetailPage() {
     if (user && !isUserLoading) {
       loadContainerData();
     }
-  }, [user, isUserLoading, containerId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isUserLoading, containerId]);
 
   const loadContainerData = async () => {
     if (!user) return;
