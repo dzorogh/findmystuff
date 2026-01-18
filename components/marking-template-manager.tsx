@@ -109,7 +109,6 @@ const MarkingTemplateManager = () => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Шаблон маркировки</Label>
         <Select
           value={useCustom ? "custom" : template}
           onChange={(e) => handleTemplateChange(e.target.value)}
