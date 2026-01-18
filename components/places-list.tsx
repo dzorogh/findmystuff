@@ -11,7 +11,7 @@ import { Search, MapPin, Building2, Loader2, Pencil, Trash2, RotateCcw } from "l
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPlaceForm from "./edit-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
-import { useSettings } from "@/hooks/use-settings";
+import { useAdmin } from "@/hooks/use-admin";
 
 interface Place {
   id: number;
