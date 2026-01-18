@@ -13,10 +13,14 @@ const GoogleSignIn = () => {
       setIsLoading(true);
       const supabase = createClient();
       
+      // Используем переменную окружения для production URL, иначе window.location.origin
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                      (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+      
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${baseUrl}/auth/callback`,
         },
       });
     } catch (error) {

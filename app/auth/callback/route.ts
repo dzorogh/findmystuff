@@ -18,13 +18,17 @@ export async function GET(request: Request) {
     if (!error) {
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin
+      
       if (isLocalEnv) {
         // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
         return NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {
         return NextResponse.redirect(`https://${forwardedHost}${next}`)
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        // Используем переменную окружения или origin из запроса
+        const redirectUrl = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`
+        return NextResponse.redirect(`${redirectUrl}${next}`)
       }
     }
   }
