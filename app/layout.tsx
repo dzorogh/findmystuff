@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthLayout } from "@/components/auth-layout";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -30,8 +31,15 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning className={`${geistSans.className} ${geistMono.variable} h-full bg-background`}>
       <body className="antialiased h-full bg-background">
-        <AuthLayout>{children}</AuthLayout>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthLayout>{children}</AuthLayout>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

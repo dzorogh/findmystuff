@@ -10,6 +10,7 @@ import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Se
 import Logo from "@/components/logo";
 import GoogleSignIn from "@/components/google-signin";
 import { useAdmin } from "@/hooks/use-admin";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sheet,
   SheetContent,
@@ -136,15 +137,18 @@ const Sidebar = () => {
               <UserIcon className="h-4 w-4 shrink-0" />
               <span className="truncate text-xs">{user.email}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              title="Выйти"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="sr-only">Выйти</span>
-            </Button>
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSignOut}
+                title="Выйти"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Выйти</span>
+              </Button>
+            </div>
           </div>
         </div>
       </aside>
@@ -177,15 +181,18 @@ const Sidebar = () => {
                       <UserIcon className="h-4 w-4 shrink-0" />
                       <span className="truncate text-xs">{user.email}</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSignOut}
-                      title="Выйти"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span className="sr-only">Выйти</span>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <ThemeToggle />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSignOut}
+                        title="Выйти"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span className="sr-only">Выйти</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
