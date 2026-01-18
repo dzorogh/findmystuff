@@ -172,6 +172,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
           marking_number: place.marking_number ?? null,
           created_at: place.created_at,
           deleted_at: place.deleted_at,
+          photo_url: place.photo_url,
           room: transition
             ? {
                 room_id: transition.destination_id,
@@ -406,19 +407,18 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     {place.photo_url ? (
-                      <div className="relative h-12 w-12 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                      <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
                         <Image
                           src={place.photo_url}
                           alt={place.name || `Место #${place.id}`}
                           fill
                           className="object-cover"
-                          sizes="48px"
-                          unoptimized
+                          sizes="40px"
                         />
                       </div>
                     ) : (
-                      <div className="h-12 w-12 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
-                        <MapPin className="h-6 w-6 text-muted-foreground" />
+                      <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                        <MapPin className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
                     <div className="flex flex-col min-w-0 flex-1">

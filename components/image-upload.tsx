@@ -21,10 +21,13 @@ const ImageUpload = ({
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isUploadingRef = useRef(false);
 
-  // Синхронизируем preview с value при изменении value
+  // Синхронизируем preview с value при изменении value, но только если не идет загрузка
   useEffect(() => {
-    setPreview(value || null);
+    if (!isUploadingRef.current) {
+      setPreview(value || null);
+    }
   }, [value]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,6 +56,7 @@ const ImageUpload = ({
 
     // Загружаем на сервер
     setIsUploading(true);
+    isUploadingRef.current = true;
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -78,9 +82,11 @@ const ImageUpload = ({
         throw new Error("Сервер не вернул URL загруженного файла");
       }
       console.log("Received photo URL from server:", data.url);
-      // Обновляем preview на реальный URL
+      // Обновляем preview на реальный URL и вызываем onChange
       setPreview(data.url);
       onChange(data.url);
+      // Даем время для обновления value prop перед снятием флага загрузки
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error("Ошибка загрузки фото:", error);
       const errorMessage =
@@ -91,6 +97,10 @@ const ImageUpload = ({
       setPreview(value || null); // Возвращаем предыдущее значение
     } finally {
       setIsUploading(false);
+      // Сбрасываем флаг загрузки после небольшой задержки, чтобы value успел обновиться
+      setTimeout(() => {
+        isUploadingRef.current = false;
+      }, 200);
       // Сбрасываем input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";

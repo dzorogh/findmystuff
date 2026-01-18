@@ -65,17 +65,22 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         return;
       }
 
+      const insertData: { name: string | null; place_type: string; photo_url: string | null } = {
+        name: name.trim() || null,
+        place_type: placeType,
+        photo_url: photoUrl || null,
+      };
+      
+      console.log("Inserting place with data:", insertData);
+      
       const { data: newPlace, error: insertError } = await supabase
         .from("places")
-        .insert({
-          name: name.trim() || null,
-          place_type: placeType,
-          photo_url: photoUrl || null,
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (insertError) {
+        console.error("Insert error:", insertError);
         throw insertError;
       }
 
@@ -208,7 +213,10 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
 
               <ImageUpload
                 value={photoUrl}
-                onChange={setPhotoUrl}
+                onChange={(url) => {
+                  console.log("ImageUpload onChange called with:", url);
+                  setPhotoUrl(url);
+                }}
                 disabled={isSubmitting}
                 label="Фотография места (необязательно)"
               />

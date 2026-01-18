@@ -55,14 +55,19 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
         return;
       }
 
+      const insertData: { name: string | null; photo_url: string | null } = {
+        name: name.trim() || null,
+        photo_url: photoUrl || null,
+      };
+      
+      console.log("Inserting room with data:", insertData);
+      
       const { error: insertError } = await supabase
         .from("rooms")
-        .insert({
-          name: name.trim() || null,
-          photo_url: photoUrl || null,
-        });
+        .insert(insertData);
 
       if (insertError) {
+        console.error("Insert error:", insertError);
         throw insertError;
       }
 
@@ -126,7 +131,10 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
 
               <ImageUpload
                 value={photoUrl}
-                onChange={setPhotoUrl}
+                onChange={(url) => {
+                  console.log("ImageUpload onChange called with:", url);
+                  setPhotoUrl(url);
+                }}
                 disabled={isSubmitting}
                 label="Фотография помещения (необязательно)"
               />

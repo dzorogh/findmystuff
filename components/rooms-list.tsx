@@ -394,19 +394,18 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     {room.photo_url ? (
-                      <div className="relative h-12 w-12 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                      <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
                         <Image
                           src={room.photo_url}
                           alt={room.name || `Помещение #${room.id}`}
                           fill
                           className="object-cover"
-                          sizes="48px"
-                          unoptimized
+                          sizes="40px"
                         />
                       </div>
                     ) : (
-                      <div className="h-12 w-12 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
-                        <Building2 className="h-6 w-6 text-muted-foreground" />
+                      <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
                     <CardTitle className="text-lg truncate">

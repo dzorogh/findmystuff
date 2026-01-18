@@ -39,9 +39,15 @@ const EditRoomForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Загружаем текущее фото при открытии формы
+  // Отслеживаем изменения photoUrl для отладки
+  useEffect(() => {
+    console.log("photoUrl changed:", photoUrl);
+  }, [photoUrl]);
+
+  // Загружаем текущие данные при открытии формы
   useEffect(() => {
     if (open && roomId) {
+      setName(roomName || "");
       const loadPhoto = async () => {
         const supabase = createClient();
         const { data } = await supabase
@@ -57,8 +63,12 @@ const EditRoomForm = ({
         }
       };
       loadPhoto();
+    } else {
+      // Сбрасываем форму при закрытии
+      setName("");
+      setPhotoUrl(null);
     }
-  }, [open, roomId]);
+  }, [open, roomId, roomName]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -78,15 +88,20 @@ const EditRoomForm = ({
         return;
       }
 
+      const updateData: { name: string | null; photo_url: string | null } = {
+        name: name.trim() || null,
+        photo_url: photoUrl || null,
+      };
+      
+      console.log("Updating room with data:", updateData);
+      
       const { error: updateError } = await supabase
         .from("rooms")
-        .update({
-          name: name.trim() || null,
-          photo_url: photoUrl || null,
-        })
+        .update(updateData)
         .eq("id", roomId);
 
       if (updateError) {
+        console.error("Update error:", updateError);
         throw updateError;
       }
 
@@ -135,7 +150,10 @@ const EditRoomForm = ({
 
           <ImageUpload
             value={photoUrl}
-            onChange={setPhotoUrl}
+            onChange={(url) => {
+              console.log("ImageUpload onChange called with:", url);
+              setPhotoUrl(url);
+            }}
             disabled={isSubmitting}
             label="Фотография помещения (необязательно)"
           />

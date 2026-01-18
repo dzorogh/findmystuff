@@ -57,6 +57,11 @@ const EditPlaceForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Отслеживаем изменения photoUrl для отладки
+  useEffect(() => {
+    console.log("photoUrl changed:", photoUrl);
+  }, [photoUrl]);
+
   useEffect(() => {
     if (open) {
       setName(placeName || "");
@@ -67,7 +72,7 @@ const EditPlaceForm = ({
         setSelectedRoomId("");
       }
       
-      // Загружаем текущее фото
+      // Загружаем текущее фото только при открытии формы
       const loadPhoto = async () => {
         const supabase = createClient();
         const { data } = await supabase
@@ -83,8 +88,14 @@ const EditPlaceForm = ({
         }
       };
       loadPhoto();
+    } else {
+      // Сбрасываем форму при закрытии
+      setName("");
+      setPhotoUrl(null);
     }
-  }, [open, placeName, initialPlaceType, currentRoomId, getDefaultPlaceType, placeId]);
+    // Убираем зависимости, которые могут вызывать повторную загрузку фото
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, placeId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -104,16 +115,21 @@ const EditPlaceForm = ({
         return;
       }
 
+      const updateData: { name: string | null; place_type: string; photo_url: string | null } = {
+        name: name.trim() || null,
+        place_type: placeType,
+        photo_url: photoUrl || null,
+      };
+      
+      console.log("Updating place with data:", updateData);
+      
       const { error: updateError } = await supabase
         .from("places")
-        .update({
-          name: name.trim() || null,
-          place_type: placeType,
-          photo_url: photoUrl || null,
-        })
+        .update(updateData)
         .eq("id", placeId);
 
       if (updateError) {
+        console.error("Update error:", updateError);
         throw updateError;
       }
 
@@ -224,7 +240,10 @@ const EditPlaceForm = ({
 
               <ImageUpload
                 value={photoUrl}
-                onChange={setPhotoUrl}
+                onChange={(url) => {
+                  console.log("ImageUpload onChange called with:", url);
+                  setPhotoUrl(url);
+                }}
                 disabled={isSubmitting}
                 label="Фотография места (необязательно)"
               />
