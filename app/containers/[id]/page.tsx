@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Container, MapPin, Building2, Calendar } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
-import { generateContainerMarking } from "@/lib/utils";
+import { useContainerMarking } from "@/hooks/use-container-marking";
 import {
   Table,
   TableBody,
@@ -50,6 +50,7 @@ export default function ContainerDetailPage() {
   const router = useRouter();
   const containerId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
+  const { generateMarking } = useContainerMarking();
   const [container, setContainer] = useState<Container | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -324,10 +325,10 @@ export default function ContainerDetailPage() {
                     {container.name || `Контейнер #${container.id}`}
                   </CardTitle>
                   <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
-                    {generateContainerMarking(container.container_type as any, container.marking_number) ? (
+                    {generateMarking(container.container_type as any, container.marking_number) ? (
                       <>
                         <span className="font-mono font-semibold">
-                          {generateContainerMarking(container.container_type as any, container.marking_number)}
+                          {generateMarking(container.container_type as any, container.marking_number)}
                         </span>
                         <span className="text-muted-foreground">•</span>
                       </>

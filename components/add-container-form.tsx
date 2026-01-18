@@ -9,8 +9,10 @@ import { Select } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
-import { CONTAINER_TYPES, type ContainerType } from "@/lib/utils";
+import { useSettings } from "@/hooks/use-settings";
+import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -28,8 +30,10 @@ interface AddContainerFormProps {
 
 const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
+  const { getContainerTypes, getDefaultContainerType } = useSettings();
   const [name, setName] = useState("");
-  const [containerType, setContainerType] = useState<ContainerType>("КОР");
+  const [containerType, setContainerType] = useState<ContainerType>(getDefaultContainerType());
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +57,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         return;
       }
 
-      if (currentUser.email !== "dzorogh@gmail.com") {
+      if (!isAdmin) {
         setError("У вас нет прав для добавления контейнеров");
         setIsSubmitting(false);
         return;
@@ -97,7 +101,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
       }
 
       setName("");
-      setContainerType("КОР");
+      setContainerType(getDefaultContainerType());
       setDestinationType(null);
       setSelectedDestinationId("");
       
@@ -140,7 +144,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !user || user.email !== "dzorogh@gmail.com" ? (
+          ) : !user || !isAdmin ? (
             <div className="py-8 text-center text-destructive">
               У вас нет прав для добавления контейнеров
             </div>
@@ -154,7 +158,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                   onChange={(e) => setContainerType(e.target.value as ContainerType)}
                   disabled={isSubmitting}
                 >
-                  {CONTAINER_TYPES.map((type) => (
+                  {containerTypesToOptions(getContainerTypes()).map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>

@@ -9,7 +9,11 @@ import { Select } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
+import { useSettings } from "@/hooks/use-settings";
+import { usePlaceMarking } from "@/hooks/use-place-marking";
+import { placeTypesToOptions } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +26,8 @@ import {
 interface EditPlaceFormProps {
   placeId: number;
   placeName: string | null;
+  placeType?: string | null;
+  markingNumber?: number | null;
   currentRoomId?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,27 +37,35 @@ interface EditPlaceFormProps {
 const EditPlaceForm = ({
   placeId,
   placeName,
+  placeType: initialPlaceType,
+  markingNumber,
   currentRoomId,
   open,
   onOpenChange,
   onSuccess,
 }: EditPlaceFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const { rooms } = useRooms();
+  const { getPlaceTypes, getDefaultPlaceType } = useSettings();
+  const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
+  const [placeType, setPlaceType] = useState(initialPlaceType || getDefaultPlaceType());
   const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
+      setName(placeName || "");
+      setPlaceType(initialPlaceType || getDefaultPlaceType());
       if (currentRoomId) {
         setSelectedRoomId(currentRoomId.toString());
       } else {
         setSelectedRoomId("");
       }
     }
-  }, [open, currentRoomId]);
+  }, [open, placeName, initialPlaceType, currentRoomId, getDefaultPlaceType]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -65,7 +79,7 @@ const EditPlaceForm = ({
         data: { user: currentUser },
       } = await supabase.auth.getUser();
 
-      if (!currentUser || currentUser.email !== "dzorogh@gmail.com") {
+      if (!currentUser || !isAdmin) {
         setError("У вас нет прав для редактирования мест");
         setIsSubmitting(false);
         return;
@@ -75,6 +89,7 @@ const EditPlaceForm = ({
         .from("places")
         .update({
           name: name.trim() || null,
+          place_type: placeType,
         })
         .eq("id", placeId);
 
@@ -118,7 +133,7 @@ const EditPlaceForm = ({
     }
   };
 
-  if (isLoading || !user || user.email !== "dzorogh@gmail.com") {
+  if (isLoading || !user || !isAdmin) {
     return null;
   }
 

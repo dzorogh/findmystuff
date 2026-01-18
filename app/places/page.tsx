@@ -6,11 +6,13 @@ import AddPlaceForm from "@/components/add-place-form";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 
 export default function PlacesPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { user } = useUser();
+  const { isAdmin } = useAdmin();
 
   const handlePlaceAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -29,7 +31,7 @@ export default function PlacesPage() {
               </p>
             </div>
           </div>
-          {user?.email === "dzorogh@gmail.com" && (
+          {isAdmin && (
             <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Добавить место

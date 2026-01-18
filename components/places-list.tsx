@@ -10,10 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPlaceForm from "./edit-place-form";
+import { usePlaceMarking } from "@/hooks/use-place-marking";
+import { useSettings } from "@/hooks/use-settings";
 
 interface Place {
   id: number;
   name: string | null;
+  place_type: string | null;
+  marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
   room?: {
@@ -36,6 +40,8 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const { generateMarking } = usePlaceMarking();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const supabase = createClient();
@@ -82,7 +88,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
       const supabase = createClient();
       let queryBuilder = supabase
         .from("places")
-        .select("*")
+        .select("id, name, place_type, marking_number, created_at, deleted_at")
         .order("created_at", { ascending: false });
 
       // Фильтр по удаленным
@@ -94,7 +100,17 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
 
       if (query && query.trim()) {
         const searchTerm = query.trim();
-        queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
+        // Поиск по названию, типу места или номеру маркировки
+        const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
+        if (searchNumber !== null) {
+          queryBuilder = queryBuilder.or(
+            `name.ilike.%${searchTerm}%,place_type.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+          );
+        } else {
+          queryBuilder = queryBuilder.or(
+            `name.ilike.%${searchTerm}%,place_type.ilike.%${searchTerm}%`
+          );
+        }
       }
 
       const { data: placesData, error: fetchError } = await queryBuilder;
@@ -284,7 +300,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
     );
   }
 
-  if (user.email !== "dzorogh@gmail.com") {
+  if (!isAdmin) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -302,7 +318,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
         <CardHeader>
           <CardTitle>Поиск местоположений</CardTitle>
           <CardDescription>
-            Введите название для поиска по всем местам
+            Поиск по названию, типу места или маркировке (например, Ш1)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -312,7 +328,7 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="Введите название места..."
+              placeholder="Название, тип или маркировка (Ш1)..."
               className="pl-10"
             />
             {isSearching && (
@@ -388,16 +404,29 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-lg">
-                      {place.name || `Место #${place.id}`}
-                    </CardTitle>
+                    <div className="flex flex-col">
+                      <CardTitle className="text-lg">
+                        {place.name || `Место #${place.id}`}
+                      </CardTitle>
+                      {generateMarking(place.place_type as any, place.marking_number) && (
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                          {generateMarking(place.place_type as any, place.marking_number)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {place.deleted_at && (
                       <Badge variant="destructive">Удалено</Badge>
                     )}
-                    <Badge variant="secondary">#{place.id}</Badge>
-                    {user.email === "dzorogh@gmail.com" && (
+                    {generateMarking(place.place_type as any, place.marking_number) ? (
+                      <Badge variant="secondary">
+                        {generateMarking(place.place_type as any, place.marking_number)}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">#{place.id}</Badge>
+                    )}
+                    {isAdmin && (
                       <>
                         {!place.deleted_at ? (
                           <>
@@ -460,6 +489,8 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
         <EditPlaceForm
           placeId={editingPlaceId}
           placeName={places.find((p) => p.id === editingPlaceId)?.name || null}
+          placeType={places.find((p) => p.id === editingPlaceId)?.place_type || null}
+          markingNumber={places.find((p) => p.id === editingPlaceId)?.marking_number || null}
           currentRoomId={places.find((p) => p.id === editingPlaceId)?.room?.room_id || null}
           open={!!editingPlaceId}
           onOpenChange={(open) => !open && setEditingPlaceId(null)}

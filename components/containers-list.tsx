@@ -11,7 +11,7 @@ import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCc
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import EditContainerForm from "./edit-container-form";
-import { generateContainerMarking } from "@/lib/utils";
+import { useContainerMarking } from "@/hooks/use-container-marking";
 import {
   Table,
   TableBody,
@@ -50,6 +50,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   const [editingContainerId, setEditingContainerId] = useState<number | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const { generateMarking } = useContainerMarking();
 
   useEffect(() => {
     const supabase = createClient();
@@ -526,9 +527,9 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                             >
                               {container.name || `Контейнер #${container.id}`}
                             </Link>
-                            {generateContainerMarking(container.container_type as any, container.marking_number) && (
+                            {generateMarking(container.container_type as any, container.marking_number) && (
                               <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                                {generateContainerMarking(container.container_type as any, container.marking_number)}
+                                {generateMarking(container.container_type as any, container.marking_number)}
                               </p>
                             )}
                             <div className="md:hidden mt-1 text-xs text-muted-foreground">

@@ -6,11 +6,13 @@ import AddContainerForm from "@/components/add-container-form";
 import { Button } from "@/components/ui/button";
 import { Container, Plus } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 
 export default function ContainersPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { user } = useUser();
+  const { isAdmin } = useAdmin();
 
   const handleContainerAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -29,7 +31,7 @@ export default function ContainersPage() {
               </p>
             </div>
           </div>
-          {user?.email === "dzorogh@gmail.com" && (
+          {isAdmin && (
             <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Добавить контейнер

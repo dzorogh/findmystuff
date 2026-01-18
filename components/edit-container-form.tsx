@@ -9,8 +9,11 @@ import { Select } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import LocationSelector from "@/components/location-selector";
-import { CONTAINER_TYPES, type ContainerType, generateContainerMarking } from "@/lib/utils";
+import { useSettings } from "@/hooks/use-settings";
+import { useContainerMarking } from "@/hooks/use-container-marking";
+import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -46,8 +49,11 @@ const EditContainerForm = ({
   onSuccess,
 }: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
+  const { getContainerTypes, getDefaultContainerType } = useSettings();
+  const { generateMarking } = useContainerMarking();
   const [name, setName] = useState(containerName || "");
-  const [containerType, setContainerType] = useState<ContainerType>(initialContainerType || "КОР");
+  const [containerType, setContainerType] = useState<ContainerType>(initialContainerType || getDefaultContainerType());
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
     currentLocation?.destination_type as "place" | "container" | "room" | null
   );
@@ -69,7 +75,7 @@ const EditContainerForm = ({
         data: { user: currentUser },
       } = await supabase.auth.getUser();
 
-      if (!currentUser || currentUser.email !== "dzorogh@gmail.com") {
+      if (!currentUser || !isAdmin) {
         setError("У вас нет прав для редактирования контейнеров");
         setIsSubmitting(false);
         return;
@@ -120,7 +126,7 @@ const EditContainerForm = ({
     }
   };
 
-  if (isLoading || !user || user.email !== "dzorogh@gmail.com") {
+  if (isLoading || !user || !isAdmin) {
     return null;
   }
 
@@ -135,7 +141,7 @@ const EditContainerForm = ({
           {markingNumber && (
             <div className="rounded-md bg-muted p-3">
               <p className="text-sm font-medium">
-                Маркировка: {generateContainerMarking(containerType, markingNumber) || "Не задана"}
+                Маркировка: {generateMarking(containerType, markingNumber) || "Не задана"}
               </p>
             </div>
           )}
@@ -148,7 +154,7 @@ const EditContainerForm = ({
               onChange={(e) => setContainerType(e.target.value as ContainerType)}
               disabled={isSubmitting}
             >
-              {CONTAINER_TYPES.map((type) => (
+              {containerTypesToOptions(getContainerTypes()).map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>

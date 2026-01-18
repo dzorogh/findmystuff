@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon } from "lucide-react";
+import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings } from "lucide-react";
 import Logo from "@/components/logo";
 import GoogleSignIn from "@/components/google-signin";
+import { useAdmin } from "@/hooks/use-admin";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +25,7 @@ const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const supabase = createClient();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const getUser = async () => {
@@ -56,15 +58,17 @@ const Sidebar = () => {
     await supabase.auth.signOut();
   };
 
-  const navItems = [
-    { href: "/", label: "Поиск", icon: Search },
-    { href: "/rooms", label: "Помещения", icon: Building2 },
-    { href: "/places", label: "Места", icon: MapPin },
-    { href: "/containers", label: "Контейнеры", icon: Container },
-    { href: "/items", label: "Вещи", icon: Box },
-  ];
+  const NavContent = () => {
+    const navItems = [
+      { href: "/", label: "Поиск", icon: Search },
+      { href: "/rooms", label: "Помещения", icon: Building2 },
+      { href: "/places", label: "Места", icon: MapPin },
+      { href: "/containers", label: "Контейнеры", icon: Container },
+      { href: "/items", label: "Вещи", icon: Box },
+      ...(isAdmin ? [{ href: "/settings", label: "Настройки", icon: Settings }] : []),
+    ];
 
-  const NavContent = () => (
+    return (
     <nav className="flex flex-col gap-1">
       {navItems.map((item) => {
         const Icon = item.icon;
@@ -83,7 +87,8 @@ const Sidebar = () => {
         );
       })}
     </nav>
-  );
+    );
+  };
 
   if (isLoading) {
     return (

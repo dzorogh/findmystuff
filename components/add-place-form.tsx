@@ -9,7 +9,10 @@ import { Select } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
+import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
+import { useSettings } from "@/hooks/use-settings";
+import { placeTypesToOptions } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -27,8 +30,11 @@ interface AddPlaceFormProps {
 
 const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const { user, isLoading } = useUser();
+  const { isAdmin } = useAdmin();
   const { rooms } = useRooms();
+  const { getPlaceTypes, getDefaultPlaceType } = useSettings();
   const [name, setName] = useState("");
+  const [placeType, setPlaceType] = useState(getDefaultPlaceType());
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +57,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         return;
       }
 
-      if (currentUser.email !== "dzorogh@gmail.com") {
+      if (!isAdmin) {
         setError("У вас нет прав для добавления мест");
         setIsSubmitting(false);
         return;
@@ -61,6 +67,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         .from("places")
         .insert({
           name: name.trim() || null,
+          place_type: placeType,
         })
         .select()
         .single();
@@ -90,6 +97,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       }
 
       setName("");
+      setPlaceType(getDefaultPlaceType());
       setSelectedRoomId("");
       
       toast.success("Место успешно добавлено и размещено в помещении", {
@@ -126,34 +134,44 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !user || user.email !== "dzorogh@gmail.com" ? (
+          ) : !user || !isAdmin ? (
             <div className="py-8 text-center text-destructive">
               У вас нет прав для добавления мест
             </div>
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="place-name">Название места (маркировка)</Label>
+                <Label htmlFor="place-type">Тип места</Label>
+                <Select
+                  id="place-type"
+                  value={placeType}
+                  onChange={(e) => setPlaceType(e.target.value)}
+                  disabled={isSubmitting}
+                >
+                  {placeTypesToOptions(getPlaceTypes()).map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Маркировка будет сгенерирована автоматически (например, Ш1)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="place-name">Название места (необязательно)</Label>
                 <Input
                   id="place-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Например: Ш1П1, С1П2"
+                  placeholder="Введите название места"
                   disabled={isSubmitting}
                 />
-                <div className="rounded-md bg-muted p-3 space-y-2">
-                  <p className="text-xs font-medium text-foreground">Система маркировки:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
-                    <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
-                    <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
-                    <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
-                  </ul>
-                  <p className="text-xs text-muted-foreground pt-1">
-                    Формат: [Ш/С][номер][П][номер полки]
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Дополнительное описание. ID и дата создания заполнятся автоматически.
+                </p>
               </div>
 
               {/* Выбор помещения (обязательно) */}
