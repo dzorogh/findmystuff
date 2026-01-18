@@ -26,6 +26,15 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Item {
   id: number;
@@ -73,8 +82,11 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   const [items, setItems] = useState<Item[]>([]);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [movingItemId, setMovingItemId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 20;
 
-  const loadItems = async (query?: string, isInitialLoad = false) => {
+  const loadItems = async (query?: string, isInitialLoad = false, page = 1) => {
     if (!user) return;
 
     startLoading(isInitialLoad);
@@ -82,10 +94,41 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     try {
       const supabase = createClient();
       
+      // Сначала получаем общее количество для пагинации
+      let countQueryBuilder = supabase
+        .from("items")
+        .select("*", { count: "exact", head: true });
+
+      if (!showDeleted) {
+        countQueryBuilder = countQueryBuilder.is("deleted_at", null);
+      } else {
+        countQueryBuilder = countQueryBuilder.not("deleted_at", "is", null);
+      }
+
+      if (query && query.trim()) {
+        countQueryBuilder = countQueryBuilder.ilike("name", `%${query.trim()}%`);
+      }
+
+      const { count, error: countError } = await countQueryBuilder;
+
+      if (countError) {
+        console.error("Ошибка при подсчете количества:", countError);
+        setTotalCount(0);
+      } else {
+        const total = count || 0;
+        setTotalCount(total);
+        console.log("Total count:", total, "Items per page:", itemsPerPage);
+      }
+
+      // Затем получаем данные с пагинацией
+      const from = (page - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
       let queryBuilder = supabase
         .from("items")
         .select("id, name, created_at, deleted_at, photo_url")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
       queryBuilder = applyNameSearch(queryBuilder, query, ["name"]);
@@ -372,10 +415,21 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   useEffect(() => {
     if (user && !isUserLoading) {
-      loadItems(searchQuery, true);
+      setCurrentPage(1);
+      loadItems(searchQuery, true, 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, showDeleted, refreshTrigger]);
+
+  useDebouncedSearch({
+    searchQuery,
+    onSearch: (query) => {
+      if (user && !isUserLoading) {
+        setCurrentPage(1);
+        loadItems(query || undefined, false, 1);
+      }
+    },
+  });
 
   useDebouncedSearch({
     searchQuery,
@@ -394,7 +448,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     try {
       await softDelete("items", itemId);
       toast.success("Вещь успешно удалена");
-      loadItems(searchQuery, false);
+      loadItems(searchQuery, false, currentPage);
     } catch (err) {
       console.error("Ошибка при удалении вещи:", err);
       toast.error("Произошла ошибка при удалении вещи");
@@ -405,7 +459,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     try {
       await restoreDeleted("items", itemId);
       toast.success("Вещь успешно восстановлена");
-      loadItems(searchQuery, false);
+      loadItems(searchQuery, false, currentPage);
     } catch (err) {
       console.error("Ошибка при восстановлении вещи:", err);
       toast.error("Произошла ошибка при восстановлении вещи");
@@ -681,7 +735,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
           onOpenChange={(open) => !open && setEditingItemId(null)}
           onSuccess={() => {
             setEditingItemId(null);
-            loadItems(searchQuery, false);
+            loadItems(searchQuery, false, currentPage);
           }}
         />
       )}
@@ -694,9 +748,102 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
           onOpenChange={(open) => !open && setMovingItemId(null)}
           onSuccess={() => {
             setMovingItemId(null);
-            loadItems(searchQuery, false);
+            loadItems(searchQuery, false, currentPage);
           }}
         />
+      )}
+
+      {totalCount > itemsPerPage && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => {
+                  if (currentPage > 1) {
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    loadItems(searchQuery, false, newPage);
+                  }
+                }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {(() => {
+              const totalPages = Math.ceil(totalCount / itemsPerPage);
+              const pages: (number | "ellipsis")[] = [];
+              
+              if (totalPages <= 7) {
+                // Показываем все страницы
+                for (let i = 1; i <= totalPages; i++) {
+                  pages.push(i);
+                }
+              } else {
+                // Показываем первую страницу
+                pages.push(1);
+                
+                if (currentPage <= 3) {
+                  // Текущая страница в начале
+                  for (let i = 2; i <= 4; i++) {
+                    pages.push(i);
+                  }
+                  pages.push("ellipsis");
+                  pages.push(totalPages);
+                } else if (currentPage >= totalPages - 2) {
+                  // Текущая страница в конце
+                  pages.push("ellipsis");
+                  for (let i = totalPages - 3; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
+                } else {
+                  // Текущая страница в середине
+                  pages.push("ellipsis");
+                  for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i);
+                  }
+                  pages.push("ellipsis");
+                  pages.push(totalPages);
+                }
+              }
+
+              return pages.map((page, index) => {
+                if (page === "ellipsis") {
+                  return (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => {
+                        setCurrentPage(page);
+                        loadItems(searchQuery, false, page);
+                      }}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              });
+            })()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => {
+                  const totalPages = Math.ceil(totalCount / itemsPerPage);
+                  if (currentPage < totalPages) {
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    loadItems(searchQuery, false, newPage);
+                  }
+                }}
+                className={currentPage >= Math.ceil(totalCount / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );

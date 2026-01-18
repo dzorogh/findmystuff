@@ -30,7 +30,11 @@ import { toast } from "sonner";
 interface Container {
   id: number;
   name: string | null;
-  container_type: string | null;
+  entity_type_id: number | null;
+  entity_type?: {
+    code: string;
+    name: string;
+  } | null;
   marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
@@ -82,7 +86,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
       const supabase = createClient();
       let queryBuilder = supabase
         .from("containers")
-        .select("id, name, container_type, marking_number, created_at, deleted_at, photo_url")
+        .select("id, name, entity_type_id, marking_number, created_at, deleted_at, photo_url, entity_types!inner(code, name)")
         .order("created_at", { ascending: false });
 
       queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
@@ -93,19 +97,54 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         
         if (markingMatch) {
           const [, type, number] = markingMatch;
-          queryBuilder = queryBuilder
-            .ilike("container_type", `%${type.toUpperCase()}%`)
-            .eq("marking_number", parseInt(number));
+          // Поиск по коду типа через JOIN
+          const { data: matchingTypes } = await supabase
+            .from("entity_types")
+            .select("id")
+            .eq("entity_category", "container")
+            .is("deleted_at", null)
+            .ilike("code", `%${type.toUpperCase()}%`);
+          
+          const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
+          
+          if (matchingTypeIds.length > 0) {
+            queryBuilder = queryBuilder
+              .in("entity_type_id", matchingTypeIds)
+              .eq("marking_number", parseInt(number));
+          } else {
+            queryBuilder = queryBuilder.eq("marking_number", parseInt(number));
+          }
         } else {
           const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
-          if (searchNumber !== null) {
-            queryBuilder = queryBuilder.or(
-              `name.ilike.%${searchTerm}%,container_type.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-            );
+          
+          // Поиск по коду или названию типа
+          const { data: matchingTypes } = await supabase
+            .from("entity_types")
+            .select("id")
+            .eq("entity_category", "container")
+            .is("deleted_at", null)
+            .or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
+          
+          const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
+          
+          if (matchingTypeIds.length > 0) {
+            if (searchNumber !== null) {
+              queryBuilder = queryBuilder.or(
+                `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+              ).in("entity_type_id", matchingTypeIds);
+            } else {
+              queryBuilder = queryBuilder
+                .ilike("name", `%${searchTerm}%`)
+                .in("entity_type_id", matchingTypeIds);
+            }
           } else {
-            queryBuilder = queryBuilder.or(
-              `name.ilike.%${searchTerm}%,container_type.ilike.%${searchTerm}%`
-            );
+            if (searchNumber !== null) {
+              queryBuilder = queryBuilder.or(
+                `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+              );
+            } else {
+              queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
+            }
           }
         }
       }
@@ -198,7 +237,11 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           return {
             id: container.id,
             name: container.name,
-            container_type: container.container_type,
+            entity_type_id: container.entity_type_id || null,
+            entity_type: container.entity_types ? {
+              code: container.entity_types.code,
+              name: container.entity_types.name,
+            } : null,
             marking_number: container.marking_number,
             created_at: container.created_at,
             deleted_at: container.deleted_at,
@@ -219,7 +262,11 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         return {
           id: container.id,
           name: container.name,
-          container_type: container.container_type,
+          entity_type_id: container.entity_type_id || null,
+          entity_type: container.entity_types ? {
+            code: container.entity_types.code,
+            name: container.entity_types.name,
+          } : null,
           marking_number: container.marking_number,
           created_at: container.created_at,
           deleted_at: container.deleted_at,
@@ -359,9 +406,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             >
                               {container.name || `Контейнер #${container.id}`}
                             </Link>
-                            {generateMarking(container.container_type as any, container.marking_number) && (
+                            {container.entity_type && generateMarking(container.entity_type.code as any, container.marking_number) && (
                               <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                                {generateMarking(container.container_type as any, container.marking_number)}
+                                {generateMarking(container.entity_type.code as any, container.marking_number)}
                               </p>
                             )}
                             <div className="md:hidden mt-1 text-xs text-muted-foreground">
@@ -499,7 +546,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         <EditContainerForm
           containerId={editingContainerId}
           containerName={containers.find((c) => c.id === editingContainerId)?.name || null}
-          containerType={containers.find((c) => c.id === editingContainerId)?.container_type as any || null}
+          containerTypeId={containers.find((c) => c.id === editingContainerId)?.entity_type_id || null}
           markingNumber={containers.find((c) => c.id === editingContainerId)?.marking_number || null}
           currentLocation={containers.find((c) => c.id === editingContainerId)?.last_location}
           open={!!editingContainerId}

@@ -88,10 +88,10 @@ const LocationCombobox = ({
   const getDisplayName = (dest: any) => {
     const containerMarking =
       destinationType === "container" &&
-      "container_type" in dest &&
+      dest.entity_type &&
       "marking_number" in dest
         ? generateMarking(
-            dest.container_type as ContainerType,
+            dest.entity_type.code as ContainerType,
             dest.marking_number as number | null
           )
         : null;

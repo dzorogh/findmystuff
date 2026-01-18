@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 interface Container {
   id: number;
   name: string | null;
-  container_type: string | null;
+  entity_type_id: number | null;
+  entity_type?: {
+    code: string;
+    name: string;
+  } | null;
   marking_number: number | null;
 }
 
@@ -22,7 +26,7 @@ export const useContainers = (includeDeleted = false) => {
       const supabase = createClient();
       let query = supabase
         .from("containers")
-        .select("id, name, container_type, marking_number")
+        .select("id, name, entity_type_id, marking_number, entity_types(code, name)")
         .order("name", { ascending: true, nullsFirst: false });
 
       if (!includeDeleted) {
@@ -32,7 +36,16 @@ export const useContainers = (includeDeleted = false) => {
       const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
-      setContainers(data || []);
+      setContainers((data || []).map((container: any) => ({
+        id: container.id,
+        name: container.name,
+        entity_type_id: container.entity_type_id || null,
+        entity_type: container.entity_types ? {
+          code: container.entity_types.code,
+          name: container.entity_types.name,
+        } : null,
+        marking_number: container.marking_number,
+      })));
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Ошибка загрузки контейнеров");
       setError(error);

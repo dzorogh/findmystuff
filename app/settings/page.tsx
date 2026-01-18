@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "@/hooks/use-settings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +11,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import ContainerTypesManager from "@/components/managers/container-types-manager";
+import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
 import MarkingTemplateManager from "@/components/managers/marking-template-manager";
-import PlaceTypesManager from "@/components/managers/place-types-manager";
 import PlaceMarkingTemplateManager from "@/components/managers/place-marking-template-manager";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
   const { isLoading, error } = useSettings();
+  const containerTypesManagerRef = useRef<EntityTypesManagerRef>(null);
+  const placeTypesManagerRef = useRef<EntityTypesManagerRef>(null);
 
 
   useEffect(() => {
@@ -81,13 +82,29 @@ export default function SettingsPage() {
           {/* Типы контейнеров */}
           <Card>
             <CardHeader>
-              <CardTitle>Типы контейнеров</CardTitle>
-              <CardDescription>
-                Управление типами контейнеров для системы маркировки
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Типы контейнеров</CardTitle>
+                  <CardDescription>
+                    Управление типами контейнеров для системы маркировки
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => containerTypesManagerRef.current?.openAddDialog()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить тип
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <ContainerTypesManager />
+              <EntityTypesManager
+                ref={containerTypesManagerRef}
+                category="container"
+                title="Типы контейнеров"
+                description="Управление типами контейнеров для системы маркировки"
+              />
             </CardContent>
           </Card>
 
@@ -114,13 +131,29 @@ export default function SettingsPage() {
           {/* Типы мест */}
           <Card>
             <CardHeader>
-              <CardTitle>Типы мест</CardTitle>
-              <CardDescription>
-                Управление типами мест для системы маркировки
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Типы мест</CardTitle>
+                  <CardDescription>
+                    Управление типами мест для системы маркировки
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => placeTypesManagerRef.current?.openAddDialog()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить тип
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <PlaceTypesManager />
+              <EntityTypesManager
+                ref={placeTypesManagerRef}
+                category="place"
+                title="Типы мест"
+                description="Управление типами мест для системы маркировки"
+              />
             </CardContent>
           </Card>
 

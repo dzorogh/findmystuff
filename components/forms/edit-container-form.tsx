@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
-import { useSettings } from "@/hooks/use-settings";
+import { useEntityTypes } from "@/hooks/use-entity-types";
 import { useContainerMarking } from "@/hooks/use-container-marking";
-import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
+import { MarkingDisplay } from "@/components/common/marking-display";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +26,7 @@ import {
 interface EditContainerFormProps {
   containerId: number;
   containerName: string | null;
-  containerType?: ContainerType | null;
+  containerTypeId?: number | null;
   markingNumber?: number | null;
   currentLocation?: {
     destination_type: string | null;
@@ -41,7 +41,7 @@ interface EditContainerFormProps {
 const EditContainerForm = ({
   containerId,
   containerName,
-  containerType: initialContainerType,
+  containerTypeId: initialContainerTypeId,
   markingNumber,
   currentLocation,
   open,
@@ -49,10 +49,10 @@ const EditContainerForm = ({
   onSuccess,
 }: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
-  const { getContainerTypes, getDefaultContainerType } = useSettings();
+  const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
   const { generateMarking } = useContainerMarking();
   const [name, setName] = useState(containerName || "");
-  const [containerType, setContainerType] = useState<ContainerType>(initialContainerType || getDefaultContainerType());
+  const [containerTypeId, setContainerTypeId] = useState(initialContainerTypeId?.toString() || "");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
     currentLocation?.destination_type as "place" | "container" | "room" | null
   );
@@ -98,7 +98,7 @@ const EditContainerForm = ({
         .from("containers")
         .update({
           name: name.trim() || null,
-          container_type: containerType,
+          entity_type_id: containerTypeId ? parseInt(containerTypeId) : null,
           photo_url: photoUrl || null,
         })
         .eq("id", containerId);
@@ -151,20 +151,27 @@ const EditContainerForm = ({
           <SheetDescription>Измените название или местоположение</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {markingNumber && (
-            <div className="rounded-md bg-muted p-3">
-              <p className="text-sm font-medium">
-                Маркировка: {generateMarking(containerType, markingNumber) || "Не задана"}
-              </p>
-            </div>
-          )}
+          {(() => {
+            const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+            const typeCode = selectedType?.code;
+            return (
+              <MarkingDisplay
+                typeCode={typeCode}
+                markingNumber={markingNumber}
+                generateMarking={generateMarking}
+              />
+            );
+          })()}
 
           <div className="space-y-2">
             <Label htmlFor={`container-type-${containerId}`}>Тип контейнера</Label>
             <Combobox
-              options={containerTypesToOptions(getContainerTypes())}
-              value={containerType}
-              onValueChange={(value) => setContainerType(value as ContainerType)}
+              options={containerTypes.map((type) => ({
+                value: type.id.toString(),
+                label: `${type.code} - ${type.name}`,
+              }))}
+              value={containerTypeId}
+              onValueChange={setContainerTypeId}
               placeholder="Выберите тип контейнера..."
               searchPlaceholder="Поиск типа контейнера..."
               emptyText="Типы контейнеров не найдены"

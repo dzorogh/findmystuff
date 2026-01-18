@@ -21,7 +21,11 @@ import { toast } from "sonner";
 interface Place {
   id: number;
   name: string | null;
-  place_type: string | null;
+  entity_type_id: number | null;
+  entity_type?: {
+    code: string;
+    name: string;
+  } | null;
   marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
@@ -71,7 +75,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       const supabase = createClient();
       let queryBuilder = supabase
         .from("places")
-        .select("id, name, place_type, marking_number, created_at, deleted_at, photo_url")
+        .select("id, name, entity_type_id, marking_number, created_at, deleted_at, photo_url, entity_types!inner(code, name)")
         .order("created_at", { ascending: false });
 
       queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
@@ -79,14 +83,36 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       if (query && query.trim()) {
         const searchTerm = query.trim();
         const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
-        if (searchNumber !== null) {
-          queryBuilder = queryBuilder.or(
-            `name.ilike.%${searchTerm}%,place_type.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-          );
+        
+        // Поиск по коду типа через JOIN требует отдельной логики
+        // Сначала получаем типы, которые подходят по коду или названию
+        const { data: matchingTypes } = await supabase
+          .from("entity_types")
+          .select("id")
+          .eq("entity_category", "place")
+          .is("deleted_at", null)
+          .or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
+        
+        const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
+        
+        if (matchingTypeIds.length > 0) {
+          if (searchNumber !== null) {
+            queryBuilder = queryBuilder.or(
+              `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+            ).in("entity_type_id", matchingTypeIds);
+          } else {
+            queryBuilder = queryBuilder
+              .ilike("name", `%${searchTerm}%`)
+              .in("entity_type_id", matchingTypeIds);
+          }
         } else {
-          queryBuilder = queryBuilder.or(
-            `name.ilike.%${searchTerm}%,place_type.ilike.%${searchTerm}%`
-          );
+          if (searchNumber !== null) {
+            queryBuilder = queryBuilder.or(
+              `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+            );
+          } else {
+            queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
+          }
         }
       }
 
@@ -143,7 +169,11 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         return {
           id: place.id,
           name: place.name,
-          place_type: place.place_type || null,
+          entity_type_id: place.entity_type_id || null,
+          entity_type: place.entity_types ? {
+            code: place.entity_types.code,
+            name: place.entity_types.name,
+          } : null,
           marking_number: place.marking_number ?? null,
           created_at: place.created_at,
           deleted_at: place.deleted_at,
@@ -256,9 +286,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                       <CardTitle className="text-lg truncate">
                         {place.name || `Место #${place.id}`}
                       </CardTitle>
-                      {place.place_type && place.marking_number != null && (
+                      {place.entity_type && place.marking_number != null && (
                         <p className="text-sm font-semibold font-mono text-primary mt-0.5">
-                          {generateMarking(place.place_type, place.marking_number) || `${place.place_type}${place.marking_number}`}
+                          {generateMarking(place.entity_type.code, place.marking_number) || `${place.entity_type.code}${place.marking_number}`}
                         </p>
                       )}
                     </div>
@@ -334,7 +364,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         <EditPlaceForm
           placeId={editingPlaceId}
           placeName={places.find((p) => p.id === editingPlaceId)?.name || null}
-          placeType={places.find((p) => p.id === editingPlaceId)?.place_type || null}
+          placeTypeId={places.find((p) => p.id === editingPlaceId)?.entity_type_id || null}
           markingNumber={places.find((p) => p.id === editingPlaceId)?.marking_number || null}
           currentRoomId={places.find((p) => p.id === editingPlaceId)?.room?.room_id || null}
           open={!!editingPlaceId}

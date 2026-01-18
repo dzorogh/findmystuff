@@ -55,9 +55,9 @@ const ContainerCombobox = ({
 
   const getDisplayName = (container: any) => {
     const containerMarking =
-      "container_type" in container && "marking_number" in container
+      container.entity_type && "marking_number" in container
         ? generateMarking(
-            container.container_type as ContainerType,
+            container.entity_type.code as ContainerType,
             container.marking_number as number | null
           )
         : null;
@@ -107,9 +107,10 @@ const ContainerCombobox = ({
                         container.id.toString(),
                         displayName,
                         container.name || "",
-                        container.container_type || "",
+                        container.entity_type?.code || "",
+                        container.entity_type?.name || "",
                         generateMarking(
-                          container.container_type as ContainerType,
+                          container.entity_type?.code as ContainerType,
                           container.marking_number as number | null
                         ) || "",
                       ]}

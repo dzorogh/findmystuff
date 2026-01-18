@@ -5,7 +5,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Loader2, Save, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
@@ -106,21 +106,27 @@ const MarkingTemplateManager = () => {
     return <div className="text-sm text-muted-foreground">Загрузка...</div>;
   }
 
+  const templateOptions = [
+    ...MARKING_TEMPLATES.map((t) => ({
+      value: t.value,
+      label: t.label,
+    })),
+    { value: "custom", label: "Пользовательский шаблон" },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Select
+        <Label>Шаблон маркировки</Label>
+        <Combobox
+          options={templateOptions}
           value={useCustom ? "custom" : template}
-          onChange={(e) => handleTemplateChange(e.target.value)}
+          onValueChange={handleTemplateChange}
+          placeholder="Выберите шаблон..."
+          searchPlaceholder="Поиск шаблона..."
+          emptyText="Шаблоны не найдены"
           disabled={isSaving}
-        >
-          {MARKING_TEMPLATES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-          <option value="custom">Пользовательский шаблон</option>
-        </Select>
+        />
       </div>
 
       {useCustom && (

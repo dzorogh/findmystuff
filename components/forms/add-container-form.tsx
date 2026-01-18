@@ -10,8 +10,7 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
-import { useSettings } from "@/hooks/use-settings";
-import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
+import { useEntityTypes } from "@/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -31,9 +30,9 @@ interface AddContainerFormProps {
 
 const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
   const { user, isLoading } = useUser();
-  const { getContainerTypes, getDefaultContainerType } = useSettings();
+  const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
-  const [containerType, setContainerType] = useState<ContainerType>(getDefaultContainerType());
+  const [containerTypeId, setContainerTypeId] = useState<string>("");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -56,12 +55,18 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         return;
       }
 
+      if (!containerTypeId) {
+        setError("Необходимо выбрать тип контейнера");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Добавляем контейнер
       const { data: newContainer, error: insertError } = await supabase
         .from("containers")
         .insert({
           name: name.trim() || null,
-          container_type: containerType,
+          entity_type_id: parseInt(containerTypeId),
           photo_url: photoUrl || null,
         })
         .select()
@@ -88,7 +93,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
       }
 
       setName("");
-      setContainerType(getDefaultContainerType());
+      setContainerTypeId(containerTypes[0]?.id.toString() || "");
       setDestinationType(null);
       setSelectedDestinationId("");
       setPhotoUrl(null);
@@ -128,7 +133,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {isLoading ? (
+          {isLoading || isLoadingTypes ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
@@ -137,9 +142,12 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
               <div className="space-y-2">
                 <Label htmlFor="container-type">Тип контейнера</Label>
                 <Combobox
-                  options={containerTypesToOptions(getContainerTypes())}
-                  value={containerType}
-                  onValueChange={(value) => setContainerType(value as ContainerType)}
+                  options={containerTypes.map((type) => ({
+                    value: type.id.toString(),
+                    label: `${type.code} - ${type.name}`,
+                  }))}
+                  value={containerTypeId}
+                  onValueChange={setContainerTypeId}
                   placeholder="Выберите тип контейнера..."
                   searchPlaceholder="Поиск типа контейнера..."
                   emptyText="Типы контейнеров не найдены"

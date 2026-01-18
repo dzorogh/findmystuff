@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import RoomCombobox from "@/components/location/room-combobox";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useSettings } from "@/hooks/use-settings";
+import { useEntityTypes } from "@/hooks/use-entity-types";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
-import { placeTypesToOptions } from "@/lib/utils";
 import { Combobox } from "@/components/ui/combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
+import { MarkingDisplay } from "@/components/common/marking-display";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +26,7 @@ import {
 interface EditPlaceFormProps {
   placeId: number;
   placeName: string | null;
-  placeType?: string | null;
+  placeTypeId?: number | null;
   markingNumber?: number | null;
   currentRoomId?: number | null;
   open: boolean;
@@ -37,7 +37,7 @@ interface EditPlaceFormProps {
 const EditPlaceForm = ({
   placeId,
   placeName,
-  placeType: initialPlaceType,
+  placeTypeId: initialPlaceTypeId,
   markingNumber,
   currentRoomId,
   open,
@@ -45,10 +45,10 @@ const EditPlaceForm = ({
   onSuccess,
 }: EditPlaceFormProps) => {
   const { user, isLoading } = useUser();
-  const { getPlaceTypes, getDefaultPlaceType } = useSettings();
+  const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
-  const [placeType, setPlaceType] = useState(initialPlaceType || getDefaultPlaceType());
+  const [placeTypeId, setPlaceTypeId] = useState(initialPlaceTypeId?.toString() || "");
   const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +58,7 @@ const EditPlaceForm = ({
   useEffect(() => {
     if (open) {
       setName(placeName || "");
-      setPlaceType(initialPlaceType || getDefaultPlaceType());
+      setPlaceTypeId(initialPlaceTypeId?.toString() || placeTypes[0]?.id.toString() || "");
       if (currentRoomId) {
         setSelectedRoomId(currentRoomId.toString());
       } else {
@@ -99,9 +99,15 @@ const EditPlaceForm = ({
       const supabase = createClient();
 
 
-      const updateData: { name: string | null; place_type: string; photo_url: string | null } = {
+      if (!placeTypeId) {
+        setError("Необходимо выбрать тип места");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const updateData: { name: string | null; entity_type_id: number; photo_url: string | null } = {
         name: name.trim() || null,
-        place_type: placeType,
+        entity_type_id: parseInt(placeTypeId),
         photo_url: photoUrl || null,
       };
       
@@ -185,6 +191,17 @@ const EditPlaceForm = ({
                 Формат: [Ш/С][номер][П][номер полки]
               </p>
             </div>
+            {(() => {
+              const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
+              const typeCode = selectedType?.code;
+              return (
+                <MarkingDisplay
+                  typeCode={typeCode}
+                  markingNumber={markingNumber}
+                  generateMarking={generateMarking}
+                />
+              );
+            })()}
           </div>
 
               {/* Выбор помещения (обязательно) */}

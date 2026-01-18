@@ -8,9 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Container, MapPin, Building2, Calendar } from "lucide-react";
+import { ArrowLeft, Container, MapPin, Building2, Calendar, Edit, Trash2, RotateCcw } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { useContainerMarking } from "@/hooks/use-container-marking";
+import { MarkingDisplay } from "@/components/common/marking-display";
+import { toast } from "sonner";
+import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import EditContainerForm from "@/components/forms/edit-container-form";
 import {
   Table,
   TableBody,
@@ -33,8 +37,13 @@ interface Transition {
 interface Container {
   id: number;
   name: string | null;
-  container_type: string | null;
+  entity_type_id: number | null;
+  entity_type?: {
+    code: string;
+    name: string;
+  } | null;
   marking_number: number | null;
+  photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
   last_location?: {
@@ -55,6 +64,9 @@ export default function ContainerDetailPage() {
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -81,7 +93,7 @@ export default function ContainerDetailPage() {
       // Загружаем контейнер
       const { data: containerData, error: containerError } = await supabase
         .from("containers")
-        .select("id, name, container_type, marking_number, created_at, deleted_at")
+        .select("id, name, entity_type_id, marking_number, photo_url, created_at, deleted_at, entity_types(code, name)")
         .eq("id", containerId)
         .single();
 
@@ -251,7 +263,17 @@ export default function ContainerDetailPage() {
         : null;
 
       setContainer({
-        ...containerData,
+        id: containerData.id,
+        name: containerData.name,
+        entity_type_id: containerData.entity_type_id || null,
+        entity_type: containerData.entity_types ? {
+          code: containerData.entity_types.code,
+          name: containerData.entity_types.name,
+        } : null,
+        marking_number: containerData.marking_number,
+        photo_url: containerData.photo_url,
+        created_at: containerData.created_at,
+        deleted_at: containerData.deleted_at,
         last_location: lastLocation,
       });
       setTransitions(transitionsWithNames);
@@ -261,6 +283,43 @@ export default function ContainerDetailPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Вы уверены, что хотите удалить этот контейнер?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await softDelete("containers", containerId);
+      toast.success("Контейнер успешно удален");
+      await loadContainerData();
+    } catch (err) {
+      console.error("Ошибка при удалении контейнера:", err);
+      toast.error("Произошла ошибка при удалении контейнера");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      await restoreDeleted("containers", containerId);
+      toast.success("Контейнер успешно восстановлен");
+      await loadContainerData();
+    } catch (err) {
+      console.error("Ошибка при восстановлении контейнера:", err);
+      toast.error("Произошла ошибка при восстановлении контейнера");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditing(false);
+    loadContainerData();
   };
 
   if (isUserLoading || isLoading) {
@@ -314,22 +373,26 @@ export default function ContainerDetailPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <Container className="h-8 w-8 text-primary" />
-                <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4 flex-1">
+                {container.photo_url ? (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={container.photo_url}
+                      alt={container.name || `Контейнер #${container.id}`}
+                      className="w-24 h-24 object-cover rounded-lg border"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-shrink-0 w-24 h-24 rounded-lg border bg-muted flex items-center justify-center">
+                    <Container className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
                   <CardTitle className="text-2xl">
                     {container.name || `Контейнер #${container.id}`}
                   </CardTitle>
                   <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
-                    {generateMarking(container.container_type as any, container.marking_number) ? (
-                      <>
-                        <span className="font-mono font-semibold">
-                          {generateMarking(container.container_type as any, container.marking_number)}
-                        </span>
-                        <span className="text-muted-foreground">•</span>
-                      </>
-                    ) : null}
                     <span>ID: #{container.id}</span>
                     {container.deleted_at && (
                       <>
@@ -342,9 +405,46 @@ export default function ContainerDetailPage() {
                   </CardDescription>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  disabled={isDeleting || isRestoring}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Редактировать
+                </Button>
+                {container.deleted_at ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestore}
+                    disabled={isDeleting || isRestoring}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Восстановить
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                    disabled={isDeleting || isRestoring}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Удалить
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <MarkingDisplay
+              typeCode={container.entity_type?.code}
+              markingNumber={container.marking_number}
+              generateMarking={generateMarking}
+            />
             <div>
               <h3 className="text-sm font-medium mb-2">Текущее местоположение</h3>
               {container.last_location ? (
@@ -511,6 +611,19 @@ export default function ContainerDetailPage() {
             )}
           </CardContent>
         </Card>
+
+        {isEditing && container && (
+          <EditContainerForm
+            containerId={container.id}
+            containerName={container.name}
+            containerTypeId={container.entity_type_id}
+            markingNumber={container.marking_number}
+            currentLocation={container.last_location || undefined}
+            open={isEditing}
+            onOpenChange={setIsEditing}
+            onSuccess={handleEditSuccess}
+          />
+        )}
       </div>
     </div>
   );

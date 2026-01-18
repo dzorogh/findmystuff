@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useSettings } from "@/hooks/use-settings";
-import { placeTypesToOptions } from "@/lib/utils";
+import { useEntityTypes } from "@/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
 import RoomCombobox from "@/components/location/room-combobox";
 import ImageUpload from "@/components/common/image-upload";
@@ -31,9 +30,9 @@ interface AddPlaceFormProps {
 
 const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const { user, isLoading } = useUser();
-  const { getPlaceTypes, getDefaultPlaceType } = useSettings();
+  const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const [name, setName] = useState("");
-  const [placeType, setPlaceType] = useState(getDefaultPlaceType());
+  const [placeTypeId, setPlaceTypeId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,9 +47,15 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       const supabase = createClient();
       
 
-      const insertData: { name: string | null; place_type: string; photo_url: string | null } = {
+      if (!placeTypeId) {
+        setError("Необходимо выбрать тип места");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const insertData: { name: string | null; entity_type_id: number; photo_url: string | null } = {
         name: name.trim() || null,
-        place_type: placeType,
+        entity_type_id: parseInt(placeTypeId),
         photo_url: photoUrl || null,
       };
       
@@ -85,7 +90,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       }
 
       setName("");
-      setPlaceType(getDefaultPlaceType());
+      setPlaceTypeId(placeTypes[0]?.id.toString() || "");
       setSelectedRoomId("");
       setPhotoUrl(null);
       
@@ -119,7 +124,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {isLoading ? (
+          {isLoading || isLoadingTypes ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
@@ -128,9 +133,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
               <div className="space-y-2">
                 <Label htmlFor="place-type">Тип места</Label>
                 <Combobox
-                  options={placeTypesToOptions(getPlaceTypes())}
-                  value={placeType}
-                  onValueChange={setPlaceType}
+                  options={placeTypes.map((type) => ({
+                    value: type.id.toString(),
+                    label: `${type.code} - ${type.name}`,
+                  }))}
+                  value={placeTypeId}
+                  onValueChange={setPlaceTypeId}
                   placeholder="Выберите тип места..."
                   searchPlaceholder="Поиск типа места..."
                   emptyText="Типы мест не найдены"
