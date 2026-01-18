@@ -502,17 +502,18 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             {searchQuery && (
               <p className="text-sm text-muted-foreground">
                 Найдено: {items.length} {items.length === 1 ? "вещь" : "вещей"}
               </p>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant={showDeleted ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowDeleted(!showDeleted)}
+                className="flex-1 sm:flex-initial"
               >
                 {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
               </Button>
@@ -570,25 +571,26 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">ID</TableHead>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Местоположение</TableHead>
-                  <TableHead className="w-[120px]">Дата перемещения</TableHead>
-                  {user.email === "dzorogh@gmail.com" && (
-                    <TableHead className="w-[150px] text-right">Действия</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px] hidden sm:table-cell">ID</TableHead>
+                    <TableHead>Название</TableHead>
+                    <TableHead className="hidden md:table-cell">Местоположение</TableHead>
+                    <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
+                    {user.email === "dzorogh@gmail.com" && (
+                      <TableHead className="w-[150px] text-right">Действия</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {items.map((item) => (
                   <TableRow
                     key={item.id}
                     className={item.deleted_at ? "opacity-60" : ""}
                   >
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex items-center gap-2">
                         {item.deleted_at && (
                           <Badge variant="destructive" className="text-xs">Удалено</Badge>
@@ -597,17 +599,54 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <Link
-                          href={`/items/${item.id}`}
-                          className="font-medium hover:underline break-words leading-tight"
-                        >
-                          {item.name || `Вещь #${item.id}`}
-                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <Link
+                            href={`/items/${item.id}`}
+                            className="font-medium hover:underline break-words leading-tight block"
+                          >
+                            {item.name || `Вещь #${item.id}`}
+                          </Link>
+                          <div className="md:hidden mt-1 text-xs text-muted-foreground">
+                            {item.last_location ? (
+                              <div className="flex items-center gap-1">
+                                {item.last_location.destination_type === "room" && (
+                                  <>
+                                    <Building2 className="h-3 w-3" />
+                                    <span className="truncate">
+                                      {item.last_location.destination_name ||
+                                        `Помещение #${item.last_location.destination_id}`}
+                                    </span>
+                                  </>
+                                )}
+                                {item.last_location.destination_type === "place" && (
+                                  <>
+                                    <MapPin className="h-3 w-3" />
+                                    <span className="truncate">
+                                      {item.last_location.destination_name ||
+                                        `Место #${item.last_location.destination_id}`}
+                                    </span>
+                                  </>
+                                )}
+                                {item.last_location.destination_type === "container" && (
+                                  <>
+                                    <Container className="h-3 w-3" />
+                                    <span className="truncate">
+                                      {item.last_location.destination_name ||
+                                        `Контейнер #${item.last_location.destination_id}`}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            ) : (
+                              <span>Местоположение не указано</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {item.last_location ? (
                         <div className="space-y-1">
                           {item.last_location.destination_type === "room" && (
@@ -664,7 +703,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                         <span className="text-sm text-muted-foreground">Не указано</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {item.last_location ? (
                         <span className="text-xs text-muted-foreground">
                           {new Date(item.last_location.moved_at).toLocaleDateString("ru-RU", {
@@ -679,7 +718,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                     </TableCell>
                     {user.email === "dzorogh@gmail.com" && (
                       <TableCell>
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                           {!item.deleted_at ? (
                             <>
                               <Button
@@ -687,6 +726,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                                 size="icon"
                                 onClick={() => setEditingItemId(item.id)}
                                 className="h-8 w-8"
+                                title="Редактировать"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -704,6 +744,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                                 size="icon"
                                 onClick={() => handleDeleteItem(item.id)}
                                 className="h-8 w-8 text-destructive hover:text-destructive"
+                                title="Удалить"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -714,6 +755,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                               size="icon"
                               onClick={() => handleRestoreItem(item.id)}
                               className="h-8 w-8 text-green-600 hover:text-green-700"
+                              title="Восстановить"
                             >
                               <RotateCcw className="h-4 w-4" />
                             </Button>
@@ -725,6 +767,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

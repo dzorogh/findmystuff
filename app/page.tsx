@@ -242,7 +242,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="container flex min-h-screen items-center justify-center">
+      <div className="container mx-auto flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-muted-foreground">Загрузка...</p>
@@ -316,13 +316,13 @@ export default function Home() {
   };
 
   return (
-    <div className="container py-8 px-4">
+    <div className="container mx-auto py-8 px-4">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Заголовок и поиск */}
         <div className="space-y-4">
           <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Найти вещь</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Найти вещь</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Быстрый поиск по вещам, местам и контейнерам
             </p>
           </div>
@@ -353,7 +353,7 @@ export default function Home() {
         {searchQuery && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-lg sm:text-xl font-semibold">
                 Результаты поиска
                 {searchResults.length > 0 && (
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
@@ -373,7 +373,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {searchResults.map((result) => (
                   <Card
                     key={`${result.type}-${result.id}`}
@@ -420,7 +420,7 @@ export default function Home() {
 
         {/* Быстрые действия */}
         {!searchQuery && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50" onClick={() => router.push("/items")}>
               <CardHeader>
                 <div className="flex items-center gap-2">

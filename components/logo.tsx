@@ -22,7 +22,7 @@ const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
   };
 
   return (
-    <div className={`flex items-center gap-2.5 ${className || ""}`}>
+    <div className={`flex items-center gap-2 sm:gap-2.5 ${className || ""}`}>
       <div className="relative">
         <div className="absolute inset-0 bg-primary/15 blur-xl rounded-xl" />
         <div className="relative flex items-center justify-center bg-gradient-to-br from-primary to-primary/80 rounded-lg p-1.5 shadow-md">
@@ -35,7 +35,7 @@ const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
       </div>
       {showText && (
         <span
-          className={`font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent ${textSizes[size]} tracking-tight`}
+          className={`font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent ${textSizes[size]} tracking-tight hidden sm:inline`}
         >
           FindMyStuff
         </span>

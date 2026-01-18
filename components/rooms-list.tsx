@@ -244,7 +244,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -320,18 +320,19 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             {searchQuery && (
               <p className="text-sm text-muted-foreground">
                 Найдено: {rooms.length}{" "}
                 {rooms.length === 1 ? "помещение" : "помещений"}
               </p>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant={showDeleted ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowDeleted(!showDeleted)}
+                className="flex-1 sm:flex-initial"
               >
                 {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
               </Button>
@@ -349,7 +350,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
       )}
 
       {isSearching && rooms.length === 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -384,7 +385,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
             <Card key={room.id} className={room.deleted_at ? "opacity-60 border-destructive/50" : ""}>
               <CardHeader>

@@ -295,7 +295,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -367,18 +367,19 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             {searchQuery && (
               <p className="text-sm text-muted-foreground">
                 Найдено: {containers.length}{" "}
                 {containers.length === 1 ? "контейнер" : "контейнеров"}
               </p>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant={showDeleted ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowDeleted(!showDeleted)}
+                className="flex-1 sm:flex-initial"
               >
                 {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
               </Button>
@@ -396,7 +397,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       )}
 
       {isSearching && containers.length === 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -427,7 +428,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {containers.map((container) => (
             <Card key={container.id}>
               <CardHeader>

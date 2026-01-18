@@ -276,20 +276,6 @@ const EditItemForm = ({
                   <Building2 className="mr-2 h-4 w-4" />
                   Помещение
                 </Button>
-                {destinationType && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setDestinationType(null);
-                      setSelectedDestinationId("");
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    ✕
-                  </Button>
-                )}
               </div>
             </div>
 
