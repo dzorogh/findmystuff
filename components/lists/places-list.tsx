@@ -402,32 +402,32 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
                     <>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => setEditingPlaceId(place.id)}
-                        className="h-8 px-3"
+                        className="h-8 w-8"
+                        aria-label="Изменить место"
                       >
-                        <Pencil className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Изменить</span>
+                        <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleDeletePlace(place.id)}
-                        className="h-8 px-3 text-destructive hover:text-destructive"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        aria-label="Удалить место"
                       >
-                        <Trash2 className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Удалить</span>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </>
                   ) : (
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleRestorePlace(place.id)}
-                      className="h-8 px-3 text-green-600 hover:text-green-700"
+                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      aria-label="Восстановить место"
                     >
-                      <RotateCcw className="h-4 w-4 mr-1.5" />
-                      <span className="text-xs">Восстановить</span>
+                      <RotateCcw className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
