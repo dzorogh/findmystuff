@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { SearchForm } from "@/components/common/search-form";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -66,15 +66,17 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
 
   useEffect(() => {
     if (user) {
-      loadContainers();
+      loadContainers(undefined, true);
     }
   }, [user, refreshTrigger, showDeleted]);
 
-  const loadContainers = async (query?: string) => {
+  const loadContainers = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
     setIsSearching(true);
-    setIsLoading(true);
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -126,7 +128,9 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       if (!containersData || containersData.length === 0) {
         setContainers([]);
         setIsSearching(false);
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -249,7 +253,9 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       setContainers([]);
     } finally {
       setIsSearching(false);
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -262,12 +268,16 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
     }
 
     if (!value.trim()) {
-      loadContainers();
+      // При очистке поля не показываем полную загрузку, чтобы не терять фокус
+      const timer = setTimeout(() => {
+        loadContainers(undefined, false);
+      }, 300);
+      setDebounceTimer(timer);
       return;
     }
 
     const timer = setTimeout(() => {
-      loadContainers(value);
+      loadContainers(value, false);
     }, 300);
 
     setDebounceTimer(timer);
@@ -286,7 +296,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
         .eq("id", containerId);
 
       if (error) throw error;
-      loadContainers(searchQuery);
+      loadContainers(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении контейнера:", err);
       alert("Произошла ошибка при удалении контейнера");
@@ -302,7 +312,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
         .eq("id", containerId);
 
       if (error) throw error;
-      loadContainers(searchQuery);
+      loadContainers(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении контейнера:", err);
       alert("Произошла ошибка при восстановлении контейнера");
@@ -377,49 +387,18 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Поиск контейнеров</CardTitle>
-          <CardDescription>
-            Поиск по названию, типу контейнера или маркировке (например, КОР-001)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Название, тип или маркировка (КОР-001)..."
-              className="pl-10"
-            />
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            {searchQuery && (
-              <p className="text-sm text-muted-foreground">
-                Найдено: {containers.length}{" "}
-                {containers.length === 1 ? "контейнер" : "контейнеров"}
-              </p>
-            )}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button
-                variant={showDeleted ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowDeleted(!showDeleted)}
-                className="flex-1 sm:flex-initial"
-              >
-                {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SearchForm
+        title="Поиск контейнеров"
+        description="Поиск по названию, типу контейнера или маркировке (например, КОР-001)"
+        placeholder="Название, тип или маркировка (КОР-001)..."
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        isSearching={isSearching}
+        resultsCount={containers.length}
+        resultsLabel={{ singular: "контейнер", plural: "контейнеров" }}
+        showDeleted={showDeleted}
+        onToggleDeleted={() => setShowDeleted(!showDeleted)}
+      />
 
       {error && (
         <Card className="border-destructive">
@@ -670,7 +649,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           onOpenChange={(open) => !open && setEditingContainerId(null)}
           onSuccess={() => {
             setEditingContainerId(null);
-            loadContainers(searchQuery);
+            loadContainers(searchQuery, false);
           }}
         />
       )}

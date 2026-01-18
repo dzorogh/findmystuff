@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Package, MapPin, Container, Building2, Loader2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Package, MapPin, Container, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { SearchForm } from "@/components/common/search-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,15 +66,17 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
 
   useEffect(() => {
     if (user) {
-      loadItems();
+      loadItems(undefined, true);
     }
   }, [user, showDeleted, refreshTrigger]);
 
-  const loadItems = async (query?: string) => {
+  const loadItems = async (query?: string, isInitialLoad = false) => {
     if (!user || !isAdmin) return;
 
     setIsSearching(true);
-    setIsLoading(true);
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -106,7 +108,9 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       if (!itemsData || itemsData.length === 0) {
         setItems([]);
         setIsSearching(false);
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -383,7 +387,9 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
       setItems([]);
     } finally {
       setIsSearching(false);
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -396,12 +402,15 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
     }
 
     if (!value.trim()) {
-      loadItems();
+      const timer = setTimeout(() => {
+        loadItems(undefined, false);
+      }, 300);
+      setDebounceTimer(timer);
       return;
     }
 
     const timer = setTimeout(() => {
-      loadItems(value);
+      loadItems(value, false);
     }, 300);
 
     setDebounceTimer(timer);
@@ -420,7 +429,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         .eq("id", itemId);
 
       if (error) throw error;
-      loadItems();
+      loadItems(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении вещи:", err);
       alert("Произошла ошибка при удалении вещи");
@@ -436,7 +445,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         .eq("id", itemId);
 
       if (error) throw error;
-      loadItems();
+      loadItems(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении вещи:", err);
       alert("Произошла ошибка при восстановлении вещи");
@@ -511,48 +520,18 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Поиск вещей</CardTitle>
-          <CardDescription>
-            Введите название для поиска по всем вещам
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Введите название вещи..."
-              className="pl-10"
-            />
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            {searchQuery && (
-              <p className="text-sm text-muted-foreground">
-                Найдено: {items.length} {items.length === 1 ? "вещь" : "вещей"}
-              </p>
-            )}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button
-                variant={showDeleted ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowDeleted(!showDeleted)}
-                className="flex-1 sm:flex-initial"
-              >
-                {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SearchForm
+        title="Поиск вещей"
+        description="Введите название для поиска по всем вещам"
+        placeholder="Введите название вещи..."
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        isSearching={isSearching}
+        resultsCount={items.length}
+        resultsLabel={{ singular: "вещь", plural: "вещей" }}
+        showDeleted={showDeleted}
+        onToggleDeleted={() => setShowDeleted(!showDeleted)}
+      />
 
       {error && (
         <Card className="border-destructive">
@@ -849,7 +828,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
           onOpenChange={(open) => !open && setEditingItemId(null)}
           onSuccess={() => {
             setEditingItemId(null);
-            loadItems(searchQuery);
+            loadItems(searchQuery, false);
           }}
         />
       )}
@@ -862,7 +841,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
           onOpenChange={(open) => !open && setMovingItemId(null)}
           onSuccess={() => {
             setMovingItemId(null);
-            loadItems(searchQuery);
+            loadItems(searchQuery, false);
           }}
         />
       )}

@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Building2, Loader2, Pencil, MapPin, Container, Package, Trash2, RotateCcw } from "lucide-react";
+import { Building2, Pencil, MapPin, Container, Package, Trash2, RotateCcw } from "lucide-react";
+import { SearchForm } from "@/components/common/search-form";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditRoomForm from "@/components/forms/edit-room-form";
@@ -50,15 +50,17 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
 
   useEffect(() => {
     if (user) {
-      loadRooms();
+      loadRooms(undefined, true);
     }
   }, [user, refreshTrigger, showDeleted]);
 
-  const loadRooms = async (query?: string) => {
+  const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
     setIsSearching(true);
-    setIsLoading(true);
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -89,7 +91,9 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
       if (!roomsData || roomsData.length === 0) {
         setRooms([]);
         setIsSearching(false);
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -150,7 +154,9 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
       setRooms([]);
     } finally {
       setIsSearching(false);
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -163,12 +169,15 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
     }
 
     if (!value.trim()) {
-      loadRooms();
+      const timer = setTimeout(() => {
+        loadRooms(undefined, false);
+      }, 300);
+      setDebounceTimer(timer);
       return;
     }
 
     const timer = setTimeout(() => {
-      loadRooms(value);
+      loadRooms(value, false);
     }, 300);
 
     setDebounceTimer(timer);
@@ -187,7 +196,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
         .eq("id", roomId);
 
       if (error) throw error;
-      loadRooms(searchQuery);
+      loadRooms(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при удалении помещения:", err);
       alert("Произошла ошибка при удалении помещения");
@@ -203,7 +212,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
         .eq("id", roomId);
 
       if (error) throw error;
-      loadRooms(searchQuery);
+      loadRooms(searchQuery, false);
     } catch (err) {
       console.error("Ошибка при восстановлении помещения:", err);
       alert("Произошла ошибка при восстановлении помещения");
@@ -275,49 +284,18 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Поиск помещений</CardTitle>
-          <CardDescription>
-            Введите название для поиска по всем помещениям
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Введите название помещения..."
-              className="pl-10"
-            />
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            {searchQuery && (
-              <p className="text-sm text-muted-foreground">
-                Найдено: {rooms.length}{" "}
-                {rooms.length === 1 ? "помещение" : "помещений"}
-              </p>
-            )}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button
-                variant={showDeleted ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowDeleted(!showDeleted)}
-                className="flex-1 sm:flex-initial"
-              >
-                {showDeleted ? "Скрыть удаленные" : "Показать удаленные"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SearchForm
+        title="Поиск помещений"
+        description="Введите название для поиска по всем помещениям"
+        placeholder="Введите название помещения..."
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        isSearching={isSearching}
+        resultsCount={rooms.length}
+        resultsLabel={{ singular: "помещение", plural: "помещений" }}
+        showDeleted={showDeleted}
+        onToggleDeleted={() => setShowDeleted(!showDeleted)}
+      />
 
       {error && (
         <Card className="border-destructive">
@@ -471,7 +449,7 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
           onOpenChange={(open) => !open && setEditingRoomId(null)}
           onSuccess={() => {
             setEditingRoomId(null);
-            loadRooms(searchQuery);
+            loadRooms(searchQuery, false);
           }}
         />
       )}
