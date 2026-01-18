@@ -12,11 +12,11 @@ import { Search, Package, MapPin, Container, Building2, Plus, ArrowRight } from 
 import AddItemForm from "@/components/add-item-form";
 
 interface SearchResult {
-  type: "item" | "place" | "container";
+  type: "item" | "place" | "container" | "room";
   id: number;
   name: string | null;
   location?: string;
-  locationType?: "place" | "container";
+  locationType?: "place" | "container" | "room";
 }
 
 export default function Home() {
@@ -153,7 +153,7 @@ export default function Home() {
         itemsResult.data.forEach((item) => {
           const transition = lastTransitions.get(item.id);
           let location: string | undefined;
-          let locationType: "place" | "container" | undefined;
+          let locationType: "place" | "container" | "room" | undefined;
 
             if (transition) {
               if (transition.destination_type === "place") {
