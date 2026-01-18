@@ -5,11 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import RoomCombobox from "@/components/room-combobox";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { placeTypesToOptions } from "@/lib/utils";
@@ -47,7 +46,6 @@ const EditPlaceForm = ({
 }: EditPlaceFormProps) => {
   const { user, isLoading } = useUser();
   const { isAdmin } = useAdmin();
-  const { rooms } = useRooms();
   const { getPlaceTypes, getDefaultPlaceType } = useSettings();
   const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
@@ -203,35 +201,19 @@ const EditPlaceForm = ({
 
               {/* Выбор помещения (обязательно) */}
               <div className="space-y-3 border-t pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`place-room-select-${placeId}`}>
-                    Выберите помещение <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    id={`place-room-select-${placeId}`}
-                    value={selectedRoomId}
-                    onChange={(e) => setSelectedRoomId(e.target.value)}
-                    disabled={isSubmitting || rooms.length === 0}
-                    required
-                  >
-                    <option value="">-- Выберите помещение --</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.name || `Помещение #${room.id}`}
-                      </option>
-                    ))}
-                  </Select>
-                  {rooms.length === 0 && (
-                    <p className="text-xs text-destructive">
-                      Помещения не найдены. Сначала создайте помещение.
-                    </p>
-                  )}
-                  {currentRoomId && !selectedRoomId && (
-                    <p className="text-xs text-muted-foreground">
-                      Текущее помещение будет удалено. Выберите новое помещение.
-                    </p>
-                  )}
-                </div>
+                <RoomCombobox
+                  selectedRoomId={selectedRoomId}
+                  onRoomIdChange={setSelectedRoomId}
+                  disabled={isSubmitting}
+                  label="Выберите помещение"
+                  id={`place-room-${placeId}`}
+                  required
+                />
+                {currentRoomId && !selectedRoomId && (
+                  <p className="text-xs text-muted-foreground">
+                    Текущее помещение будет удалено. Выберите новое помещение.
+                  </p>
+                )}
               </div>
 
               <ImageUpload

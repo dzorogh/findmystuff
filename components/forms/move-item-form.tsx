@@ -10,7 +10,7 @@ import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
-import LocationSelector from "@/components/location-selector";
+import LocationCombobox from "@/components/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -113,7 +113,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <LocationSelector
+          <LocationCombobox
             destinationType={destinationType}
             selectedDestinationId={selectedDestinationId}
             onDestinationTypeChange={(type) => {

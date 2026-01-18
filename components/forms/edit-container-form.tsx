@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import LocationSelector from "@/components/location-selector";
+import LocationCombobox from "@/components/location-combobox";
 import ImageUpload from "@/components/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { useContainerMarking } from "@/hooks/use-container-marking";
@@ -194,7 +194,7 @@ const EditContainerForm = ({
             />
           </div>
 
-          <LocationSelector
+          <LocationCombobox
             destinationType={destinationType}
             selectedDestinationId={selectedDestinationId}
             onDestinationTypeChange={setDestinationType}

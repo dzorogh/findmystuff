@@ -1,0 +1,213 @@
+"use client";
+
+import * as React from "react";
+import { Check, ChevronsUpDown, MapPin, Container, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { useRooms } from "@/hooks/use-rooms";
+import { usePlaces } from "@/hooks/use-places";
+import { useContainers } from "@/hooks/use-containers";
+import { useContainerMarking } from "@/hooks/use-container-marking";
+import { type ContainerType } from "@/lib/utils";
+
+interface LocationComboboxProps {
+  destinationType: "room" | "place" | "container" | null;
+  selectedDestinationId: string;
+  onDestinationTypeChange: (type: "room" | "place" | "container" | null) => void;
+  onDestinationIdChange: (id: string) => void;
+  disabled?: boolean;
+  showRoomFirst?: boolean;
+  label?: string;
+  id?: string;
+}
+
+const LocationCombobox = ({
+  destinationType,
+  selectedDestinationId,
+  onDestinationTypeChange,
+  onDestinationIdChange,
+  disabled = false,
+  showRoomFirst = true,
+  label = "Местоположение (необязательно)",
+  id = "location-combobox",
+}: LocationComboboxProps) => {
+  const { rooms } = useRooms();
+  const { places } = usePlaces();
+  const { containers } = useContainers();
+  const { generateMarking } = useContainerMarking();
+  const [open, setOpen] = React.useState(false);
+
+  const destinations =
+    destinationType === "container"
+      ? containers
+      : destinationType === "place"
+      ? places
+      : destinationType === "room"
+      ? rooms
+      : [];
+
+  const destinationLabel =
+    destinationType === "container"
+      ? "контейнер"
+      : destinationType === "place"
+      ? "местоположение"
+      : destinationType === "room"
+      ? "помещение"
+      : "";
+
+  const buttonOrder = showRoomFirst
+    ? [
+        { type: "room" as const, label: "Помещение", icon: Building2 },
+        { type: "place" as const, label: "Место", icon: MapPin },
+        { type: "container" as const, label: "Контейнер", icon: Container },
+      ]
+    : [
+        { type: "place" as const, label: "Место", icon: MapPin },
+        { type: "container" as const, label: "Контейнер", icon: Container },
+        { type: "room" as const, label: "Помещение", icon: Building2 },
+      ];
+
+  const selectedDestination = destinations.find(
+    (dest) => dest.id.toString() === selectedDestinationId
+  );
+
+  const getDisplayName = (dest: any) => {
+    const containerMarking =
+      destinationType === "container" &&
+      "container_type" in dest &&
+      "marking_number" in dest
+        ? generateMarking(
+            dest.container_type as ContainerType,
+            dest.marking_number as number | null
+          )
+        : null;
+
+    const displayName =
+      dest.name ||
+      `${
+        destinationType === "container"
+          ? "Контейнер"
+          : destinationType === "place"
+          ? "Место"
+          : "Помещение"
+      } #${dest.id}`;
+
+    return containerMarking ? `${displayName} (${containerMarking})` : displayName;
+  };
+
+  return (
+    <div className="space-y-3 border-t pt-4">
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <div className="flex gap-2">
+          {buttonOrder.map(({ type, label: btnLabel, icon: Icon }) => (
+            <Button
+              key={type}
+              type="button"
+              variant={destinationType === type ? "default" : "outline"}
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                onDestinationTypeChange(type);
+                onDestinationIdChange("");
+                setOpen(false);
+              }}
+              disabled={disabled}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {btnLabel}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {destinationType && (
+        <div className="space-y-2">
+          <Label htmlFor={`${id}-combobox`}>Выберите {destinationLabel}</Label>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between"
+                disabled={disabled || destinations.length === 0}
+                id={`${id}-combobox`}
+              >
+                {selectedDestination
+                  ? getDisplayName(selectedDestination)
+                  : `-- Выберите ${destinationLabel} --`}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder={`Поиск ${destinationLabel}...`} />
+                <CommandList>
+                  <CommandEmpty>
+                    {destinationType === "container"
+                      ? "Контейнеры не найдены"
+                      : destinationType === "place"
+                      ? "Местоположения не найдены"
+                      : "Помещения не найдены"}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {destinations.map((dest) => {
+                      const displayName = getDisplayName(dest);
+                      const isSelected = dest.id.toString() === selectedDestinationId;
+                      const itemValue = `${dest.id}-${displayName}`;
+                      return (
+                        <CommandItem
+                          key={dest.id}
+                          value={itemValue}
+                          keywords={[dest.id.toString(), displayName, dest.name || ""]}
+                          onSelect={() => {
+                            onDestinationIdChange(dest.id.toString());
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {displayName}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {destinations.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              {destinationType === "container"
+                ? "Контейнеры не найдены"
+                : destinationType === "place"
+                ? "Местоположения не найдены"
+                : "Помещения не найдены"}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LocationCombobox;

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/hooks/use-admin";
-import LocationSelector from "@/components/location-selector";
+import LocationCombobox from "@/components/location-combobox";
 import ImageUpload from "@/components/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -160,7 +160,7 @@ const EditItemForm = ({
             />
           </div>
 
-          <LocationSelector
+          <LocationCombobox
             destinationType={destinationType}
             selectedDestinationId={selectedDestinationId}
             onDestinationTypeChange={setDestinationType}
