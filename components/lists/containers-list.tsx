@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw, Package, PackageX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -39,6 +39,7 @@ interface Container {
   created_at: string;
   deleted_at: string | null;
   photo_url: string | null;
+  itemsCount?: number;
   last_location?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -280,8 +281,76 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         };
       });
 
-      setContainers(containersWithLocation);
-      finishLoading(isInitialLoad, containersWithLocation.length);
+      // Проверяем наличие вещей в контейнерах
+      const containerIdsForItems = containersWithLocation.map(c => c.id);
+      if (containerIdsForItems.length > 0) {
+        // Получаем все transitions для вещей, которые находятся в этих контейнерах
+        const { data: itemsTransitionsData } = await supabase
+          .from("transitions")
+          .select("item_id, destination_id, destination_type, created_at")
+          .eq("destination_type", "container")
+          .in("destination_id", containerIdsForItems)
+          .order("created_at", { ascending: false });
+
+        // Получаем последние transitions для каждого item
+        const lastItemTransitions = new Map<number, any>();
+        (itemsTransitionsData || []).forEach((t) => {
+          if (t.item_id && !lastItemTransitions.has(t.item_id)) {
+            lastItemTransitions.set(t.item_id, t);
+          }
+        });
+
+        // Получаем все transitions для этих вещей, чтобы найти последнее местоположение
+        const itemIds = Array.from(lastItemTransitions.keys());
+        if (itemIds.length > 0) {
+          const { data: allItemTransitionsData } = await supabase
+            .from("transitions")
+            .select("*")
+            .in("item_id", itemIds)
+            .order("created_at", { ascending: false });
+
+          const finalItemTransitions = new Map<number, any>();
+          (allItemTransitionsData || []).forEach((t) => {
+            if (t.item_id && !finalItemTransitions.has(t.item_id)) {
+              finalItemTransitions.set(t.item_id, t);
+            }
+          });
+
+          // Подсчитываем количество вещей в каждом контейнере
+          const itemsCountByContainer = new Map<number, number>();
+          finalItemTransitions.forEach((transition) => {
+            if (transition.destination_type === "container" && transition.destination_id) {
+              const currentCount = itemsCountByContainer.get(transition.destination_id) || 0;
+              itemsCountByContainer.set(transition.destination_id, currentCount + 1);
+            }
+          });
+
+          // Добавляем информацию о количестве вещей
+          const containersWithItemsInfo = containersWithLocation.map(container => ({
+            ...container,
+            itemsCount: itemsCountByContainer.get(container.id) || 0,
+          }));
+
+          setContainers(containersWithItemsInfo);
+          finishLoading(isInitialLoad, containersWithItemsInfo.length);
+        } else {
+          // Нет вещей ни в одном контейнере
+          const containersWithItemsInfo = containersWithLocation.map(container => ({
+            ...container,
+            itemsCount: 0,
+          }));
+          setContainers(containersWithItemsInfo);
+          finishLoading(isInitialLoad, containersWithItemsInfo.length);
+        }
+      } else {
+        // Нет контейнеров для проверки
+        const containersWithItemsInfo = containersWithLocation.map(container => ({
+          ...container,
+          itemsCount: 0,
+        }));
+        setContainers(containersWithItemsInfo);
+        finishLoading(isInitialLoad, containersWithItemsInfo.length);
+      }
     } catch (err) {
       handleError(err, isInitialLoad);
       setContainers([]);
@@ -360,11 +429,12 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px] hidden sm:table-cell">ID</TableHead>
-                    <TableHead>Маркировка / Название</TableHead>
-                    <TableHead className="hidden md:table-cell">Местоположение</TableHead>
-                    <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    <TableHead className="w-[150px] text-right">Действия</TableHead>
+                    <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
+                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Маркировка / Название</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
+                    <TableHead className="w-[100px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis text-center">Содержимое</TableHead>
+                    <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
+                    <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -483,6 +553,18 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                         ) : (
                           <span className="text-sm text-muted-foreground">Не указано</span>
                         )}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {container.itemsCount !== undefined && container.itemsCount > 0 ? (
+                            <>
+                              <Package className="h-4 w-4 text-primary" />
+                              <span className="text-sm font-medium">{container.itemsCount}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">0</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {container.last_location ? (

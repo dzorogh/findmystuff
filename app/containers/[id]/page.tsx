@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Container, MapPin, Building2, Calendar, Edit, Trash2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Container, MapPin, Building2, Calendar, Edit, Trash2, RotateCcw, Package } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { MarkingDisplay } from "@/components/common/marking-display";
@@ -62,6 +63,12 @@ export default function ContainerDetailPage() {
   const { generateMarking } = useContainerMarking();
   const [container, setContainer] = useState<Container | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
+  const [containerItems, setContainerItems] = useState<Array<{
+    id: number;
+    name: string | null;
+    photo_url: string | null;
+    created_at: string;
+  }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -277,6 +284,70 @@ export default function ContainerDetailPage() {
         last_location: lastLocation,
       });
       setTransitions(transitionsWithNames);
+
+      // Загружаем вещи, которые находятся в этом контейнере
+      const { data: itemsTransitionsData, error: itemsTransitionsError } = await supabase
+        .from("transitions")
+        .select("item_id, created_at")
+        .eq("destination_type", "container")
+        .eq("destination_id", containerId)
+        .order("created_at", { ascending: false });
+
+      if (itemsTransitionsError) {
+        console.error("Ошибка при загрузке transitions вещей:", itemsTransitionsError);
+      } else {
+        // Получаем последние transitions для каждого item, чтобы убедиться, что вещь все еще в контейнере
+        const itemTransitionsMap = new Map<number, any>();
+        (itemsTransitionsData || []).forEach((t) => {
+          if (t.item_id && !itemTransitionsMap.has(t.item_id)) {
+            itemTransitionsMap.set(t.item_id, t);
+          }
+        });
+
+        // Получаем все transitions для этих вещей, чтобы найти последнее местоположение
+        const itemIds = Array.from(itemTransitionsMap.keys());
+        if (itemIds.length > 0) {
+          const { data: allItemTransitionsData } = await supabase
+            .from("transitions")
+            .select("*")
+            .in("item_id", itemIds)
+            .order("created_at", { ascending: false });
+
+          const lastItemTransitions = new Map<number, any>();
+          (allItemTransitionsData || []).forEach((t) => {
+            if (t.item_id && !lastItemTransitions.has(t.item_id)) {
+              lastItemTransitions.set(t.item_id, t);
+            }
+          });
+
+          // Фильтруем только те вещи, которые все еще находятся в этом контейнере
+          const itemsInContainer = Array.from(lastItemTransitions.entries())
+            .filter(([itemId, transition]) => 
+              transition.destination_type === "container" && 
+              transition.destination_id === containerId
+            )
+            .map(([itemId]) => itemId);
+
+          if (itemsInContainer.length > 0) {
+            const { data: itemsData, error: itemsError } = await supabase
+              .from("items")
+              .select("id, name, photo_url, created_at")
+              .in("id", itemsInContainer)
+              .is("deleted_at", null)
+              .order("created_at", { ascending: false });
+
+            if (itemsError) {
+              console.error("Ошибка при загрузке вещей:", itemsError);
+            } else {
+              setContainerItems(itemsData || []);
+            }
+          } else {
+            setContainerItems([]);
+          }
+        } else {
+          setContainerItems([]);
+        }
+      }
     } catch (err) {
       console.error("Ошибка загрузки данных контейнера:", err);
       setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
@@ -608,6 +679,60 @@ export default function ContainerDetailPage() {
                   ))}
                 </TableBody>
               </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Содержимое контейнера</CardTitle>
+            <CardDescription>
+              Вещи, которые находятся в этом контейнере
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {containerItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Контейнер пуст
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {containerItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/items/${item.id}`}
+                    className="group"
+                  >
+                    <Card className="h-full hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col items-center text-center space-y-2">
+                          {item.photo_url ? (
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                              <img
+                                src={item.photo_url}
+                                alt={item.name || `Вещь #${item.id}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 rounded-lg border bg-muted flex items-center justify-center">
+                              <Package className="h-10 w-10 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="w-full">
+                            <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
+                              {item.name || `Вещь #${item.id}`}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              ID: #{item.id}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
