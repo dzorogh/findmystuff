@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import LocationSelector from "@/components/location-selector";
-import ImageUpload from "@/components/image-upload";
+import LocationCombobox from "@/components/location/location-combobox";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -29,7 +28,6 @@ interface AddItemFormProps {
 
 const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [name, setName] = useState("");
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
@@ -45,11 +43,6 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
     try {
       const supabase = createClient();
       
-      if (!isAdmin) {
-        setError("У вас нет прав для добавления вещей");
-        setIsSubmitting(false);
-        return;
-      }
 
       // Проверяем, что если выбран тип назначения, то и ID тоже выбран
       if (destinationType && !selectedDestinationId) {
@@ -59,7 +52,6 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       }
 
       // Добавляем вещь
-      console.log("Adding item with photo_url:", photoUrl);
       const { data: newItem, error: insertError } = await supabase
         .from("items")
         .insert({
@@ -133,10 +125,6 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !isAdmin ? (
-            <div className="py-8 text-center text-destructive">
-              У вас нет прав для добавления вещей
-            </div>
           ) : (
             <>
               <div className="space-y-2">
@@ -154,7 +142,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 </p>
               </div>
 
-              <LocationSelector
+              <LocationCombobox
                 destinationType={destinationType}
                 selectedDestinationId={selectedDestinationId}
                 onDestinationTypeChange={setDestinationType}

@@ -133,7 +133,9 @@ export const TypesManager = ({
         </Button>
       </div>
 
-      <div className="flex justify-end">
+      <p className="text-xs text-muted-foreground">{description}</p>
+
+      <div className="flex justify-end pt-2">
         <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
           {isSaving ? (
             <>
@@ -148,8 +150,6 @@ export const TypesManager = ({
           )}
         </Button>
       </div>
-
-      <p className="text-xs text-muted-foreground">{description}</p>
     </div>
   );
 };

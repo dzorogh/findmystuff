@@ -5,13 +5,11 @@ import RoomsList from "@/components/lists/rooms-list";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
-import { useAdmin } from "@/hooks/use-admin";
 import { PageHeader } from "@/components/common/page-header";
 
 export default function RoomsPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { isAdmin } = useAdmin();
 
   const handleRoomAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -25,22 +23,18 @@ export default function RoomsPage() {
           title="Помещения"
           description="Просмотр и поиск всех помещений в складе"
           action={
-            isAdmin ? (
-              <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
-                Добавить помещение
-              </Button>
-            ) : undefined
+            <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Добавить помещение
+            </Button>
           }
         />
         <RoomsList refreshTrigger={refreshTrigger} />
-        {isAdmin && (
-          <AddRoomForm
-            open={isAddDialogOpen}
-            onOpenChange={setIsAddDialogOpen}
-            onSuccess={handleRoomAdded}
-          />
-        )}
+        <AddRoomForm
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onSuccess={handleRoomAdded}
+        />
       </div>
     </div>
   );

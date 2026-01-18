@@ -115,29 +115,6 @@ export const useSettings = () => {
     return getSetting("container_type_default") || "КОР";
   };
 
-  const getAdminEmail = (): string => {
-    // Для обратной совместимости, возвращаем первый email из списка
-    const emails = getAdminEmails();
-    return emails.length > 0 ? emails[0] : "dzorogh@gmail.com";
-  };
-
-  const getAdminEmails = (): string[] => {
-    const emailsJson = getSetting("admin_emails");
-    if (!emailsJson) {
-      // Проверяем старую настройку для обратной совместимости
-      const oldEmail = getSetting("admin_email");
-      if (oldEmail) {
-        return [oldEmail];
-      }
-      return ["dzorogh@gmail.com"];
-    }
-    try {
-      return JSON.parse(emailsJson);
-    } catch {
-      return ["dzorogh@gmail.com"];
-    }
-  };
-
   const getMarkingTemplate = (): string => {
     return getSetting("container_marking_template") || "{TYPE}-{NUMBER}";
   };
@@ -175,8 +152,6 @@ export const useSettings = () => {
     getSetting,
     getContainerTypes,
     getDefaultContainerType,
-    getAdminEmail,
-    getAdminEmails,
     getMarkingTemplate,
     getPlaceTypes,
     getDefaultPlaceType,

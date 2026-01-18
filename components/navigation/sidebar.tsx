@@ -7,10 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings } from "lucide-react";
-import Logo from "@/components/logo";
-import GoogleSignIn from "@/components/google-signin";
-import { useAdmin } from "@/hooks/use-admin";
-import { ThemeToggle } from "@/components/theme-toggle";
+import Logo from "@/components/common/logo";
+import GoogleSignIn from "@/components/auth/google-signin";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +25,6 @@ const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const supabase = createClient();
-  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     const getUser = async () => {
@@ -66,7 +64,7 @@ const Sidebar = () => {
       { href: "/places", label: "Места", icon: MapPin },
       { href: "/containers", label: "Контейнеры", icon: Container },
       { href: "/items", label: "Вещи", icon: Box },
-      ...(isAdmin ? [{ href: "/settings", label: "Настройки", icon: Settings }] : []),
+      { href: "/settings", label: "Настройки", icon: Settings },
     ];
 
     return (
@@ -118,88 +116,77 @@ const Sidebar = () => {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col z-40">
-        {/* Header */}
-        <div className="h-16 flex items-center px-4 border-b shrink-0">
+        <div className="h-16 flex items-center px-4 border-b">
           <Link href="/" className="flex items-center">
             <Logo size="md" showText={true} />
           </Link>
         </div>
-
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 p-4 overflow-y-auto">
           <NavContent />
         </div>
-
-        {/* User Section */}
-        <div className="border-t p-4 shrink-0">
-          <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+        <div className="border-t p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <UserIcon className="h-4 w-4 shrink-0" />
-              <span className="truncate text-xs">{user.email}</span>
+              <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground truncate">{user.email}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                title="Выйти"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="sr-only">Выйти</span>
-              </Button>
-            </div>
+            <ThemeToggle />
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="w-full justify-start gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Выйти
+          </Button>
         </div>
       </aside>
 
-      {/* Mobile Menu */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Link href="/" className="flex items-center">
-            <Logo size="sm" showText={true} />
-          </Link>
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Открыть меню</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0">
-              <div className="flex flex-col h-full">
-                <SheetHeader className="px-4 h-14 flex-row items-center border-b shrink-0 space-y-0">
-                  <SheetTitle className="sr-only">Меню</SheetTitle>
-                  <Logo size="sm" showText={true} />
-                </SheetHeader>
-                <div className="flex-1 overflow-y-auto p-4">
-                  <NavContent />
-                </div>
-                <div className="border-t p-4">
-                  <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <UserIcon className="h-4 w-4 shrink-0" />
-                      <span className="truncate text-xs">{user.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <ThemeToggle />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleSignOut}
-                        title="Выйти"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span className="sr-only">Выйти</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+      {/* Mobile Sidebar */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden fixed top-4 left-4 z-50"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Открыть меню</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+          <SheetHeader>
+            <SheetTitle>
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+                <Logo size="sm" showText={true} />
+              </Link>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 mt-6">
+            <NavContent />
+          </div>
+          <div className="border-t pt-4 mt-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground truncate">{user.email}</span>
               </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
+              <ThemeToggle />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="w-full justify-start gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Выйти
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

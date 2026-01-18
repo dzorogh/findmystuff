@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,6 @@ interface RoomsListProps {
 const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -270,18 +268,6 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
     return null;
   }
 
-  if (!isAdmin) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            У вас нет прав для просмотра помещений.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <SearchForm
@@ -398,44 +384,42 @@ const RoomsList = ({ refreshTrigger }: RoomsListProps = {}) => {
                   })}
                 </p>
               </CardContent>
-              {isAdmin && (
-                <div className="border-t pl-6 pr-6 pt-3 pb-3">
-                  <div className="flex items-center justify-end gap-2">
-                    {!room.deleted_at ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingRoomId(room.id)}
-                          className="h-8 px-3"
-                        >
-                          <Pencil className="h-4 w-4 mr-1.5" />
-                          <span className="text-xs">Изменить</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteRoom(room.id)}
-                          className="h-8 px-3 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1.5" />
-                          <span className="text-xs">Удалить</span>
-                        </Button>
-                      </>
-                    ) : (
+              <div className="border-t pl-6 pr-6 pt-3 pb-3">
+                <div className="flex items-center justify-end gap-2">
+                  {!room.deleted_at ? (
+                    <>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRestoreRoom(room.id)}
-                        className="h-8 px-3 text-green-600 hover:text-green-700"
+                        onClick={() => setEditingRoomId(room.id)}
+                        className="h-8 px-3"
                       >
-                        <RotateCcw className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Восстановить</span>
+                        <Pencil className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Изменить</span>
                       </Button>
-                    )}
-                  </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteRoom(room.id)}
+                        className="h-8 px-3 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Удалить</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRestoreRoom(room.id)}
+                      className="h-8 px-3 text-green-600 hover:text-green-700"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1.5" />
+                      <span className="text-xs">Восстановить</span>
+                    </Button>
+                  )}
                 </div>
-              )}
+              </div>
             </Card>
           ))}
         </div>

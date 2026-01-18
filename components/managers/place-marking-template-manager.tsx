@@ -9,15 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Loader2, Save, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-
-const PLACE_MARKING_TEMPLATES = [
-  { value: "{TYPE}{NUMBER}", label: "{TYPE}{NUMBER} (например, Ш1)", example: "Ш1" },
-  { value: "{TYPE}-{NUMBER}", label: "{TYPE}-{NUMBER} (например, Ш-1)", example: "Ш-1" },
-  { value: "{TYPE}{NUMBER:2}", label: "{TYPE}{NUMBER:2} (например, Ш01)", example: "Ш01" },
-  { value: "{TYPE}-{NUMBER:2}", label: "{TYPE}-{NUMBER:2} (например, Ш-01)", example: "Ш-01" },
-  { value: "[{TYPE}]{NUMBER}", label: "[{TYPE}]{NUMBER} (например, [Ш]1)", example: "[Ш]1" },
-  { value: "{NUMBER}{TYPE}", label: "{NUMBER}{TYPE} (например, 1Ш)", example: "1Ш" },
-];
+import { MARKING_TEMPLATES } from "@/lib/marking-templates";
 
 const PlaceMarkingTemplateManager = () => {
   const { settings, updateSetting, isLoading } = useSettings();
@@ -34,7 +26,7 @@ const PlaceMarkingTemplateManager = () => {
   useEffect(() => {
     if (templateSetting) {
       const value = templateSetting.value;
-      const predefined = PLACE_MARKING_TEMPLATES.find((t) => t.value === value);
+      const predefined = MARKING_TEMPLATES.find((t) => t.value === value);
       if (predefined) {
         setTemplate(value);
         setUseCustom(false);
@@ -51,7 +43,8 @@ const PlaceMarkingTemplateManager = () => {
   const handleTemplateChange = (value: string) => {
     if (value === "custom") {
       setUseCustom(true);
-    } else {
+      setCustomTemplate("");
+    } else if (value) {
       setUseCustom(false);
       setTemplate(value);
     }
@@ -60,13 +53,20 @@ const PlaceMarkingTemplateManager = () => {
   const handleSave = async () => {
     const templateToSave = useCustom ? customTemplate : template;
 
-    if (!templateToSave.trim()) {
+    if (!templateToSave || !templateToSave.trim()) {
       toast.error("Шаблон не может быть пустым");
       return;
     }
 
-    if (!templateToSave.includes("{TYPE}") || !templateToSave.includes("{NUMBER}")) {
-      toast.error("Шаблон должен содержать {TYPE} и {NUMBER}");
+    const trimmedTemplate = templateToSave.trim();
+    
+    // Проверяем наличие {TYPE} и любого варианта {NUMBER} (с параметрами или без)
+    // {NUMBER} может быть в форматах: {NUMBER}, {NUMBER:2}, {NUMBER:3}, {NUMBER:4} и т.д.
+    const hasType = trimmedTemplate.includes("{TYPE}");
+    const hasNumber = /\{NUMBER(:?\d+)?\}/.test(trimmedTemplate);
+    
+    if (!hasType || !hasNumber) {
+      toast.error(`Шаблон должен содержать {TYPE} и {NUMBER}. Текущий шаблон: "${trimmedTemplate}"`);
       return;
     }
 
@@ -90,10 +90,10 @@ const PlaceMarkingTemplateManager = () => {
     }
   };
 
-  const getPreview = (templateValue: string): string => {
+  const getPreview = (templateValue: string, typeExample: string = "Ш"): string => {
     try {
       let preview = templateValue;
-      preview = preview.replace(/{TYPE}/g, "Ш");
+      preview = preview.replace(/{TYPE}/g, typeExample);
       preview = preview.replace(/{NUMBER:(\d+)}/g, (_, width) => {
         return String(1).padStart(parseInt(width), "0");
       });
@@ -119,7 +119,7 @@ const PlaceMarkingTemplateManager = () => {
           onChange={(e) => handleTemplateChange(e.target.value)}
           disabled={isSaving}
         >
-          {PLACE_MARKING_TEMPLATES.map((t) => (
+          {MARKING_TEMPLATES.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
             </option>
@@ -158,12 +158,15 @@ const PlaceMarkingTemplateManager = () => {
               <p className="text-xs text-muted-foreground">
                 Пример маркировки для типа "Ш" с номером 1
               </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Для контейнеров: {getPreview(currentTemplate, "КОР")}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
           {isSaving ? (
             <>

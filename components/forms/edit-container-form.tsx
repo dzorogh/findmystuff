@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import LocationCombobox from "@/components/location-combobox";
-import ImageUpload from "@/components/image-upload";
+import LocationCombobox from "@/components/location/location-combobox";
+import ImageUpload from "@/components/common/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
@@ -50,7 +49,6 @@ const EditContainerForm = ({
   onSuccess,
 }: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const { getContainerTypes, getDefaultContainerType } = useSettings();
   const { generateMarking } = useContainerMarking();
   const [name, setName] = useState(containerName || "");
@@ -94,11 +92,6 @@ const EditContainerForm = ({
     try {
       const supabase = createClient();
 
-      if (!isAdmin) {
-        setError("У вас нет прав для редактирования контейнеров");
-        setIsSubmitting(false);
-        return;
-      }
 
       // Обновляем название, тип контейнера и фото
       const { error: updateError } = await supabase
@@ -146,7 +139,7 @@ const EditContainerForm = ({
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading) {
     return null;
   }
 

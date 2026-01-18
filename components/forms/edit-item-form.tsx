@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import LocationCombobox from "@/components/location-combobox";
-import ImageUpload from "@/components/image-upload";
+import LocationCombobox from "@/components/location/location-combobox";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -42,7 +41,6 @@ const EditItemForm = ({
   onSuccess,
 }: EditItemFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [name, setName] = useState(itemName || "");
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(
     currentLocation?.destination_type as "container" | "place" | "room" | null
@@ -83,14 +81,8 @@ const EditItemForm = ({
     try {
       const supabase = createClient();
 
-      if (!isAdmin) {
-        setError("У вас нет прав для редактирования вещей");
-        setIsSubmitting(false);
-        return;
-      }
 
       // Обновляем название вещи и фото
-      console.log("Updating item with photo_url:", photoUrl);
       const { error: updateError } = await supabase
         .from("items")
         .update({
@@ -136,7 +128,7 @@ const EditItemForm = ({
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading) {
     return null;
   }
 

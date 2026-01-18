@@ -5,14 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import RoomCombobox from "@/components/room-combobox";
+import RoomCombobox from "@/components/location/room-combobox";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { useSettings } from "@/hooks/use-settings";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { placeTypesToOptions } from "@/lib/utils";
-import ImageUpload from "@/components/image-upload";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -45,7 +44,6 @@ const EditPlaceForm = ({
   onSuccess,
 }: EditPlaceFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const { getPlaceTypes, getDefaultPlaceType } = useSettings();
   const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
@@ -55,10 +53,6 @@ const EditPlaceForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Отслеживаем изменения photoUrl для отладки
-  useEffect(() => {
-    console.log("photoUrl changed:", photoUrl);
-  }, [photoUrl]);
 
   useEffect(() => {
     if (open) {
@@ -103,19 +97,12 @@ const EditPlaceForm = ({
     try {
       const supabase = createClient();
 
-      if (!isAdmin) {
-        setError("У вас нет прав для редактирования мест");
-        setIsSubmitting(false);
-        return;
-      }
 
       const updateData: { name: string | null; place_type: string; photo_url: string | null } = {
         name: name.trim() || null,
         place_type: placeType,
         photo_url: photoUrl || null,
       };
-      
-      console.log("Updating place with data:", updateData);
       
       const { error: updateError } = await supabase
         .from("places")
@@ -163,7 +150,7 @@ const EditPlaceForm = ({
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading) {
     return null;
   }
 
@@ -218,10 +205,7 @@ const EditPlaceForm = ({
 
               <ImageUpload
                 value={photoUrl}
-                onChange={(url) => {
-                  console.log("ImageUpload onChange called with:", url);
-                  setPhotoUrl(url);
-                }}
+                onChange={setPhotoUrl}
                 disabled={isSubmitting}
                 label="Фотография места (необязательно)"
               />

@@ -13,7 +13,6 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPlaceForm from "@/components/forms/edit-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
-import { useAdmin } from "@/hooks/use-admin";
 
 interface Place {
   id: number;
@@ -45,7 +44,6 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const { generateMarking } = usePlaceMarking();
-  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -286,18 +284,6 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
     return null;
   }
 
-  if (!isAdmin) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            У вас нет прав для просмотра местоположений.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <SearchForm
@@ -410,44 +396,42 @@ const PlacesList = ({ refreshTrigger }: PlacesListProps = {}) => {
                   })}
                 </p>
               </CardContent>
-              {isAdmin && (
-                <div className="border-t px-6 py-3">
-                  <div className="flex items-center justify-end gap-2">
-                    {!place.deleted_at ? (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingPlaceId(place.id)}
-                          className="h-8 px-3"
-                        >
-                          <Pencil className="h-4 w-4 mr-1.5" />
-                          <span className="text-xs">Изменить</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeletePlace(place.id)}
-                          className="h-8 px-3 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1.5" />
-                          <span className="text-xs">Удалить</span>
-                        </Button>
-                      </>
-                    ) : (
+              <div className="border-t px-6 py-3">
+                <div className="flex items-center justify-end gap-2">
+                  {!place.deleted_at ? (
+                    <>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRestorePlace(place.id)}
-                        className="h-8 px-3 text-green-600 hover:text-green-700"
+                        onClick={() => setEditingPlaceId(place.id)}
+                        className="h-8 px-3"
                       >
-                        <RotateCcw className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Восстановить</span>
+                        <Pencil className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Изменить</span>
                       </Button>
-                    )}
-                  </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeletePlace(place.id)}
+                        className="h-8 px-3 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1.5" />
+                        <span className="text-xs">Удалить</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRestorePlace(place.id)}
+                      className="h-8 px-3 text-green-600 hover:text-green-700"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1.5" />
+                      <span className="text-xs">Восстановить</span>
+                    </Button>
+                  )}
                 </div>
-              )}
+              </div>
             </Card>
           ))}
         </div>

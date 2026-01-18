@@ -9,11 +9,10 @@ import { Select } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
 import { useSettings } from "@/hooks/use-settings";
 import { placeTypesToOptions } from "@/lib/utils";
-import ImageUpload from "@/components/image-upload";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -32,7 +31,6 @@ interface AddPlaceFormProps {
 
 const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const { rooms } = useRooms();
   const { getPlaceTypes, getDefaultPlaceType } = useSettings();
   const [name, setName] = useState("");
@@ -50,19 +48,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
     try {
       const supabase = createClient();
       
-      if (!isAdmin) {
-        setError("У вас нет прав для добавления мест");
-        setIsSubmitting(false);
-        return;
-      }
 
       const insertData: { name: string | null; place_type: string; photo_url: string | null } = {
         name: name.trim() || null,
         place_type: placeType,
         photo_url: photoUrl || null,
       };
-      
-      console.log("Inserting place with data:", insertData);
       
       const { data: newPlace, error: insertError } = await supabase
         .from("places")
@@ -71,7 +62,6 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         .single();
 
       if (insertError) {
-        console.error("Insert error:", insertError);
         throw insertError;
       }
 
@@ -133,10 +123,6 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
-            </div>
-          ) : !isAdmin ? (
-            <div className="py-8 text-center text-destructive">
-              У вас нет прав для добавления мест
             </div>
           ) : (
             <>
@@ -204,10 +190,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
 
               <ImageUpload
                 value={photoUrl}
-                onChange={(url) => {
-                  console.log("ImageUpload onChange called with:", url);
-                  setPhotoUrl(url);
-                }}
+                onChange={setPhotoUrl}
                 disabled={isSubmitting}
                 label="Фотография места (необязательно)"
               />

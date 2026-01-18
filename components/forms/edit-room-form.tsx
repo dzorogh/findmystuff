@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import ImageUpload from "@/components/image-upload";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -35,16 +34,11 @@ const EditRoomForm = ({
   onSuccess,
 }: EditRoomFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [name, setName] = useState(roomName || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Отслеживаем изменения photoUrl для отладки
-  useEffect(() => {
-    console.log("photoUrl changed:", photoUrl);
-  }, [photoUrl]);
 
   // Загружаем текущие данные при открытии формы
   useEffect(() => {
@@ -80,18 +74,11 @@ const EditRoomForm = ({
     try {
       const supabase = createClient();
 
-      if (!isAdmin) {
-        setError("У вас нет прав для редактирования помещений");
-        setIsSubmitting(false);
-        return;
-      }
 
       const updateData: { name: string | null; photo_url: string | null } = {
         name: name.trim() || null,
         photo_url: photoUrl || null,
       };
-      
-      console.log("Updating room with data:", updateData);
       
       const { error: updateError } = await supabase
         .from("rooms")
@@ -122,7 +109,7 @@ const EditRoomForm = ({
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading) {
     return null;
   }
 
@@ -148,10 +135,7 @@ const EditRoomForm = ({
 
           <ImageUpload
             value={photoUrl}
-            onChange={(url) => {
-              console.log("ImageUpload onChange called with:", url);
-              setPhotoUrl(url);
-            }}
+              onChange={setPhotoUrl}
             disabled={isSubmitting}
             label="Фотография помещения (необязательно)"
           />

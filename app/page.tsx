@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, Plus, ArrowRight } from "lucide-react";
 import AddItemForm from "@/components/forms/add-item-form";
-import GoogleSignIn from "@/components/google-signin";
-import Logo from "@/components/logo";
+import GoogleSignIn from "@/components/auth/google-signin";
+import Logo from "@/components/common/logo";
 
 interface SearchResult {
   type: "item" | "place" | "container" | "room";

@@ -6,11 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
-import LocationCombobox from "@/components/location-combobox";
+import LocationCombobox from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -31,7 +30,6 @@ interface MoveItemFormProps {
 
 const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveItemFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const { rooms } = useRooms();
   const { places } = usePlaces();
   const { containers } = useContainers();
@@ -99,7 +97,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
     }
   };
 
-  if (isLoading || !isAdmin) {
+  if (isLoading) {
     return null;
   }
 

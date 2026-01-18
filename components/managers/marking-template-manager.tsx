@@ -9,15 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Loader2, Save, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
-
-const MARKING_TEMPLATES = [
-  { value: "{TYPE}-{NUMBER}", label: "{TYPE}-{NUMBER} (например, КОР-001)", example: "КОР-001" },
-  { value: "{TYPE}{NUMBER}", label: "{TYPE}{NUMBER} (например, КОР001)", example: "КОР001" },
-  { value: "{TYPE}-{NUMBER:2}", label: "{TYPE}-{NUMBER:2} (например, КОР-01)", example: "КОР-01" },
-  { value: "{TYPE}-{NUMBER:4}", label: "{TYPE}-{NUMBER:4} (например, КОР-0001)", example: "КОР-0001" },
-  { value: "[{TYPE}]{NUMBER}", label: "[{TYPE}]{NUMBER} (например, [КОР]001)", example: "[КОР]001" },
-  { value: "{NUMBER}-{TYPE}", label: "{NUMBER}-{TYPE} (например, 001-КОР)", example: "001-КОР" },
-];
+import { MARKING_TEMPLATES } from "@/lib/marking-templates";
 
 const MarkingTemplateManager = () => {
   const { settings, updateSetting, isLoading } = useSettings();
@@ -51,7 +43,8 @@ const MarkingTemplateManager = () => {
   const handleTemplateChange = (value: string) => {
     if (value === "custom") {
       setUseCustom(true);
-    } else {
+      setCustomTemplate("");
+    } else if (value) {
       setUseCustom(false);
       setTemplate(value);
     }
@@ -60,13 +53,20 @@ const MarkingTemplateManager = () => {
   const handleSave = async () => {
     const templateToSave = useCustom ? customTemplate : template;
 
-    if (!templateToSave.trim()) {
+    if (!templateToSave || !templateToSave.trim()) {
       toast.error("Шаблон не может быть пустым");
       return;
     }
 
-    if (!templateToSave.includes("{TYPE}") || !templateToSave.includes("{NUMBER}")) {
-      toast.error("Шаблон должен содержать {TYPE} и {NUMBER}");
+    const trimmedTemplate = templateToSave.trim();
+    
+    // Проверяем наличие {TYPE} и любого варианта {NUMBER} (с параметрами или без)
+    // {NUMBER} может быть в форматах: {NUMBER}, {NUMBER:2}, {NUMBER:3}, {NUMBER:4} и т.д.
+    const hasType = trimmedTemplate.includes("{TYPE}");
+    const hasNumber = /\{NUMBER(:?\d+)?\}/.test(trimmedTemplate);
+    
+    if (!hasType || !hasNumber) {
+      toast.error(`Шаблон должен содержать {TYPE} и {NUMBER}. Текущий шаблон: "${trimmedTemplate}"`);
       return;
     }
 
@@ -81,17 +81,17 @@ const MarkingTemplateManager = () => {
     }
   };
 
-  const getPreview = (templateValue: string): string => {
+  const getPreview = (templateValue: string, typeExample: string = "КОР"): string => {
     try {
       // Парсим шаблон для предпросмотра
       let preview = templateValue;
-      preview = preview.replace(/{TYPE}/g, "КОР");
+      preview = preview.replace(/{TYPE}/g, typeExample);
       
       // Обрабатываем {NUMBER} с разными форматами
       preview = preview.replace(/{NUMBER:(\d+)}/g, (_, width) => {
         return String(1).padStart(parseInt(width), "0");
       });
-      preview = preview.replace(/{NUMBER}/g, String(1).padStart(3, "0"));
+      preview = preview.replace(/{NUMBER}/g, String(1));
       
       return preview;
     } catch {
@@ -153,12 +153,15 @@ const MarkingTemplateManager = () => {
               <p className="text-xs text-muted-foreground">
                 Пример маркировки для типа "КОР" с номером 1
               </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Для мест: {getPreview(currentTemplate, "Ш")}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
           {isSaving ? (
             <>

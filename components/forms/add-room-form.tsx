@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import ImageUpload from "@/components/image-upload";
+import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -27,7 +26,6 @@ interface AddRoomFormProps {
 
 const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,18 +39,11 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
     try {
       const supabase = createClient();
       
-      if (!isAdmin) {
-        setError("У вас нет прав для добавления помещений");
-        setIsSubmitting(false);
-        return;
-      }
 
       const insertData: { name: string | null; photo_url: string | null } = {
         name: name.trim() || null,
         photo_url: photoUrl || null,
       };
-      
-      console.log("Inserting room with data:", insertData);
       
       const { error: insertError } = await supabase
         .from("rooms")
@@ -100,10 +91,6 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !isAdmin ? (
-            <div className="py-8 text-center text-destructive">
-              У вас нет прав для добавления помещений
-            </div>
           ) : (
             <>
               <div className="space-y-2">
@@ -123,10 +110,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
 
               <ImageUpload
                 value={photoUrl}
-                onChange={(url) => {
-                  console.log("ImageUpload onChange called with:", url);
-                  setPhotoUrl(url);
-                }}
+                onChange={setPhotoUrl}
                 disabled={isSubmitting}
                 label="Фотография помещения (необязательно)"
               />

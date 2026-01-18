@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,6 @@ interface ItemsListProps {
 const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,7 +69,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
   }, [user, showDeleted, refreshTrigger]);
 
   const loadItems = async (query?: string, isInitialLoad = false) => {
-    if (!user || !isAdmin) return;
+    if (!user) return;
 
     setIsSearching(true);
     if (isInitialLoad) {
@@ -374,11 +372,6 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         };
       });
 
-      // Отладочная информация
-      const itemsWithPhotos = itemsWithLocation.filter(i => i.photo_url);
-      if (itemsWithPhotos.length > 0) {
-        console.log("Items with photos:", itemsWithPhotos.map(i => ({ id: i.id, name: i.name, photo_url: i.photo_url })));
-      }
       setItems(itemsWithLocation);
     } catch (err) {
       setError(
@@ -506,18 +499,6 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
     return null;
   }
 
-  if (!isAdmin) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            У вас нет прав для просмотра вещей.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <SearchForm
@@ -590,9 +571,7 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                     <TableHead>Название</TableHead>
                     <TableHead className="hidden md:table-cell">Местоположение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    {isAdmin && (
-                      <TableHead className="w-[150px] text-right">Действия</TableHead>
-                    )}
+                    <TableHead className="w-[150px] text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
@@ -763,53 +742,51 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    {isAdmin && (
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
-                          {!item.deleted_at ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setEditingItemId(item.id)}
-                                className="h-8 w-8"
-                                title="Редактировать"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setMovingItemId(item.id)}
-                                className="h-8 w-8"
-                                title="Переместить"
-                              >
-                                <MapPin className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                title="Удалить"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          ) : (
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        {!item.deleted_at ? (
+                          <>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleRestoreItem(item.id)}
-                              className="h-8 w-8 text-green-600 hover:text-green-700"
-                              title="Восстановить"
+                              onClick={() => setEditingItemId(item.id)}
+                              className="h-8 w-8"
+                              title="Редактировать"
                             >
-                              <RotateCcw className="h-4 w-4" />
+                              <Pencil className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setMovingItemId(item.id)}
+                              className="h-8 w-8"
+                              title="Переместить"
+                            >
+                              <MapPin className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              title="Удалить"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRestoreItem(item.id)}
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            title="Восстановить"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -81,7 +81,6 @@ const ImageUpload = ({
       if (!data.url) {
         throw new Error("Сервер не вернул URL загруженного файла");
       }
-      console.log("Received photo URL from server:", data.url);
       // Обновляем preview на реальный URL и вызываем onChange
       setPreview(data.url);
       onChange(data.url);

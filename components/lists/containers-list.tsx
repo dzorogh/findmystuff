@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,6 @@ interface ContainersListProps {
 const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [containers, setContainers] = useState<Container[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -373,18 +371,6 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
     return null;
   }
 
-  if (!isAdmin) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
-            У вас нет прав для просмотра контейнеров.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <SearchForm
@@ -457,9 +443,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                     <TableHead>Маркировка / Название</TableHead>
                     <TableHead className="hidden md:table-cell">Местоположение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
-                    {isAdmin && (
-                      <TableHead className="w-[150px] text-right">Действия</TableHead>
-                    )}
+                    <TableHead className="w-[150px] text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -589,46 +573,44 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      {isAdmin && (
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-1 sm:gap-2">
-                            {!container.deleted_at ? (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setEditingContainerId(container.id)}
-                                  className="h-8 w-8"
-                                  title="Редактировать"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteContainer(container.id)}
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
-                                  title="Удалить"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleRestoreContainer(container.id)}
-                                className="h-8 w-8 text-green-600 hover:text-green-700"
-                                title="Восстановить"
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        {!container.deleted_at ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingContainerId(container.id)}
+                              className="h-8 w-8"
+                              title="Редактировать"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteContainer(container.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              title="Удалить"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRestoreContainer(container.id)}
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            title="Восстановить"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

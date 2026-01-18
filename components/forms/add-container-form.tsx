@@ -9,9 +9,8 @@ import { Select } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import { useAdmin } from "@/hooks/use-admin";
-import LocationSelector from "@/components/location-selector";
-import ImageUpload from "@/components/image-upload";
+import LocationCombobox from "@/components/location/location-combobox";
+import ImageUpload from "@/components/common/image-upload";
 import { useSettings } from "@/hooks/use-settings";
 import { containerTypesToOptions, type ContainerType } from "@/lib/utils";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -32,7 +31,6 @@ interface AddContainerFormProps {
 
 const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
   const { user, isLoading } = useUser();
-  const { isAdmin } = useAdmin();
   const { getContainerTypes, getDefaultContainerType } = useSettings();
   const [name, setName] = useState("");
   const [containerType, setContainerType] = useState<ContainerType>(getDefaultContainerType());
@@ -50,11 +48,6 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
     try {
       const supabase = createClient();
       
-      if (!isAdmin) {
-        setError("У вас нет прав для добавления контейнеров");
-        setIsSubmitting(false);
-        return;
-      }
 
       // Проверяем, что если выбран тип назначения, то и ID тоже выбран
       if (destinationType && !selectedDestinationId) {
@@ -139,10 +132,6 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
-          ) : !isAdmin ? (
-            <div className="py-8 text-center text-destructive">
-              У вас нет прав для добавления контейнеров
-            </div>
           ) : (
             <>
               <div className="space-y-2">
@@ -179,7 +168,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 </p>
               </div>
 
-      <LocationSelector
+      <LocationCombobox
         destinationType={destinationType}
         selectedDestinationId={selectedDestinationId}
         onDestinationTypeChange={setDestinationType}
