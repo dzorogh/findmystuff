@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
 import {
@@ -31,7 +31,6 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,12 +96,14 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       setDestinationType(null);
       setSelectedDestinationId("");
       
-      toast({
-        title: "Вещь добавлена",
-        description: destinationType && selectedDestinationId
+      toast.success(
+        destinationType && selectedDestinationId
           ? "Вещь успешно добавлена и размещена"
           : "Вещь успешно добавлена в склад",
-      });
+        {
+          description: "Вещь добавлена",
+        }
+      );
       
       if (onSuccess) {
         onSuccess();

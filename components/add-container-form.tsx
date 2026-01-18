@@ -5,10 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
+import { CONTAINER_TYPES, type ContainerType } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +29,11 @@ interface AddContainerFormProps {
 const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
   const { user, isLoading } = useUser();
   const [name, setName] = useState("");
+  const [containerType, setContainerType] = useState<ContainerType>("КОР");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,6 +71,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         .from("containers")
         .insert({
           name: name.trim() || null,
+          container_type: containerType,
         })
         .select()
         .single();
@@ -94,15 +97,18 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
       }
 
       setName("");
+      setContainerType("КОР");
       setDestinationType(null);
       setSelectedDestinationId("");
       
-      toast({
-        title: "Контейнер добавлен",
-        description: destinationType && selectedDestinationId
+      toast.success(
+        destinationType && selectedDestinationId
           ? "Контейнер успешно добавлен и размещен"
           : "Контейнер успешно добавлен в склад",
-      });
+        {
+          description: "Контейнер добавлен",
+        }
+      );
       
       if (onSuccess) {
         onSuccess();
@@ -141,19 +147,38 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="container-name">Название контейнера</Label>
-        <Input
-          id="container-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Введите название контейнера"
-          disabled={isSubmitting}
-        />
-        <p className="text-xs text-muted-foreground">
-          Поле необязательное. ID и дата создания заполнятся автоматически.
-        </p>
-      </div>
+                <Label htmlFor="container-type">Тип контейнера</Label>
+                <Select
+                  id="container-type"
+                  value={containerType}
+                  onChange={(e) => setContainerType(e.target.value as ContainerType)}
+                  disabled={isSubmitting}
+                >
+                  {CONTAINER_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Маркировка будет сгенерирована автоматически (например, КОР-001)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="container-name">Название контейнера (необязательно)</Label>
+                <Input
+                  id="container-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название контейнера"
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Дополнительное описание. ID и дата создания заполнятся автоматически.
+                </p>
+              </div>
 
       <LocationSelector
         destinationType={destinationType}

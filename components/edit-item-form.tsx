@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
 import {
@@ -49,7 +49,6 @@ const EditItemForm = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -95,10 +94,7 @@ const EditItemForm = ({
       }
 
       // Сначала показываем toast
-      toast({
-        title: "Вещь обновлена",
-        description: "Вещь успешно обновлена",
-      });
+      toast.success("Вещь успешно обновлена");
 
       // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
       await new Promise(resolve => setTimeout(resolve, 200));

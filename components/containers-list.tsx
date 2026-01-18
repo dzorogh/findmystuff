@@ -11,10 +11,21 @@ import { Search, Container, Loader2, MapPin, Building2, Pencil, Trash2, RotateCc
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import EditContainerForm from "./edit-container-form";
+import { generateContainerMarking } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Container {
   id: number;
   name: string | null;
+  container_type: string | null;
+  marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
   last_location?: {
@@ -85,7 +96,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       const supabase = createClient();
       let queryBuilder = supabase
         .from("containers")
-        .select("*")
+        .select("id, name, container_type, marking_number, created_at, deleted_at")
         .order("created_at", { ascending: false });
 
       // Фильтр по удаленным
@@ -97,7 +108,28 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
 
       if (query && query.trim()) {
         const searchTerm = query.trim();
-        queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
+        // Проверяем, является ли запрос маркировкой в формате ТИП-НОМЕР
+        const markingMatch = searchTerm.match(/^([А-ЯЁ]+)-?(\d+)$/i);
+        
+        if (markingMatch) {
+          // Если это маркировка, ищем по типу и номеру
+          const [, type, number] = markingMatch;
+          queryBuilder = queryBuilder
+            .ilike("container_type", `%${type.toUpperCase()}%`)
+            .eq("marking_number", parseInt(number));
+        } else {
+          // Обычный поиск по названию, типу или номеру
+          const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
+          if (searchNumber !== null) {
+            queryBuilder = queryBuilder.or(
+              `name.ilike.%${searchTerm}%,container_type.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
+            );
+          } else {
+            queryBuilder = queryBuilder.or(
+              `name.ilike.%${searchTerm}%,container_type.ilike.%${searchTerm}%`
+            );
+          }
+        }
       }
 
       const { data: containersData, error: fetchError } = await queryBuilder;
@@ -188,6 +220,8 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           return {
             id: container.id,
             name: container.name,
+            container_type: container.container_type,
+            marking_number: container.marking_number,
             created_at: container.created_at,
             deleted_at: container.deleted_at,
             last_location: null,
@@ -206,6 +240,8 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
         return {
           id: container.id,
           name: container.name,
+          container_type: container.container_type,
+          marking_number: container.marking_number,
           created_at: container.created_at,
           deleted_at: container.deleted_at,
           last_location: {
@@ -304,25 +340,32 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
+                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -357,7 +400,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
         <CardHeader>
           <CardTitle>Поиск контейнеров</CardTitle>
           <CardDescription>
-            Введите название для поиска по всем контейнерам
+            Поиск по названию, типу контейнера или маркировке (например, КОР-001)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -367,7 +410,7 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="Введите название контейнера..."
+              placeholder="Название, тип или маркировка (КОР-001)..."
               className="pl-10"
             />
             {isSearching && (
@@ -406,25 +449,32 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
       )}
 
       {isSearching && containers.length === 0 ? (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"><Skeleton className="h-4 w-8" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-24" /></TableHead>
+                  <TableHead><Skeleton className="h-4 w-32" /></TableHead>
+                  <TableHead className="w-[120px]"><Skeleton className="h-4 w-20" /></TableHead>
+                  <TableHead className="w-[150px]"><Skeleton className="h-4 w-16" /></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : containers.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -437,113 +487,189 @@ const ContainersList = ({ refreshTrigger }: ContainersListProps = {}) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {containers.map((container) => (
-            <Card key={container.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Container className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-lg">
-                      <Link
-                        href={`/containers/${container.id}`}
-                        className="hover:underline"
-                      >
-                        {container.name || `Контейнер #${container.id}`}
-                      </Link>
-                    </CardTitle>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {container.deleted_at && (
-                      <Badge variant="destructive">Удалено</Badge>
-                    )}
-                    <Badge variant="secondary">#{container.id}</Badge>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px] hidden sm:table-cell">ID</TableHead>
+                    <TableHead>Маркировка / Название</TableHead>
+                    <TableHead className="hidden md:table-cell">Местоположение</TableHead>
+                    <TableHead className="w-[120px] hidden lg:table-cell">Дата перемещения</TableHead>
                     {user.email === "dzorogh@gmail.com" && (
-                      <>
-                        {!container.deleted_at ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingContainerId(container.id)}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteContainer(container.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestoreContainer(container.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </>
+                      <TableHead className="w-[150px] text-right">Действия</TableHead>
                     )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {container.last_location ? (
-                  <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          {container.last_location.destination_type === "place" ? (
-                            <MapPin className="h-4 w-4 text-primary" />
-                          ) : container.last_location.destination_type === "container" ? (
-                            <Container className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Building2 className="h-4 w-4 text-primary" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {containers.map((container) => (
+                    <TableRow
+                      key={container.id}
+                      className={container.deleted_at ? "opacity-60" : ""}
+                    >
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex items-center gap-2">
+                          {container.deleted_at && (
+                            <Badge variant="destructive" className="text-xs">Удалено</Badge>
                           )}
-                          <span className="font-medium">
-                            {container.last_location.destination_name ||
-                              `#${container.last_location.destination_id}`}
-                          </span>
+                          <span className="text-muted-foreground">#{container.id}</span>
                         </div>
-                    <p className="text-xs text-muted-foreground">
-                      Размещен:{" "}
-                      {new Date(container.last_location.moved_at).toLocaleDateString("ru-RU", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="rounded-md bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">
-                      Местоположение не указано
-                    </p>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Создан:{" "}
-                  {new Date(container.created_at).toLocaleDateString("ru-RU", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Container className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={`/containers/${container.id}`}
+                              className="font-medium hover:underline break-words leading-tight block"
+                            >
+                              {container.name || `Контейнер #${container.id}`}
+                            </Link>
+                            {generateContainerMarking(container.container_type as any, container.marking_number) && (
+                              <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                                {generateContainerMarking(container.container_type as any, container.marking_number)}
+                              </p>
+                            )}
+                            <div className="md:hidden mt-1 text-xs text-muted-foreground">
+                              {container.last_location ? (
+                                <div className="flex items-center gap-1">
+                                  {container.last_location.destination_type === "room" && (
+                                    <>
+                                      <Building2 className="h-3 w-3" />
+                                      <span className="truncate">
+                                        {container.last_location.destination_name ||
+                                          `Помещение #${container.last_location.destination_id}`}
+                                      </span>
+                                    </>
+                                  )}
+                                  {container.last_location.destination_type === "place" && (
+                                    <>
+                                      <MapPin className="h-3 w-3" />
+                                      <span className="truncate">
+                                        {container.last_location.destination_name ||
+                                          `Место #${container.last_location.destination_id}`}
+                                      </span>
+                                    </>
+                                  )}
+                                  {container.last_location.destination_type === "container" && (
+                                    <>
+                                      <Container className="h-3 w-3" />
+                                      <span className="truncate">
+                                        {container.last_location.destination_name ||
+                                          `Контейнер #${container.last_location.destination_id}`}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              ) : (
+                                <span>Местоположение не указано</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {container.last_location ? (
+                          <div className="space-y-1">
+                            {container.last_location.destination_type === "room" && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span>
+                                  {container.last_location.destination_name ||
+                                    `Помещение #${container.last_location.destination_id}`}
+                                </span>
+                              </div>
+                            )}
+                            {container.last_location.destination_type === "place" && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span>
+                                  {container.last_location.destination_name ||
+                                    `Место #${container.last_location.destination_id}`}
+                                </span>
+                              </div>
+                            )}
+                            {container.last_location.destination_type === "container" && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Container className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span>
+                                  {container.last_location.destination_name ||
+                                    `Контейнер #${container.last_location.destination_id}`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Не указано</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {container.last_location ? (
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(container.last_location.moved_at).toLocaleDateString("ru-RU", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      {user.email === "dzorogh@gmail.com" && (
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1 sm:gap-2">
+                            {!container.deleted_at ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditingContainerId(container.id)}
+                                  className="h-8 w-8"
+                                  title="Редактировать"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteContainer(container.id)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  title="Удалить"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRestoreContainer(container.id)}
+                                className="h-8 w-8 text-green-600 hover:text-green-700"
+                                title="Восстановить"
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {editingContainerId && (
         <EditContainerForm
           containerId={editingContainerId}
           containerName={containers.find((c) => c.id === editingContainerId)?.name || null}
+          containerType={containers.find((c) => c.id === editingContainerId)?.container_type as any || null}
+          markingNumber={containers.find((c) => c.id === editingContainerId)?.marking_number || null}
           currentLocation={containers.find((c) => c.id === editingContainerId)?.last_location}
           open={!!editingContainerId}
           onOpenChange={(open) => !open && setEditingContainerId(null)}

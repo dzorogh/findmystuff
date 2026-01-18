@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Container, MapPin, Building2, Calendar } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { generateContainerMarking } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -32,6 +33,8 @@ interface Transition {
 interface Container {
   id: number;
   name: string | null;
+  container_type: string | null;
+  marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
   last_location?: {
@@ -70,7 +73,7 @@ export default function ContainerDetailPage() {
       // Загружаем контейнер
       const { data: containerData, error: containerError } = await supabase
         .from("containers")
-        .select("*")
+        .select("id, name, container_type, marking_number, created_at, deleted_at")
         .eq("id", containerId)
         .single();
 
@@ -320,12 +323,23 @@ export default function ContainerDetailPage() {
                   <CardTitle className="text-2xl">
                     {container.name || `Контейнер #${container.id}`}
                   </CardTitle>
-                  <CardDescription className="mt-1">
-                    ID: #{container.id}
+                  <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
+                    {generateContainerMarking(container.container_type as any, container.marking_number) ? (
+                      <>
+                        <span className="font-mono font-semibold">
+                          {generateContainerMarking(container.container_type as any, container.marking_number)}
+                        </span>
+                        <span className="text-muted-foreground">•</span>
+                      </>
+                    ) : null}
+                    <span>ID: #{container.id}</span>
                     {container.deleted_at && (
-                      <Badge variant="destructive" className="ml-2">
-                        Удалено
-                      </Badge>
+                      <>
+                        <span className="text-muted-foreground">•</span>
+                        <Badge variant="destructive">
+                          Удалено
+                        </Badge>
+                      </>
                     )}
                   </CardDescription>
                 </div>

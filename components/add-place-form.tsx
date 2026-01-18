@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useRooms } from "@/hooks/use-rooms";
 import {
@@ -32,7 +32,6 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -93,9 +92,8 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       setName("");
       setSelectedRoomId("");
       
-      toast({
-        title: "Место добавлено",
-        description: "Место успешно добавлено и размещено в помещении",
+      toast.success("Место успешно добавлено и размещено в помещении", {
+        description: "Место добавлено",
       });
       
       if (onSuccess) {

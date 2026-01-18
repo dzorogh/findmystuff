@@ -245,6 +245,23 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         .filter((t) => t.destination_type === "place" && t.destination_id)
         .map((t) => t.destination_id);
 
+      // Загружаем transitions для всех мест, где находятся контейнеры (если еще не загружены)
+      const missingPlaceIds = containerPlaceIds.filter((id) => !lastPlaceTransitions.has(id));
+      if (missingPlaceIds.length > 0) {
+        const { data: missingPlacesTransitionsData } = await supabase
+          .from("transitions")
+          .select("*")
+          .eq("destination_type", "room")
+          .in("place_id", missingPlaceIds)
+          .order("created_at", { ascending: false });
+
+        (missingPlacesTransitionsData || []).forEach((t) => {
+          if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
+            lastPlaceTransitions.set(t.place_id, t);
+          }
+        });
+      }
+
       const containerPlaceRoomIds = containerPlaceIds
         .map((placeId) => {
           const placeTransition = lastPlaceTransitions.get(placeId);
@@ -252,16 +269,31 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
         })
         .filter((id) => id !== null);
 
-      const { data: containerPlaceRoomsData } = containerPlaceRoomIds.length > 0
+      // Объединяем с уже загруженными помещениями мест
+      const allPlaceRoomIds = Array.from(new Set([
+        ...placeRoomIds,
+        ...containerPlaceRoomIds
+      ]));
+
+      const { data: allPlaceRoomsData } = allPlaceRoomIds.length > 0
         ? await supabase
             .from("rooms")
             .select("id, name")
-            .in("id", containerPlaceRoomIds)
+            .in("id", allPlaceRoomIds)
             .is("deleted_at", null)
         : { data: [] };
 
+      const allPlaceRoomsMap = new Map(
+        (allPlaceRoomsData || []).map((r) => [r.id, r.name])
+      );
+
+      // Обновляем placeRoomsMap, чтобы включить все помещения
+      allPlaceRoomsMap.forEach((name, id) => {
+        placeRoomsMap.set(id, name);
+      });
+
       const containerPlaceRoomsMap = new Map(
-        (containerPlaceRoomsData || []).map((r) => [r.id, r.name])
+        containerPlaceRoomIds.map((roomId) => [roomId, allPlaceRoomsMap.get(roomId) || null])
       );
 
       // Для контейнеров, которые находятся в помещениях
@@ -312,10 +344,25 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
               placeName = placesMap.get(containerTransition.destination_id) || null;
               const placeTransition = lastPlaceTransitions.get(containerTransition.destination_id);
               if (placeTransition) {
-                roomName = containerPlaceRoomsMap.get(placeTransition.destination_id) || null;
+                // Используем общую карту помещений
+                roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
               }
             } else if (containerTransition.destination_type === "room") {
               roomName = containerRoomsMap.get(containerTransition.destination_id) || null;
+            } else if (containerTransition.destination_type === "container") {
+              // Контейнер в контейнере - рекурсивно находим помещение
+              const parentContainerTransition = lastContainerTransitions.get(containerTransition.destination_id);
+              if (parentContainerTransition) {
+                if (parentContainerTransition.destination_type === "place") {
+                  placeName = placesMap.get(parentContainerTransition.destination_id) || null;
+                  const placeTransition = lastPlaceTransitions.get(parentContainerTransition.destination_id);
+                  if (placeTransition) {
+                    roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
+                  }
+                } else if (parentContainerTransition.destination_type === "room") {
+                  roomName = containerRoomsMap.get(parentContainerTransition.destination_id) || null;
+                }
+              }
             }
           }
         }
@@ -608,34 +655,56 @@ const ItemsList = ({ refreshTrigger }: ItemsListProps = {}) => {
                           >
                             {item.name || `Вещь #${item.id}`}
                           </Link>
-                          <div className="md:hidden mt-1 text-xs text-muted-foreground">
+                          <div className="md:hidden mt-1 text-xs text-muted-foreground space-y-0.5">
                             {item.last_location ? (
-                              <div className="flex items-center gap-1">
+                              <div className="space-y-0.5">
                                 {item.last_location.destination_type === "room" && (
-                                  <>
+                                  <div className="flex items-center gap-1">
                                     <Building2 className="h-3 w-3" />
                                     <span className="truncate">
                                       {item.last_location.destination_name ||
                                         `Помещение #${item.last_location.destination_id}`}
                                     </span>
-                                  </>
+                                  </div>
                                 )}
                                 {item.last_location.destination_type === "place" && (
                                   <>
-                                    <MapPin className="h-3 w-3" />
-                                    <span className="truncate">
-                                      {item.last_location.destination_name ||
-                                        `Место #${item.last_location.destination_id}`}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="h-3 w-3" />
+                                      <span className="truncate">
+                                        {item.last_location.destination_name ||
+                                          `Место #${item.last_location.destination_id}`}
+                                      </span>
+                                    </div>
+                                    {item.last_location.room_name && (
+                                      <div className="flex items-center gap-1 ml-4">
+                                        <Building2 className="h-2.5 w-2.5" />
+                                        <span className="truncate">{item.last_location.room_name}</span>
+                                      </div>
+                                    )}
                                   </>
                                 )}
                                 {item.last_location.destination_type === "container" && (
                                   <>
-                                    <Container className="h-3 w-3" />
-                                    <span className="truncate">
-                                      {item.last_location.destination_name ||
-                                        `Контейнер #${item.last_location.destination_id}`}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                      <Container className="h-3 w-3" />
+                                      <span className="truncate">
+                                        {item.last_location.destination_name ||
+                                          `Контейнер #${item.last_location.destination_id}`}
+                                      </span>
+                                    </div>
+                                    {item.last_location.place_name && (
+                                      <div className="flex items-center gap-1 ml-4">
+                                        <MapPin className="h-2.5 w-2.5" />
+                                        <span className="truncate">{item.last_location.place_name}</span>
+                                      </div>
+                                    )}
+                                    {item.last_location.room_name && (
+                                      <div className="flex items-center gap-1 ml-4">
+                                        <Building2 className="h-2.5 w-2.5" />
+                                        <span className="truncate">{item.last_location.room_name}</span>
+                                      </div>
+                                    )}
                                   </>
                                 )}
                               </div>

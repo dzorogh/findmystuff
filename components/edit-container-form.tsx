@@ -5,10 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationSelector from "@/components/location-selector";
+import { CONTAINER_TYPES, type ContainerType, generateContainerMarking } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,8 @@ import {
 interface EditContainerFormProps {
   containerId: number;
   containerName: string | null;
+  containerType?: ContainerType | null;
+  markingNumber?: number | null;
   currentLocation?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -34,6 +38,8 @@ interface EditContainerFormProps {
 const EditContainerForm = ({
   containerId,
   containerName,
+  containerType: initialContainerType,
+  markingNumber,
   currentLocation,
   open,
   onOpenChange,
@@ -41,6 +47,7 @@ const EditContainerForm = ({
 }: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
   const [name, setName] = useState(containerName || "");
+  const [containerType, setContainerType] = useState<ContainerType>(initialContainerType || "КОР");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
     currentLocation?.destination_type as "place" | "container" | "room" | null
   );
@@ -49,7 +56,6 @@ const EditContainerForm = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,11 +75,12 @@ const EditContainerForm = ({
         return;
       }
 
-      // Обновляем название контейнера
+      // Обновляем название и тип контейнера
       const { error: updateError } = await supabase
         .from("containers")
         .update({
           name: name.trim() || null,
+          container_type: containerType,
         })
         .eq("id", containerId);
 
@@ -94,10 +101,7 @@ const EditContainerForm = ({
         }
       }
 
-      toast({
-        title: "Контейнер обновлен",
-        description: "Контейнер успешно обновлен",
-      });
+      toast.success("Контейнер успешно обновлен");
 
       // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -128,8 +132,32 @@ const EditContainerForm = ({
           <DialogDescription>Измените название или местоположение</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {markingNumber && (
+            <div className="rounded-md bg-muted p-3">
+              <p className="text-sm font-medium">
+                Маркировка: {generateContainerMarking(containerType, markingNumber) || "Не задана"}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor={`container-name-${containerId}`}>Название контейнера</Label>
+            <Label htmlFor={`container-type-${containerId}`}>Тип контейнера</Label>
+            <Select
+              id={`container-type-${containerId}`}
+              value={containerType}
+              onChange={(e) => setContainerType(e.target.value as ContainerType)}
+              disabled={isSubmitting}
+            >
+              {CONTAINER_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`container-name-${containerId}`}>Название контейнера (необязательно)</Label>
             <Input
               id={`container-name-${containerId}`}
               type="text"

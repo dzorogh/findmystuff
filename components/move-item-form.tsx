@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
@@ -37,7 +37,6 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,9 +75,8 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
       const finalDestinationName = destinationName || 
         `${destinationType === "container" ? "Контейнер" : destinationType === "place" ? "Место" : "Помещение"} #${selectedDestinationId}`;
 
-      toast({
-        title: "Вещь перемещена",
-        description: `Вещь успешно перемещена в ${finalDestinationName}`,
+      toast.success(`Вещь успешно перемещена в ${finalDestinationName}`, {
+        description: "Вещь перемещена",
       });
 
       setSelectedDestinationId("");

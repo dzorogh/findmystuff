@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useRooms } from "@/hooks/use-rooms";
 import {
@@ -42,7 +42,6 @@ const EditPlaceForm = ({
   const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -101,10 +100,7 @@ const EditPlaceForm = ({
         throw transitionError;
       }
 
-      toast({
-        title: "Место обновлено",
-        description: "Место успешно обновлено",
-      });
+      toast.success("Место успешно обновлено");
 
       if (onSuccess) {
         onSuccess();
