@@ -7,13 +7,13 @@ import { Toaster } from "sonner";
 
 const geistSans = Geist({
   subsets: ["latin"],
-  display: "optional",
+  display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
-  display: "optional",
+  display: "swap",
   variable: "--font-geist-mono",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
 });

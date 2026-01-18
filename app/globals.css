@@ -79,6 +79,5 @@
   }
   body {
     @apply bg-background text-foreground h-full;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
