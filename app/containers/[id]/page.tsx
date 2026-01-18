@@ -238,7 +238,7 @@ export default function ContainerDetailPage() {
         ? {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,
-            destination_name: lastTransition.destination_name,
+            destination_name: lastTransition.destination_name || null,
             moved_at: lastTransition.created_at,
           }
         : null;
