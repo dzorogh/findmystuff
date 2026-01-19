@@ -269,14 +269,20 @@ export default function ContainerDetailPage() {
           }
         : null;
 
+      let entityType: { code: string; name: string } | null = null;
+      if (containerData.entity_types) {
+        if (Array.isArray(containerData.entity_types) && containerData.entity_types.length > 0) {
+          entityType = containerData.entity_types[0];
+        } else if (!Array.isArray(containerData.entity_types)) {
+          entityType = containerData.entity_types;
+        }
+      }
+
       setContainer({
         id: containerData.id,
         name: containerData.name,
         entity_type_id: containerData.entity_type_id || null,
-        entity_type: containerData.entity_types ? {
-          code: containerData.entity_types.code,
-          name: containerData.entity_types.name,
-        } : null,
+        entity_type: entityType,
         marking_number: containerData.marking_number,
         photo_url: containerData.photo_url,
         created_at: containerData.created_at,
