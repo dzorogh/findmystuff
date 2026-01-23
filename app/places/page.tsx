@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import PlacesList from "@/components/lists/places-list";
 import AddPlaceForm from "@/components/forms/add-place-form";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Plus, Filter } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { CompactSearchBar } from "@/components/common/compact-search-bar";
+import { useFiltersFromUrl } from "@/hooks/use-filters-from-url";
+import { PlacesFilters } from "@/components/filters/places-filters-panel";
 
-export default function PlacesPage() {
+function PlacesPageContent() {
+  const { filtersFromUrl, updateFiltersInUrl } = useFiltersFromUrl<PlacesFilters>(
+    {
+      showDeleted: false,
+      entityTypeId: null,
+      roomId: null,
+    },
+    "places"
+  );
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +87,8 @@ export default function PlacesPage() {
           filtersOpen={isFiltersOpen}
           onFiltersOpenChange={setIsFiltersOpen}
           onActiveFiltersCountChange={setActiveFiltersCount}
+          initialFilters={filtersFromUrl}
+          onFiltersChange={updateFiltersInUrl}
         />
         <AddPlaceForm
           open={isAddDialogOpen}
@@ -84,5 +97,20 @@ export default function PlacesPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function PlacesPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <div className="h-20 bg-muted animate-pulse rounded" />
+          <div className="h-10 bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+    }>
+      <PlacesPageContent />
+    </Suspense>
   );
 }

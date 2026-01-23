@@ -65,10 +65,12 @@ interface ContainersListProps {
   onFiltersOpenChange?: (open: boolean) => void;
   filtersOpen?: boolean;
   onActiveFiltersCountChange?: (count: number) => void;
+  initialFilters?: ContainersFilters;
+  onFiltersChange?: (filters: ContainersFilters) => void;
 }
 
-const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: ContainersListProps = {}) => {
-  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange, initialFilters, onFiltersChange }: ContainersListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || initialFilters?.showDeleted || false);
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
   
   const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
@@ -90,12 +92,19 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
   }, [internalShowDeleted]);
 
-  const [filters, setFilters] = useState<ContainersFilters>({
-    showDeleted: internalShowDeleted,
-    entityTypeId: null,
-    hasItems: null,
-    locationType: null,
-  });
+  const [filters, setFilters] = useState<ContainersFilters>(() => ({
+    showDeleted: initialFilters?.showDeleted ?? internalShowDeleted,
+    entityTypeId: initialFilters?.entityTypeId ?? null,
+    hasItems: initialFilters?.hasItems ?? null,
+    locationType: initialFilters?.locationType ?? null,
+  }));
+
+  // Синхронизируем фильтры с URL при изменении
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange(filters);
+    }
+  }, [filters, onFiltersChange]);
 
   const {
     user,
@@ -734,6 +743,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
                 setInternalShowDeleted(newFilters.showDeleted);
+                if (onFiltersChange) {
+                  onFiltersChange(newFilters);
+                }
               }}
               onReset={() => {
                 const resetFilters: ContainersFilters = {
@@ -744,6 +756,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                 };
                 setFilters(resetFilters);
                 setInternalShowDeleted(false);
+                if (onFiltersChange) {
+                  onFiltersChange(resetFilters);
+                }
               }}
               hasActiveFilters={hasActiveFilters}
             />

@@ -53,10 +53,12 @@ interface PlacesListProps {
   onFiltersOpenChange?: (open: boolean) => void;
   filtersOpen?: boolean;
   onActiveFiltersCountChange?: (count: number) => void;
+  initialFilters?: PlacesFilters;
+  onFiltersChange?: (filters: PlacesFilters) => void;
 }
 
-const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: PlacesListProps = {}) => {
-  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange, initialFilters, onFiltersChange }: PlacesListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || initialFilters?.showDeleted || false);
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
   
   const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
@@ -78,11 +80,18 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
   }, [internalShowDeleted]);
 
-  const [filters, setFilters] = useState<PlacesFilters>({
-    showDeleted: internalShowDeleted,
-    entityTypeId: null,
-    roomId: null,
-  });
+  const [filters, setFilters] = useState<PlacesFilters>(() => ({
+    showDeleted: initialFilters?.showDeleted ?? internalShowDeleted,
+    entityTypeId: initialFilters?.entityTypeId ?? null,
+    roomId: initialFilters?.roomId ?? null,
+  }));
+
+  // Синхронизируем фильтры с URL при изменении
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange(filters);
+    }
+  }, [filters, onFiltersChange]);
 
   const {
     user,
@@ -422,6 +431,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
                 setInternalShowDeleted(newFilters.showDeleted);
+                if (onFiltersChange) {
+                  onFiltersChange(newFilters);
+                }
               }}
               onReset={() => {
                 const resetFilters: PlacesFilters = {
@@ -431,6 +443,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                 };
                 setFilters(resetFilters);
                 setInternalShowDeleted(false);
+                if (onFiltersChange) {
+                  onFiltersChange(resetFilters);
+                }
               }}
               hasActiveFilters={hasActiveFilters}
             />
