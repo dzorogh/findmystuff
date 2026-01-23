@@ -196,20 +196,19 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         scannerRef.current = scanner;
 
         // Адаптивный размер области сканирования
-        // Получаем размеры контейнера
+        // Получаем размеры контейнера (контейнер квадратный благодаря aspect-square)
         const containerElement = document.getElementById(qrReaderId);
         const containerWidth = containerElement?.clientWidth || Math.min(400, window.innerWidth - 80);
-        const containerHeight = containerElement?.clientHeight || 300;
+        const containerSize = containerWidth; // Для квадратного контейнера используем ширину
         
-        // Размер qrbox должен быть меньше контейнера
-        const qrboxWidth = Math.min(250, containerWidth - 40);
-        const qrboxHeight = Math.min(250, containerHeight - 40);
+        // Размер qrbox должен быть меньше контейнера (квадратный)
+        const qrboxSize = Math.min(250, containerSize - 40);
 
         await scanner.start(
           selectedCamera.id,
           {
             fps: 10,
-            qrbox: { width: qrboxWidth, height: qrboxHeight },
+            qrbox: { width: qrboxSize, height: qrboxSize },
             aspectRatio: 1.0,
             disableFlip: false,
           },
@@ -396,8 +395,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           ref={containerRef}
           id={qrReaderId}
           className={cn(
-            "relative z-0 w-full overflow-hidden rounded-lg border",
-            !isScanning && "min-h-[300px] bg-muted"
+            "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
           )}
           onClick={(e) => e.stopPropagation()}
         />

@@ -6,21 +6,39 @@ interface UseDebouncedSearchProps {
   searchQuery: string;
   onSearch: (query: string) => void;
   delay?: number;
+  skipInitial?: boolean;
 }
 
 export const useDebouncedSearch = ({
   searchQuery,
   onSearch,
   delay = 300,
+  skipInitial = true,
 }: UseDebouncedSearchProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const onSearchRef = useRef(onSearch);
+  const isInitialMountRef = useRef(true);
+  const previousQueryRef = useRef(searchQuery);
 
   useEffect(() => {
     onSearchRef.current = onSearch;
   }, [onSearch]);
 
   useEffect(() => {
+    // Пропускаем первый вызов при монтировании, если skipInitial = true
+    if (skipInitial && isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      previousQueryRef.current = searchQuery;
+      return;
+    }
+
+    // Пропускаем вызов, если запрос не изменился
+    if (previousQueryRef.current === searchQuery) {
+      return;
+    }
+
+    previousQueryRef.current = searchQuery;
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -38,5 +56,5 @@ export const useDebouncedSearch = ({
         timerRef.current = null;
       }
     };
-  }, [searchQuery, delay]);
+  }, [searchQuery, delay, skipInitial]);
 };

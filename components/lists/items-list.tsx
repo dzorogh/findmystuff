@@ -442,6 +442,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   useDebouncedSearch({
     searchQuery,
     onSearch: handleSearch,
+    skipInitial: true,
   });
 
   const handleDeleteItem = async (itemId: number) => {

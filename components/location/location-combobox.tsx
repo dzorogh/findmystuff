@@ -110,7 +110,7 @@ const LocationCombobox = ({
   };
 
   return (
-    <div className="space-y-3 border-t pt-4">
+    <div className="">
       <div className="space-y-2">
         <Label>{label}</Label>
         <div className="flex gap-2">
