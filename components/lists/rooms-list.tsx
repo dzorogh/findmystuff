@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -285,9 +286,14 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                         <Building2 className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
-                    <CardTitle className="text-lg truncate">
-                      {room.name || `Помещение #${room.id}`}
-                    </CardTitle>
+                    <Link
+                      href={`/rooms/${room.id}`}
+                      className="font-medium hover:underline break-words leading-tight block"
+                    >
+                      <CardTitle className="text-lg truncate">
+                        {room.name || `Помещение #${room.id}`}
+                      </CardTitle>
+                    </Link>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {room.deleted_at && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -340,9 +341,14 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                       </div>
                     )}
                     <div className="flex flex-col min-w-0 flex-1">
-                      <CardTitle className="text-lg truncate">
-                        {place.name || `Место #${place.id}`}
-                      </CardTitle>
+                      <Link
+                        href={`/places/${place.id}`}
+                        className="font-medium hover:underline break-words leading-tight block"
+                      >
+                        <CardTitle className="text-lg truncate">
+                          {place.name || `Место #${place.id}`}
+                        </CardTitle>
+                      </Link>
                       {place.entity_type && place.marking_number != null && (
                         <p className="text-sm font-semibold font-mono text-primary mt-0.5">
                           {generateMarking(place.entity_type.code, place.marking_number) || `${place.entity_type.code}${place.marking_number}`}
@@ -359,13 +365,16 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {place.room?.room_name && (
-                  <div className="flex items-center gap-2 text-sm">
+                {place.room?.room_name && place.room.room_id && (
+                  <Link
+                    href={`/rooms/${place.room.room_id}`}
+                    className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                  >
                     <Building2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium">
+                    <span className="font-medium hover:underline">
                       {place.room.room_name}
                     </span>
-                  </div>
+                  </Link>
                 )}
                 <p className="text-xs text-muted-foreground">
                   Создано:{" "}

@@ -268,13 +268,13 @@ export default function Home() {
 
   const handleResultClick = (result: SearchResult) => {
     if (result.type === "item") {
-      router.push("/items");
+      router.push(`/items/${result.id}`);
     } else if (result.type === "place") {
-      router.push("/places");
+      router.push(`/places/${result.id}`);
     } else if (result.type === "container") {
-      router.push("/containers");
+      router.push(`/containers/${result.id}`);
     } else if (result.type === "room") {
-      router.push("/rooms");
+      router.push(`/rooms/${result.id}`);
     }
   };
 
