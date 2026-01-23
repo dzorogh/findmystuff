@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw, Package, PackageX, ArrowRightLeft } from "lucide-react";
+import { Container, MapPin, Building2, Package, PackageX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -26,6 +26,7 @@ import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
+import { ListActions } from "@/components/common/list-actions";
 import { toast } from "sonner";
 
 interface Container {
@@ -582,49 +583,13 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-1 sm:gap-2">
-                        {!container.deleted_at ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingContainerId(container.id)}
-                              className="h-8 w-8"
-                              title="Редактировать"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setMovingContainerId(container.id)}
-                              className="h-8 w-8"
-                              title="Переместить"
-                            >
-                              <ArrowRightLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteContainer(container.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              title="Удалить"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestoreContainer(container.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                            title="Восстановить"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                      <ListActions
+                        isDeleted={!!container.deleted_at}
+                        onEdit={() => setEditingContainerId(container.id)}
+                        onMove={() => setMovingContainerId(container.id)}
+                        onDelete={() => handleDeleteContainer(container.id)}
+                        onRestore={() => handleRestoreContainer(container.id)}
+                      />
                     </TableCell>
                     </TableRow>
                   ))}
@@ -641,7 +606,6 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           containerName={containers.find((c) => c.id === editingContainerId)?.name || null}
           containerTypeId={containers.find((c) => c.id === editingContainerId)?.entity_type_id || null}
           markingNumber={containers.find((c) => c.id === editingContainerId)?.marking_number || null}
-          currentLocation={containers.find((c) => c.id === editingContainerId)?.last_location}
           open={!!editingContainerId}
           onOpenChange={(open) => !open && setEditingContainerId(null)}
           onSuccess={() => {

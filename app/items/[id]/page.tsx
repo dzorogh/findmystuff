@@ -666,7 +666,6 @@ export default function ItemDetailPage() {
           <EditItemForm
             itemId={item.id}
             itemName={item.name}
-            currentLocation={item.last_location}
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onSuccess={() => {

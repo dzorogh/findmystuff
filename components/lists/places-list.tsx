@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { MapPin, Building2 } from "lucide-react";
 import Image from "next/image";
 import EditPlaceForm from "@/components/forms/edit-place-form";
+import MovePlaceForm from "@/components/forms/move-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
@@ -16,6 +17,7 @@ import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
+import { ListActions } from "@/components/common/list-actions";
 import { toast } from "sonner";
 
 interface Place {
@@ -64,6 +66,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
+  const [movingPlaceId, setMovingPlaceId] = useState<number | null>(null);
   const { generateMarking } = usePlaceMarking();
 
   const loadPlaces = async (query?: string, isInitialLoad = false) => {
@@ -320,40 +323,13 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                 </p>
               </CardContent>
               <div className="border-t px-6 py-3">
-                <div className="flex items-center justify-end gap-2">
-                  {!place.deleted_at ? (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingPlaceId(place.id)}
-                        className="h-8 px-3"
-                      >
-                        <Pencil className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Изменить</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeletePlace(place.id)}
-                        className="h-8 px-3 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Удалить</span>
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRestorePlace(place.id)}
-                      className="h-8 px-3 text-green-600 hover:text-green-700"
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1.5" />
-                      <span className="text-xs">Восстановить</span>
-                    </Button>
-                  )}
-                </div>
+                <ListActions
+                  isDeleted={!!place.deleted_at}
+                  onEdit={() => setEditingPlaceId(place.id)}
+                  onMove={() => setMovingPlaceId(place.id)}
+                  onDelete={() => handleDeletePlace(place.id)}
+                  onRestore={() => handleRestorePlace(place.id)}
+                />
               </div>
             </Card>
           ))}
@@ -366,11 +342,23 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
           placeName={places.find((p) => p.id === editingPlaceId)?.name || null}
           placeTypeId={places.find((p) => p.id === editingPlaceId)?.entity_type_id || null}
           markingNumber={places.find((p) => p.id === editingPlaceId)?.marking_number || null}
-          currentRoomId={places.find((p) => p.id === editingPlaceId)?.room?.room_id || null}
           open={!!editingPlaceId}
           onOpenChange={(open) => !open && setEditingPlaceId(null)}
           onSuccess={() => {
             setEditingPlaceId(null);
+            loadPlaces(searchQuery, false);
+          }}
+        />
+      )}
+
+      {movingPlaceId && (
+        <MovePlaceForm
+          placeId={movingPlaceId}
+          placeName={places.find((p) => p.id === movingPlaceId)?.name || null}
+          open={!!movingPlaceId}
+          onOpenChange={(open) => !open && setMovingPlaceId(null)}
+          onSuccess={() => {
+            setMovingPlaceId(null);
             loadPlaces(searchQuery, false);
           }}
         />

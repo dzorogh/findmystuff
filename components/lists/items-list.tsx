@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, MapPin, Container, Building2, Pencil, Trash2, RotateCcw, ArrowRightLeft } from "lucide-react";
+import { Package, MapPin, Container, Building2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -25,6 +25,7 @@ import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
+import { ListActions } from "@/components/common/list-actions";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -699,49 +700,13 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-1 sm:gap-2">
-                        {!item.deleted_at ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingItemId(item.id)}
-                              className="h-8 w-8"
-                              title="Редактировать"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setMovingItemId(item.id)}
-                              className="h-8 w-8"
-                              title="Переместить"
-                            >
-                              <ArrowRightLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              title="Удалить"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestoreItem(item.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                            title="Восстановить"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                      <ListActions
+                        isDeleted={!!item.deleted_at}
+                        onEdit={() => setEditingItemId(item.id)}
+                        onMove={() => setMovingItemId(item.id)}
+                        onDelete={() => handleDeleteItem(item.id)}
+                        onRestore={() => handleRestoreItem(item.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -756,7 +721,6 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         <EditItemForm
           itemId={editingItemId}
           itemName={items.find((i) => i.id === editingItemId)?.name || null}
-          currentLocation={items.find((i) => i.id === editingItemId)?.last_location}
           open={!!editingItemId}
           onOpenChange={(open) => !open && setEditingItemId(null)}
           onSuccess={() => {

@@ -8,7 +8,6 @@ import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
-import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { useEntityTypes } from "@/hooks/use-entity-types";
 import { useContainerMarking } from "@/hooks/use-container-marking";
@@ -27,11 +26,6 @@ interface EditContainerFormProps {
   containerName: string | null;
   containerTypeId?: number | null;
   markingNumber?: number | null;
-  currentLocation?: {
-    destination_type: string | null;
-    destination_id: number | null;
-    destination_name: string | null;
-  } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -42,7 +36,6 @@ const EditContainerForm = ({
   containerName,
   containerTypeId: initialContainerTypeId,
   markingNumber,
-  currentLocation,
   open,
   onOpenChange,
   onSuccess,
@@ -52,12 +45,6 @@ const EditContainerForm = ({
   const { generateMarking } = useContainerMarking();
   const [name, setName] = useState(containerName || "");
   const [containerTypeId, setContainerTypeId] = useState(initialContainerTypeId?.toString() || "");
-  const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(
-    currentLocation?.destination_type as "place" | "container" | "room" | null
-  );
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string>(
-    currentLocation?.destination_id?.toString() || ""
-  );
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,19 +92,6 @@ const EditContainerForm = ({
         throw updateError;
       }
 
-      // Если указано новое местоположение, создаем transition
-      if (destinationType && selectedDestinationId) {
-        const { error: transitionError } = await supabase.from("transitions").insert({
-          container_id: containerId,
-          destination_type: destinationType,
-          destination_id: parseInt(selectedDestinationId),
-        });
-
-        if (transitionError) {
-          console.error("Ошибка при создании transition:", transitionError);
-        }
-      }
-
       toast.success("Контейнер успешно обновлен");
 
       // Небольшая задержка перед закрытием, чтобы toast успел отобразиться
@@ -146,7 +120,7 @@ const EditContainerForm = ({
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Редактировать контейнер</SheetTitle>
-          <SheetDescription>Измените название или местоположение</SheetDescription>
+          <SheetDescription>Измените название контейнера</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FormGroup>
@@ -197,31 +171,12 @@ const EditContainerForm = ({
               </div>
             </FormField>
 
-            <LocationCombobox
-              destinationType={destinationType}
-              selectedDestinationId={selectedDestinationId}
-              onDestinationTypeChange={setDestinationType}
-              onDestinationIdChange={setSelectedDestinationId}
-              disabled={isSubmitting}
-              showRoomFirst={true}
-              label="Изменить местоположение (необязательно)"
-              id={`edit-container-location-${containerId}`}
-            />
-
             <ImageUpload
               value={photoUrl}
               onChange={setPhotoUrl}
               disabled={isSubmitting}
               label="Фотография контейнера (необязательно)"
             />
-
-            {currentLocation && (
-              <div className="rounded-md bg-muted p-3">
-                <p className="text-xs text-muted-foreground">
-                  Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
-                </p>
-              </div>
-            )}
 
             <ErrorMessage message={error || ""} />
 

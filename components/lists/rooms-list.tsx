@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Pencil, MapPin, Container, Package, Trash2, RotateCcw } from "lucide-react";
+import { Building2, MapPin, Container, Package } from "lucide-react";
 import Image from "next/image";
 import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/hooks/use-list-state";
@@ -15,6 +15,7 @@ import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
+import { ListActions } from "@/components/common/list-actions";
 import { toast } from "sonner";
 
 interface Room {
@@ -264,41 +265,13 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                   })}
                 </p>
               </CardContent>
-              <div className="border-t pl-6 pr-6 pt-3 pb-3">
-                <div className="flex items-center justify-end gap-2">
-                  {!room.deleted_at ? (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingRoomId(room.id)}
-                        className="h-8 px-3"
-                      >
-                        <Pencil className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Изменить</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteRoom(room.id)}
-                        className="h-8 px-3 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1.5" />
-                        <span className="text-xs">Удалить</span>
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRestoreRoom(room.id)}
-                      className="h-8 px-3 text-green-600 hover:text-green-700"
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1.5" />
-                      <span className="text-xs">Восстановить</span>
-                    </Button>
-                  )}
-                </div>
+              <div className="border-t px-6 py-3">
+                <ListActions
+                  isDeleted={!!room.deleted_at}
+                  onEdit={() => setEditingRoomId(room.id)}
+                  onDelete={() => handleDeleteRoom(room.id)}
+                  onRestore={() => handleRestoreRoom(room.id)}
+                />
               </div>
             </Card>
           ))}

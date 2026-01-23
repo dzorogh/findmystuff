@@ -762,7 +762,6 @@ export default function ContainerDetailPage() {
             containerName={container.name}
             containerTypeId={container.entity_type_id}
             markingNumber={container.marking_number}
-            currentLocation={container.last_location || undefined}
             open={isEditing}
             onOpenChange={setIsEditing}
             onSuccess={handleEditSuccess}

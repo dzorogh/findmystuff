@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
-import RoomCombobox from "@/components/location/room-combobox";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useEntityTypes } from "@/hooks/use-entity-types";
@@ -28,7 +27,6 @@ interface EditPlaceFormProps {
   placeName: string | null;
   placeTypeId?: number | null;
   markingNumber?: number | null;
-  currentRoomId?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -39,7 +37,6 @@ const EditPlaceForm = ({
   placeName,
   placeTypeId: initialPlaceTypeId,
   markingNumber,
-  currentRoomId,
   open,
   onOpenChange,
   onSuccess,
@@ -49,7 +46,6 @@ const EditPlaceForm = ({
   const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
   const [placeTypeId, setPlaceTypeId] = useState(initialPlaceTypeId?.toString() || "");
-  const [selectedRoomId, setSelectedRoomId] = useState<string>(currentRoomId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,11 +55,6 @@ const EditPlaceForm = ({
     if (open) {
       setName(placeName || "");
       setPlaceTypeId(initialPlaceTypeId?.toString() || placeTypes[0]?.id.toString() || "");
-      if (currentRoomId) {
-        setSelectedRoomId(currentRoomId.toString());
-      } else {
-        setSelectedRoomId("");
-      }
       
       // Загружаем текущее фото только при открытии формы
       const loadPhoto = async () => {
@@ -121,23 +112,7 @@ const EditPlaceForm = ({
         throw updateError;
       }
 
-      // Помещение обязательно
-      if (!selectedRoomId) {
-        setError("Необходимо выбрать помещение");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Создаем transition для помещения (всегда создаем новую запись, даже если помещение не изменилось)
-      const { error: transitionError } = await supabase.from("transitions").insert({
-        place_id: placeId,
-        destination_type: "room",
-        destination_id: parseInt(selectedRoomId),
-      });
-
-      if (transitionError) {
-        throw transitionError;
-      }
+      // Местоположение не изменяется через форму редактирования
 
       toast.success("Место успешно обновлено");
 
@@ -215,22 +190,6 @@ const EditPlaceForm = ({
                 </FormField>
               ) : null;
             })()}
-
-            <FormGroup separator>
-              <RoomCombobox
-                selectedRoomId={selectedRoomId}
-                onRoomIdChange={setSelectedRoomId}
-                disabled={isSubmitting}
-                label="Выберите помещение"
-                id={`place-room-${placeId}`}
-                required
-              />
-              {currentRoomId && !selectedRoomId && (
-                <p className="text-xs text-muted-foreground">
-                  Текущее помещение будет удалено. Выберите новое помещение.
-                </p>
-              )}
-            </FormGroup>
 
             <ImageUpload
               value={photoUrl}
