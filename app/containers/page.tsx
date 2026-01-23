@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import ContainersList from "@/components/lists/containers-list";
 import AddContainerForm from "@/components/forms/add-container-form";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Container, Plus, Filter } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { CompactSearchBar } from "@/components/common/compact-search-bar";
+import { useFiltersFromUrl } from "@/hooks/use-filters-from-url";
+import { ContainersFilters } from "@/components/filters/containers-filters-panel";
 
-export default function ContainersPage() {
+function ContainersPageContent() {
+  const { filtersFromUrl, updateFiltersInUrl } = useFiltersFromUrl<ContainersFilters>(
+    {
+      showDeleted: false,
+      entityTypeId: null,
+      hasItems: null,
+      locationType: null,
+    },
+    "containers"
+  );
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +88,8 @@ export default function ContainersPage() {
           filtersOpen={isFiltersOpen}
           onFiltersOpenChange={setIsFiltersOpen}
           onActiveFiltersCountChange={setActiveFiltersCount}
+          initialFilters={filtersFromUrl}
+          onFiltersChange={updateFiltersInUrl}
         />
         <AddContainerForm
           open={isAddDialogOpen}
@@ -84,5 +98,20 @@ export default function ContainersPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ContainersPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <div className="h-20 bg-muted animate-pulse rounded" />
+          <div className="h-10 bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+    }>
+      <ContainersPageContent />
+    </Suspense>
   );
 }

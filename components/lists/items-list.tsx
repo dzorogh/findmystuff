@@ -69,10 +69,12 @@ interface ItemsListProps {
   onFiltersOpenChange?: (open: boolean) => void;
   filtersOpen?: boolean;
   onActiveFiltersCountChange?: (count: number) => void;
+  initialFilters?: ItemsFilters;
+  onFiltersChange?: (filters: ItemsFilters) => void;
 }
 
-const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: ItemsListProps = {}) => {
-  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange, initialFilters, onFiltersChange }: ItemsListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || initialFilters?.showDeleted || false);
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
   
   const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
@@ -94,12 +96,19 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
   }, [internalShowDeleted]);
 
-  const [filters, setFilters] = useState<ItemsFilters>({
-    showDeleted: internalShowDeleted,
-    locationType: null,
-    hasPhoto: null,
-    roomId: null,
-  });
+  const [filters, setFilters] = useState<ItemsFilters>(() => ({
+    showDeleted: initialFilters?.showDeleted ?? internalShowDeleted,
+    locationType: initialFilters?.locationType ?? null,
+    hasPhoto: initialFilters?.hasPhoto ?? null,
+    roomId: initialFilters?.roomId ?? null,
+  }));
+
+  // Синхронизируем фильтры с URL при изменении
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange(filters);
+    }
+  }, [filters, onFiltersChange]);
 
   const {
     user,
@@ -978,6 +987,9 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
                 setInternalShowDeleted(newFilters.showDeleted);
+                if (onFiltersChange) {
+                  onFiltersChange(newFilters);
+                }
               }}
               onReset={() => {
                 const resetFilters: ItemsFilters = {
@@ -988,6 +1000,9 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                 };
                 setFilters(resetFilters);
                 setInternalShowDeleted(false);
+                if (onFiltersChange) {
+                  onFiltersChange(resetFilters);
+                }
               }}
               hasActiveFilters={hasActiveFilters}
             />
