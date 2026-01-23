@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
+import { Divider } from "@/components/ui/divider";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useRooms } from "@/hooks/use-rooms";
@@ -15,7 +16,7 @@ import LocationCombobox from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import QRScanner from "@/components/common/qr-scanner";
-import { Camera } from "lucide-react";
+import { Scan } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -158,29 +159,18 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
           </SheetHeader>
           <form onSubmit={handleSubmit} className="mt-6">
             <FormGroup>
-              <FormField label="Способ выбора местоположения">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setIsQRScannerOpen(true)}
-                    disabled={isSubmitting}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Сканировать QR-код
-                  </Button>
-                </div>
-              </FormField>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsQRScannerOpen(true)}
+                disabled={isSubmitting}
+              >
+                <Scan className="mr-2 h-4 w-4" />
+                Сканировать QR-код
+              </Button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">или</span>
-                </div>
-              </div>
+              <Divider />
 
               <LocationCombobox
                 destinationType={destinationType}

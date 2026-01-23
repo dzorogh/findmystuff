@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { useRooms } from "@/hooks/use-rooms";
 
 interface RoomComboboxProps {
@@ -45,10 +46,11 @@ const RoomCombobox = ({
   );
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor={`${id}-combobox`}>
-        {label} {required && <span className="text-destructive">*</span>}
-      </Label>
+    <FormField
+      label={label}
+      htmlFor={`${id}-combobox`}
+      required={required}
+    >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -105,7 +107,7 @@ const RoomCombobox = ({
           Помещения не найдены. Сначала создайте помещение.
         </p>
       )}
-    </div>
+    </FormField>
   );
 };
 

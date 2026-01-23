@@ -18,6 +18,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
@@ -110,9 +112,8 @@ const LocationCombobox = ({
   };
 
   return (
-    <div className="">
-      <div className="space-y-2">
-        <Label>{label}</Label>
+    <FormGroup>
+      <FormField label={label}>
         <div className="flex gap-2">
           {buttonOrder.map(({ type, label: btnLabel, icon: Icon }) => (
             <Button
@@ -133,11 +134,10 @@ const LocationCombobox = ({
             </Button>
           ))}
         </div>
-      </div>
+      </FormField>
 
       {destinationType && (
-        <div className="space-y-2">
-          <Label htmlFor={`${id}-combobox`}>Выберите {destinationLabel}</Label>
+        <FormField label={`Выберите ${destinationLabel}`} htmlFor={`${id}-combobox`}>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -204,9 +204,9 @@ const LocationCombobox = ({
                 : "Помещения не найдены"}
             </p>
           )}
-        </div>
+        </FormField>
       )}
-    </div>
+    </FormGroup>
   );
 };
 

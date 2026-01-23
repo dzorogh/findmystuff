@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { useContainers } from "@/hooks/use-containers";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { type ContainerType } from "@/lib/utils";
@@ -69,10 +70,11 @@ const ContainerCombobox = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor={`${id}-combobox`}>
-        {label} {required && <span className="text-destructive">*</span>}
-      </Label>
+    <FormField
+      label={label}
+      htmlFor={`${id}-combobox`}
+      required={required}
+    >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -139,7 +141,7 @@ const ContainerCombobox = ({
           Контейнеры не найдены. Сначала создайте контейнер.
         </p>
       )}
-    </div>
+    </FormField>
   );
 };
 

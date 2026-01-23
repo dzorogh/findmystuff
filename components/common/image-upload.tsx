@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -116,8 +117,10 @@ const ImageUpload = ({
   };
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">{label}</label>
+    <FormField
+      label={label}
+      description="Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 10MB"
+    >
       <div className="space-y-3">
         {preview ? (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
@@ -196,10 +199,7 @@ const ImageUpload = ({
           disabled={disabled || isUploading}
         />
       </div>
-      <p className="text-xs text-muted-foreground">
-        Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 10MB
-      </p>
-    </div>
+    </FormField>
   );
 };
 
