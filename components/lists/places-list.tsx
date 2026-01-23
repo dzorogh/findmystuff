@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,13 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { PlacesFiltersPanel, type PlacesFilters } from "@/components/filters/places-filters-panel";
 import { toast } from "sonner";
 
 interface Place {
@@ -43,9 +50,40 @@ interface PlacesListProps {
   searchQuery?: string;
   showDeleted?: boolean;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
+  onFiltersOpenChange?: (open: boolean) => void;
+  filtersOpen?: boolean;
+  onActiveFiltersCountChange?: (count: number) => void;
 }
 
-const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: PlacesListProps = {}) => {
+const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: PlacesListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+  const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
+  
+  const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
+  const setIsFiltersOpen = useCallback((open: boolean) => {
+    if (externalFiltersOpen === undefined) {
+      setInternalFiltersOpen(open);
+    }
+    onFiltersOpenChange?.(open);
+  }, [externalFiltersOpen, onFiltersOpenChange]);
+  
+  useEffect(() => {
+    if (externalShowDeleted !== undefined) {
+      setInternalShowDeleted(externalShowDeleted);
+      setFilters((prev) => ({ ...prev, showDeleted: externalShowDeleted }));
+    }
+  }, [externalShowDeleted]);
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
+  }, [internalShowDeleted]);
+
+  const [filters, setFilters] = useState<PlacesFilters>({
+    showDeleted: internalShowDeleted,
+    entityTypeId: null,
+    roomId: null,
+  });
+
   const {
     user,
     isUserLoading,
@@ -59,7 +97,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     handleError,
   } = useListState({
     externalSearchQuery,
-    externalShowDeleted,
+    externalShowDeleted: filters.showDeleted,
     refreshTrigger,
     onSearchStateChange,
   });
@@ -190,8 +228,23 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         };
       });
 
-      setPlaces(placesWithRooms);
-      finishLoading(isInitialLoad, placesWithRooms.length);
+      // Применяем фильтры
+      let filteredPlaces = placesWithRooms;
+
+      if (filters.entityTypeId !== null) {
+        filteredPlaces = filteredPlaces.filter(
+          (p) => p.entity_type_id === filters.entityTypeId
+        );
+      }
+
+      if (filters.roomId !== null) {
+        filteredPlaces = filteredPlaces.filter(
+          (p) => p.room?.room_id === filters.roomId
+        );
+      }
+
+      setPlaces(filteredPlaces);
+      finishLoading(isInitialLoad, filteredPlaces.length);
     } catch (err) {
       handleError(err, isInitialLoad);
       setPlaces([]);
@@ -203,7 +256,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       loadPlaces(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.roomId, filters.showDeleted]);
 
   useDebouncedSearch({
     searchQuery,
@@ -240,13 +293,12 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     }
   };
 
-  if (isLoading || isUserLoading) {
-    return (
-      <div className="space-y-6">
-        <ListSkeleton variant="grid" rows={6} />
-      </div>
-    );
-  }
+  const hasActiveFilters = filters.entityTypeId !== null || filters.roomId !== null || filters.showDeleted;
+  const activeFiltersCount = [filters.entityTypeId !== null, filters.roomId !== null, filters.showDeleted].filter(Boolean).length;
+
+  useEffect(() => {
+    onActiveFiltersCountChange?.(activeFiltersCount);
+  }, [activeFiltersCount, onActiveFiltersCountChange]);
 
   if (!user) {
     return null;
@@ -256,7 +308,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     <div className="space-y-6">
       <ErrorCard message={error || ""} />
 
-      {isSearching && places.length === 0 ? (
+      {isLoading || isUserLoading ? (
+        <ListSkeleton variant="grid" rows={6} />
+      ) : isSearching && places.length === 0 ? (
         <ListSkeleton variant="grid" rows={6} />
       ) : places.length === 0 ? (
         <EmptyState
@@ -350,6 +404,39 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
           }}
         />
       )}
+
+      <Sheet 
+        open={isFiltersOpen} 
+        onOpenChange={setIsFiltersOpen}
+      >
+        <SheetContent 
+          side="right"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <SheetHeader>
+            <SheetTitle>Фильтры</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <PlacesFiltersPanel
+              filters={filters}
+              onFiltersChange={(newFilters) => {
+                setFilters(newFilters);
+                setInternalShowDeleted(newFilters.showDeleted);
+              }}
+              onReset={() => {
+                const resetFilters: PlacesFilters = {
+                  showDeleted: false,
+                  entityTypeId: null,
+                  roomId: null,
+                };
+                setFilters(resetFilters);
+                setInternalShowDeleted(false);
+              }}
+              hasActiveFilters={hasActiveFilters}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {movingPlaceId && (
         <MovePlaceForm

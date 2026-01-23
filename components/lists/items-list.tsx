@@ -26,6 +26,13 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ItemsFiltersPanel, type ItemsFilters } from "@/components/filters/items-filters-panel";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -58,9 +65,40 @@ interface ItemsListProps {
   searchQuery?: string;
   showDeleted?: boolean;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
+  onFiltersOpenChange?: (open: boolean) => void;
+  filtersOpen?: boolean;
+  onActiveFiltersCountChange?: (count: number) => void;
 }
 
-const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: ItemsListProps = {}) => {
+const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: ItemsListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+  const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
+  
+  const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
+  const setIsFiltersOpen = useCallback((open: boolean) => {
+    if (externalFiltersOpen === undefined) {
+      setInternalFiltersOpen(open);
+    }
+    onFiltersOpenChange?.(open);
+  }, [externalFiltersOpen, onFiltersOpenChange]);
+  
+  useEffect(() => {
+    if (externalShowDeleted !== undefined) {
+      setInternalShowDeleted(externalShowDeleted);
+      setFilters((prev) => ({ ...prev, showDeleted: externalShowDeleted }));
+    }
+  }, [externalShowDeleted]);
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
+  }, [internalShowDeleted]);
+
+  const [filters, setFilters] = useState<ItemsFilters>({
+    showDeleted: internalShowDeleted,
+    locationType: null,
+    hasPhoto: null,
+  });
+
   const {
     user,
     isUserLoading,
@@ -75,7 +113,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     handleError,
   } = useListState({
     externalSearchQuery,
-    externalShowDeleted,
+    externalShowDeleted: filters.showDeleted,
     refreshTrigger,
     onSearchStateChange,
   });
@@ -433,9 +471,25 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         };
       });
 
+      // Применяем фильтры
+      let filteredItems = itemsWithLocation;
+      
+      if (filters.locationType) {
+        filteredItems = filteredItems.filter((item) => {
+          if (!item.last_location) return false;
+          return item.last_location.destination_type === filters.locationType;
+        });
+      }
+      
+      if (filters.hasPhoto !== null) {
+        filteredItems = filteredItems.filter((item) =>
+          filters.hasPhoto ? !!item.photo_url : !item.photo_url
+        );
+      }
+
       if (isMountedRef.current) {
-        setItems(itemsWithLocation);
-        finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
+        setItems(filteredItems);
+        finishLoadingRef.current(isInitialLoad, filteredItems.length);
       }
     } catch (err) {
       if (isMountedRef.current) {
@@ -451,7 +505,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       loadItems(searchQuery, true, 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.locationType, filters.hasPhoto, filters.showDeleted]);
 
   const handleSearch = useCallback((query: string) => {
     if (user && !isUserLoading) {
@@ -493,13 +547,12 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
-  if (isLoading || isUserLoading) {
-    return (
-      <div className="space-y-6">
-        <ListSkeleton variant="table" rows={6} columns={5} />
-      </div>
-    );
-  }
+  const hasActiveFilters = filters.locationType !== null || filters.hasPhoto !== null || filters.showDeleted;
+  const activeFiltersCount = [filters.locationType !== null, filters.hasPhoto !== null, filters.showDeleted].filter(Boolean).length;
+
+  useEffect(() => {
+    onActiveFiltersCountChange?.(activeFiltersCount);
+  }, [activeFiltersCount, onActiveFiltersCountChange]);
 
   if (!user) {
     return null;
@@ -509,7 +562,9 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     <div className="space-y-6">
       <ErrorCard message={error || ""} />
 
-      {isSearching && items.length === 0 ? (
+      {isLoading || isUserLoading ? (
+        <ListSkeleton variant="table" rows={6} columns={5} />
+      ) : isSearching && items.length === 0 ? (
         <ListSkeleton variant="table" rows={6} columns={5} />
       ) : items.length === 0 ? (
         <EmptyState
@@ -835,6 +890,39 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
           </PaginationContent>
         </Pagination>
       )}
+
+      <Sheet 
+        open={isFiltersOpen} 
+        onOpenChange={setIsFiltersOpen}
+      >
+        <SheetContent 
+          side="right"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <SheetHeader>
+            <SheetTitle>Фильтры</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <ItemsFiltersPanel
+              filters={filters}
+              onFiltersChange={(newFilters) => {
+                setFilters(newFilters);
+                setInternalShowDeleted(newFilters.showDeleted);
+              }}
+              onReset={() => {
+                const resetFilters: ItemsFilters = {
+                  showDeleted: false,
+                  locationType: null,
+                  hasPhoto: null,
+                };
+                setFilters(resetFilters);
+                setInternalShowDeleted(false);
+              }}
+              hasActiveFilters={hasActiveFilters}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

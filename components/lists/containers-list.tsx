@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,13 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ContainersFiltersPanel, type ContainersFilters } from "@/components/filters/containers-filters-panel";
 import { toast } from "sonner";
 
 interface Container {
@@ -55,9 +62,41 @@ interface ContainersListProps {
   searchQuery?: string;
   showDeleted?: boolean;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
+  onFiltersOpenChange?: (open: boolean) => void;
+  filtersOpen?: boolean;
+  onActiveFiltersCountChange?: (count: number) => void;
 }
 
-const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: ContainersListProps = {}) => {
+const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: ContainersListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+  const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
+  
+  const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
+  const setIsFiltersOpen = useCallback((open: boolean) => {
+    if (externalFiltersOpen === undefined) {
+      setInternalFiltersOpen(open);
+    }
+    onFiltersOpenChange?.(open);
+  }, [externalFiltersOpen, onFiltersOpenChange]);
+  
+  useEffect(() => {
+    if (externalShowDeleted !== undefined) {
+      setInternalShowDeleted(externalShowDeleted);
+      setFilters((prev) => ({ ...prev, showDeleted: externalShowDeleted }));
+    }
+  }, [externalShowDeleted]);
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
+  }, [internalShowDeleted]);
+
+  const [filters, setFilters] = useState<ContainersFilters>({
+    showDeleted: internalShowDeleted,
+    entityTypeId: null,
+    hasItems: null,
+    locationType: null,
+  });
+
   const {
     user,
     isUserLoading,
@@ -71,7 +110,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     handleError,
   } = useListState({
     externalSearchQuery,
-    externalShowDeleted,
+    externalShowDeleted: filters.showDeleted,
     refreshTrigger,
     onSearchStateChange,
   });
@@ -329,28 +368,90 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           });
 
           // Добавляем информацию о количестве вещей
-          const containersWithItemsInfo = containersWithLocation.map(container => ({
+          let containersWithItemsInfo = containersWithLocation.map(container => ({
             ...container,
             itemsCount: itemsCountByContainer.get(container.id) || 0,
           }));
+
+          // Применяем фильтры
+          if (filters.entityTypeId !== null) {
+            containersWithItemsInfo = containersWithItemsInfo.filter(
+              (c) => c.entity_type_id === filters.entityTypeId
+            );
+          }
+
+          if (filters.hasItems !== null) {
+            containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
+              filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
+            );
+          }
+
+          if (filters.locationType) {
+            containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
+              if (!c.last_location) return false;
+              return c.last_location.destination_type === filters.locationType;
+            });
+          }
 
           setContainers(containersWithItemsInfo);
           finishLoading(isInitialLoad, containersWithItemsInfo.length);
         } else {
           // Нет вещей ни в одном контейнере
-          const containersWithItemsInfo = containersWithLocation.map(container => ({
+          let containersWithItemsInfo = containersWithLocation.map(container => ({
             ...container,
             itemsCount: 0,
           }));
+
+          // Применяем фильтры
+          if (filters.entityTypeId !== null) {
+            containersWithItemsInfo = containersWithItemsInfo.filter(
+              (c) => c.entity_type_id === filters.entityTypeId
+            );
+          }
+
+          if (filters.hasItems !== null) {
+            containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
+              filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
+            );
+          }
+
+          if (filters.locationType) {
+            containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
+              if (!c.last_location) return false;
+              return c.last_location.destination_type === filters.locationType;
+            });
+          }
+
           setContainers(containersWithItemsInfo);
           finishLoading(isInitialLoad, containersWithItemsInfo.length);
         }
       } else {
         // Нет контейнеров для проверки
-        const containersWithItemsInfo = containersWithLocation.map(container => ({
+        let containersWithItemsInfo = containersWithLocation.map(container => ({
           ...container,
           itemsCount: 0,
         }));
+
+        // Применяем фильтры
+        if (filters.entityTypeId !== null) {
+          containersWithItemsInfo = containersWithItemsInfo.filter(
+            (c) => c.entity_type_id === filters.entityTypeId
+          );
+        }
+
+        if (filters.hasItems !== null) {
+          containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
+            filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
+          );
+        }
+
+        if (filters.locationType) {
+          containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
+            if (!c.last_location) return false;
+            return c.last_location.destination_type === filters.locationType;
+          });
+        }
+
         setContainers(containersWithItemsInfo);
         finishLoading(isInitialLoad, containersWithItemsInfo.length);
       }
@@ -365,7 +466,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
       loadContainers(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.hasItems, filters.locationType, filters.showDeleted]);
 
   useDebouncedSearch({
     searchQuery,
@@ -402,13 +503,12 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
   };
 
-  if (isLoading || isUserLoading) {
-    return (
-      <div className="space-y-6">
-        <ListSkeleton variant="table" rows={6} columns={5} />
-      </div>
-    );
-  }
+  const hasActiveFilters = filters.entityTypeId !== null || filters.hasItems !== null || filters.locationType !== null || filters.showDeleted;
+  const activeFiltersCount = [filters.entityTypeId !== null, filters.hasItems !== null, filters.locationType !== null, filters.showDeleted].filter(Boolean).length;
+
+  useEffect(() => {
+    onActiveFiltersCountChange?.(activeFiltersCount);
+  }, [activeFiltersCount, onActiveFiltersCountChange]);
 
   if (!user) {
     return null;
@@ -418,7 +518,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     <div className="space-y-6">
       <ErrorCard message={error || ""} />
 
-      {isSearching && containers.length === 0 ? (
+      {isLoading || isUserLoading ? (
+        <ListSkeleton variant="table" rows={6} columns={5} />
+      ) : isSearching && containers.length === 0 ? (
         <ListSkeleton variant="table" rows={6} columns={5} />
       ) : containers.length === 0 ? (
         <EmptyState
@@ -614,6 +716,40 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           }}
         />
       )}
+
+      <Sheet 
+        open={isFiltersOpen} 
+        onOpenChange={setIsFiltersOpen}
+      >
+        <SheetContent 
+          side="right"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <SheetHeader>
+            <SheetTitle>Фильтры</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <ContainersFiltersPanel
+              filters={filters}
+              onFiltersChange={(newFilters) => {
+                setFilters(newFilters);
+                setInternalShowDeleted(newFilters.showDeleted);
+              }}
+              onReset={() => {
+                const resetFilters: ContainersFilters = {
+                  showDeleted: false,
+                  entityTypeId: null,
+                  hasItems: null,
+                  locationType: null,
+                };
+                setFilters(resetFilters);
+                setInternalShowDeleted(false);
+              }}
+              hasActiveFilters={hasActiveFilters}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {movingContainerId && (
         <MoveContainerForm
