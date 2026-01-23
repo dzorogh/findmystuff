@@ -32,6 +32,7 @@ interface ComboboxProps {
   emptyText?: string;
   disabled?: boolean;
   className?: string;
+  size?: "sm" | "default" | "lg";
 }
 
 export const Combobox = ({
@@ -43,6 +44,7 @@ export const Combobox = ({
   emptyText = "Ничего не найдено.",
   disabled = false,
   className,
+  size = "default",
 }: ComboboxProps) => {
   const [open, setOpen] = React.useState(false);
 
@@ -55,6 +57,7 @@ export const Combobox = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          size={size}
           className={cn("w-full justify-between", className)}
           disabled={disabled}
         >

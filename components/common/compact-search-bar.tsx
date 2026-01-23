@@ -19,6 +19,7 @@ interface CompactSearchBarProps {
   showDeleted?: boolean;
   onToggleDeleted?: () => void;
   className?: string;
+  actions?: React.ReactNode;
 }
 
 export const CompactSearchBar = memo(({
@@ -31,6 +32,7 @@ export const CompactSearchBar = memo(({
   showDeleted,
   onToggleDeleted,
   className = "",
+  actions,
 }: CompactSearchBarProps) => {
   const getResultsText = () => {
     if (!resultsCount || !resultsLabel) return null;
@@ -49,7 +51,8 @@ export const CompactSearchBar = memo(({
           value={searchQuery}
           onChange={onSearchChange}
           placeholder={placeholder}
-          className="pl-10 pr-10 h-9"
+          size="default"
+          className="pl-10 pr-10"
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -63,12 +66,13 @@ export const CompactSearchBar = memo(({
             {resultsCount} {getResultsText()}
           </Badge>
         )}
+        {actions}
         {onToggleDeleted && (
           <Button
             variant={showDeleted ? "default" : "outline"}
-            size="sm"
+            size="default"
             onClick={onToggleDeleted}
-            className="h-9 gap-2"
+            className="gap-2"
           >
             <Filter className="h-3.5 w-3.5" />
             <span className="text-xs">{showDeleted ? "Скрыть удаленные" : "Удаленные"}</span>

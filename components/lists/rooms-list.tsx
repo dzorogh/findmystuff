@@ -5,7 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, Container, Package } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import { FormField } from "@/components/ui/form-field";
+import { Building2, MapPin, Container, Package, Filter } from "lucide-react";
 import Image from "next/image";
 import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/hooks/use-list-state";
@@ -16,6 +19,12 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { toast } from "sonner";
 
 interface Room {
@@ -34,9 +43,29 @@ interface RoomsListProps {
   searchQuery?: string;
   showDeleted?: boolean;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
+  onFiltersOpenChange?: (open: boolean) => void;
+  filtersOpen?: boolean;
+  onActiveFiltersCountChange?: (count: number) => void;
 }
 
-const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange }: RoomsListProps = {}) => {
+const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: RoomsListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+  const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
+  
+  const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
+  const setIsFiltersOpen = (open: boolean) => {
+    if (externalFiltersOpen === undefined) {
+      setInternalFiltersOpen(open);
+    }
+    onFiltersOpenChange?.(open);
+  };
+  
+  useEffect(() => {
+    if (externalShowDeleted !== undefined) {
+      setInternalShowDeleted(externalShowDeleted);
+    }
+  }, [externalShowDeleted]);
+  
   const {
     user,
     isUserLoading,
@@ -50,13 +79,16 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     handleError,
   } = useListState({
     externalSearchQuery,
-    externalShowDeleted,
+    externalShowDeleted: internalShowDeleted,
     refreshTrigger,
     onSearchStateChange,
   });
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
+  const [hasItemsFilter, setHasItemsFilter] = useState<boolean | null>(null);
+  const [hasContainersFilter, setHasContainersFilter] = useState<boolean | null>(null);
+  const [hasPlacesFilter, setHasPlacesFilter] = useState<boolean | null>(null);
 
   const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
@@ -125,7 +157,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         }
       });
 
-      const roomsWithCounts = roomsData.map((room) => {
+      let roomsWithCounts = roomsData.map((room) => {
         return {
           ...room,
           items_count: itemsByRoom.get(room.id)?.size || 0,
@@ -133,6 +165,23 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
           containers_count: containersByRoom.get(room.id)?.size || 0,
         };
       });
+
+      // Применяем фильтры
+      if (hasItemsFilter !== null) {
+        roomsWithCounts = roomsWithCounts.filter((room) =>
+          hasItemsFilter ? room.items_count > 0 : room.items_count === 0
+        );
+      }
+      if (hasContainersFilter !== null) {
+        roomsWithCounts = roomsWithCounts.filter((room) =>
+          hasContainersFilter ? room.containers_count > 0 : room.containers_count === 0
+        );
+      }
+      if (hasPlacesFilter !== null) {
+        roomsWithCounts = roomsWithCounts.filter((room) =>
+          hasPlacesFilter ? room.places_count > 0 : room.places_count === 0
+        );
+      }
 
       setRooms(roomsWithCounts);
       finishLoading(isInitialLoad, roomsWithCounts.length);
@@ -147,7 +196,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       loadRooms(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger]);
+  }, [user?.id, showDeleted, refreshTrigger, hasItemsFilter, hasContainersFilter, hasPlacesFilter, internalShowDeleted]);
 
   useDebouncedSearch({
     searchQuery,
@@ -157,6 +206,13 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       }
     },
   });
+
+  const hasActiveFilters = hasItemsFilter !== null || hasContainersFilter !== null || hasPlacesFilter !== null || internalShowDeleted;
+  const activeFiltersCount = [hasItemsFilter !== null, hasContainersFilter !== null, hasPlacesFilter !== null, internalShowDeleted].filter(Boolean).length;
+
+  useEffect(() => {
+    onActiveFiltersCountChange?.(activeFiltersCount);
+  }, [activeFiltersCount, onActiveFiltersCountChange]);
 
   const handleDeleteRoom = async (roomId: number) => {
     if (!confirm("Вы уверены, что хотите удалить это помещение?")) {
@@ -277,6 +333,96 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
           ))}
         </div>
       )}
+
+      <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>Фильтры</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-6">
+            <FormField label="Показывать удаленные">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="showDeleted"
+                  checked={internalShowDeleted}
+                  onChange={(e) => setInternalShowDeleted(e.target.checked)}
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                />
+                <Label htmlFor="showDeleted" className="text-sm font-normal cursor-pointer">
+                  Показывать удаленные помещения
+                </Label>
+              </div>
+            </FormField>
+
+            <FormField label="Есть вещи">
+              <Combobox
+                options={[
+                  { value: "all", label: "Все" },
+                  { value: "yes", label: "Да" },
+                  { value: "no", label: "Нет" },
+                ]}
+                value={hasItemsFilter === null ? "all" : hasItemsFilter ? "yes" : "no"}
+                onValueChange={(value) => {
+                  setHasItemsFilter(value === "all" ? null : value === "yes");
+                }}
+                placeholder="Выберите..."
+                searchPlaceholder="Поиск..."
+                emptyText="Не найдено"
+              />
+            </FormField>
+
+            <FormField label="Есть контейнеры">
+              <Combobox
+                options={[
+                  { value: "all", label: "Все" },
+                  { value: "yes", label: "Да" },
+                  { value: "no", label: "Нет" },
+                ]}
+                value={hasContainersFilter === null ? "all" : hasContainersFilter ? "yes" : "no"}
+                onValueChange={(value) => {
+                  setHasContainersFilter(value === "all" ? null : value === "yes");
+                }}
+                placeholder="Выберите..."
+                searchPlaceholder="Поиск..."
+                emptyText="Не найдено"
+              />
+            </FormField>
+
+            <FormField label="Есть места">
+              <Combobox
+                options={[
+                  { value: "all", label: "Все" },
+                  { value: "yes", label: "Да" },
+                  { value: "no", label: "Нет" },
+                ]}
+                value={hasPlacesFilter === null ? "all" : hasPlacesFilter ? "yes" : "no"}
+                onValueChange={(value) => {
+                  setHasPlacesFilter(value === "all" ? null : value === "yes");
+                }}
+                placeholder="Выберите..."
+                searchPlaceholder="Поиск..."
+                emptyText="Не найдено"
+              />
+            </FormField>
+
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setHasItemsFilter(null);
+                  setHasContainersFilter(null);
+                  setHasPlacesFilter(null);
+                  setInternalShowDeleted(false);
+                }}
+              >
+                Сбросить фильтры
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {editingRoomId && (
         <EditRoomForm
