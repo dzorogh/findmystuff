@@ -57,6 +57,7 @@ interface Item {
     moved_at: string;
     place_name?: string | null;
     room_name?: string | null;
+    room_id?: number | null;
   } | null;
 }
 
@@ -97,6 +98,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     showDeleted: internalShowDeleted,
     locationType: null,
     hasPhoto: null,
+    roomId: null,
   });
 
   const {
@@ -309,22 +311,43 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         (placeRoomsData || []).map((r) => [r.id, r.name])
       );
 
-      // Загружаем transitions для контейнеров
-      const allContainerIds = Array.from(containersMap.keys());
-      const { data: containersTransitionsData } = allContainerIds.length > 0
-        ? await supabase
+      // Загружаем transitions для контейнеров (рекурсивно для всех контейнеров в цепочке)
+      const allContainerIds = new Set(Array.from(containersMap.keys()));
+      
+      // Рекурсивно находим все контейнеры в цепочке
+      const loadContainerTransitionsRecursively = async (containerIds: Set<number>): Promise<Map<number, any>> => {
+        const transitionsMap = new Map<number, any>();
+        let currentLevelIds = Array.from(containerIds);
+        const allLoadedIds = new Set<number>();
+        
+        while (currentLevelIds.length > 0) {
+          const { data: containersTransitionsData } = await supabase
             .from("transitions")
             .select("*")
-            .in("container_id", allContainerIds)
-            .order("created_at", { ascending: false })
-        : { data: [] };
-
-      const lastContainerTransitions = new Map<number, any>();
-      (containersTransitionsData || []).forEach((t) => {
-        if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
-          lastContainerTransitions.set(t.container_id, t);
+            .in("container_id", currentLevelIds)
+            .order("created_at", { ascending: false });
+          
+          const nextLevelIds: number[] = [];
+          
+          (containersTransitionsData || []).forEach((t) => {
+            if (t.container_id && !transitionsMap.has(t.container_id)) {
+              transitionsMap.set(t.container_id, t);
+              allLoadedIds.add(t.container_id);
+              
+              // Если контейнер находится в другом контейнере, добавляем его для следующего уровня
+              if (t.destination_type === "container" && t.destination_id && !allLoadedIds.has(t.destination_id)) {
+                nextLevelIds.push(t.destination_id);
+              }
+            }
+          });
+          
+          currentLevelIds = nextLevelIds;
         }
-      });
+        
+        return transitionsMap;
+      };
+      
+      const lastContainerTransitions = await loadContainerTransitionsRecursively(allContainerIds);
 
       // Для контейнеров, которые находятся в местах, получаем помещения этих мест
       const containerPlaceIds = Array.from(lastContainerTransitions.values())
@@ -392,6 +415,35 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         containerRoomsMap.set(roomId, roomsMap.get(roomId) || null);
       });
 
+      // Вспомогательная функция для рекурсивного поиска помещения через цепочку контейнеров
+      const findRoomIdRecursively = (
+        containerId: number,
+        visited: Set<number> = new Set()
+      ): number | null => {
+        if (visited.has(containerId)) {
+          return null; // Предотвращаем бесконечную рекурсию
+        }
+        visited.add(containerId);
+
+        const containerTransition = lastContainerTransitions.get(containerId);
+        if (!containerTransition) {
+          return null;
+        }
+
+        if (containerTransition.destination_type === "room") {
+          return containerTransition.destination_id;
+        } else if (containerTransition.destination_type === "place") {
+          const placeTransition = lastPlaceTransitions.get(containerTransition.destination_id);
+          if (placeTransition) {
+            return placeTransition.destination_id;
+          }
+        } else if (containerTransition.destination_type === "container") {
+          return findRoomIdRecursively(containerTransition.destination_id, visited);
+        }
+
+        return null;
+      };
+
       const itemsWithLocation = itemsData.map((item) => {
         const lastTransition = lastTransitionsByItem.get(item.id);
 
@@ -409,47 +461,51 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         let destinationName: string | null = null;
         let placeName: string | null = null;
         let roomName: string | null = null;
+        let roomId: number | null = null;
 
         if (lastTransition.destination_type === "room") {
           // Вещь в помещении
           destinationName = roomsMap.get(lastTransition.destination_id) || null;
           roomName = destinationName;
+          roomId = lastTransition.destination_id;
         } else if (lastTransition.destination_type === "place") {
           // Вещь в месте - показываем место и помещение
           destinationName = placesMap.get(lastTransition.destination_id) || null;
           placeName = destinationName;
           const placeTransition = lastPlaceTransitions.get(lastTransition.destination_id);
           if (placeTransition) {
-            roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
+            roomId = placeTransition.destination_id;
+            roomName = placeRoomsMap.get(roomId) || null;
           }
         } else if (lastTransition.destination_type === "container") {
           // Вещь в контейнере - показываем контейнер, место (если есть) и помещение
           destinationName = containersMap.get(lastTransition.destination_id) || null;
-          const containerTransition = lastContainerTransitions.get(lastTransition.destination_id);
-          if (containerTransition) {
-            if (containerTransition.destination_type === "place") {
+          // Используем рекурсивную функцию для поиска помещения через всю цепочку
+          roomId = findRoomIdRecursively(lastTransition.destination_id);
+          
+          if (roomId) {
+            // Определяем roomName из соответствующей карты
+            roomName = containerRoomsMap.get(roomId) || placeRoomsMap.get(roomId) || roomsMap.get(roomId) || null;
+            
+            // Определяем placeName, если контейнер находится в месте
+            const containerTransition = lastContainerTransitions.get(lastTransition.destination_id);
+            if (containerTransition && containerTransition.destination_type === "place") {
               placeName = placesMap.get(containerTransition.destination_id) || null;
-              const placeTransition = lastPlaceTransitions.get(containerTransition.destination_id);
-              if (placeTransition) {
-                // Используем общую карту помещений
-                roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
-              }
-            } else if (containerTransition.destination_type === "room") {
-              roomName = containerRoomsMap.get(containerTransition.destination_id) || null;
-            } else if (containerTransition.destination_type === "container") {
-              // Контейнер в контейнере - рекурсивно находим помещение
-              const parentContainerTransition = lastContainerTransitions.get(containerTransition.destination_id);
-              if (parentContainerTransition) {
-                if (parentContainerTransition.destination_type === "place") {
-                  placeName = placesMap.get(parentContainerTransition.destination_id) || null;
-                  const placeTransition = lastPlaceTransitions.get(parentContainerTransition.destination_id);
-                  if (placeTransition) {
-                    roomName = placeRoomsMap.get(placeTransition.destination_id) || null;
-                  }
-                } else if (parentContainerTransition.destination_type === "room") {
-                  roomName = containerRoomsMap.get(parentContainerTransition.destination_id) || null;
+            } else if (containerTransition && containerTransition.destination_type === "container") {
+              // Если контейнер в контейнере, ищем место в цепочке
+              const findPlaceNameRecursively = (cid: number, visited: Set<number> = new Set()): string | null => {
+                if (visited.has(cid)) return null;
+                visited.add(cid);
+                const ct = lastContainerTransitions.get(cid);
+                if (!ct) return null;
+                if (ct.destination_type === "place") {
+                  return placesMap.get(ct.destination_id) || null;
+                } else if (ct.destination_type === "container") {
+                  return findPlaceNameRecursively(ct.destination_id, visited);
                 }
-              }
+                return null;
+              };
+              placeName = findPlaceNameRecursively(containerTransition.destination_id);
             }
           }
         }
@@ -467,12 +523,26 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
             moved_at: lastTransition.created_at,
             place_name: placeName,
             room_name: roomName,
+            room_id: roomId,
           },
         };
       });
 
       // Применяем фильтры
       let filteredItems = itemsWithLocation;
+      
+      // Сначала применяем фильтр по помещению, так как он самый строгий
+      if (filters.roomId !== null) {
+        filteredItems = filteredItems.filter((item) => {
+          if (!item.last_location) return false;
+          // Исключаем элементы без room_id или с несовпадающим room_id
+          const itemRoomId = item.last_location.room_id;
+          if (itemRoomId === null || itemRoomId === undefined) {
+            return false; // Исключаем элементы, для которых не удалось определить помещение
+          }
+          return itemRoomId === filters.roomId;
+        });
+      }
       
       if (filters.locationType) {
         filteredItems = filteredItems.filter((item) => {
@@ -497,7 +567,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         setItems([]);
       }
     }
-  }, [user?.id, showDeleted]);
+  }, [user?.id, showDeleted, filters.roomId, filters.locationType, filters.hasPhoto, filters.showDeleted]);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -505,7 +575,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       loadItems(searchQuery, true, 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger, filters.locationType, filters.hasPhoto, filters.showDeleted]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.locationType, filters.hasPhoto, filters.roomId, filters.showDeleted]);
 
   const handleSearch = useCallback((query: string) => {
     if (user && !isUserLoading) {
@@ -547,8 +617,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
-  const hasActiveFilters = filters.locationType !== null || filters.hasPhoto !== null || filters.showDeleted;
-  const activeFiltersCount = [filters.locationType !== null, filters.hasPhoto !== null, filters.showDeleted].filter(Boolean).length;
+  const hasActiveFilters = filters.locationType !== null || filters.hasPhoto !== null || filters.roomId !== null || filters.showDeleted;
+  const activeFiltersCount = [filters.locationType !== null, filters.hasPhoto !== null, filters.roomId !== null, filters.showDeleted].filter(Boolean).length;
 
   useEffect(() => {
     onActiveFiltersCountChange?.(activeFiltersCount);
@@ -914,6 +984,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                   showDeleted: false,
                   locationType: null,
                   hasPhoto: null,
+                  roomId: null,
                 };
                 setFilters(resetFilters);
                 setInternalShowDeleted(false);
