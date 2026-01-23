@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Container {
@@ -18,6 +18,7 @@ export const useContainers = (includeDeleted = false) => {
   const [containers, setContainers] = useState<Container[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const isMountedRef = useRef(true);
 
   const loadContainers = async () => {
     setIsLoading(true);
@@ -35,6 +36,8 @@ export const useContainers = (includeDeleted = false) => {
 
       const { data, error: fetchError } = await query;
 
+      if (!isMountedRef.current) return;
+
       if (fetchError) throw fetchError;
       setContainers((data || []).map((container: any) => ({
         id: container.id,
@@ -47,16 +50,23 @@ export const useContainers = (includeDeleted = false) => {
         marking_number: container.marking_number,
       })));
     } catch (err) {
+      if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки контейнеров");
       setError(error);
       console.error("Ошибка загрузки контейнеров:", err);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     loadContainers();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [includeDeleted]);
 
   return { containers, isLoading, error, refetch: loadContainers };

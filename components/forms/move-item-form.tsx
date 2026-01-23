@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useRooms } from "@/hooks/use-rooms";
@@ -154,54 +156,55 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
               {itemName || `Item #${itemId}`}
             </SheetDescription>
           </SheetHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-            <div className="space-y-2">
-              <Label>Способ выбора местоположения</Label>
-              <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setIsQRScannerOpen(true)}
+          <form onSubmit={handleSubmit} className="mt-6">
+            <FormGroup>
+              <FormField label="Способ выбора местоположения">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setIsQRScannerOpen(true)}
+                    disabled={isSubmitting}
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    Сканировать QR-код
+                  </Button>
+                </div>
+              </FormField>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">или</span>
+                </div>
+              </div>
+
+              <LocationCombobox
+                destinationType={destinationType}
+                selectedDestinationId={selectedDestinationId}
+                onDestinationTypeChange={(type) => {
+                  setDestinationType(type || "room");
+                  setSelectedDestinationId("");
+                }}
+                onDestinationIdChange={setSelectedDestinationId}
                 disabled={isSubmitting}
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Сканировать QR-код
-              </Button>
-              </div>
-            </div>
+                showRoomFirst={true}
+                label="Тип назначения"
+                id={`move-item-${itemId}`}
+              />
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">или</span>
-              </div>
-            </div>
+              <ErrorMessage message={error || ""} />
 
-            <LocationCombobox
-              destinationType={destinationType}
-              selectedDestinationId={selectedDestinationId}
-              onDestinationTypeChange={(type) => {
-                setDestinationType(type || "room");
-                setSelectedDestinationId("");
-              }}
-              onDestinationIdChange={setSelectedDestinationId}
-              disabled={isSubmitting}
-              showRoomFirst={true}
-              label="Тип назначения"
-              id={`move-item-${itemId}`}
-            />
-
-            <ErrorMessage message={error || ""} />
-
-            <FormFooter
-              isSubmitting={isSubmitting}
-              onCancel={() => onOpenChange(false)}
-              submitLabel="Переместить"
-              disabled={!selectedDestinationId}
-            />
+              <FormFooter
+                isSubmitting={isSubmitting}
+                onCancel={() => onOpenChange(false)}
+                submitLabel="Переместить"
+                disabled={!selectedDestinationId}
+              />
+            </FormGroup>
           </form>
         </SheetContent>
       </Sheet>

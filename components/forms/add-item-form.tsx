@@ -4,7 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
@@ -120,15 +121,18 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
             Введите название вещи и при необходимости укажите местоположение
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit} className="mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="item-name">Название вещи</Label>
+            <FormGroup>
+              <FormField
+                label="Название вещи"
+                htmlFor="item-name"
+                description="Поле необязательное. ID и дата создания заполнятся автоматически."
+              >
                 <Input
                   id="item-name"
                   type="text"
@@ -137,10 +141,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                   placeholder="Введите название вещи"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Поле необязательное. ID и дата создания заполнятся автоматически.
-                </p>
-              </div>
+              </FormField>
 
               <LocationCombobox
                 destinationType={destinationType}
@@ -168,7 +169,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 submitLabel="Добавить вещь"
                 submitIcon={Plus}
               />
-            </>
+            </FormGroup>
           )}
         </form>
       </SheetContent>

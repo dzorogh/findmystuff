@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -87,33 +88,34 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
             Создайте нового пользователя. Пароль будет сгенерирован автоматически.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor="user-email">
-              Email <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="user-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
-              disabled={isSubmitting}
+        <form onSubmit={handleSubmit} className="mt-6">
+          <FormGroup>
+            <FormField
+              label="Email"
+              htmlFor="user-email"
               required
+              description="Пароль будет автоматически сгенерирован и показан после создания"
+            >
+              <Input
+                id="user-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
+
+            <ErrorMessage message={error || ""} />
+
+            <FormFooter
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              submitLabel="Добавить пользователя"
+              submitIcon={Plus}
             />
-            <p className="text-xs text-muted-foreground">
-              Пароль будет автоматически сгенерирован и показан после создания
-            </p>
-          </div>
-
-          <ErrorMessage message={error || ""} />
-
-          <FormFooter
-            isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Добавить пользователя"
-            submitIcon={Plus}
-          />
+          </FormGroup>
         </form>
       </SheetContent>
     </Sheet>

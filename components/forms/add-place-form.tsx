@@ -4,7 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
@@ -123,15 +124,18 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
             Введите название места. Рекомендуемый формат: Ш1П1 (Шкаф 1 Полка 1), С1П1 (Стеллаж 1 Полка 1)
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit} className="mt-6">
           {isLoading || isLoadingTypes ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="place-type">Тип места</Label>
+            <FormGroup>
+              <FormField
+                label="Тип места"
+                htmlFor="place-type"
+                description="Маркировка будет сгенерирована автоматически (например, Ш1)"
+              >
                 <Combobox
                   options={placeTypes.map((type) => ({
                     value: type.id.toString(),
@@ -144,13 +148,13 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   emptyText="Типы мест не найдены"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Маркировка будет сгенерирована автоматически (например, Ш1)
-                </p>
-              </div>
+              </FormField>
 
-              <div className="space-y-2">
-                <Label htmlFor="place-name">Название места (необязательно)</Label>
+              <FormField
+                label="Название места (необязательно)"
+                htmlFor="place-name"
+                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
+              >
                 <Input
                   id="place-name"
                   type="text"
@@ -159,13 +163,9 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   placeholder="Введите название места"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Дополнительное описание. ID и дата создания заполнятся автоматически.
-                </p>
-              </div>
+              </FormField>
 
-              {/* Выбор помещения (обязательно) */}
-              <div className="space-y-3 border-t pt-4">
+              <FormGroup separator>
                 <RoomCombobox
                   selectedRoomId={selectedRoomId}
                   onRoomIdChange={setSelectedRoomId}
@@ -174,7 +174,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   id="place-room-select"
                   required
                 />
-              </div>
+              </FormGroup>
 
               <ImageUpload
                 value={photoUrl}
@@ -191,7 +191,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 submitLabel="Добавить место"
                 submitIcon={Plus}
               />
-            </>
+            </FormGroup>
           )}
         </form>
       </SheetContent>

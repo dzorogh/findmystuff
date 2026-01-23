@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import RoomCombobox from "@/components/location/room-combobox";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
@@ -168,73 +169,76 @@ const EditPlaceForm = ({
           <SheetTitle>Редактировать место</SheetTitle>
           <SheetDescription>Измените название места</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor={`place-name-${placeId}`}>Название места (маркировка)</Label>
-            <Input
-              id={`place-name-${placeId}`}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Ш1П1, С1П2"
-              disabled={isSubmitting}
-            />
-            <div className="rounded-md bg-muted p-3 space-y-2">
-              <p className="text-xs font-medium text-foreground">Система маркировки:</p>
-              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
-                <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
-                <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
-                <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
-              </ul>
-              <p className="text-xs text-muted-foreground pt-1">
-                Формат: [Ш/С][номер][П][номер полки]
-              </p>
-            </div>
-            {(() => {
-              const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
-              const typeCode = selectedType?.code;
-              return (
-                <MarkingDisplay
-                  typeCode={typeCode}
-                  markingNumber={markingNumber}
-                  generateMarking={generateMarking}
-                />
-              );
-            })()}
-          </div>
-
-              {/* Выбор помещения (обязательно) */}
-              <div className="space-y-3 border-t pt-4">
-                <RoomCombobox
-                  selectedRoomId={selectedRoomId}
-                  onRoomIdChange={setSelectedRoomId}
-                  disabled={isSubmitting}
-                  label="Выберите помещение"
-                  id={`place-room-${placeId}`}
-                  required
-                />
-                {currentRoomId && !selectedRoomId && (
-                  <p className="text-xs text-muted-foreground">
-                    Текущее помещение будет удалено. Выберите новое помещение.
-                  </p>
-                )}
-              </div>
-
-              <ImageUpload
-                value={photoUrl}
-                onChange={setPhotoUrl}
+        <form onSubmit={handleSubmit} className="mt-6">
+          <FormGroup>
+            <FormField
+              label="Название места (маркировка)"
+              htmlFor={`place-name-${placeId}`}
+            >
+              <Input
+                id={`place-name-${placeId}`}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Например: Ш1П1, С1П2"
                 disabled={isSubmitting}
-                label="Фотография места (необязательно)"
               />
+              <div className="rounded-md bg-muted p-3 space-y-2">
+                <p className="text-xs font-medium text-foreground">Система маркировки:</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
+                  <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
+                  <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
+                  <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
+                </ul>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Формат: [Ш/С][номер][П][номер полки]
+                </p>
+              </div>
+              {(() => {
+                const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
+                const typeCode = selectedType?.code;
+                return (
+                  <MarkingDisplay
+                    typeCode={typeCode}
+                    markingNumber={markingNumber}
+                    generateMarking={generateMarking}
+                  />
+                );
+              })()}
+            </FormField>
 
-          <ErrorMessage message={error || ""} />
+            <FormGroup separator>
+              <RoomCombobox
+                selectedRoomId={selectedRoomId}
+                onRoomIdChange={setSelectedRoomId}
+                disabled={isSubmitting}
+                label="Выберите помещение"
+                id={`place-room-${placeId}`}
+                required
+              />
+              {currentRoomId && !selectedRoomId && (
+                <p className="text-xs text-muted-foreground">
+                  Текущее помещение будет удалено. Выберите новое помещение.
+                </p>
+              )}
+            </FormGroup>
 
-          <FormFooter
-            isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Сохранить"
-          />
+            <ImageUpload
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              disabled={isSubmitting}
+              label="Фотография места (необязательно)"
+            />
+
+            <ErrorMessage message={error || ""} />
+
+            <FormFooter
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              submitLabel="Сохранить"
+            />
+          </FormGroup>
         </form>
       </SheetContent>
     </Sheet>

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
@@ -86,15 +88,18 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
             Введите название помещения
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit} className="mt-6">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="room-name">Название помещения</Label>
+            <FormGroup>
+              <FormField
+                label="Название помещения"
+                htmlFor="room-name"
+                description="Поле необязательное. ID и дата создания заполнятся автоматически."
+              >
                 <Input
                   id="room-name"
                   type="text"
@@ -103,10 +108,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   placeholder="Введите название помещения"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Поле необязательное. ID и дата создания заполнятся автоматически.
-                </p>
-              </div>
+              </FormField>
 
               <ImageUpload
                 value={photoUrl}
@@ -123,7 +125,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                 submitLabel="Добавить помещение"
                 submitIcon={Plus}
               />
-            </>
+            </FormGroup>
           )}
         </form>
       </SheetContent>

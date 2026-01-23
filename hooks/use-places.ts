@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Place {
@@ -12,6 +12,7 @@ export const usePlaces = (includeDeleted = false) => {
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const isMountedRef = useRef(true);
 
   const loadPlaces = async () => {
     setIsLoading(true);
@@ -29,19 +30,28 @@ export const usePlaces = (includeDeleted = false) => {
 
       const { data, error: fetchError } = await query;
 
+      if (!isMountedRef.current) return;
+
       if (fetchError) throw fetchError;
       setPlaces(data || []);
     } catch (err) {
+      if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки мест");
       setError(error);
       console.error("Ошибка загрузки мест:", err);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     loadPlaces();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [includeDeleted]);
 
   return { places, isLoading, error, refetch: loadPlaces };

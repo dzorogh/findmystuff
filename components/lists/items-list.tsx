@@ -89,6 +89,14 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   const startLoadingRef = useRef(startLoading);
   const finishLoadingRef = useRef(finishLoading);
   const handleErrorRef = useRef(handleError);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     startLoadingRef.current = startLoading;
@@ -98,6 +106,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const loadItems = useCallback(async (query?: string, isInitialLoad = false, page = 1) => {
     if (!user) return;
+    if (!isMountedRef.current) return;
 
     startLoadingRef.current(isInitialLoad);
 
@@ -121,8 +130,10 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
       const { count, error: countError } = await countQueryBuilder;
 
+      if (!isMountedRef.current) return;
+
       if (countError) {
-        console.error("Ошибка при подсчете количества:", countError);
+        console.error("Ошибка при подсчете количества:", countError.message || countError.code || countError);
         setTotalCount(0);
       } else {
         const total = count || 0;
@@ -145,13 +156,17 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
       const { data: itemsData, error: itemsError } = await queryBuilder;
 
+      if (!isMountedRef.current) return;
+
       if (itemsError) {
         throw itemsError;
       }
 
       if (!itemsData || itemsData.length === 0) {
-        setItems([]);
-        finishLoadingRef.current(isInitialLoad, 0);
+        if (isMountedRef.current) {
+          setItems([]);
+          finishLoadingRef.current(isInitialLoad, 0);
+        }
         return;
       }
 
@@ -161,6 +176,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         .select("*")
         .in("item_id", itemIds)
         .order("created_at", { ascending: false });
+
+      if (!isMountedRef.current) return;
 
       if (transitionsError) {
         throw transitionsError;
@@ -415,11 +432,15 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         };
       });
 
-      setItems(itemsWithLocation);
-      finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
+      if (isMountedRef.current) {
+        setItems(itemsWithLocation);
+        finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
+      }
     } catch (err) {
-      handleErrorRef.current(err, isInitialLoad);
-      setItems([]);
+      if (isMountedRef.current) {
+        handleErrorRef.current(err, isInitialLoad);
+        setItems([]);
+      }
     }
   }, [user?.id, showDeleted]);
 

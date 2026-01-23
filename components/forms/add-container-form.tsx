@@ -4,7 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
@@ -132,15 +133,18 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
             Введите название контейнера и при необходимости укажите местоположение
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit} className="mt-6">
           {isLoading || isLoadingTypes ? (
             <div className="py-8 text-center text-muted-foreground">
               Загрузка...
             </div>
           ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="container-type">Тип контейнера</Label>
+            <FormGroup>
+              <FormField
+                label="Тип контейнера"
+                htmlFor="container-type"
+                description="Маркировка будет сгенерирована автоматически (например, КОР-001)"
+              >
                 <Combobox
                   options={containerTypes.map((type) => ({
                     value: type.id.toString(),
@@ -153,13 +157,13 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                   emptyText="Типы контейнеров не найдены"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Маркировка будет сгенерирована автоматически (например, КОР-001)
-                </p>
-              </div>
+              </FormField>
 
-              <div className="space-y-2">
-                <Label htmlFor="container-name">Название контейнера (необязательно)</Label>
+              <FormField
+                label="Название контейнера (необязательно)"
+                htmlFor="container-name"
+                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
+              >
                 <Input
                   id="container-name"
                   type="text"
@@ -168,20 +172,17 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                   placeholder="Введите название контейнера"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Дополнительное описание. ID и дата создания заполнятся автоматически.
-                </p>
-              </div>
+              </FormField>
 
-      <LocationCombobox
-        destinationType={destinationType}
-        selectedDestinationId={selectedDestinationId}
-        onDestinationTypeChange={setDestinationType}
-        onDestinationIdChange={setSelectedDestinationId}
-        disabled={isSubmitting}
-        showRoomFirst={true}
-        label="Указать местоположение (необязательно)"
-        id="add-container-location"
+              <LocationCombobox
+                destinationType={destinationType}
+                selectedDestinationId={selectedDestinationId}
+                onDestinationTypeChange={setDestinationType}
+                onDestinationIdChange={setSelectedDestinationId}
+                disabled={isSubmitting}
+                showRoomFirst={true}
+                label="Указать местоположение (необязательно)"
+                id="add-container-location"
               />
 
               <ImageUpload
@@ -199,7 +200,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 submitLabel="Добавить контейнер"
                 submitIcon={Plus}
               />
-            </>
+            </FormGroup>
           )}
         </form>
       </SheetContent>

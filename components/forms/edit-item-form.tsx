@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationCombobox from "@/components/location/location-combobox";
@@ -139,52 +140,56 @@ const EditItemForm = ({
           <SheetTitle>Редактировать вещь</SheetTitle>
           <SheetDescription>Измените название или местоположение</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor={`item-name-${itemId}`}>Название вещи</Label>
-            <Input
-              id={`item-name-${itemId}`}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название вещи"
+        <form onSubmit={handleSubmit} className="mt-6">
+          <FormGroup>
+            <FormField
+              label="Название вещи"
+              htmlFor={`item-name-${itemId}`}
+            >
+              <Input
+                id={`item-name-${itemId}`}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Введите название вещи"
+                disabled={isSubmitting}
+              />
+            </FormField>
+
+            <LocationCombobox
+              destinationType={destinationType}
+              selectedDestinationId={selectedDestinationId}
+              onDestinationTypeChange={setDestinationType}
+              onDestinationIdChange={setSelectedDestinationId}
               disabled={isSubmitting}
+              showRoomFirst={true}
+              label="Изменить местоположение (необязательно)"
+              id={`edit-item-location-${itemId}`}
             />
-          </div>
 
-          <LocationCombobox
-            destinationType={destinationType}
-            selectedDestinationId={selectedDestinationId}
-            onDestinationTypeChange={setDestinationType}
-            onDestinationIdChange={setSelectedDestinationId}
-            disabled={isSubmitting}
-            showRoomFirst={true}
-            label="Изменить местоположение (необязательно)"
-            id={`edit-item-location-${itemId}`}
-          />
+            <ImageUpload
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              disabled={isSubmitting}
+              label="Фотография вещи (необязательно)"
+            />
 
-          <ImageUpload
-            value={photoUrl}
-            onChange={setPhotoUrl}
-            disabled={isSubmitting}
-            label="Фотография вещи (необязательно)"
-          />
+            {currentLocation && (
+              <div className="rounded-md bg-muted p-3">
+                <p className="text-xs text-muted-foreground">
+                  Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
+                </p>
+              </div>
+            )}
 
-          {currentLocation && (
-            <div className="rounded-md bg-muted p-3">
-              <p className="text-xs text-muted-foreground">
-                Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
-              </p>
-            </div>
-          )}
+            <ErrorMessage message={error || ""} />
 
-          <ErrorMessage message={error || ""} />
-
-          <FormFooter
-            isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Сохранить"
-          />
+            <FormFooter
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              submitLabel="Сохранить"
+            />
+          </FormGroup>
         </form>
       </SheetContent>
     </Sheet>

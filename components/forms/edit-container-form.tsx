@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import LocationCombobox from "@/components/location/location-combobox";
@@ -150,80 +151,86 @@ const EditContainerForm = ({
           <SheetTitle>Редактировать контейнер</SheetTitle>
           <SheetDescription>Измените название или местоположение</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {(() => {
-            const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
-            const typeCode = selectedType?.code;
-            return (
-              <MarkingDisplay
-                typeCode={typeCode}
-                markingNumber={markingNumber}
-                generateMarking={generateMarking}
+        <form onSubmit={handleSubmit} className="mt-6">
+          <FormGroup>
+            {(() => {
+              const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+              const typeCode = selectedType?.code;
+              return (
+                <MarkingDisplay
+                  typeCode={typeCode}
+                  markingNumber={markingNumber}
+                  generateMarking={generateMarking}
+                />
+              );
+            })()}
+
+            <FormField
+              label="Тип контейнера"
+              htmlFor={`container-type-${containerId}`}
+            >
+              <Combobox
+                options={containerTypes.map((type) => ({
+                  value: type.id.toString(),
+                  label: `${type.code} - ${type.name}`,
+                }))}
+                value={containerTypeId}
+                onValueChange={setContainerTypeId}
+                placeholder="Выберите тип контейнера..."
+                searchPlaceholder="Поиск типа контейнера..."
+                emptyText="Типы контейнеров не найдены"
+                disabled={isSubmitting}
               />
-            );
-          })()}
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor={`container-type-${containerId}`}>Тип контейнера</Label>
-            <Combobox
-              options={containerTypes.map((type) => ({
-                value: type.id.toString(),
-                label: `${type.code} - ${type.name}`,
-              }))}
-              value={containerTypeId}
-              onValueChange={setContainerTypeId}
-              placeholder="Выберите тип контейнера..."
-              searchPlaceholder="Поиск типа контейнера..."
-              emptyText="Типы контейнеров не найдены"
+            <FormField
+              label="Название контейнера (необязательно)"
+              htmlFor={`container-name-${containerId}`}
+            >
+              <Input
+                id={`container-name-${containerId}`}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Введите название контейнера"
+                disabled={isSubmitting}
+              />
+            </FormField>
+
+            <LocationCombobox
+              destinationType={destinationType}
+              selectedDestinationId={selectedDestinationId}
+              onDestinationTypeChange={setDestinationType}
+              onDestinationIdChange={setSelectedDestinationId}
               disabled={isSubmitting}
+              showRoomFirst={true}
+              label="Изменить местоположение (необязательно)"
+              id={`edit-container-location-${containerId}`}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor={`container-name-${containerId}`}>Название контейнера (необязательно)</Label>
-            <Input
-              id={`container-name-${containerId}`}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название контейнера"
+            <ImageUpload
+              value={photoUrl}
+              onChange={setPhotoUrl}
               disabled={isSubmitting}
+              label="Фотография контейнера (необязательно)"
             />
-          </div>
 
-          <LocationCombobox
-            destinationType={destinationType}
-            selectedDestinationId={selectedDestinationId}
-            onDestinationTypeChange={setDestinationType}
-            onDestinationIdChange={setSelectedDestinationId}
-            disabled={isSubmitting}
-            showRoomFirst={true}
-            label="Изменить местоположение (необязательно)"
-            id={`edit-container-location-${containerId}`}
-          />
+            {currentLocation && (
+              <div className="rounded-md bg-muted p-3">
+                <p className="text-xs text-muted-foreground">
+                  Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
+                </p>
+              </div>
+            )}
 
-          <ImageUpload
-            value={photoUrl}
-            onChange={setPhotoUrl}
-            disabled={isSubmitting}
-            label="Фотография контейнера (необязательно)"
-          />
+            <ErrorMessage message={error || ""} />
 
-          {currentLocation && (
-            <div className="rounded-md bg-muted p-3">
-              <p className="text-xs text-muted-foreground">
-                Текущее местоположение: {currentLocation.destination_name || `#${currentLocation.destination_id}`}
-              </p>
-            </div>
-          )}
-
-          <ErrorMessage message={error || ""} />
-
-          <FormFooter
-            isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Сохранить"
-          />
+            <FormFooter
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              submitLabel="Сохранить"
+            />
+          </FormGroup>
         </form>
       </SheetContent>
     </Sheet>

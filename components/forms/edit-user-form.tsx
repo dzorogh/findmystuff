@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -94,32 +96,33 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
             Измените email пользователя. При сохранении будет сгенерирован новый пароль.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor={`user-email-${user.id}`}>
-              Email <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id={`user-email-${user.id}`}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
-              disabled={isSubmitting}
+        <form onSubmit={handleSubmit} className="mt-6">
+          <FormGroup>
+            <FormField
+              label="Email"
+              htmlFor={`user-email-${user.id}`}
               required
+              description="При сохранении будет автоматически сгенерирован новый пароль"
+            >
+              <Input
+                id={`user-email-${user.id}`}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                disabled={isSubmitting}
+                required
+              />
+            </FormField>
+
+            <ErrorMessage message={error || ""} />
+
+            <FormFooter
+              isSubmitting={isSubmitting}
+              onCancel={() => onOpenChange(false)}
+              submitLabel="Сохранить"
             />
-            <p className="text-xs text-muted-foreground">
-              При сохранении будет автоматически сгенерирован новый пароль
-            </p>
-          </div>
-
-          <ErrorMessage message={error || ""} />
-
-          <FormFooter
-            isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Сохранить"
-          />
+          </FormGroup>
         </form>
       </SheetContent>
     </Sheet>
