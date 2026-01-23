@@ -18,6 +18,17 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## QR-сканнер и доступ к камере
+
+Для работы QR-сканнера на мобильных устройствах требуется HTTPS соединение. Используйте Cloudflare Tunnel для доступа к локальному серверу разработки:
+
+1. Установите `cloudflared`: `brew install cloudflare/cloudflare/cloudflared` (macOS)
+2. Запустите dev сервер: `pnpm dev`
+3. В отдельном терминале запустите туннель: `pnpm dev:tunnel`
+4. Откройте предоставленный HTTPS URL на телефоне
+
+Подробная инструкция: [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md)
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

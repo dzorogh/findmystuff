@@ -13,14 +13,27 @@ const GoogleSignIn = () => {
       setIsLoading(true);
       const supabase = createClient();
       
-      // Используем переменную окружения для production URL, иначе window.location.origin
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                      (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
-      
+      // Используем текущий origin для динамического определения URL (работает с dev tunnels)
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_APP_URL || '';
+
+      if (!baseUrl) {
+        throw new Error("Не удалось определить базовый URL");
+      }
+
+      // Сохраняем исходный URL в sessionStorage для использования в callback
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('oauth_redirect_origin', baseUrl);
+      }
+
+      // Используем чистый callback URL без query параметров (Supabase может не пропускать их)
+      const callbackUrl = `${baseUrl}/auth/callback`;
+
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${baseUrl}/auth/callback`,
+          redirectTo: callbackUrl,
           queryParams: {
             prompt: "select_account",
           },

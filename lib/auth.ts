@@ -5,6 +5,11 @@ import { getDatabaseUrl } from "./supabase/database-url";
 // Получаем DATABASE_URL (автоматически из Supabase переменных или из DATABASE_URL)
 const databaseUrl = getDatabaseUrl();
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+if (!appUrl) {
+  throw new Error("NEXT_PUBLIC_APP_URL is not set");
+}
+
 export const auth = betterAuth({
   database: new Pool({
     connectionString: databaseUrl,
@@ -12,7 +17,7 @@ export const auth = betterAuth({
       ? { rejectUnauthorized: false } 
       : undefined,
   }),
-  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: appUrl,
   emailAndPassword: {
     enabled: true,
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,10 +86,20 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 20;
 
-  const loadItems = async (query?: string, isInitialLoad = false, page = 1) => {
+  const startLoadingRef = useRef(startLoading);
+  const finishLoadingRef = useRef(finishLoading);
+  const handleErrorRef = useRef(handleError);
+
+  useEffect(() => {
+    startLoadingRef.current = startLoading;
+    finishLoadingRef.current = finishLoading;
+    handleErrorRef.current = handleError;
+  }, [startLoading, finishLoading, handleError]);
+
+  const loadItems = useCallback(async (query?: string, isInitialLoad = false, page = 1) => {
     if (!user) return;
 
-    startLoading(isInitialLoad);
+    startLoadingRef.current(isInitialLoad);
 
     try {
       const supabase = createClient();
@@ -141,7 +151,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
       if (!itemsData || itemsData.length === 0) {
         setItems([]);
-        finishLoading(isInitialLoad, 0);
+        finishLoadingRef.current(isInitialLoad, 0);
         return;
       }
 
@@ -406,12 +416,12 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       });
 
       setItems(itemsWithLocation);
-      finishLoading(isInitialLoad, itemsWithLocation.length);
+      finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
     } catch (err) {
-      handleError(err, isInitialLoad);
+      handleErrorRef.current(err, isInitialLoad);
       setItems([]);
     }
-  };
+  }, [user?.id, showDeleted]);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -421,23 +431,17 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, showDeleted, refreshTrigger]);
 
-  useDebouncedSearch({
-    searchQuery,
-    onSearch: (query) => {
-      if (user && !isUserLoading) {
-        setCurrentPage(1);
-        loadItems(query || undefined, false, 1);
-      }
-    },
-  });
+  const handleSearch = useCallback((query: string) => {
+    if (user && !isUserLoading) {
+      setCurrentPage(1);
+      loadItems(query || undefined, false, 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isUserLoading]);
 
   useDebouncedSearch({
     searchQuery,
-    onSearch: (query) => {
-      if (user && !isUserLoading) {
-        loadItems(query || undefined, false);
-      }
-    },
+    onSearch: handleSearch,
   });
 
   const handleDeleteItem = async (itemId: number) => {
