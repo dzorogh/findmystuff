@@ -44,10 +44,12 @@ interface RoomsListProps {
   onFiltersOpenChange?: (open: boolean) => void;
   filtersOpen?: boolean;
   onActiveFiltersCountChange?: (count: number) => void;
+  initialFilters?: RoomsFilters;
+  onFiltersChange?: (filters: RoomsFilters) => void;
 }
 
-const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: RoomsListProps = {}) => {
-  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
+const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange, initialFilters, onFiltersChange }: RoomsListProps = {}) => {
+  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || initialFilters?.showDeleted || false);
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
   
   const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
@@ -89,12 +91,19 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
-  const [filters, setFilters] = useState<RoomsFilters>({
-    showDeleted: internalShowDeleted,
-    hasItems: null,
-    hasContainers: null,
-    hasPlaces: null,
-  });
+  const [filters, setFilters] = useState<RoomsFilters>(() => ({
+    showDeleted: initialFilters?.showDeleted ?? internalShowDeleted,
+    hasItems: initialFilters?.hasItems ?? null,
+    hasContainers: initialFilters?.hasContainers ?? null,
+    hasPlaces: initialFilters?.hasPlaces ?? null,
+  }));
+
+  // Синхронизируем фильтры с URL при изменении
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange(filters);
+    }
+  }, [filters, onFiltersChange]);
 
   const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
@@ -346,24 +355,30 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
             <SheetTitle>Фильтры</SheetTitle>
           </SheetHeader>
           <div className="mt-6">
-            <RoomsFiltersPanel
-              filters={filters}
-              onFiltersChange={(newFilters) => {
-                setFilters(newFilters);
-                setInternalShowDeleted(newFilters.showDeleted);
-              }}
-              onReset={() => {
-                const resetFilters: RoomsFilters = {
-                  showDeleted: false,
-                  hasItems: null,
-                  hasContainers: null,
-                  hasPlaces: null,
-                };
-                setFilters(resetFilters);
-                setInternalShowDeleted(false);
-              }}
-              hasActiveFilters={hasActiveFilters}
-            />
+                        <RoomsFiltersPanel
+                          filters={filters}
+                          onFiltersChange={(newFilters) => {
+                            setFilters(newFilters);
+                            setInternalShowDeleted(newFilters.showDeleted);
+                            if (onFiltersChange) {
+                              onFiltersChange(newFilters);
+                            }
+                          }}
+                          onReset={() => {
+                            const resetFilters: RoomsFilters = {
+                              showDeleted: false,
+                              hasItems: null,
+                              hasContainers: null,
+                              hasPlaces: null,
+                            };
+                            setFilters(resetFilters);
+                            setInternalShowDeleted(false);
+                            if (onFiltersChange) {
+                              onFiltersChange(resetFilters);
+                            }
+                          }}
+                          hasActiveFilters={hasActiveFilters}
+                        />
           </div>
         </SheetContent>
       </Sheet>

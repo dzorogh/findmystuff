@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun } from "lucide-react";
 import Logo from "@/components/common/logo";
 import GoogleSignIn from "@/components/auth/google-signin";
@@ -91,26 +92,9 @@ const Sidebar = () => {
     );
   };
 
-  if (isLoading) {
-    return (
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col">
-        <div className="h-16 flex items-center px-4 border-b">
-          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-        </div>
-        <div className="flex-1 p-4">
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 w-full animate-pulse rounded bg-muted" />
-            ))}
-          </div>
-        </div>
-      </aside>
-    );
-  }
-
   // Sidebar рендерится только для авторизованных пользователей
   // Для неавторизованных используется отдельный layout в AuthLayout
-  if (!user) {
+  if (!isLoading && !user) {
     return null;
   }
 
@@ -132,7 +116,11 @@ const Sidebar = () => {
               <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
             </div>
-            <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
+            {user ? (
+              <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
+            ) : (
+              <Skeleton className="h-4 w-32 mt-1 ml-6" />
+            )}
           </div>
           <Button
             variant="ghost"
@@ -152,6 +140,7 @@ const Sidebar = () => {
             size="sm"
             onClick={handleSignOut}
             className="w-full justify-start gap-2"
+            disabled={!user}
           >
             <LogOut className="h-4 w-4" />
             Выйти
@@ -181,7 +170,11 @@ const Sidebar = () => {
                 <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
               </div>
-              <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
+              {user ? (
+                <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground truncate mt-1 ml-6">Загрузка...</p>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -201,6 +194,7 @@ const Sidebar = () => {
               size="sm"
               onClick={handleSignOut}
               className="w-full justify-start gap-2"
+              disabled={!user}
             >
               <LogOut className="h-4 w-4" />
               Выйти

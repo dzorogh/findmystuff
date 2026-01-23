@@ -1,0 +1,10 @@
+tunnel: findmystuff-dev
+credentials-file: /Users/dzorogh/.cloudflared/fe842a5e-1ebe-46a0-8fbc-355b6a6c9c9d.json
+
+ingress:
+  # ВАЖНО:
+  # - Для "named route" с постоянным доменом нужно добавить hostname (см. README ниже)
+  # - Даже без hostname этот ingress нужен, чтобы tunnel не отдавал 503
+  - service: http://localhost:3000
+  - service: http_status:404
+
