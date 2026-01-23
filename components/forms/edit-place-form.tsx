@@ -15,7 +15,6 @@ import { Combobox } from "@/components/ui/combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
-import { MarkingDisplay } from "@/components/common/marking-display";
 import {
   Sheet,
   SheetContent,
@@ -100,15 +99,15 @@ const EditPlaceForm = ({
       const supabase = createClient();
 
 
-      if (!placeTypeId) {
-        setError("Необходимо выбрать тип места");
+      if (!initialPlaceTypeId) {
+        setError("Тип места не определен");
         setIsSubmitting(false);
         return;
       }
 
-      const updateData: { name: string | null; entity_type_id: number; photo_url: string | null } = {
+      // Обновляем только название и фото (тип места нельзя менять)
+      const updateData: { name: string | null; photo_url: string | null } = {
         name: name.trim() || null,
-        entity_type_id: parseInt(placeTypeId),
         photo_url: photoUrl || null,
       };
       
@@ -172,7 +171,7 @@ const EditPlaceForm = ({
         <form onSubmit={handleSubmit} className="mt-6">
           <FormGroup>
             <FormField
-              label="Название места (маркировка)"
+              label="Название места"
               htmlFor={`place-name-${placeId}`}
             >
               <Input
@@ -183,30 +182,39 @@ const EditPlaceForm = ({
                 placeholder="Например: Ш1П1, С1П2"
                 disabled={isSubmitting}
               />
-              <div className="rounded-md bg-muted p-3 space-y-2">
-                <p className="text-xs font-medium text-foreground">Система маркировки:</p>
-                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                  <li><strong>Ш1П1</strong> - Шкаф 1, Полка 1</li>
-                  <li><strong>Ш1П2</strong> - Шкаф 1, Полка 2</li>
-                  <li><strong>С1П1</strong> - Стеллаж 1, Полка 1</li>
-                  <li><strong>С1П2</strong> - Стеллаж 1, Полка 2</li>
-                </ul>
-                <p className="text-xs text-muted-foreground pt-1">
-                  Формат: [Ш/С][номер][П][номер полки]
-                </p>
-              </div>
-              {(() => {
-                const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
-                const typeCode = selectedType?.code;
-                return (
-                  <MarkingDisplay
-                    typeCode={typeCode}
-                    markingNumber={markingNumber}
-                    generateMarking={generateMarking}
-                  />
-                );
-              })()}
             </FormField>
+
+            {(() => {
+              const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
+              const typeCode = selectedType?.code;
+              const marking = typeCode && markingNumber !== null && markingNumber !== undefined
+                ? generateMarking(typeCode, markingNumber)
+                : null;
+              
+              return marking ? (
+                <FormField label="Маркировка">
+                  <div className="rounded-md border bg-muted px-3 py-2">
+                    <p className="text-sm font-medium">{marking}</p>
+                  </div>
+                </FormField>
+              ) : null;
+            })()}
+
+            {(() => {
+              const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
+              return selectedType ? (
+                <FormField
+                  label="Тип места"
+                  description="Тип места нельзя изменить после создания, чтобы сохранить код маркировки"
+                >
+                  <div className="rounded-md border bg-muted px-3 py-2">
+                    <p className="text-sm font-medium">
+                      {selectedType.code} - {selectedType.name}
+                    </p>
+                  </div>
+                </FormField>
+              ) : null;
+            })()}
 
             <FormGroup separator>
               <RoomCombobox

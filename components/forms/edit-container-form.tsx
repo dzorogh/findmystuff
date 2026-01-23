@@ -12,10 +12,8 @@ import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { useEntityTypes } from "@/hooks/use-entity-types";
 import { useContainerMarking } from "@/hooks/use-container-marking";
-import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
-import { MarkingDisplay } from "@/components/common/marking-display";
 import {
   Sheet,
   SheetContent,
@@ -94,12 +92,11 @@ const EditContainerForm = ({
       const supabase = createClient();
 
 
-      // Обновляем название, тип контейнера и фото
+      // Обновляем только название и фото (тип контейнера нельзя менять)
       const { error: updateError } = await supabase
         .from("containers")
         .update({
           name: name.trim() || null,
-          entity_type_id: containerTypeId ? parseInt(containerTypeId) : null,
           photo_url: photoUrl || null,
         })
         .eq("id", containerId);
@@ -153,38 +150,8 @@ const EditContainerForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FormGroup>
-            {(() => {
-              const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
-              const typeCode = selectedType?.code;
-              return (
-                <MarkingDisplay
-                  typeCode={typeCode}
-                  markingNumber={markingNumber}
-                  generateMarking={generateMarking}
-                />
-              );
-            })()}
-
             <FormField
-              label="Тип контейнера"
-              htmlFor={`container-type-${containerId}`}
-            >
-              <Combobox
-                options={containerTypes.map((type) => ({
-                  value: type.id.toString(),
-                  label: `${type.code} - ${type.name}`,
-                }))}
-                value={containerTypeId}
-                onValueChange={setContainerTypeId}
-                placeholder="Выберите тип контейнера..."
-                searchPlaceholder="Поиск типа контейнера..."
-                emptyText="Типы контейнеров не найдены"
-                disabled={isSubmitting}
-              />
-            </FormField>
-
-            <FormField
-              label="Название контейнера (необязательно)"
+              label="Название контейнера"
               htmlFor={`container-name-${containerId}`}
             >
               <Input
@@ -195,6 +162,39 @@ const EditContainerForm = ({
                 placeholder="Введите название контейнера"
                 disabled={isSubmitting}
               />
+            </FormField>
+
+            {(() => {
+              const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+              const typeCode = selectedType?.code;
+              const marking = typeCode && markingNumber !== null && markingNumber !== undefined
+                ? generateMarking(typeCode, markingNumber)
+                : null;
+              
+              return marking ? (
+                <FormField label="Маркировка">
+                  <div className="rounded-md border bg-muted px-3 py-2">
+                    <p className="text-sm font-medium">{marking}</p>
+                  </div>
+                </FormField>
+              ) : null;
+            })()}
+
+            <FormField
+              label="Тип контейнера"
+              htmlFor={`container-type-${containerId}`}
+              description="Тип контейнера нельзя изменить после создания, чтобы сохранить код маркировки"
+            >
+              <div className="rounded-md border bg-muted px-3 py-2">
+                {(() => {
+                  const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+                  return (
+                    <p className="text-sm font-medium">
+                      {selectedType ? `${selectedType.code} - ${selectedType.name}` : "Тип не выбран"}
+                    </p>
+                  );
+                })()}
+              </div>
             </FormField>
 
             <LocationCombobox

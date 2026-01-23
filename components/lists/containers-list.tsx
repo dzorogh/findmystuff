@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw, Package, PackageX } from "lucide-react";
+import { Container, MapPin, Building2, Pencil, Trash2, RotateCcw, Package, PackageX, ArrowRightLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
+import MoveContainerForm from "@/components/forms/move-container-form";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import {
   Table,
@@ -76,6 +77,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
 
   const [containers, setContainers] = useState<Container[]>([]);
   const [editingContainerId, setEditingContainerId] = useState<number | null>(null);
+  const [movingContainerId, setMovingContainerId] = useState<number | null>(null);
   const { generateMarking } = useContainerMarking();
 
   const loadContainers = async (query?: string, isInitialLoad = false) => {
@@ -595,6 +597,15 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => setMovingContainerId(container.id)}
+                              className="h-8 w-8"
+                              title="Переместить"
+                            >
+                              <ArrowRightLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleDeleteContainer(container.id)}
                               className="h-8 w-8 text-destructive hover:text-destructive"
                               title="Удалить"
@@ -635,6 +646,19 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           onOpenChange={(open) => !open && setEditingContainerId(null)}
           onSuccess={() => {
             setEditingContainerId(null);
+            loadContainers(searchQuery, false);
+          }}
+        />
+      )}
+
+      {movingContainerId && (
+        <MoveContainerForm
+          containerId={movingContainerId}
+          containerName={containers.find((c) => c.id === movingContainerId)?.name || null}
+          open={!!movingContainerId}
+          onOpenChange={(open) => !open && setMovingContainerId(null)}
+          onSuccess={() => {
+            setMovingContainerId(null);
             loadContainers(searchQuery, false);
           }}
         />

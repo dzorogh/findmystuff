@@ -9,13 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Container, MapPin, Building2, Calendar, Edit, Trash2, RotateCcw, Package } from "lucide-react";
+import { ArrowLeft, Container, MapPin, Building2, Calendar, Edit, Trash2, RotateCcw, Package, ArrowRightLeft } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { MarkingDisplay } from "@/components/common/marking-display";
 import { toast } from "sonner";
 import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import EditContainerForm from "@/components/forms/edit-container-form";
+import MoveContainerForm from "@/components/forms/move-container-form";
 import {
   Table,
   TableBody,
@@ -72,6 +73,7 @@ export default function ContainerDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -492,6 +494,17 @@ export default function ContainerDetailPage() {
                   <Edit className="h-4 w-4 mr-2" />
                   Редактировать
                 </Button>
+                {!container.deleted_at && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsMoving(true)}
+                    disabled={isDeleting || isRestoring}
+                  >
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
+                    Переместить
+                  </Button>
+                )}
                 {container.deleted_at ? (
                   <Button
                     variant="outline"
@@ -753,6 +766,19 @@ export default function ContainerDetailPage() {
             open={isEditing}
             onOpenChange={setIsEditing}
             onSuccess={handleEditSuccess}
+          />
+        )}
+
+        {isMoving && container && (
+          <MoveContainerForm
+            containerId={container.id}
+            containerName={container.name}
+            open={isMoving}
+            onOpenChange={setIsMoving}
+            onSuccess={() => {
+              setIsMoving(false);
+              loadContainerData();
+            }}
           />
         )}
       </div>

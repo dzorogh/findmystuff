@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
+import { toast } from "sonner";
+import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import {
   Table,
   TableBody,
@@ -59,6 +61,8 @@ export default function ItemDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -277,6 +281,38 @@ export default function ItemDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Вы уверены, что хотите удалить эту вещь?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await softDelete("items", itemId);
+      toast.success("Вещь успешно удалена");
+      await loadItemData();
+    } catch (err) {
+      console.error("Ошибка при удалении вещи:", err);
+      toast.error("Произошла ошибка при удалении вещи");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      await restoreDeleted("items", itemId);
+      toast.success("Вещь успешно восстановлена");
+      await loadItemData();
+    } catch (err) {
+      console.error("Ошибка при восстановлении вещи:", err);
+      toast.error("Произошла ошибка при восстановлении вещи");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
   if (isUserLoading || isLoading) {
     return (
       <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
@@ -357,26 +393,55 @@ export default function ItemDetailPage() {
                   </CardDescription>
                 </div>
               </div>
-              {user.email === "dzorogh@gmail.com" && !item.deleted_at && (
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditDialogOpen(true)}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Редактировать
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsMoveDialogOpen(true)}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <ArrowRightLeft className="mr-2 h-4 w-4" />
-                    Переместить
-                  </Button>
+              {user.email === "dzorogh@gmail.com" && (
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                  {!item.deleted_at && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditDialogOpen(true)}
+                        disabled={isDeleting || isRestoring}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Редактировать
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsMoveDialogOpen(true)}
+                        disabled={isDeleting || isRestoring}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                        Переместить
+                      </Button>
+                    </>
+                  )}
+                  {item.deleted_at ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRestore}
+                      disabled={isDeleting || isRestoring}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Восстановить
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDelete}
+                      disabled={isDeleting || isRestoring}
+                      className="flex-1 sm:flex-initial"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Удалить
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
