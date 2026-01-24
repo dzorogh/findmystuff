@@ -14,8 +14,8 @@ type IconPalette = {
 };
 
 export const size: IconSize = {
-  width: 192,
-  height: 192,
+  width: 512,
+  height: 512,
 };
 
 export const contentType = "image/png";
