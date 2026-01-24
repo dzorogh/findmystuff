@@ -23,6 +23,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
   description: "Приложение для учета домашнего склада и быстрого поиска вещей",
+  themeColor: "#ffffff",
+  appleWebApp: {
+    capable: true,
+    title: "FindMyStuff",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({
