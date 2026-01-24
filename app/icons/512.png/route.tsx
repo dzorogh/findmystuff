@@ -1,10 +1,12 @@
 import {
   createIconErrorResponse,
-  createIconResponse,
-  iconSizes,
+  createIconResponse
 } from "@/lib/icon-image";
 
-export const size = iconSizes.lg;
+export const  size = {
+  width: 512,
+  height: 512,
+};
 
 export const GET = async () => {
   try {

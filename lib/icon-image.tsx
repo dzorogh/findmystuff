@@ -21,17 +21,6 @@ const iconPalette: IconPalette = {
   accent: "#0f172a",
 };
 
-export const iconSizes: Record<"sm" | "lg", IconSize> = {
-  sm: {
-    width: 256,
-    height: 256,
-  },
-  lg: {
-    width: 512,
-    height: 512,
-  },
-};
-
 const IconMarkup = () => {
   return (
     <div
