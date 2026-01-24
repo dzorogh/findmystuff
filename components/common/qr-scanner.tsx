@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
-import { Camera } from "@capacitor/camera";
+import { BarcodeFormat, BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 
 interface QRScannerProps {
   onScanSuccess: (result: { type: "room" | "place" | "container"; id: number }) => void;
@@ -25,24 +25,88 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scanSuccessCallbackRef = useRef(onScanSuccess);
   const qrReaderId = useId().replace(/:/g, "-"); // Уникальный ID для элемента сканера
+  const nativeScanInProgressRef = useRef(false);
+  const isNativePlatform = Capacitor.isNativePlatform();
 
-  const ensureCameraPermission = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
-      return;
+  const parseQrPayload = useCallback((decodedText: string) => {
+    try {
+      const parsed = JSON.parse(decodedText);
+      if (
+        parsed.type &&
+        (parsed.type === "room" || parsed.type === "place" || parsed.type === "container") &&
+        typeof parsed.id === "number"
+      ) {
+        return { type: parsed.type, id: parsed.id } as const;
+      }
+    } catch {
+      // ignore
     }
 
-    const permissions = await Camera.checkPermissions();
-
-    if (permissions.camera === "granted") {
-      return;
+    const match = decodedText.match(/^(room|place|container):(\d+)$/);
+    if (match) {
+      return {
+        type: match[1] as "room" | "place" | "container",
+        id: parseInt(match[2], 10),
+      } as const;
     }
 
-    const requested = await Camera.requestPermissions({ permissions: ["camera"] });
-
-    if (requested.camera !== "granted") {
-      throw new Error("Доступ к камере запрещен. Разрешите доступ в настройках приложения.");
-    }
+    return null;
   }, []);
+
+  const handleNativeScan = useCallback(async () => {
+    if (nativeScanInProgressRef.current) {
+      return;
+    }
+
+    nativeScanInProgressRef.current = true;
+    isInitializingRef.current = true;
+    setError(null);
+    setIsScanning(true);
+
+    try {
+      const { supported } = await BarcodeScanner.isSupported();
+
+      if (!supported) {
+        throw new Error("Сканирование на этом устройстве не поддерживается.");
+      }
+
+      const permissions = await BarcodeScanner.requestPermissions();
+
+      if (permissions.camera !== "granted") {
+        throw new Error("Доступ к камере запрещен. Разрешите доступ в настройках приложения.");
+      }
+
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: [BarcodeFormat.QrCode],
+        autoZoom: true,
+      });
+
+      const rawValue = barcodes[0]?.rawValue || barcodes[0]?.displayValue;
+
+      if (!rawValue) {
+        setError("Сканирование отменено.");
+        return;
+      }
+
+      const parsed = parseQrPayload(rawValue);
+
+      if (!parsed) {
+        setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
+        return;
+      }
+
+      scanSuccessCallbackRef.current(parsed);
+      onClose();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || "Не удалось инициализировать сканер");
+    } finally {
+      nativeScanInProgressRef.current = false;
+      isInitializingRef.current = false;
+      isScanningRef.current = false;
+      setIsScanning(false);
+    }
+  }, [onClose, parseQrPayload]);
 
   // Проверка монтирования на клиенте
   useEffect(() => {
@@ -87,11 +151,18 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
     if (!open) {
       stopScanner();
       initAttemptRef.current = 0;
+      setError(null);
+      setIsScanning(false);
       return;
     }
 
     // Проверяем, что мы на клиенте
     if (typeof window === "undefined") {
+      return;
+    }
+
+    if (isNativePlatform) {
+      handleNativeScan();
       return;
     }
 
@@ -127,6 +198,52 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
       setError(null);
 
       try {
+        if (Capacitor.isNativePlatform()) {
+          const { supported } = await BarcodeScanner.isSupported();
+
+          if (!supported) {
+            throw new Error("Сканирование на этом устройстве не поддерживается.");
+          }
+
+          const permissions = await BarcodeScanner.requestPermissions();
+
+          if (permissions.camera !== "granted") {
+            throw new Error("Доступ к камере запрещен. Разрешите доступ в настройках приложения.");
+          }
+
+          const { barcodes } = await BarcodeScanner.scan({
+            formats: [BarcodeFormat.QrCode],
+            autoZoom: true,
+          });
+
+          const rawValue = barcodes[0]?.rawValue || barcodes[0]?.displayValue;
+
+          if (!rawValue) {
+            setError("QR-код не найден. Повторите попытку.");
+            isScanningRef.current = false;
+            setIsScanning(false);
+            isInitializingRef.current = false;
+            return;
+          }
+
+          const parsed = parseQrPayload(rawValue);
+
+          if (!parsed) {
+            setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
+            isScanningRef.current = false;
+            setIsScanning(false);
+            isInitializingRef.current = false;
+            return;
+          }
+
+          scanSuccessCallbackRef.current(parsed);
+          onClose();
+          isScanningRef.current = false;
+          setIsScanning(false);
+          isInitializingRef.current = false;
+          return;
+        }
+
         // Ждем, пока элемент будет в DOM
         await new Promise((resolve) => setTimeout(resolve, 100));
         
@@ -174,8 +291,6 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           isInitializingRef.current = false;
           return;
         }
-
-        await ensureCameraPermission();
 
         // Получаем список камер
         let devices: any[] = [];
@@ -235,33 +350,13 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
             disableFlip: false,
           },
           (decodedText: string) => {
-            try {
-              const parsed = JSON.parse(decodedText);
-              if (
-                parsed.type &&
-                (parsed.type === "room" || parsed.type === "place" || parsed.type === "container") &&
-                typeof parsed.id === "number"
-              ) {
-                scanSuccessCallbackRef.current({
-                  type: parsed.type,
-                  id: parsed.id,
-                });
-                stopScanner();
-              } else {
-                setError("Неверный формат QR-кода. Ожидается JSON с полями type и id.");
-              }
-            } catch (parseError) {
-              // Попробуем альтернативный формат: просто ID с префиксом типа
-              const match = decodedText.match(/^(room|place|container):(\d+)$/);
-              if (match) {
-                scanSuccessCallbackRef.current({
-                  type: match[1] as "room" | "place" | "container",
-                  id: parseInt(match[2], 10),
-                });
-                stopScanner();
-              } else {
-                setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
-              }
+            const parsed = parseQrPayload(decodedText);
+
+            if (parsed) {
+              scanSuccessCallbackRef.current(parsed);
+              stopScanner();
+            } else {
+              setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
             }
           },
           (errorMessage: string) => {
@@ -314,7 +409,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
       initAttemptRef.current++;
       stopScanner();
     };
-  }, [open, qrReaderId]);
+  }, [open, qrReaderId, isNativePlatform, stopScanner]);
 
   const handleClose = useCallback((e?: React.MouseEvent) => {
     // Останавливаем распространение события, чтобы оно не влияло на другие модальные окна
@@ -330,7 +425,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   }, [stopScanner, onClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || isNativePlatform) return;
 
     // Ограничиваем z-index элементов, создаваемых html5-qrcode, но не меняем их позиционирование
     const style = document.createElement("style");
@@ -362,7 +457,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         existingStyle.remove();
       }
     };
-  }, [open, qrReaderId]);
+  }, [open, qrReaderId, isNativePlatform]);
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -413,14 +508,16 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           <h3 className="text-lg font-semibold">Сканирование QR-кода</h3>
         </div>
 
-        <div
-          ref={containerRef}
-          id={qrReaderId}
-          className={cn(
-            "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
-          )}
-          onClick={(e) => e.stopPropagation()}
-        />
+        {!isNativePlatform && (
+          <div
+            ref={containerRef}
+            id={qrReaderId}
+            className={cn(
+              "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
 
         {error && (
           <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -431,17 +528,29 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         {!isScanning && !error && (
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Инициализация камеры...</span>
+            <span>{isNativePlatform ? "Готово к сканированию" : "Инициализация камеры..."}</span>
           </div>
         )}
 
         {isScanning && (
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Наведите камеру на QR-код
+            {isNativePlatform ? "Открыта камера для сканирования..." : "Наведите камеру на QR-код"}
           </div>
         )}
 
-        <div className="relative z-[60] mt-4 flex justify-end pointer-events-auto">
+        <div className={cn("relative z-[60] mt-4 flex justify-end pointer-events-auto", isNativePlatform && "justify-between")}>
+          {isNativePlatform && (
+            <Button
+              variant="default"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNativeScan();
+              }}
+              disabled={isScanning}
+            >
+              {error ? "Сканировать снова" : "Открыть камеру"}
+            </Button>
+          )}
           <Button 
             variant="outline" 
             onClick={(e) => {
