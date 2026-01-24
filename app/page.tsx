@@ -298,7 +298,6 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12 text-base"
-              autoFocus
             />
             {isSearching && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, MapPin, Container, Building2 } from "lucide-react";
+import { Package, MapPin, Container, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -26,6 +26,7 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -123,9 +124,30 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   const [items, setItems] = useState<Item[]>([]);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [movingItemId, setMovingItemId] = useState<number | null>(null);
+  const [mobileActionsItemId, setMobileActionsItemId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 20;
+
+  const getRoomLabel = (location: Item["last_location"]) => {
+    if (!location) {
+      return null;
+    }
+
+    if (location.destination_type === "room") {
+      return location.destination_name || `Помещение #${location.destination_id}`;
+    }
+
+    if (location.room_name) {
+      return location.room_name;
+    }
+
+    if (location.room_id) {
+      return `Помещение #${location.room_id}`;
+    }
+
+    return null;
+  };
 
   const startLoadingRef = useRef(startLoading);
   const finishLoadingRef = useRef(finishLoading);
@@ -633,9 +655,13 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (
-        <ListSkeleton variant="table" rows={6} columns={5} />
+        <div className="overflow-x-hidden">
+          <ListSkeleton variant="table" rows={6} columns={5} />
+        </div>
       ) : isSearching && items.length === 0 ? (
-        <ListSkeleton variant="table" rows={6} columns={5} />
+        <div className="overflow-x-hidden">
+          <ListSkeleton variant="table" rows={6} columns={5} />
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={Package}
@@ -644,13 +670,13 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-hidden md:overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
                     <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
-                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
                     <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
                   </TableRow>
@@ -696,59 +722,16 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                           </Link>
                           <div className="md:hidden mt-1 text-xs text-muted-foreground space-y-0.5">
                             {item.last_location ? (
-                              <div className="space-y-0.5">
-                                {item.last_location.destination_type === "room" && (
-                                  <div className="flex items-center gap-1">
-                                    <Building2 className="h-3 w-3" />
-                                    <span className="truncate">
-                                      {item.last_location.destination_name ||
-                                        `Помещение #${item.last_location.destination_id}`}
-                                    </span>
-                                  </div>
-                                )}
-                                {item.last_location.destination_type === "place" && (
-                                  <>
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="h-3 w-3" />
-                                      <span className="truncate">
-                                        {item.last_location.destination_name ||
-                                          `Место #${item.last_location.destination_id}`}
-                                      </span>
-                                    </div>
-                                    {item.last_location.room_name && (
-                                      <div className="flex items-center gap-1 ml-4">
-                                        <Building2 className="h-2.5 w-2.5" />
-                                        <span className="truncate">{item.last_location.room_name}</span>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                                {item.last_location.destination_type === "container" && (
-                                  <>
-                                    <div className="flex items-center gap-1">
-                                      <Container className="h-3 w-3" />
-                                      <span className="truncate">
-                                        {item.last_location.destination_name ||
-                                          `Контейнер #${item.last_location.destination_id}`}
-                                      </span>
-                                    </div>
-                                    {item.last_location.place_name && (
-                                      <div className="flex items-center gap-1 ml-4">
-                                        <MapPin className="h-2.5 w-2.5" />
-                                        <span className="truncate">{item.last_location.place_name}</span>
-                                      </div>
-                                    )}
-                                    {item.last_location.room_name && (
-                                      <div className="flex items-center gap-1 ml-4">
-                                        <Building2 className="h-2.5 w-2.5" />
-                                        <span className="truncate">{item.last_location.room_name}</span>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
+                              getRoomLabel(item.last_location) ? (
+                                <div className="flex items-center gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  <span className="truncate">{getRoomLabel(item.last_location)}</span>
+                                </div>
+                              ) : (
+                                <span>Помещение не указано</span>
+                              )
                             ) : (
-                              <span>Местоположение не указано</span>
+                              <span>Помещение не указано</span>
                             )}
                           </div>
                         </div>
@@ -756,59 +739,16 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {item.last_location ? (
-                        <div className="space-y-1">
-                          {item.last_location.destination_type === "room" && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span>
-                                {item.last_location.destination_name ||
-                                  `Помещение #${item.last_location.destination_id}`}
-                              </span>
-                            </div>
-                          )}
-                          {item.last_location.destination_type === "place" && (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                                <span>
-                                  {item.last_location.destination_name ||
-                                    `Место #${item.last_location.destination_id}`}
-                                </span>
-                              </div>
-                              {item.last_location.room_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <Building2 className="h-3 w-3 flex-shrink-0" />
-                                  <span>{item.last_location.room_name}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {item.last_location.destination_type === "container" && (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Container className="h-4 w-4 text-primary flex-shrink-0" />
-                                <span>
-                                  {item.last_location.destination_name ||
-                                    `Контейнер #${item.last_location.destination_id}`}
-                                </span>
-                              </div>
-                              {item.last_location.place_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                                  <span>{item.last_location.place_name}</span>
-                                </div>
-                              )}
-                              {item.last_location.room_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <Building2 className="h-3 w-3 flex-shrink-0" />
-                                  <span>{item.last_location.room_name}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        getRoomLabel(item.last_location) ? (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
+                            <span>{getRoomLabel(item.last_location)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Помещение не указано</span>
+                        )
                       ) : (
-                        <span className="text-sm text-muted-foreground">Не указано</span>
+                        <span className="text-sm text-muted-foreground">Помещение не указано</span>
                       )}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
@@ -825,13 +765,81 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                       )}
                     </TableCell>
                     <TableCell>
-                      <ListActions
-                        isDeleted={!!item.deleted_at}
-                        onEdit={() => setEditingItemId(item.id)}
-                        onMove={() => setMovingItemId(item.id)}
-                        onDelete={() => handleDeleteItem(item.id)}
-                        onRestore={() => handleRestoreItem(item.id)}
-                      />
+                      <div className="hidden md:flex">
+                        <ListActions
+                          isDeleted={!!item.deleted_at}
+                          onEdit={() => setEditingItemId(item.id)}
+                          onMove={() => setMovingItemId(item.id)}
+                          onDelete={() => handleDeleteItem(item.id)}
+                          onRestore={() => handleRestoreItem(item.id)}
+                        />
+                      </div>
+                      <div className="flex md:hidden items-center justify-end gap-1">
+                        {item.deleted_at ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRestoreItem(item.id)}
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            aria-label="Восстановить"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setMovingItemId(item.id)}
+                              className="h-8 w-8"
+                              aria-label="Переместить"
+                            >
+                              <ArrowRightLeft className="h-4 w-4" />
+                            </Button>
+                            <Popover
+                              open={mobileActionsItemId === item.id}
+                              onOpenChange={(open) => {
+                                setMobileActionsItemId(open ? item.id : null);
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Открыть меню действий"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-40 p-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    setEditingItemId(item.id);
+                                    setMobileActionsItemId(null);
+                                  }}
+                                >
+                                  <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    handleDeleteItem(item.id);
+                                    setMobileActionsItemId(null);
+                                  }}
+                                >
+                                  <span>Удалить</span>
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

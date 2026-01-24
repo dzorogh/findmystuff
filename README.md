@@ -18,6 +18,20 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Android (Capacitor)
+
+Приложение запускается как нативная оболочка над работающим Next.js сервером.
+
+1. Установить зависимости: `npm install`
+2. Один раз создать Android-проект: `npm run android:add`
+3. Dev-сервер и синхронизация:
+   - `npm run dev:external`
+   - `CAPACITOR_SERVER_URL="http://<LAN-IP>:3000" npm run android:sync`
+4. Открыть Android Studio: `npm run android:open`
+
+Продакшен URL:
+`CAPACITOR_SERVER_URL="https://<DOMAIN>" npm run android:sync`
+
 ## QR-сканнер и доступ к камере
 
 Для работы QR-сканнера на мобильных устройствах требуется HTTPS соединение. Используйте Cloudflare Tunnel для доступа к локальному серверу разработки:

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -12,33 +14,44 @@ const GoogleSignIn = () => {
     try {
       setIsLoading(true);
       const supabase = createClient();
-      
-      // Используем текущий origin для динамического определения URL (работает с dev tunnels)
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : process.env.NEXT_PUBLIC_APP_URL || '';
 
-      if (!baseUrl) {
+      const isNativePlatform = Capacitor.isNativePlatform();
+
+      const baseUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_APP_URL || "";
+
+      if (!isNativePlatform && !baseUrl) {
         throw new Error("Не удалось определить базовый URL");
       }
 
-      // Сохраняем исходный URL в sessionStorage для использования в callback
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('oauth_redirect_origin', baseUrl);
+      if (typeof window !== "undefined" && baseUrl) {
+        sessionStorage.setItem("oauth_redirect_origin", baseUrl);
       }
 
-      // Используем чистый callback URL без query параметров (Supabase может не пропускать их)
-      const callbackUrl = `${baseUrl}/auth/callback`;
+      const callbackUrl = isNativePlatform
+        ? "com.findmystuff.app://auth/callback"
+        : `${baseUrl}/auth/callback`;
 
-      await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: callbackUrl,
           queryParams: {
             prompt: "select_account",
           },
+          skipBrowserRedirect: isNativePlatform,
         },
       });
+
+      if (error) {
+        throw error;
+      }
+
+      if (isNativePlatform && data?.url) {
+        await Browser.open({ url: data.url, presentationStyle: "fullscreen" });
+      }
     } catch (error) {
       console.error("Ошибка входа через Google:", error);
       setIsLoading(false);

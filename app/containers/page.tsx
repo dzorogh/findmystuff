@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ContainersList from "@/components/lists/containers-list";
 import AddContainerForm from "@/components/forms/add-container-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Container, Plus, Filter } from "lucide-react";
-import { PageHeader } from "@/components/common/page-header";
+import { Filter } from "lucide-react";
 import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 export default function ContainersPage() {
@@ -17,6 +17,10 @@ export default function ContainersPage() {
   const [resultsCount, setResultsCount] = useState(0);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const shouldOpenCreateForm = searchParams.get("create") === "1";
 
   const handleContainerAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -31,20 +35,15 @@ export default function ContainersPage() {
     setResultsCount(state.resultsCount);
   };
 
+  useEffect(() => {
+    if (shouldOpenCreateForm) {
+      setIsAddDialogOpen(true);
+    }
+  }, [shouldOpenCreateForm]);
+
   return (
     <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <PageHeader
-          icon={Container}
-          title="Контейнеры"
-          description="Просмотр и поиск всех контейнеров в складе"
-          action={
-            <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить контейнер
-            </Button>
-          }
-        />
         <CompactSearchBar
           placeholder="Название, тип или маркировка (КОР-001)..."
           searchQuery={searchQuery}
@@ -59,8 +58,8 @@ export default function ContainersPage() {
               onClick={() => setIsFiltersOpen(true)}
               className={activeFiltersCount > 0 ? "border-primary" : ""}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Фильтры
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Фильтры</span>
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
                   {activeFiltersCount}
@@ -79,7 +78,15 @@ export default function ContainersPage() {
         />
         <AddContainerForm
           open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open && shouldOpenCreateForm) {
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("create");
+              const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+              router.replace(nextUrl, { scroll: false });
+            }
+          }}
           onSuccess={handleContainerAdded}
         />
       </div>

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
-import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users } from "lucide-react";
 import UsersManager from "@/components/managers/users-manager";
 
 export default function UsersPage() {
@@ -45,12 +43,6 @@ export default function UsersPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mx-auto max-w-6xl space-y-6">
-        <PageHeader
-          icon={Users}
-          title="Пользователи"
-          description="Управление пользователями Supabase"
-        />
-
         <Card>
           <CardHeader>
             <CardTitle>Список пользователей</CardTitle>

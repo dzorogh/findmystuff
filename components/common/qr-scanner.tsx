@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { Camera } from "@capacitor/camera";
 
 interface QRScannerProps {
   onScanSuccess: (result: { type: "room" | "place" | "container"; id: number }) => void;
@@ -23,6 +25,24 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scanSuccessCallbackRef = useRef(onScanSuccess);
   const qrReaderId = useId().replace(/:/g, "-"); // Уникальный ID для элемента сканера
+
+  const ensureCameraPermission = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    const permissions = await Camera.checkPermissions();
+
+    if (permissions.camera === "granted") {
+      return;
+    }
+
+    const requested = await Camera.requestPermissions({ permissions: ["camera"] });
+
+    if (requested.camera !== "granted") {
+      throw new Error("Доступ к камере запрещен. Разрешите доступ в настройках приложения.");
+    }
+  }, []);
 
   // Проверка монтирования на клиенте
   useEffect(() => {
@@ -154,6 +174,8 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           isInitializingRef.current = false;
           return;
         }
+
+        await ensureCameraPermission();
 
         // Получаем список камер
         let devices: any[] = [];

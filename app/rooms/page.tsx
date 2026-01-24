@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import RoomsList from "@/components/lists/rooms-list";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Filter } from "lucide-react";
-import { PageHeader } from "@/components/common/page-header";
+import { Filter } from "lucide-react";
 import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 export default function RoomsPage() {
@@ -17,6 +17,10 @@ export default function RoomsPage() {
   const [resultsCount, setResultsCount] = useState(0);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const shouldOpenCreateForm = searchParams.get("create") === "1";
 
   const handleRoomAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -31,20 +35,15 @@ export default function RoomsPage() {
     setResultsCount(state.resultsCount);
   };
 
+  useEffect(() => {
+    if (shouldOpenCreateForm) {
+      setIsAddDialogOpen(true);
+    }
+  }, [shouldOpenCreateForm]);
+
   return (
     <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <PageHeader
-          icon={Building2}
-          title="Помещения"
-          description="Просмотр и поиск всех помещений в складе"
-          action={
-            <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить помещение
-            </Button>
-          }
-        />
         <CompactSearchBar
           placeholder="Введите название помещения..."
           searchQuery={searchQuery}
@@ -59,8 +58,8 @@ export default function RoomsPage() {
               onClick={() => setIsFiltersOpen(true)}
               className={activeFiltersCount > 0 ? "border-primary" : ""}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Фильтры
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Фильтры</span>
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
                   {activeFiltersCount}
@@ -79,7 +78,15 @@ export default function RoomsPage() {
         />
         <AddRoomForm
           open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open && shouldOpenCreateForm) {
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("create");
+              const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+              router.replace(nextUrl, { scroll: false });
+            }
+          }}
           onSuccess={handleRoomAdded}
         />
       </div>

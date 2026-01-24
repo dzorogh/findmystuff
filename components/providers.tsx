@@ -6,6 +6,7 @@ import { UserProvider } from "@/contexts/user-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { Toaster } from "sonner";
 import { AuthLayout } from "@/components/layouts/auth-layout";
+import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ const ProvidersComponent = ({ children }: ProvidersProps) => {
     >
       <UserProvider>
         <SettingsProvider>
+          <CapacitorAuthListener />
           <AuthLayout>{children}</AuthLayout>
           <Toaster />
         </SettingsProvider>

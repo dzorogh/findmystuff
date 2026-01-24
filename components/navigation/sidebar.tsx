@@ -8,20 +8,11 @@ import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun } from "lucide-react";
 import Logo from "@/components/common/logo";
-import GoogleSignIn from "@/components/auth/google-signin";
 import { useTheme } from "next-themes";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
   const { user, isLoading } = useUser();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const supabase = createClient();
@@ -62,7 +53,6 @@ const Sidebar = () => {
           <Button
             variant={isActive ? "secondary" : "ghost"}
             className="w-full justify-start gap-3 h-10 px-3"
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             <Icon className="h-4 w-4 shrink-0" />
             <span className="text-sm font-medium">{item.label}</span>
@@ -159,55 +149,40 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Mobile Sidebar */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="default"
-            size="icon"
-            className="md:hidden fixed bottom-4 left-4 z-50 h-14 w-14 rounded-full shadow-lg"
-          >
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Открыть меню</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-          <div className="flex-1 mt-6">
-            <NavContent />
-          </div>
-          <div className="border-t pt-4 mt-4 space-y-2">
-            <div className="px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleThemeToggle}
-              className="w-full justify-start gap-2"
-            >
-              {mounted && theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-              <span>Смена темы</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full justify-start gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Выйти
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background">
+        <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-around gap-2 px-2 pb-[var(--app-safe-bottom)]">
+          {[
+            { href: "/", label: "Поиск", icon: Search },
+            { href: "/rooms", label: "Помещения", icon: Building2 },
+            { href: "/places", label: "Места", icon: MapPin },
+            { href: "/containers", label: "Контейнеры", icon: Container },
+            { href: "/items", label: "Вещи", icon: Box },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const linkTextClassName = isActive
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground";
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={item.label}
+                className={cn(
+                  "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
+                  linkTextClassName
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="sr-only">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </>
   );
 };

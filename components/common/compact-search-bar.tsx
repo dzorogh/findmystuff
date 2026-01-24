@@ -43,8 +43,8 @@ export const CompactSearchBar = memo(({
   };
 
   return (
-    <div className={`flex flex-col sm:flex-row gap-2 ${className}`}>
-      <div className="relative flex-1">
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="relative flex-1 min-w-0">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
@@ -60,7 +60,7 @@ export const CompactSearchBar = memo(({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {searchQuery && resultsCount !== undefined && resultsLabel && (
           <Badge variant="secondary" className="text-xs whitespace-nowrap">
             {resultsCount} {getResultsText()}
@@ -74,8 +74,10 @@ export const CompactSearchBar = memo(({
             onClick={onToggleDeleted}
             className="gap-2"
           >
-            <Filter className="h-3.5 w-3.5" />
-            <span className="text-xs">{showDeleted ? "Скрыть удаленные" : "Удаленные"}</span>
+            <Filter className="h-3.5 w-3.5 sm:mr-2" />
+            <span className="text-xs hidden sm:inline">
+              {showDeleted ? "Скрыть удаленные" : "Удаленные"}
+            </span>
           </Button>
         )}
       </div>

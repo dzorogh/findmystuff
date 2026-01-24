@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -19,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash2, Loader2, Plus, Pencil } from "lucide-react";
+import { Trash2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
@@ -38,6 +39,10 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
   const [addFormOpen, setAddFormOpen] = useState(false);
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const shouldOpenCreateForm = searchParams.get("create") === "1";
 
   const fetchUsers = async () => {
     try {
@@ -61,6 +66,12 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (shouldOpenCreateForm) {
+      setAddFormOpen(true);
+    }
+  }, [shouldOpenCreateForm]);
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user);
@@ -127,13 +138,6 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setAddFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Добавить пользователя
-        </Button>
-      </div>
-
       {users.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <p>Пользователи не найдены</p>
@@ -187,7 +191,15 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
 
       <AddUserForm
         open={addFormOpen}
-        onOpenChange={setAddFormOpen}
+        onOpenChange={(open) => {
+          setAddFormOpen(open);
+          if (!open && shouldOpenCreateForm) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("create");
+            const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+            router.replace(nextUrl, { scroll: false });
+          }
+        }}
         onSuccess={fetchUsers}
       />
 
