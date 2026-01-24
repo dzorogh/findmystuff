@@ -31,9 +31,9 @@ interface Room {
   created_at: string;
   deleted_at: string | null;
   photo_url: string | null;
-  items_count?: number;
-  places_count?: number;
-  containers_count?: number;
+  items_count: number;
+  places_count: number;
+  containers_count: number;
 }
 
 interface RoomsListProps {
@@ -122,7 +122,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         finishLoading(isInitialLoad, 0);
         return;
       }
-      let roomsWithCounts = roomsData.map((room: any) => ({
+      let roomsWithCounts: Room[] = roomsData.map((room: any) => ({
         id: room.id,
         name: room.name,
         created_at: room.created_at,

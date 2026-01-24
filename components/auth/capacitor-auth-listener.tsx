@@ -91,7 +91,8 @@ const CapacitorAuthListener = () => {
     };
 
     const handleInitialUrl = async () => {
-      const { url } = await App.getLaunchUrl();
+      const launchUrl = await App.getLaunchUrl();
+      const url = launchUrl?.url;
 
       if (!url) {
         log("no initial url");
@@ -105,27 +106,30 @@ const CapacitorAuthListener = () => {
     log("listener init");
     void handleInitialUrl();
 
-    const listener = App.addListener("appUrlOpen", ({ url }) => {
+    const appUrlListenerPromise = App.addListener("appUrlOpen", ({ url }) => {
       log("appUrlOpen", url);
       void handleAuthUrl(url);
     });
 
-    const appStateListener = App.addListener("appStateChange", async ({ isActive }) => {
+    const appStateListenerPromise = App.addListener("appStateChange", async ({ isActive }) => {
       if (!isActive) {
         return;
       }
 
-      const { url } = await App.getLaunchUrl();
-      if (url) {
-        log("appStateChange launchUrl", url);
-        void handleAuthUrl(url);
+      const launchUrl = await App.getLaunchUrl();
+      const url = launchUrl?.url;
+      if (!url) {
+        return;
       }
+
+      log("appStateChange launchUrl", url);
+      void handleAuthUrl(url);
     });
 
     return () => {
       log("listener removed");
-      listener.remove();
-      appStateListener.remove();
+      void appUrlListenerPromise.then((listener) => listener.remove());
+      void appStateListenerPromise.then((listener) => listener.remove());
     };
   }, [router]);
 

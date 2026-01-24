@@ -145,7 +145,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         finishLoading(isInitialLoad, 0);
         return;
       }
-      const containersWithLocation = containersData.map((container: any) => ({
+      const containersWithLocation: Container[] = containersData.map((container: any) => ({
         id: container.id,
         name: container.name,
         entity_type_id: container.entity_type_id || null,

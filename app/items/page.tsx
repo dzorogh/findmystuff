@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ItemsList from "@/components/lists/items-list";
 import AddItemForm from "@/components/forms/add-item-form";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
 import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
-export default function ItemsPage() {
+const ItemsPageContent = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,4 +92,14 @@ export default function ItemsPage() {
       </div>
     </div>
   );
-}
+};
+
+const ItemsPage = () => {
+  return (
+    <Suspense fallback={<div className="container mx-auto pb-10 pt-4 px-4 md:py-10" />}>
+      <ItemsPageContent />
+    </Suspense>
+  );
+};
+
+export default ItemsPage;

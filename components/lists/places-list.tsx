@@ -133,7 +133,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         finishLoading(isInitialLoad, 0);
         return;
       }
-      const placesWithRooms = placesData.map((place: any) => ({
+      const placesWithRooms: Place[] = placesData.map((place: any) => ({
         id: place.id,
         name: place.name,
         entity_type_id: place.entity_type_id || null,

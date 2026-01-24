@@ -189,7 +189,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       const totalCountValue = itemsData[0]?.total_count ?? 0;
       setTotalCount(totalCountValue);
 
-      const itemsWithLocation = itemsData.map((item) => {
+      const itemsWithLocation: Item[] = itemsData.map((item: any) => {
         const hasLocation = Boolean(item.destination_type);
 
         return {
