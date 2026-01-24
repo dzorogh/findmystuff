@@ -1,41 +1,24 @@
 {
-  "background_color": "#ffffff",
+  "name": "FindMyStuff",
+  "short_name": "FindMyStuff",
   "description": "Приложение для учета домашнего склада и быстрого поиска вещей",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "stuff.indenbom",
-  "orientation": "any",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
   "scope": "/",
-  "short_name": "stuff.indenbom",
-  "start_url": "https://stuff.indenbom.ru/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#ffffff",
   "theme_color": "#ffffff",
+  "lang": "ru",
+  "dir": "ltr",
+  "orientation": "any",
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "https://stuff.indenbom.ru/favicon.ico?favicon.0b3bf435.ico",
+      "src": "/favicon.ico",
       "type": "image/x-icon",
-      "sizes": "256x256",
-      "isSquare": true,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 256,
-      "is512x512": false,
-      "is256x256": true,
-      "is192x192": false
-    },
-    {
-      "src": "https://stuff.indenbom.ru/favicon.ico",
-      "type": "image/x-icon",
-      "isSquare": false,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
+      "sizes": "any"
     }
-  ],
-  "id": "FindMyStuff",
-  "lang": "ru"
+  ]
 }
