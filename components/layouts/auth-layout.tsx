@@ -14,7 +14,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const baseMainClasses =
     "h-[100svh] h-[100dvh] bg-background overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch]";
   const mobileTopPadding = isAuthenticated
-    ? "pt-[calc(var(--app-safe-top)+var(--app-header-height))] md:pt-[var(--app-safe-top)]"
+    ? "pt-[calc(var(--app-safe-top)+var(--app-header-height))]"
     : "pt-[var(--app-safe-top)]";
   const mobileBottomPadding = isAuthenticated
     ? "pb-[calc(var(--app-safe-bottom)+var(--app-bottom-nav-height))] md:pb-[var(--app-safe-bottom)]"

@@ -84,7 +84,7 @@ const Sidebar = () => {
   if (isLoading) {
     return (
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col">
-        <div className="h-16 flex items-center px-4 border-b">
+        <div className="h-[var(--app-header-height)] flex items-center px-4 border-b box-border">
           <div className="h-6 w-32 animate-pulse rounded bg-muted" />
         </div>
         <div className="flex-1 p-4">

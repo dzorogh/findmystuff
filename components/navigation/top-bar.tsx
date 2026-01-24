@@ -95,9 +95,9 @@ const TopBar = () => {
   };
 
   return (
-    <header className="md:hidden fixed inset-x-0 top-0 z-40 border-b bg-background">
+    <header className="fixed inset-x-0 top-0 z-40 bg-background md:left-64 md:w-[calc(100%-16rem)]">
       <div className="pt-[var(--app-safe-top)]">
-        <div className="flex h-[var(--app-header-height)] items-center justify-between px-4">
+        <div className="flex h-[var(--app-header-height)] items-center justify-between border-b px-4 md:px-6 box-border">
           <div className="flex items-center gap-2 min-w-0">
             {pathname === "/" ? (
               <>
@@ -110,14 +110,26 @@ const TopBar = () => {
           </div>
           <div className="flex items-center gap-1">
             {canCreate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCreateClick}
-                aria-label={createLabelMap[pathname] || "Добавить"}
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCreateClick}
+                  aria-label={createLabelMap[pathname] || "Добавить"}
+                  className="md:hidden"
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCreateClick}
+                  className="hidden md:inline-flex gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{createLabelMap[pathname] || "Добавить"}</span>
+                </Button>
+              </>
             )}
             <Sheet open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
               <SheetTrigger asChild>
@@ -125,6 +137,7 @@ const TopBar = () => {
                   variant="ghost"
                   size="icon"
                   aria-label="Открыть меню аккаунта"
+                  className="md:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
