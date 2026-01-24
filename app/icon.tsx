@@ -1,6 +1,9 @@
-import { createIconResponse, iconSizes } from "@/lib/icon-image";
+import { createIconResponse } from "@/lib/icon-image";
 
-export const size = iconSizes.lg;
+export const size = {
+  width: 512,
+  height: 512,
+};
 
 export const contentType = "image/png";
 
