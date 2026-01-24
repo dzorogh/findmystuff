@@ -24,7 +24,7 @@ interface ComboboxOption {
 }
 
 interface ComboboxProps {
-  options: ComboboxOption[];
+  options: ReadonlyArray<ComboboxOption>;
   value?: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
