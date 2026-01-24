@@ -13,7 +13,6 @@ import MovePlaceForm from "@/components/forms/move-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { applyDeletedFilter, applyNameSearch } from "@/lib/query-builder";
 import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
@@ -115,50 +114,15 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
 
     try {
       const supabase = createClient();
-      let queryBuilder = supabase
-        .from("places")
-        .select("id, name, entity_type_id, marking_number, created_at, deleted_at, photo_url, entity_types!inner(code, name)")
-        .order("created_at", { ascending: false });
-
-      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
-
-      if (query && query.trim()) {
-        const searchTerm = query.trim();
-        const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
-        
-        // Поиск по коду типа через JOIN требует отдельной логики
-        // Сначала получаем типы, которые подходят по коду или названию
-        const { data: matchingTypes } = await supabase
-          .from("entity_types")
-          .select("id")
-          .eq("entity_category", "place")
-          .is("deleted_at", null)
-          .or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
-        
-        const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
-        
-        if (matchingTypeIds.length > 0) {
-          if (searchNumber !== null) {
-            queryBuilder = queryBuilder.or(
-              `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-            ).in("entity_type_id", matchingTypeIds);
-          } else {
-            queryBuilder = queryBuilder
-              .ilike("name", `%${searchTerm}%`)
-              .in("entity_type_id", matchingTypeIds);
-          }
-        } else {
-          if (searchNumber !== null) {
-            queryBuilder = queryBuilder.or(
-              `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-            );
-          } else {
-            queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
-          }
+      const { data: placesData, error: fetchError } = await supabase.rpc(
+        "get_places_with_room",
+        {
+          search_query: query?.trim() || null,
+          show_deleted: showDeleted,
+          page_limit: 2000,
+          page_offset: 0,
         }
-      }
-
-      const { data: placesData, error: fetchError } = await queryBuilder;
+      );
 
       if (fetchError) {
         throw fetchError;
@@ -169,65 +133,27 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         finishLoading(isInitialLoad, 0);
         return;
       }
-
-      // Загружаем transitions для мест, чтобы узнать в каких помещениях они находятся
-      const placeIds = placesData.map((place) => place.id);
-      const { data: transitionsData } = await supabase
-        .from("transitions")
-        .select("*")
-        .eq("destination_type", "room")
-        .in("place_id", placeIds)
-        .order("created_at", { ascending: false });
-
-      // Группируем transitions по place_id и находим последний для каждого
-      const lastTransitionsByPlace = new Map<number, any>();
-      (transitionsData || []).forEach((transition) => {
-        if (transition.place_id && !lastTransitionsByPlace.has(transition.place_id)) {
-          lastTransitionsByPlace.set(transition.place_id, transition);
-        }
-      });
-
-      // Получаем названия помещений
-      const roomIds = Array.from(lastTransitionsByPlace.values())
-        .map((t) => t.destination_id)
-        .filter((id) => id !== null);
-
-      const { data: roomsData } = roomIds.length > 0
-        ? await supabase
-            .from("rooms")
-            .select("id, name")
-            .in("id", roomIds)
-            .is("deleted_at", null)
-        : { data: [] };
-
-      const roomsMap = new Map(
-        (roomsData || []).map((r) => [r.id, r.name])
-      );
-
-      // Объединяем данные
-      const placesWithRooms = placesData.map((place: any) => {
-        const transition = lastTransitionsByPlace.get(place.id);
-        
-        return {
-          id: place.id,
-          name: place.name,
-          entity_type_id: place.entity_type_id || null,
-          entity_type: place.entity_types ? {
-            code: place.entity_types.code,
-            name: place.entity_types.name,
-          } : null,
-          marking_number: place.marking_number ?? null,
-          created_at: place.created_at,
-          deleted_at: place.deleted_at,
-          photo_url: place.photo_url,
-          room: transition
-            ? {
-                room_id: transition.destination_id,
-                room_name: roomsMap.get(transition.destination_id) || null,
-              }
-            : null,
-        };
-      });
+      const placesWithRooms = placesData.map((place: any) => ({
+        id: place.id,
+        name: place.name,
+        entity_type_id: place.entity_type_id || null,
+        entity_type: place.entity_type_code
+          ? {
+              code: place.entity_type_code,
+              name: place.entity_type_name,
+            }
+          : null,
+        marking_number: place.marking_number ?? null,
+        created_at: place.created_at,
+        deleted_at: place.deleted_at,
+        photo_url: place.photo_url,
+        room: place.room_id
+          ? {
+              room_id: place.room_id,
+              room_name: place.room_name || null,
+            }
+          : null,
+      }));
 
       // Применяем фильтры
       let filteredPlaces = placesWithRooms;

@@ -11,7 +11,6 @@ import Image from "next/image";
 import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { applyDeletedFilter, applyNameSearch } from "@/lib/query-builder";
 import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
@@ -104,15 +103,15 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
     try {
       const supabase = createClient();
-      let queryBuilder = supabase
-        .from("rooms")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
-      queryBuilder = applyNameSearch(queryBuilder, query, ["name"]);
-
-      const { data: roomsData, error: fetchError } = await queryBuilder;
+      const { data: roomsData, error: fetchError } = await supabase.rpc(
+        "get_rooms_with_counts",
+        {
+          search_query: query?.trim() || null,
+          show_deleted: showDeleted,
+          page_limit: 2000,
+          page_offset: 0,
+        }
+      );
 
       if (fetchError) {
         throw fetchError;
@@ -123,55 +122,16 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         finishLoading(isInitialLoad, 0);
         return;
       }
-
-      // Подсчитываем количество вещей, мест и контейнеров в каждом помещении
-      const roomIds = roomsData.map((room) => room.id);
-      
-      // Получаем все transitions с room как destination
-      const { data: allTransitions } = await supabase
-        .from("transitions")
-        .select("*")
-        .eq("destination_type", "room")
-        .in("destination_id", roomIds);
-
-      // Подсчитываем уникальные item_id для вещей
-      const itemsByRoom = new Map<number, Set<number>>();
-      const placesByRoom = new Map<number, Set<number>>();
-      const containersByRoom = new Map<number, Set<number>>();
-
-      (allTransitions || []).forEach((t) => {
-        const roomId = t.destination_id;
-        
-        if (t.item_id) {
-          if (!itemsByRoom.has(roomId)) {
-            itemsByRoom.set(roomId, new Set());
-          }
-          itemsByRoom.get(roomId)?.add(t.item_id);
-        }
-        
-        if (t.place_id) {
-          if (!placesByRoom.has(roomId)) {
-            placesByRoom.set(roomId, new Set());
-          }
-          placesByRoom.get(roomId)?.add(t.place_id);
-        }
-        
-        if (t.container_id) {
-          if (!containersByRoom.has(roomId)) {
-            containersByRoom.set(roomId, new Set());
-          }
-          containersByRoom.get(roomId)?.add(t.container_id);
-        }
-      });
-
-      let roomsWithCounts = roomsData.map((room) => {
-        return {
-          ...room,
-          items_count: itemsByRoom.get(room.id)?.size || 0,
-          places_count: placesByRoom.get(room.id)?.size || 0,
-          containers_count: containersByRoom.get(room.id)?.size || 0,
-        };
-      });
+      let roomsWithCounts = roomsData.map((room: any) => ({
+        id: room.id,
+        name: room.name,
+        created_at: room.created_at,
+        deleted_at: room.deleted_at,
+        photo_url: room.photo_url,
+        items_count: room.items_count ?? 0,
+        places_count: room.places_count ?? 0,
+        containers_count: room.containers_count ?? 0,
+      }));
 
       // Применяем фильтры
       if (filters.hasItems !== null) {

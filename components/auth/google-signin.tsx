@@ -14,6 +14,10 @@ const GoogleSignIn = () => {
     try {
       setIsLoading(true);
       const supabase = createClient();
+      const log = (message: string, details?: unknown) => {
+        const suffix = details ? ` ${JSON.stringify(details)}` : "";
+        console.log(`[auth][google-signin] ${message}${suffix}`);
+      };
 
       const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -46,10 +50,12 @@ const GoogleSignIn = () => {
       });
 
       if (error) {
+        log("signInWithOAuth error", error);
         throw error;
       }
 
       if (isNativePlatform && data?.url) {
+        log("open browser", data.url);
         await Browser.open({ url: data.url, presentationStyle: "fullscreen" });
       }
     } catch (error) {

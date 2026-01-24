@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/table";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { applyDeletedFilter } from "@/lib/query-builder";
 import { softDelete, restoreDeleted } from "@/lib/soft-delete";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
@@ -127,72 +126,15 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
 
     try {
       const supabase = createClient();
-      let queryBuilder = supabase
-        .from("containers")
-        .select("id, name, entity_type_id, marking_number, created_at, deleted_at, photo_url, entity_types!inner(code, name)")
-        .order("created_at", { ascending: false });
-
-      queryBuilder = applyDeletedFilter(queryBuilder, showDeleted);
-
-      if (query && query.trim()) {
-        const searchTerm = query.trim();
-        const markingMatch = searchTerm.match(/^([А-ЯЁ]+)-?(\d+)$/i);
-        
-        if (markingMatch) {
-          const [, type, number] = markingMatch;
-          // Поиск по коду типа через JOIN
-          const { data: matchingTypes } = await supabase
-            .from("entity_types")
-            .select("id")
-            .eq("entity_category", "container")
-            .is("deleted_at", null)
-            .ilike("code", `%${type.toUpperCase()}%`);
-          
-          const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
-          
-          if (matchingTypeIds.length > 0) {
-            queryBuilder = queryBuilder
-              .in("entity_type_id", matchingTypeIds)
-              .eq("marking_number", parseInt(number));
-          } else {
-            queryBuilder = queryBuilder.eq("marking_number", parseInt(number));
-          }
-        } else {
-          const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
-          
-          // Поиск по коду или названию типа
-          const { data: matchingTypes } = await supabase
-            .from("entity_types")
-            .select("id")
-            .eq("entity_category", "container")
-            .is("deleted_at", null)
-            .or(`code.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
-          
-          const matchingTypeIds = matchingTypes?.map(t => t.id) || [];
-          
-          if (matchingTypeIds.length > 0) {
-            if (searchNumber !== null) {
-              queryBuilder = queryBuilder.or(
-                `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-              ).in("entity_type_id", matchingTypeIds);
-            } else {
-              queryBuilder = queryBuilder
-                .ilike("name", `%${searchTerm}%`)
-                .in("entity_type_id", matchingTypeIds);
-            }
-          } else {
-            if (searchNumber !== null) {
-              queryBuilder = queryBuilder.or(
-                `name.ilike.%${searchTerm}%,marking_number.eq.${searchNumber}`
-              );
-            } else {
-              queryBuilder = queryBuilder.ilike("name", `%${searchTerm}%`);
-            }
-          }
+      const { data: containersData, error: fetchError } = await supabase.rpc(
+        "get_containers_with_location",
+        {
+          search_query: query?.trim() || null,
+          show_deleted: showDeleted,
+          page_limit: 2000,
+          page_offset: 0,
         }
-      }
-
-      const { data: containersData, error: fetchError } = await queryBuilder;
+      );
 
       if (fetchError) {
         throw fetchError;
@@ -203,258 +145,54 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         finishLoading(isInitialLoad, 0);
         return;
       }
+      const containersWithLocation = containersData.map((container: any) => ({
+        id: container.id,
+        name: container.name,
+        entity_type_id: container.entity_type_id || null,
+        entity_type: container.entity_type_code
+          ? {
+              code: container.entity_type_code,
+              name: container.entity_type_name,
+            }
+          : null,
+        marking_number: container.marking_number,
+        created_at: container.created_at,
+        deleted_at: container.deleted_at,
+        photo_url: container.photo_url,
+        itemsCount: container.items_count ?? 0,
+        last_location: container.destination_type
+          ? {
+              destination_type: container.destination_type,
+              destination_id: container.destination_id,
+              destination_name: container.destination_name,
+              moved_at: container.moved_at,
+            }
+          : null,
+      }));
 
-      // Загружаем transitions для контейнеров
-      const containerIds = containersData.map((container) => container.id);
-      const { data: transitionsData, error: transitionsError } = await supabase
-        .from("transitions")
-        .select("*")
-        .in("container_id", containerIds)
-        .order("created_at", { ascending: false });
+      let filteredContainers = containersWithLocation;
 
-      if (transitionsError) {
-        throw transitionsError;
+      if (filters.entityTypeId !== null) {
+        filteredContainers = filteredContainers.filter(
+          (c) => c.entity_type_id === filters.entityTypeId
+        );
       }
 
-      // Группируем transitions по container_id и находим последний для каждого
-      const lastTransitionsByContainer = new Map<number, any>();
-      (transitionsData || []).forEach((transition) => {
-        if (!lastTransitionsByContainer.has(transition.container_id)) {
-          lastTransitionsByContainer.set(transition.container_id, transition);
-        }
-      });
+      if (filters.hasItems !== null) {
+        filteredContainers = filteredContainers.filter((c) =>
+          filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
+        );
+      }
 
-      // Загружаем все места и контейнеры одним запросом
-      const placeIds = Array.from(lastTransitionsByContainer.values())
-        .filter((t) => t.destination_type === "place" && t.destination_id)
-        .map((t) => t.destination_id);
-
-      const containerDestinationIds = Array.from(lastTransitionsByContainer.values())
-        .filter((t) => t.destination_type === "container" && t.destination_id)
-        .map((t) => t.destination_id);
-
-      const roomIds = Array.from(lastTransitionsByContainer.values())
-        .filter((t) => t.destination_type === "room" && t.destination_id)
-        .map((t) => t.destination_id);
-
-      const [placesData, containersDestData, roomsData] = await Promise.all([
-        placeIds.length > 0
-          ? supabase
-              .from("places")
-              .select("id, name")
-              .in("id", placeIds)
-              .is("deleted_at", null)
-          : { data: [], error: null },
-        containerDestinationIds.length > 0
-          ? supabase
-              .from("containers")
-              .select("id, name")
-              .in("id", containerDestinationIds)
-              .is("deleted_at", null)
-          : { data: [], error: null },
-        roomIds.length > 0
-          ? supabase
-              .from("rooms")
-              .select("id, name")
-              .in("id", roomIds)
-              .is("deleted_at", null)
-          : { data: [], error: null },
-      ]);
-
-      // Создаем мапы для быстрого поиска
-      const placesMap = new Map(
-        (placesData.data || []).map((p) => [p.id, p.name])
-      );
-      const containersMap = new Map(
-        (containersDestData.data || []).map((c) => [c.id, c.name])
-      );
-      const roomsMap = new Map(
-        (roomsData.data || []).map((r) => [r.id, r.name])
-      );
-
-      // Объединяем данные
-      const containersWithLocation = containersData.map((container: any) => {
-        const lastTransition = lastTransitionsByContainer.get(container.id);
-
-        if (!lastTransition) {
-          return {
-            id: container.id,
-            name: container.name,
-            entity_type_id: container.entity_type_id || null,
-            entity_type: container.entity_types ? {
-              code: container.entity_types.code,
-              name: container.entity_types.name,
-            } : null,
-            marking_number: container.marking_number,
-            created_at: container.created_at,
-            deleted_at: container.deleted_at,
-            photo_url: container.photo_url,
-            last_location: null,
-          };
-        }
-
-        const destinationName =
-          lastTransition.destination_type === "place"
-            ? placesMap.get(lastTransition.destination_id) || null
-            : lastTransition.destination_type === "container"
-            ? containersMap.get(lastTransition.destination_id) || null
-            : lastTransition.destination_type === "room"
-            ? roomsMap.get(lastTransition.destination_id) || null
-            : null;
-
-        return {
-          id: container.id,
-          name: container.name,
-          entity_type_id: container.entity_type_id || null,
-          entity_type: container.entity_types ? {
-            code: container.entity_types.code,
-            name: container.entity_types.name,
-          } : null,
-          marking_number: container.marking_number,
-          created_at: container.created_at,
-          deleted_at: container.deleted_at,
-          photo_url: container.photo_url,
-          last_location: {
-            destination_type: lastTransition.destination_type,
-            destination_id: lastTransition.destination_id,
-            destination_name: destinationName,
-            moved_at: lastTransition.created_at,
-          },
-        };
-      });
-
-      // Проверяем наличие вещей в контейнерах
-      const containerIdsForItems = containersWithLocation.map(c => c.id);
-      if (containerIdsForItems.length > 0) {
-        // Получаем все transitions для вещей, которые находятся в этих контейнерах
-        const { data: itemsTransitionsData } = await supabase
-          .from("transitions")
-          .select("item_id, destination_id, destination_type, created_at")
-          .eq("destination_type", "container")
-          .in("destination_id", containerIdsForItems)
-          .order("created_at", { ascending: false });
-
-        // Получаем последние transitions для каждого item
-        const lastItemTransitions = new Map<number, any>();
-        (itemsTransitionsData || []).forEach((t) => {
-          if (t.item_id && !lastItemTransitions.has(t.item_id)) {
-            lastItemTransitions.set(t.item_id, t);
-          }
+      if (filters.locationType) {
+        filteredContainers = filteredContainers.filter((c) => {
+          if (!c.last_location) return false;
+          return c.last_location.destination_type === filters.locationType;
         });
-
-        // Получаем все transitions для этих вещей, чтобы найти последнее местоположение
-        const itemIds = Array.from(lastItemTransitions.keys());
-        if (itemIds.length > 0) {
-          const { data: allItemTransitionsData } = await supabase
-            .from("transitions")
-            .select("*")
-            .in("item_id", itemIds)
-            .order("created_at", { ascending: false });
-
-          const finalItemTransitions = new Map<number, any>();
-          (allItemTransitionsData || []).forEach((t) => {
-            if (t.item_id && !finalItemTransitions.has(t.item_id)) {
-              finalItemTransitions.set(t.item_id, t);
-            }
-          });
-
-          // Подсчитываем количество вещей в каждом контейнере
-          const itemsCountByContainer = new Map<number, number>();
-          finalItemTransitions.forEach((transition) => {
-            if (transition.destination_type === "container" && transition.destination_id) {
-              const currentCount = itemsCountByContainer.get(transition.destination_id) || 0;
-              itemsCountByContainer.set(transition.destination_id, currentCount + 1);
-            }
-          });
-
-          // Добавляем информацию о количестве вещей
-          let containersWithItemsInfo = containersWithLocation.map(container => ({
-            ...container,
-            itemsCount: itemsCountByContainer.get(container.id) || 0,
-          }));
-
-          // Применяем фильтры
-          if (filters.entityTypeId !== null) {
-            containersWithItemsInfo = containersWithItemsInfo.filter(
-              (c) => c.entity_type_id === filters.entityTypeId
-            );
-          }
-
-          if (filters.hasItems !== null) {
-            containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
-              filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
-            );
-          }
-
-          if (filters.locationType) {
-            containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
-              if (!c.last_location) return false;
-              return c.last_location.destination_type === filters.locationType;
-            });
-          }
-
-          setContainers(containersWithItemsInfo);
-          finishLoading(isInitialLoad, containersWithItemsInfo.length);
-        } else {
-          // Нет вещей ни в одном контейнере
-          let containersWithItemsInfo = containersWithLocation.map(container => ({
-            ...container,
-            itemsCount: 0,
-          }));
-
-          // Применяем фильтры
-          if (filters.entityTypeId !== null) {
-            containersWithItemsInfo = containersWithItemsInfo.filter(
-              (c) => c.entity_type_id === filters.entityTypeId
-            );
-          }
-
-          if (filters.hasItems !== null) {
-            containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
-              filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
-            );
-          }
-
-          if (filters.locationType) {
-            containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
-              if (!c.last_location) return false;
-              return c.last_location.destination_type === filters.locationType;
-            });
-          }
-
-          setContainers(containersWithItemsInfo);
-          finishLoading(isInitialLoad, containersWithItemsInfo.length);
-        }
-      } else {
-        // Нет контейнеров для проверки
-        let containersWithItemsInfo = containersWithLocation.map(container => ({
-          ...container,
-          itemsCount: 0,
-        }));
-
-        // Применяем фильтры
-        if (filters.entityTypeId !== null) {
-          containersWithItemsInfo = containersWithItemsInfo.filter(
-            (c) => c.entity_type_id === filters.entityTypeId
-          );
-        }
-
-        if (filters.hasItems !== null) {
-          containersWithItemsInfo = containersWithItemsInfo.filter((c) =>
-            filters.hasItems ? (c.itemsCount || 0) > 0 : (c.itemsCount || 0) === 0
-          );
-        }
-
-        if (filters.locationType) {
-          containersWithItemsInfo = containersWithItemsInfo.filter((c) => {
-            if (!c.last_location) return false;
-            return c.last_location.destination_type === filters.locationType;
-          });
-        }
-
-        setContainers(containersWithItemsInfo);
-        finishLoading(isInitialLoad, containersWithItemsInfo.length);
       }
+
+      setContainers(filteredContainers);
+      finishLoading(isInitialLoad, filteredContainers.length);
     } catch (err) {
       handleError(err, isInitialLoad);
       setContainers([]);
