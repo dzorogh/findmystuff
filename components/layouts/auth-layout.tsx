@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import Sidebar from "@/components/navigation/sidebar";
 import TopBar from "@/components/navigation/top-bar";
@@ -9,11 +10,13 @@ interface AuthLayoutProps {
 }
 
 export const AuthLayout = ({ children }: AuthLayoutProps) => {
+  const pathname = usePathname();
   const { user, isLoading } = useUser();
   const isAuthenticated = Boolean(user);
+  const isHomePage = pathname === "/";
   const baseMainClasses =
     "h-[100svh] h-[100dvh] bg-background overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch]";
-  const mobileTopPadding = isAuthenticated
+  const mobileTopPadding = isAuthenticated && !isHomePage
     ? "pt-[calc(var(--app-safe-top)+var(--app-header-height))]"
     : "pt-[var(--app-safe-top)]";
   const mobileBottomPadding = isAuthenticated
@@ -34,7 +37,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   // Во время загрузки sidebar не рендерится, но отступ применяется для предотвращения скачка
   return (
     <>
-      {!isLoading && user && <TopBar />}
+      {!isLoading && user && !isHomePage && <TopBar />}
       {!isLoading && user && <Sidebar />}
       <main className={`${mainClassName} md:ml-64`}>
         {children}

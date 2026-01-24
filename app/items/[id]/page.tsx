@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
+import { Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
@@ -317,7 +317,6 @@ export default function ItemDetailPage() {
     return (
       <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
         <div className="mx-auto max-w-4xl space-y-6">
-          <Skeleton className="h-10 w-32" />
           <Card>
             <CardHeader>
               <Skeleton className="h-8 w-48" />
@@ -340,10 +339,6 @@ export default function ItemDetailPage() {
     return (
       <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
         <div className="mx-auto max-w-4xl space-y-6">
-          <Button variant="ghost" onClick={() => router.push("/items")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Назад к списку
-          </Button>
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-destructive">{error || "Вещь не найдена"}</p>
@@ -357,11 +352,6 @@ export default function ItemDetailPage() {
   return (
     <div className="container pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-4xl space-y-6">
-        <Button variant="ghost" onClick={() => router.push("/items")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад к списку
-        </Button>
-
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

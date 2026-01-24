@@ -279,17 +279,10 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
+    <div className="container mx-auto pb-10 pt-[calc(var(--app-header-height)+1rem)] px-4 md:py-10 md:pt-[calc(var(--app-header-height)+2.5rem)]">
       <div className="mx-auto max-w-4xl space-y-8">
-        {/* Заголовок и поиск */}
+        {/* Поиск */}
         <div className="space-y-4">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Найти вещь</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Быстрый поиск по вещам, местам и контейнерам
-            </p>
-          </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
