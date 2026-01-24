@@ -1,4 +1,5 @@
 import { createIconResponse } from "@/lib/icon-image";
+import { headers } from "next/headers";
 
 export const size = {
   width: 512,
@@ -7,8 +8,16 @@ export const size = {
 
 export const contentType = "image/png";
 
-const Icon = () => {
-  return createIconResponse(size);
+const Icon = async () => {
+  const headersList = await headers();
+  
+  const prefersColorScheme = headersList.get("sec-ch-prefers-color-scheme") || 
+                             headersList.get("prefers-color-scheme") ||
+                             "light";
+  
+  const theme: "light" | "dark" = prefersColorScheme === "dark" ? "dark" : "light";
+  
+  return createIconResponse(size, theme);
 };
 
 export default Icon;

@@ -25,6 +25,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
   description: "Приложение для учета домашнего склада и быстрого поиска вещей",
+  icons: {
+    icon: [
+      { url: "/icon", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/icon", sizes: "180x180", type: "image/png" },
+    ],
+  },
   appleWebApp: {
     capable: true,
     title: "FindMyStuff",

@@ -10,7 +10,8 @@
     "lint": "eslint",
     "android:add": "cap add android",
     "android:sync": "cap sync android",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "android:sync:prod": "CAPACITOR_SERVER_URL=\"https://stuff.indenbom.ru/\" npx cap sync android"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.971.0",

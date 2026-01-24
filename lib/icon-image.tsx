@@ -5,23 +5,11 @@ export type IconSize = {
   height: number;
 };
 
-type IconPalette = {
-  background: string;
-  gradientFrom: string;
-  gradientTo: string;
-  foreground: string;
-  accent: string;
-};
+type IconTheme = "light" | "dark";
 
-const iconPalette: IconPalette = {
-  background: "#ffffff",
-  gradientFrom: "#111827",
-  gradientTo: "#1f2937",
-  foreground: "#ffffff",
-  accent: "#0f172a",
-};
-
-const IconMarkup = () => {
+const IconMarkup = ({ theme = "light" }: { theme?: IconTheme }) => {
+  const fillColor = theme === "dark" ? "#ffffff" : "#000000";
+  
   return (
     <div
       role="img"
@@ -32,72 +20,28 @@ const IconMarkup = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "transparent",
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: "78%",
-          height: "78%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "22%",
-          background: `linear-gradient(135deg, ${iconPalette.gradientFrom}, ${iconPalette.gradientTo})`,
-          boxShadow: "0 8px 18px rgba(15, 23, 42, 0.35)",
-        }}
+      <svg
+        viewBox="0 0 241 241"
+        width="100%"
+        height="100%"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <svg
-          viewBox="0 0 24 24"
-          width="62%"
-          height="62%"
-          fill="none"
-          stroke={iconPalette.foreground}
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m7.5 4.27 9 5.15" />
-          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z" />
-          <path d="m3.3 7 8.7 5 8.7-5" />
-          <path d="M12 22V12" />
-        </svg>
-        <div
-          style={{
-            position: "absolute",
-            right: "-4%",
-            bottom: "-4%",
-            width: "34%",
-            height: "34%",
-            borderRadius: "999px",
-            backgroundColor: iconPalette.background,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="70%"
-            height="70%"
-            fill="none"
-            stroke={iconPalette.accent}
-            strokeWidth={2.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-        </div>
-      </div>
+        <path
+          fill={fillColor}
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M97.083 0H143C163.525 0 179.783 0 192.502 1.7085C205.589 3.47283 216.187 7.18017 224.55 15.5328C232.903 23.8967 236.61 34.4938 238.375 47.5812C240.083 60.3112 240.083 76.5587 240.083 97.083V120.667C240.083 141.191 240.083 157.45 238.375 170.169C236.61 183.256 232.903 193.853 224.55 202.217C219.369 207.398 213.328 210.793 206.36 213.049C206.509 213.659 206.583 214.296 206.583 214.958V231.708C206.583 233.93 205.701 236.06 204.13 237.63C202.56 239.201 200.43 240.083 198.208 240.083C195.987 240.083 193.857 239.201 192.286 237.63C190.716 236.06 189.833 233.93 189.833 231.708V216.365C177.528 217.75 162.118 217.75 143 217.75H97.083C77.9657 217.75 62.5557 217.75 50.25 216.365V231.708C50.25 233.93 49.3676 236.06 47.797 237.63C46.2264 239.201 44.0962 240.083 41.875 240.083C39.6538 240.083 37.5236 239.201 35.953 237.63C34.3824 236.06 33.5 233.93 33.5 231.708V214.958C33.5 214.288 33.5744 213.648 33.7233 213.038C26.7553 210.793 20.7142 207.398 15.5328 202.206C7.18017 193.853 3.47283 183.256 1.7085 170.169C0 157.439 0 141.191 0 120.667V97.083C0 76.5587 0 60.3 1.7085 47.5812C3.47283 34.4938 7.18017 23.8967 15.5328 15.5328C23.8967 7.18017 34.4938 3.47283 47.5812 1.7085C60.3112 0 76.5587 0 97.083 0ZM128.417 201H142.375C163.67 201 178.801 200.978 190.28 199.437C201.502 197.929 207.979 195.093 212.703 190.369C217.426 185.646 220.262 179.169 221.77 167.935C223.311 156.456 223.333 141.336 223.333 120.042V97.7083C223.333 76.4135 223.311 61.2938 221.77 49.8033C220.262 38.5808 217.426 32.1042 212.703 27.3807C207.979 22.6572 201.502 19.8208 190.269 18.3133C178.801 16.7723 163.67 16.75 142.375 16.75H128.417V201ZM111.667 16.75V201H97.7083C76.4135 201 61.2938 200.978 49.8033 199.437C38.5808 197.929 32.1042 195.093 27.3807 190.369C22.6572 185.646 19.8208 179.169 18.3133 167.935C16.7723 156.456 16.75 141.336 16.75 120.042V97.7083C16.75 76.4135 16.7723 61.2938 18.3133 49.8033C19.8208 38.5808 22.6572 32.1042 27.3807 27.3807C32.1042 22.6572 38.5808 19.8208 49.8145 18.3133C61.2938 16.7723 76.4135 16.75 97.7083 16.75H111.667ZM86.5417 78.1667C88.7628 78.1667 90.8931 79.049 92.4637 80.6196C94.0343 82.1903 94.9167 84.3205 94.9167 86.5417V131.208C94.9167 133.43 94.0343 135.56 92.4637 137.13C90.8931 138.701 88.7628 139.583 86.5417 139.583C84.3205 139.583 82.1903 138.701 80.6196 137.13C79.049 135.56 78.1667 133.43 78.1667 131.208V86.5417C78.1667 84.3205 79.049 82.1903 80.6196 80.6196C82.1903 79.049 84.3205 78.1667 86.5417 78.1667ZM153.542 78.1667C155.763 78.1667 157.893 79.049 159.464 80.6196C161.034 82.1903 161.917 84.3205 161.917 86.5417V131.208C161.917 133.43 161.034 135.56 159.464 137.13C157.893 138.701 155.763 139.583 153.542 139.583C151.32 139.583 149.19 138.701 147.62 137.13C146.049 135.56 145.167 133.43 145.167 131.208V86.5417C145.167 84.3205 146.049 82.1903 147.62 80.6196C149.19 79.049 151.32 78.1667 153.542 78.1667Z"
+        />
+      </svg>
     </div>
   );
 };
 
-export const createIconResponse = (size: IconSize) => {
-  return new ImageResponse(<IconMarkup />, size);
+export const createIconResponse = (size: IconSize, theme?: IconTheme) => {
+  return new ImageResponse(<IconMarkup theme={theme} />, size);
 };
 
 export const createIconErrorResponse = (error: unknown) => {
