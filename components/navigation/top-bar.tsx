@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Menu, Settings, LogOut, Moon, Sun, User as UserIcon, Plus, ChevronRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
+import { useCurrentPage } from "@/contexts/current-page-context";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Logo from "@/components/common/logo";
@@ -77,13 +77,9 @@ const TopBar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const prevPageKeyRef = useRef<string | null>(null);
-  const dataLoadedRef = useRef(false);
+  const { entityName, isLoading, setEntityName, setIsLoading } = useCurrentPage();
 
   const sectionTitle = useMemo(() => getSectionTitle(pathname), [pathname]);
   const detailPageInfo = useMemo(() => getDetailPageInfo(pathname), [pathname]);
@@ -96,88 +92,13 @@ const TopBar = () => {
     "/users": "Добавить пользователя",
   };
 
+  // Очищаем имя и состояние загрузки при переходе на страницы списков
   useEffect(() => {
-    if (!user || !detailPageInfo) {
+    if (!detailPageInfo) {
       setEntityName(null);
-      setShowSkeleton(false);
-      prevPageKeyRef.current = null;
-      return;
+      setIsLoading(false);
     }
-
-    const currentPageKey = `${detailPageInfo.type}-${detailPageInfo.id}`;
-    const isNewPage = prevPageKeyRef.current !== currentPageKey;
-    const shouldShowSkeleton = isNewPage || !entityName;
-
-    // Сбрасываем entityName только при переходе на новую страницу
-    if (isNewPage) {
-      setEntityName(null);
-      prevPageKeyRef.current = currentPageKey;
-    }
-
-    let skeletonTimer: NodeJS.Timeout | null = null;
-    let isCancelled = false;
-
-    const loadEntityName = async () => {
-      // Показываем скелетон для новой страницы или если данных еще нет, с небольшой задержкой для плавности
-      if (shouldShowSkeleton) {
-        dataLoadedRef.current = false;
-        skeletonTimer = setTimeout(() => {
-          if (!isCancelled && !dataLoadedRef.current) {
-            setShowSkeleton(true);
-          }
-        }, 50);
-      }
-
-      try {
-        const tableName = detailPageInfo.type;
-        const { data, error } = await supabase
-          .from(tableName)
-          .select("name")
-          .eq("id", detailPageInfo.id)
-          .is("deleted_at", null)
-          .single();
-
-        if (isCancelled) return;
-
-        dataLoadedRef.current = true;
-        
-        if (skeletonTimer) {
-          clearTimeout(skeletonTimer);
-          skeletonTimer = null;
-        }
-        
-        if (!error && data) {
-          setEntityName(data.name);
-          setShowSkeleton(false);
-        } else {
-          setEntityName(null);
-          setShowSkeleton(false);
-        }
-      } catch (error) {
-        if (isCancelled) return;
-        
-        dataLoadedRef.current = true;
-        
-        if (skeletonTimer) {
-          clearTimeout(skeletonTimer);
-          skeletonTimer = null;
-        }
-        console.error("Ошибка загрузки названия сущности:", error);
-        setEntityName(null);
-        setShowSkeleton(false);
-      }
-    };
-
-    loadEntityName();
-
-    return () => {
-      isCancelled = true;
-      if (skeletonTimer) {
-        clearTimeout(skeletonTimer);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, detailPageInfo]);
+  }, [detailPageInfo, setEntityName, setIsLoading]);
 
   if (!user) {
     return null;
@@ -232,7 +153,7 @@ const TopBar = () => {
                   {detailPageInfo.listTitle}
                 </Link>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                {showSkeleton ? (
+                {isLoading && !entityName ? (
                   <Skeleton className="h-5 w-32" />
                 ) : entityName ? (
                   <span className="text-base font-semibold truncate">{entityName}</span>

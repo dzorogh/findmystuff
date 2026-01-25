@@ -1,0 +1,89 @@
+import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ReactNode } from "react";
+import { EntityPhoto } from "./entity-photo";
+
+interface EntityHeaderProps {
+  id: number;
+  name: string | null;
+  photoUrl: string | null;
+  isDeleted: boolean;
+  defaultIcon: ReactNode;
+  defaultName: string;
+  actions: ReactNode;
+  showId?: boolean;
+  layout?: "default" | "compact";
+}
+
+export const EntityHeader = ({
+  id,
+  name,
+  photoUrl,
+  isDeleted,
+  defaultIcon,
+  defaultName,
+  actions,
+  showId = true,
+  layout = "default",
+}: EntityHeaderProps) => {
+  const displayName = name || `${defaultName} #${id}`;
+
+  if (layout === "compact") {
+    return (
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <EntityPhoto
+              photoUrl={photoUrl}
+              name={displayName}
+              defaultIcon={defaultIcon}
+              size="small"
+            />
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-xl sm:text-2xl break-words">
+                {displayName}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {showId && <span>ID: #{id}</span>}
+                {isDeleted && (
+                  <Badge variant="destructive" className="ml-2">
+                    Удалено
+                  </Badge>
+                )}
+              </CardDescription>
+            </div>
+          </div>
+          {actions}
+        </div>
+      </CardHeader>
+    );
+  }
+
+  return (
+    <CardHeader>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <EntityPhoto
+            photoUrl={photoUrl}
+            name={displayName}
+            defaultIcon={defaultIcon}
+            size="medium"
+          />
+          <div className="flex-1">
+            <CardTitle className="text-2xl">{displayName}</CardTitle>
+            <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
+              {showId && <span>ID: #{id}</span>}
+              {isDeleted && (
+                <>
+                  {showId && <span className="text-muted-foreground">•</span>}
+                  <Badge variant="destructive">Удалено</Badge>
+                </>
+              )}
+            </CardDescription>
+          </div>
+        </div>
+        {actions}
+      </div>
+    </CardHeader>
+  );
+};

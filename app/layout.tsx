@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UserProvider } from "@/contexts/user-context";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { CurrentPageProvider } from "@/contexts/current-page-context";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -64,9 +65,11 @@ export default function RootLayout({
         >
           <UserProvider>
             <SettingsProvider>
-              <CapacitorAuthListener />
-              <AuthLayout>{children}</AuthLayout>
-              <Toaster />
+              <CurrentPageProvider>
+                <CapacitorAuthListener />
+                <AuthLayout>{children}</AuthLayout>
+                <Toaster />
+              </CurrentPageProvider>
             </SettingsProvider>
           </UserProvider>
         </ThemeProvider>

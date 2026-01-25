@@ -1,68 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
+// React и Next.js
+import { useState, useEffect, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
+
+// Supabase и контексты
 import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Package, MapPin, Container, Building2, Calendar, Pencil, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
+import { useCurrentPage } from "@/contexts/current-page-context";
 import { useUser } from "@/hooks/use-user";
+
+// UI компоненты
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package } from "lucide-react";
+
+// Компоненты entity-detail
+import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
+import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
+import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
+import { EntityHeader } from "@/components/entity-detail/entity-header";
+import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { EntityLocation } from "@/components/entity-detail/entity-location";
+import { EntityPhoto } from "@/components/entity-detail/entity-photo";
+import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
+import { TransitionsTable } from "@/components/entity-detail/transitions-table";
+
+// Формы
 import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
-import { toast } from "sonner";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-interface Transition {
-  id: number;
-  created_at: string;
-  destination_type: string | null;
-  destination_id: number | null;
-  destination_name?: string | null;
-  place_name?: string | null;
-  room_name?: string | null;
-}
+// Утилиты
+import { useEntityActions } from "@/hooks/use-entity-actions";
 
-interface Item {
-  id: number;
-  name: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  last_location?: {
-    destination_type: string | null;
-    destination_id: number | null;
-    destination_name: string | null;
-    moved_at: string;
-    place_name?: string | null;
-    room_name?: string | null;
-  } | null;
-}
+// Типы
+import type { Transition, Location, ItemEntity } from "@/types/entity";
+
+interface Item extends ItemEntity {}
 
 export default function ItemDetailPage() {
   const params = useParams();
   const router = useRouter();
   const itemId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
+  const { setEntityName, setIsLoading } = useCurrentPage();
   const [item, setItem] = useState<Item | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -70,17 +56,11 @@ export default function ItemDetailPage() {
     }
   }, [isUserLoading, user, router]);
 
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      loadItemData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isUserLoading, itemId]);
-
-  const loadItemData = async () => {
+  const loadItemData = useCallback(async () => {
     if (!user) return;
 
-    setIsLoading(true);
+    setIsPageLoading(true);
+    setIsLoading(true); // Устанавливаем загрузку в контекст для TopBar
     setError(null);
 
     try {
@@ -99,7 +79,9 @@ export default function ItemDetailPage() {
 
       if (!itemData) {
         setError("Вещь не найдена");
+        setIsPageLoading(false);
         setIsLoading(false);
+        setEntityName(null);
         return;
       }
 
@@ -219,7 +201,7 @@ export default function ItemDetailPage() {
       );
 
       // Формируем transitions с названиями
-      const transitionsWithNames: Transition[] = (transitionsData || []).map((t) => {
+      const transitionsWithNames = (transitionsData || []).map((t): Transition => {
         const transition: Transition = {
           id: t.id,
           created_at: t.created_at,
@@ -257,7 +239,7 @@ export default function ItemDetailPage() {
 
       // Определяем последнее местоположение
       const lastTransition = transitionsWithNames[0];
-      const lastLocation = lastTransition
+      const lastLocation: Location | null = lastTransition
         ? {
             destination_type: lastTransition.destination_type,
             destination_id: lastTransition.destination_id,
@@ -273,62 +255,41 @@ export default function ItemDetailPage() {
         last_location: lastLocation,
       });
       setTransitions(transitionsWithNames);
+
+      // Устанавливаем имя в контекст сразу после получения данных вещи
+      // чтобы оно отображалось в крошках как можно раньше
+      const nameToSet = itemData.name || `Вещь #${itemData.id}`;
+      flushSync(() => {
+        setEntityName(nameToSet);
+      });
+      setIsLoading(false);
     } catch (err) {
       console.error("Ошибка загрузки данных вещи:", err);
       setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
+      setIsLoading(false); // Загрузка завершена с ошибкой
+      setEntityName(null);
     } finally {
-      setIsLoading(false);
+      setIsPageLoading(false);
     }
-  };
+  }, [user, itemId, setEntityName, setIsLoading]);
 
-  const handleDelete = async () => {
-    if (!confirm("Вы уверены, что хотите удалить эту вещь?")) {
-      return;
-    }
+  useEntityDataLoader({
+    user,
+    isUserLoading,
+    entityId: itemId,
+    loadData: loadItemData,
+  });
 
-    setIsDeleting(true);
-    try {
-      await softDelete("items", itemId);
-      toast.success("Вещь успешно удалена");
-      await loadItemData();
-    } catch (err) {
-      console.error("Ошибка при удалении вещи:", err);
-      toast.error("Произошла ошибка при удалении вещи");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+    entityType: "items",
+    entityId: itemId,
+    entityName: "Вещь",
+    onSuccess: loadItemData,
+  });
 
-  const handleRestore = async () => {
-    setIsRestoring(true);
-    try {
-      await restoreDeleted("items", itemId);
-      toast.success("Вещь успешно восстановлена");
-      await loadItemData();
-    } catch (err) {
-      console.error("Ошибка при восстановлении вещи:", err);
-      toast.error("Произошла ошибка при восстановлении вещи");
-    } finally {
-      setIsRestoring(false);
-    }
-  };
 
   if (isUserLoading || isLoading) {
-    return (
-      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
-        <div className="mx-auto max-w-4xl space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64 mt-2" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <EntityDetailSkeleton />;
   }
 
   if (!user) {
@@ -336,211 +297,43 @@ export default function ItemDetailPage() {
   }
 
   if (error || !item) {
-    return (
-      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
-        <div className="mx-auto max-w-4xl space-y-6">
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-destructive">{error || "Вещь не найдена"}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <EntityDetailError error={error} entityName="Вещь" />;
   }
 
   return (
     <div className="container pb-10 pt-4 px-4 md:py-10">
       <div className="mx-auto max-w-4xl space-y-6">
         <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {item.photo_url ? (
-                  <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 rounded-lg overflow-hidden border border-border">
-                    <Image
-                      src={item.photo_url}
-                      alt={item.name || `Вещь #${item.id}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 64px, 80px"
-                    />
-                  </div>
-                ) : (
-                  <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <CardTitle className="text-xl sm:text-2xl break-words">
-                    {item.name || `Вещь #${item.id}`}
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    ID: #{item.id}
-                    {item.deleted_at && (
-                      <Badge variant="destructive" className="ml-2">
-                        Удалено
-                      </Badge>
-                    )}
-                  </CardDescription>
-                </div>
-              </div>
-              {user.email === "dzorogh@gmail.com" && (
-                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                  {!item.deleted_at && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditDialogOpen(true)}
-                        disabled={isDeleting || isRestoring}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Редактировать
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsMoveDialogOpen(true)}
-                        disabled={isDeleting || isRestoring}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        <ArrowRightLeft className="mr-2 h-4 w-4" />
-                        Переместить
-                      </Button>
-                    </>
-                  )}
-                  {item.deleted_at ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRestore}
-                      disabled={isDeleting || isRestoring}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Восстановить
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDelete}
-                      disabled={isDeleting || isRestoring}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Удалить
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardHeader>
+          <EntityHeader
+            id={item.id}
+            name={item.name}
+            photoUrl={item.photo_url}
+            isDeleted={!!item.deleted_at}
+            defaultIcon={<Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />}
+            defaultName="Вещь"
+            actions={
+              <EntityActions
+                isDeleted={!!item.deleted_at}
+                isDeleting={isDeleting}
+                isRestoring={isRestoring}
+                onEdit={() => setIsEditDialogOpen(true)}
+                onMove={() => setIsMoveDialogOpen(true)}
+                onDelete={handleDelete}
+                onRestore={handleRestore}
+              />
+            }
+            layout="compact"
+          />
           <CardContent className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-2">Фотография</h3>
-              {item.photo_url ? (
-                <div className="w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
-                  <Image
-                    src={item.photo_url}
-                    alt={item.name || `Вещь #${item.id}`}
-                    width={800}
-                    height={450}
-                    className="w-full h-full object-cover"
-                    unoptimized={item.photo_url.includes("storage.supabase.co")}
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-video rounded-lg border-2 border-dashed border-border bg-muted/50 flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <Package className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Фотография не загружена</p>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-2">Местоположение</h3>
-              {item.last_location ? (
-                <div className="space-y-3">
-                  <div className="rounded-md border bg-muted/50 p-4 space-y-2">
-                    {item.last_location.destination_type === "room" && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
-                          <span>
-                            {item.last_location.destination_name ||
-                              `Помещение #${item.last_location.destination_id}`}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {item.last_location.destination_type === "place" && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                          <span>
-                            {item.last_location.destination_name ||
-                              `Место #${item.last_location.destination_id}`}
-                          </span>
-                        </div>
-                        {item.last_location.room_name && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
-                            <Building2 className="h-3 w-3 flex-shrink-0" />
-                            <span>Помещение: {item.last_location.room_name}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {item.last_location.destination_type === "container" && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Container className="h-4 w-4 text-primary flex-shrink-0" />
-                          <span>
-                            {item.last_location.destination_name ||
-                              `Контейнер #${item.last_location.destination_id}`}
-                          </span>
-                        </div>
-                        {item.last_location.place_name && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
-                            <MapPin className="h-3 w-3 flex-shrink-0" />
-                            <span>Место: {item.last_location.place_name}</span>
-                          </div>
-                        )}
-                        {item.last_location.room_name && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
-                            <Building2 className="h-3 w-3 flex-shrink-0" />
-                            <span>Помещение: {item.last_location.room_name}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Перемещено:{" "}
-                    {new Date(item.last_location.moved_at).toLocaleString("ru-RU", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Местоположение не указано</p>
-              )}
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Создано:{" "}
-                {new Date(item.created_at).toLocaleDateString("ru-RU", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
+            <EntityPhoto
+              photoUrl={item.photo_url}
+              name={item.name || `Вещь #${item.id}`}
+              defaultIcon={<Package className="h-12 w-12 mx-auto text-muted-foreground" />}
+              size="large"
+              aspectRatio="video"
+            />
+            <EntityLocation location={item.last_location || null} variant="detailed" />
+            <EntityCreatedDate createdAt={item.created_at} label="Создано" />
           </CardContent>
         </Card>
 
@@ -552,103 +345,10 @@ export default function ItemDetailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {transitions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                История перемещений пуста
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Дата и время</TableHead>
-                    <TableHead>Местоположение</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transitions.map((transition, index) => (
-                    <TableRow key={transition.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {new Date(transition.created_at).toLocaleString("ru-RU", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {index === 0 && (
-                            <Badge variant="default" className="ml-2">
-                              Текущее
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {transition.destination_type === "room" && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span>
-                                {transition.destination_name ||
-                                  `Помещение #${transition.destination_id}`}
-                              </span>
-                            </div>
-                          )}
-                          {transition.destination_type === "place" && (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                                <span>
-                                  {transition.destination_name ||
-                                    `Место #${transition.destination_id}`}
-                                </span>
-                              </div>
-                              {transition.room_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <Building2 className="h-3 w-3 flex-shrink-0" />
-                                  <span>{transition.room_name}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {transition.destination_type === "container" && (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Container className="h-4 w-4 text-primary flex-shrink-0" />
-                                <span>
-                                  {transition.destination_name ||
-                                    `Контейнер #${transition.destination_id}`}
-                                </span>
-                              </div>
-                              {transition.place_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                                  <span>{transition.place_name}</span>
-                                </div>
-                              )}
-                              {transition.room_name && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                                  <Building2 className="h-3 w-3 flex-shrink-0" />
-                                  <span>{transition.room_name}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {!transition.destination_type && (
-                            <span className="text-sm text-muted-foreground">
-                              Местоположение не указано
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+            <TransitionsTable
+              transitions={transitions}
+              emptyMessage="История перемещений пуста"
+            />
           </CardContent>
         </Card>
 
