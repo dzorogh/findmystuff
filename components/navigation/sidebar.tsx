@@ -83,11 +83,11 @@ const Sidebar = () => {
 
   if (isLoading) {
     return (
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col">
-        <div className="h-[var(--app-header-height)] flex items-center px-4 border-b box-border">
+      <aside className="hidden md:flex h-full w-64 border-r bg-background flex-col">
+        <div className="h-16 flex items-center px-4 border-b">
           <div className="h-6 w-32 animate-pulse rounded bg-muted" />
         </div>
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-10 w-full animate-pulse rounded bg-muted" />
@@ -107,7 +107,7 @@ const Sidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r bg-background flex-col z-40">
+      <aside className="hidden md:flex h-full w-64 border-r bg-background flex-col z-40">
         <div className="h-16 flex items-center px-4 border-b">
           <Link href="/" className="flex items-center">
             <Logo size="md" showText={true} />

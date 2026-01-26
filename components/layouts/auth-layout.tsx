@@ -14,35 +14,49 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const { user, isLoading } = useUser();
   const isAuthenticated = Boolean(user);
   const isHomePage = pathname === "/";
-  const isSettingsPage = pathname === "/settings";
-  const baseMainClasses =
-    "h-[100svh] h-[100dvh] bg-background overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch]";
-  const mobileTopPadding = isAuthenticated && !isHomePage && !isSettingsPage
-    ? "pt-[calc(var(--app-safe-top)+var(--app-header-height))]"
-    : "pt-[var(--app-safe-top)]";
-  const mobileBottomPadding = isAuthenticated
-    ? "pb-[calc(var(--app-safe-bottom)+var(--app-bottom-nav-height))] md:pb-[var(--app-safe-bottom)]"
-    : "pb-[var(--app-safe-bottom)]";
-  const mainClassName = `${baseMainClasses} ${mobileTopPadding} ${mobileBottomPadding}`;
+  const showTopBar = !isLoading && user && !isHomePage;
+  const showSidebar = !isLoading && user;
 
   // Для неавторизованных пользователей - layout без sidebar и отступов
   if (!isLoading && !user) {
     return (
-      <main className={mainClassName}>
-        {children}
-      </main>
+      <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background">
+        <main className="h-full overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]">
+          {children}
+        </main>
+      </div>
     );
   }
 
-  // Во время загрузки и для авторизованных - layout с отступом
-  // Во время загрузки sidebar не рендерится, но отступ применяется для предотвращения скачка
+  // Grid layout для авторизованных пользователей
+  // Desktop: [Sidebar | TopBar+Content]
+  // Mobile: [TopBar+Content] + BottomNav (fixed)
   return (
-    <>
-      {!isLoading && user && !isHomePage && <TopBar />}
-      {!isLoading && user && <Sidebar />}
-      <main className={`${mainClassName} md:ml-64`}>
-        {children}
+    <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr]">
+      {/* Desktop Sidebar - первая колонка */}
+      {showSidebar && (
+        <div className="hidden md:block row-start-1 row-end-2 col-start-1 col-end-2 overflow-y-auto">
+          <Sidebar />
+        </div>
+      )}
+      
+      {/* Main content area - вторая колонка на desktop, вся ширина на mobile */}
+      <main className="row-start-1 row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
+        {/* TopBar - sticky вверху */}
+        {showTopBar && <TopBar />}
+        
+        {/* Content area - scrollable */}
+        <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] md:pt-0 md:pb-0">
+          {children}
+        </div>
       </main>
-    </>
+      
+      {/* Mobile Bottom Nav - fixed внизу, вне grid */}
+      {showSidebar && (
+        <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
+          <Sidebar />
+        </div>
+      )}
+    </div>
   );
 };

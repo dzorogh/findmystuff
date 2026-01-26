@@ -136,9 +136,9 @@ const TopBar = () => {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 bg-background md:left-64 md:w-[calc(100%-16rem)]">
-      <div className="pt-[var(--app-safe-top)]">
-        <div className="flex h-[var(--app-header-height)] items-center justify-between border-b px-4 md:px-6 box-border">
+    <header className="sticky top-0 z-40 bg-background border-b">
+      <div className="pt-[var(--app-safe-top)] md:pt-0">
+        <div className="flex h-[var(--app-header-height)] items-center justify-between px-4 md:px-6 box-border">
           <div className="flex items-center gap-2 min-w-0">
             {pathname === "/" ? (
               <>
