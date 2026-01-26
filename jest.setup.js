@@ -53,3 +53,6 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }))
+
+// Моки для scrollIntoView (используется в cmdk)
+Element.prototype.scrollIntoView = jest.fn()
