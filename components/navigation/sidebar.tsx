@@ -150,7 +150,7 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background">
+      <nav className="md:hidden border-t bg-background">
         <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-around gap-2 px-2 pb-[var(--app-safe-bottom)]">
           {[
             { href: "/", label: "Поиск", icon: Search },

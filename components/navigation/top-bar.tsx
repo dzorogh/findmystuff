@@ -136,7 +136,7 @@ const TopBar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-background border-b">
+    <header className="sticky top-0 z-40 bg-background border-b shrink-0">
       <div className="pt-[var(--app-safe-top)] md:pt-0">
         <div className="flex h-[var(--app-header-height)] items-center justify-between px-4 md:px-6 box-border">
           <div className="flex items-center gap-2 min-w-0">

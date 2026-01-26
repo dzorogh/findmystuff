@@ -14,7 +14,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const { user, isLoading } = useUser();
   const isAuthenticated = Boolean(user);
   const isHomePage = pathname === "/";
-  const showTopBar = !isLoading && user && !isHomePage;
+  const showTopBar = !isLoading && user;
   const showSidebar = !isLoading && user;
 
   // Для неавторизованных пользователей - layout без sidebar и отступов
@@ -30,9 +30,9 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
 
   // Grid layout для авторизованных пользователей
   // Desktop: [Sidebar | TopBar+Content]
-  // Mobile: [TopBar+Content] + BottomNav (fixed)
+  // Mobile: [TopBar+Content+BottomNav] - все в grid
   return (
-    <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr]">
+    <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr] grid-rows-[1fr_auto] md:grid-rows-1">
       {/* Desktop Sidebar - первая колонка */}
       {showSidebar && (
         <div className="hidden md:block row-start-1 row-end-2 col-start-1 col-end-2 overflow-y-auto">
@@ -41,19 +41,23 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
       )}
       
       {/* Main content area - вторая колонка на desktop, вся ширина на mobile */}
-      <main className="row-start-1 row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
+      <main className="row-start-1 row-end-2 md:row-start-1 md:row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
         {/* TopBar - sticky вверху */}
-        {showTopBar && <TopBar />}
+        {showTopBar && (
+          <div className="shrink-0 relative z-40">
+            <TopBar />
+          </div>
+        )}
         
         {/* Content area - scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] md:pt-0 md:pb-0">
+        <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] md:pb-0">
           {children}
         </div>
       </main>
       
-      {/* Mobile Bottom Nav - fixed внизу, вне grid */}
+      {/* Mobile Bottom Nav - часть grid, внизу */}
       {showSidebar && (
-        <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
+        <div className="md:hidden row-start-2 row-end-3 col-start-1 col-end-2 shrink-0 border-t bg-background">
           <Sidebar />
         </div>
       )}

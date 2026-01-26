@@ -6,7 +6,7 @@ import type { Container } from "@/types/entity";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, MapPin, Building2, Package, PackageX } from "lucide-react";
+import { Container as ContainerIcon, MapPin, Building2, Package, PackageX, ArrowRightLeft, MoreHorizontal, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -26,6 +26,7 @@ import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
 import { ListActions } from "@/components/common/list-actions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -96,6 +97,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
   const [containers, setContainers] = useState<Container[]>([]);
   const [editingContainerId, setEditingContainerId] = useState<number | null>(null);
   const [movingContainerId, setMovingContainerId] = useState<number | null>(null);
+  const [mobileActionsContainerId, setMobileActionsContainerId] = useState<number | null>(null);
   const { generateMarking } = useContainerMarking();
 
   const isLoadingRef = useRef(false);
@@ -408,13 +410,81 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                       )}
                     </TableCell>
                     <TableCell>
-                      <ListActions
-                        isDeleted={!!container.deleted_at}
-                        onEdit={() => setEditingContainerId(container.id)}
-                        onMove={() => setMovingContainerId(container.id)}
-                        onDelete={() => handleDeleteContainer(container.id)}
-                        onRestore={() => handleRestoreContainer(container.id)}
-                      />
+                      <div className="hidden md:flex">
+                        <ListActions
+                          isDeleted={!!container.deleted_at}
+                          onEdit={() => setEditingContainerId(container.id)}
+                          onMove={() => setMovingContainerId(container.id)}
+                          onDelete={() => handleDeleteContainer(container.id)}
+                          onRestore={() => handleRestoreContainer(container.id)}
+                        />
+                      </div>
+                      <div className="flex md:hidden items-center justify-end gap-1">
+                        {container.deleted_at ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRestoreContainer(container.id)}
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            aria-label="Восстановить"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setMovingContainerId(container.id)}
+                              className="h-8 w-8"
+                              aria-label="Переместить"
+                            >
+                              <ArrowRightLeft className="h-4 w-4" />
+                            </Button>
+                            <Popover
+                              open={mobileActionsContainerId === container.id}
+                              onOpenChange={(open) => {
+                                setMobileActionsContainerId(open ? container.id : null);
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Открыть меню действий"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-40 p-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    setEditingContainerId(container.id);
+                                    setMobileActionsContainerId(null);
+                                  }}
+                                >
+                                  <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    handleDeleteContainer(container.id);
+                                    setMobileActionsContainerId(null);
+                                  }}
+                                >
+                                  <span>Удалить</span>
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                     </TableRow>
                   ))}

@@ -130,7 +130,7 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto pb-10 pt-[calc(var(--app-header-height)+1rem)] px-4 md:py-10 md:pt-[calc(var(--app-header-height)+2.5rem)]">
+    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10 md:pt-[calc(var(--app-header-height)+2.5rem)]">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Поиск */}
         <div className="space-y-4">
