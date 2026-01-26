@@ -31,6 +31,10 @@ export async function GET(
       return NextResponse.json({ error: "Неверный ID вещи" }, { status: 400 });
     }
 
+    // Проверяем, нужно ли загружать transitions
+    const { searchParams } = new URL(request.url);
+    const includeTransitions = searchParams.get("includeTransitions") !== "false";
+
     // Загружаем вещь
     const { data: itemData, error: itemError } = await supabase
       .from("items")
@@ -47,6 +51,160 @@ export async function GET(
 
     if (!itemData) {
       return NextResponse.json({ error: "Вещь не найдена" }, { status: 404 });
+    }
+
+    // Загружаем последний transition для определения местоположения
+    const { data: lastTransitionData } = await supabase
+      .from("transitions")
+      .select("*")
+      .eq("item_id", itemId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Если не нужно загружать все transitions, возвращаем только item с last_location
+    if (!includeTransitions) {
+      let lastLocation: Location | null = null;
+
+      if (lastTransitionData) {
+        // Загружаем название для последнего местоположения
+        const destinationType = lastTransitionData.destination_type;
+        const destinationId = lastTransitionData.destination_id;
+
+        if (destinationType === "room" && destinationId) {
+          const { data: roomData } = await supabase
+            .from("rooms")
+            .select("id, name")
+            .eq("id", destinationId)
+            .is("deleted_at", null)
+            .single();
+
+          lastLocation = {
+            destination_type: destinationType,
+            destination_id: destinationId,
+            destination_name: roomData?.name || null,
+            moved_at: lastTransitionData.created_at,
+            place_name: null,
+            room_name: null,
+          };
+        } else if (destinationType === "place" && destinationId) {
+          const { data: placeData } = await supabase
+            .from("places")
+            .select("id, name")
+            .eq("id", destinationId)
+            .is("deleted_at", null)
+            .single();
+
+          // Получаем помещение для места
+          const { data: placeTransitionData } = await supabase
+            .from("transitions")
+            .select("*")
+            .eq("place_id", destinationId)
+            .eq("destination_type", "room")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          let roomName: string | null = null;
+          if (placeTransitionData?.destination_id) {
+            const { data: roomData } = await supabase
+              .from("rooms")
+              .select("id, name")
+              .eq("id", placeTransitionData.destination_id)
+              .is("deleted_at", null)
+              .single();
+            roomName = roomData?.name || null;
+          }
+
+          lastLocation = {
+            destination_type: destinationType,
+            destination_id: destinationId,
+            destination_name: placeData?.name || null,
+            moved_at: lastTransitionData.created_at,
+            place_name: null,
+            room_name: roomName,
+          };
+        } else if (destinationType === "container" && destinationId) {
+          const { data: containerData } = await supabase
+            .from("containers")
+            .select("id, name")
+            .eq("id", destinationId)
+            .is("deleted_at", null)
+            .single();
+
+          // Получаем местоположение контейнера
+          const { data: containerTransitionData } = await supabase
+            .from("transitions")
+            .select("*")
+            .eq("container_id", destinationId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          let placeName: string | null = null;
+          let roomName: string | null = null;
+
+          if (containerTransitionData) {
+            if (containerTransitionData.destination_type === "place" && containerTransitionData.destination_id) {
+              const { data: placeData } = await supabase
+                .from("places")
+                .select("id, name")
+                .eq("id", containerTransitionData.destination_id)
+                .is("deleted_at", null)
+                .single();
+              placeName = placeData?.name || null;
+
+              // Получаем помещение для места
+              const { data: placeTransitionData } = await supabase
+                .from("transitions")
+                .select("*")
+                .eq("place_id", containerTransitionData.destination_id)
+                .eq("destination_type", "room")
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (placeTransitionData?.destination_id) {
+                const { data: roomData } = await supabase
+                  .from("rooms")
+                  .select("id, name")
+                  .eq("id", placeTransitionData.destination_id)
+                  .is("deleted_at", null)
+                  .single();
+                roomName = roomData?.name || null;
+              }
+            } else if (containerTransitionData.destination_type === "room" && containerTransitionData.destination_id) {
+              const { data: roomData } = await supabase
+                .from("rooms")
+                .select("id, name")
+                .eq("id", containerTransitionData.destination_id)
+                .is("deleted_at", null)
+                .single();
+              roomName = roomData?.name || null;
+            }
+          }
+
+          lastLocation = {
+            destination_type: destinationType,
+            destination_id: destinationId,
+            destination_name: containerData?.name || null,
+            moved_at: lastTransitionData.created_at,
+            place_name: placeName,
+            room_name: roomName,
+          };
+        }
+      }
+
+      const item: Item = {
+        ...itemData,
+        last_location: lastLocation,
+      };
+
+      return NextResponse.json({
+        data: {
+          item,
+        },
+      });
     }
 
     // Загружаем все transitions для этой вещи

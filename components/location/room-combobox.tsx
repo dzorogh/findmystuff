@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/hooks/use-rooms";
 
 interface RoomComboboxProps {
@@ -38,7 +39,7 @@ const RoomCombobox = ({
   id = "room-combobox",
   required = false,
 }: RoomComboboxProps) => {
-  const { rooms } = useRooms();
+  const { rooms, isLoading } = useRooms();
   const [open, setOpen] = React.useState(false);
 
   const selectedRoom = rooms.find(
@@ -58,7 +59,7 @@ const RoomCombobox = ({
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
-            disabled={disabled || rooms.length === 0}
+            disabled={disabled || (isLoading ? false : rooms.length === 0)}
             id={`${id}-combobox`}
           >
             {selectedRoom
@@ -71,38 +72,48 @@ const RoomCombobox = ({
           <Command>
             <CommandInput placeholder="Поиск помещения..." />
             <CommandList>
-              <CommandEmpty>Помещения не найдены</CommandEmpty>
-              <CommandGroup>
-                {rooms.map((room) => {
-                  const displayName = room.name || `Помещение #${room.id}`;
-                  const isSelected = room.id.toString() === selectedRoomId;
-                  const itemValue = `${room.id}-${displayName}`;
-                  return (
-                    <CommandItem
-                      key={room.id}
-                      value={itemValue}
-                      keywords={[room.id.toString(), displayName, room.name || ""]}
-                      onSelect={() => {
-                        onRoomIdChange(room.id.toString());
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {displayName}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
+              {isLoading ? (
+                <div className="p-4 space-y-2">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty>Помещения не найдены</CommandEmpty>
+                  <CommandGroup>
+                    {rooms.map((room) => {
+                      const displayName = room.name || `Помещение #${room.id}`;
+                      const isSelected = room.id.toString() === selectedRoomId;
+                      const itemValue = `${room.id}-${displayName}`;
+                      return (
+                        <CommandItem
+                          key={room.id}
+                          value={itemValue}
+                          keywords={[room.id.toString(), displayName, room.name || ""]}
+                          onSelect={() => {
+                            onRoomIdChange(room.id.toString());
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {displayName}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-      {rooms.length === 0 && (
+      {!isLoading && rooms.length === 0 && (
         <p className="text-xs text-destructive">
           Помещения не найдены. Сначала создайте помещение.
         </p>

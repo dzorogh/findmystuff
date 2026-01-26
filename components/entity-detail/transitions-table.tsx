@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Building2, MapPin, Container } from "lucide-react";
 import {
   Table,
@@ -13,9 +14,10 @@ import type { Transition } from "@/types/entity";
 interface TransitionsTableProps {
   transitions: Transition[];
   emptyMessage?: string;
+  isLoading?: boolean;
 }
 
-export const TransitionsTable = ({ transitions, emptyMessage = "История перемещений пуста" }: TransitionsTableProps) => {
+export const TransitionsTable = ({ transitions, emptyMessage = "История перемещений пуста", isLoading = false }: TransitionsTableProps) => {
   const getLocationIcon = (type: string | null) => {
     switch (type) {
       case "room":
@@ -45,6 +47,25 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
         return "Неизвестно";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+    );
+  }
 
   if (transitions.length === 0) {
     return (

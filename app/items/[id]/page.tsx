@@ -48,6 +48,7 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [isLoading, setIsPageLoading] = useState(true);
+  const [isLoadingTransitions, setIsLoadingTransitions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
@@ -66,7 +67,8 @@ export default function ItemDetailPage() {
     setError(null);
 
     try {
-      const response = await apiClient.getItem(itemId);
+      // Сначала загружаем основную информацию о вещи (без transitions)
+      const response = await apiClient.getItem(itemId, false);
 
       // Проверяем наличие ошибки в ответе
       if (response.error) {
@@ -77,8 +79,8 @@ export default function ItemDetailPage() {
         return;
       }
 
-      // API endpoint возвращает { item, transitions } напрямую, но request оборачивает в ApiResponse
-      // Структура: { data: { item, transitions }, error?: string }
+      // API endpoint возвращает { item } без transitions
+      // Структура: { data: { item }, error?: string }
       if (!response.data || !response.data.item) {
         setError("Вещь не найдена");
         setIsPageLoading(false);
@@ -87,10 +89,9 @@ export default function ItemDetailPage() {
         return;
       }
 
-      const { item, transitions } = response.data;
+      const { item } = response.data;
 
       setItem(item);
-      setTransitions(transitions);
 
       // Устанавливаем имя в контекст сразу после получения данных вещи
       // чтобы оно отображалось в крошках как можно раньше
@@ -99,12 +100,30 @@ export default function ItemDetailPage() {
         setEntityName(nameToSet);
       });
       setIsLoading(false);
+      setIsPageLoading(false);
+
+      // После загрузки основной информации загружаем transitions
+      setIsLoadingTransitions(true);
+      try {
+        const transitionsResponse = await apiClient.getItemTransitions(itemId);
+        if (transitionsResponse.error) {
+          console.error("Ошибка загрузки transitions:", transitionsResponse.error);
+          // Не устанавливаем ошибку, просто оставляем пустой массив
+          setTransitions([]);
+        } else {
+          setTransitions(transitionsResponse.data || []);
+        }
+      } catch (transitionsErr) {
+        console.error("Ошибка загрузки transitions:", transitionsErr);
+        setTransitions([]);
+      } finally {
+        setIsLoadingTransitions(false);
+      }
     } catch (err) {
       console.error("Ошибка загрузки данных вещи:", err);
       setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       setIsLoading(false); // Загрузка завершена с ошибкой
       setEntityName(null);
-    } finally {
       setIsPageLoading(false);
     }
   }, [user, itemId, setEntityName, setIsLoading]);
@@ -184,6 +203,7 @@ export default function ItemDetailPage() {
             <TransitionsTable
               transitions={transitions}
               emptyMessage="История перемещений пуста"
+              isLoading={isLoadingTransitions}
             />
           </CardContent>
         </Card>

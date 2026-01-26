@@ -40,8 +40,15 @@ export class ItemsApi extends ApiClientBase {
     );
   }
 
-  async getItem(id: number) {
-    return this.request<{ item: Item; transitions: Transition[] }>(`/items/${id}`);
+  async getItem(id: number, includeTransitions = true) {
+    const url = includeTransitions 
+      ? `/items/${id}` 
+      : `/items/${id}?includeTransitions=false`;
+    return this.request<{ item: Item; transitions?: Transition[] }>(url);
+  }
+
+  async getItemTransitions(id: number) {
+    return this.request<Transition[]>(`/items/${id}/transitions`);
   }
 
   async createItem(data: {

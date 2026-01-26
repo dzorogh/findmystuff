@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
@@ -48,11 +49,20 @@ const LocationCombobox = ({
   label = "Местоположение (необязательно)",
   id = "location-combobox",
 }: LocationComboboxProps) => {
-  const { rooms } = useRooms();
-  const { places } = usePlaces();
-  const { containers } = useContainers();
+  const { rooms, isLoading: isLoadingRooms } = useRooms();
+  const { places, isLoading: isLoadingPlaces } = usePlaces();
+  const { containers, isLoading: isLoadingContainers } = useContainers();
   const { generateMarking } = useContainerMarking();
   const [open, setOpen] = React.useState(false);
+
+  const isLoading =
+    destinationType === "container"
+      ? isLoadingContainers
+      : destinationType === "place"
+      ? isLoadingPlaces
+      : destinationType === "room"
+      ? isLoadingRooms
+      : false;
 
   const destinations =
     destinationType === "container"
@@ -148,7 +158,7 @@ const LocationCombobox = ({
                 role="combobox"
                 aria-expanded={open}
                 className="w-full justify-between"
-                disabled={disabled || destinations.length === 0}
+                disabled={disabled || (isLoading ? false : destinations.length === 0)}
                 id={`${id}-combobox`}
               >
                 {selectedDestination
@@ -161,44 +171,54 @@ const LocationCombobox = ({
               <Command>
                 <CommandInput placeholder={`Поиск ${destinationLabel}...`} />
                 <CommandList>
-                  <CommandEmpty>
-                    {destinationType === "container"
-                      ? "Контейнеры не найдены"
-                      : destinationType === "place"
-                      ? "Местоположения не найдены"
-                      : "Помещения не найдены"}
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {destinations.map((dest) => {
-                      const displayName = getDisplayName(dest);
-                      const isSelected = dest.id.toString() === selectedDestinationId;
-                      const itemValue = `${dest.id}-${displayName}`;
-                      return (
-                        <CommandItem
-                          key={dest.id}
-                          value={itemValue}
-                          keywords={[dest.id.toString(), displayName, dest.name || ""]}
-                          onSelect={() => {
-                            onDestinationIdChange(dest.id.toString());
-                            setOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              isSelected ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {displayName}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
+                  {isLoading ? (
+                    <div className="p-4 space-y-2">
+                      {[...Array(3)].map((_, i) => (
+                        <Skeleton key={i} className="h-9 w-full" />
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      <CommandEmpty>
+                        {destinationType === "container"
+                          ? "Контейнеры не найдены"
+                          : destinationType === "place"
+                          ? "Местоположения не найдены"
+                          : "Помещения не найдены"}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {destinations.map((dest) => {
+                          const displayName = getDisplayName(dest);
+                          const isSelected = dest.id.toString() === selectedDestinationId;
+                          const itemValue = `${dest.id}-${displayName}`;
+                          return (
+                            <CommandItem
+                              key={dest.id}
+                              value={itemValue}
+                              keywords={[dest.id.toString(), displayName, dest.name || ""]}
+                              onSelect={() => {
+                                onDestinationIdChange(dest.id.toString());
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {displayName}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </>
+                  )}
                 </CommandList>
               </Command>
             </PopoverContent>
           </Popover>
-          {destinations.length === 0 && (
+          {!isLoading && destinations.length === 0 && (
             <p className="text-xs text-muted-foreground">
               {destinationType === "container"
                 ? "Контейнеры не найдены"

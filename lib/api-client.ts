@@ -39,8 +39,12 @@ class ApiClient extends ApiClientBase {
     return this.itemsApi.getItems(params);
   }
 
-  async getItem(id: number) {
-    return this.itemsApi.getItem(id);
+  async getItem(id: number, includeTransitions = true) {
+    return this.itemsApi.getItem(id, includeTransitions);
+  }
+
+  async getItemTransitions(id: number) {
+    return this.itemsApi.getItemTransitions(id);
   }
 
   async createItem(data: Parameters<ItemsApi["createItem"]>[0]) {
