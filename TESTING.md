@@ -5,24 +5,32 @@
 ## 📊 Текущий статус
 
 ### Статистика тестов
-- **Тестовых файлов**: 64 (61 unit/component + 3 E2E)
-- **Всего тестов**: 365
-- **Проходят**: 365 (100%) ✅
-- **Test Suites**: 64 passed, 64 total ✅
+- **Тестовых файлов**: 83 (80 unit/component + 3 E2E)
+- **Всего тестов**: 477
+- **Проходят**: 477 (100%) ✅
+- **Test Suites**: 83 passed, 83 total ✅
 
 ### Покрытие кода
-- **Statements**: 18.99%
-- **Branches**: 11.54%
-- **Functions**: 19.27%
-- **Lines**: 18.69%
+- **Statements**: 28.88%
+- **Branches**: 16.77%
+- **Functions**: 27.88%
+- **Lines**: 28.59%
 - **Цель**: 70% для всех метрик (порог установлен в jest.config.js)
 
 ### Покрытие по категориям
-- **lib/api-client**: 89.04% Statements, 67.69% Branches, 97.36% Functions, 92.53% Lines ✅
-- **components/entity-detail**: 89.18% Statements, 84.61% Branches ✅
-- **components/common**: 85.47% Statements, 73.91% Branches ✅
-- **components/ui**: 79.82% Statements, 82.75% Branches ⚠️
-- **components/forms**: 17.55% Statements, 11.89% Branches ❌
+- **lib/api-client**: ~89% Statements ✅ (хорошо покрыт)
+- **components/entity-detail**: ~89% Statements ✅ (хорошо покрыт)
+- **components/common**: ~85% Statements ✅ (хорошо покрыт)
+- **components/ui**: ~80% Statements ⚠️ (нужно добавить Sheet, Dialog, Popover, Toast)
+- **components/forms**: ~18% Statements ❌ (нужно добавить move-container-form, move-place-form)
+- **components/lists**: 0% Statements ❌ (не покрыты)
+- **components/filters**: ~70% Statements ✅ (базовое покрытие)
+- **components/navigation**: 0% Statements ❌ (не покрыты)
+- **components/managers**: 0% Statements ❌ (не покрыты)
+- **components/location**: 0% Statements ❌ (не покрыты)
+
+### План расширения
+Подробный план по расширению тестового покрытия до 70% см. в файле [TESTING_PLAN.md](./TESTING_PLAN.md)
 
 ---
 

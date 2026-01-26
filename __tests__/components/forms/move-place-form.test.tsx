@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import MoveItemForm from '@/components/forms/move-item-form'
+import MovePlaceForm from '@/components/forms/move-place-form'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 
@@ -22,22 +22,6 @@ jest.mock('@/hooks/use-rooms', () => ({
     refetch: jest.fn(),
   }),
 }))
-jest.mock('@/hooks/use-places', () => ({
-  usePlaces: () => ({
-    places: [{ id: 1, name: 'Место 1' }],
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  }),
-}))
-jest.mock('@/hooks/use-containers', () => ({
-  useContainers: () => ({
-    containers: [{ id: 1, name: 'Контейнер 1' }],
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  }),
-}))
 jest.mock('@/components/common/qr-scanner', () => ({
   __esModule: true,
   default: () => null,
@@ -52,7 +36,7 @@ jest.mock('@/contexts/settings-context', () => ({
   SettingsProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
 
-describe('MoveItemForm', () => {
+describe('MovePlaceForm', () => {
   const mockOnOpenChange = jest.fn()
   const mockOnSuccess = jest.fn()
 
@@ -62,28 +46,28 @@ describe('MoveItemForm', () => {
 
   it('не отображается, когда open = false', () => {
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={false}
         onOpenChange={mockOnOpenChange}
       />
     )
-    expect(screen.queryByText(/переместить вещь/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/переместить место/i)).not.toBeInTheDocument()
   })
 
   it('отображается, когда open = true', async () => {
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={true}
         onOpenChange={mockOnOpenChange}
       />
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/переместить вещь/i)).toBeInTheDocument()
+      expect(screen.getByText(/переместить место/i)).toBeInTheDocument()
     }, { timeout: 2000 })
   })
 
@@ -93,16 +77,16 @@ describe('MoveItemForm', () => {
     ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
 
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={true}
         onOpenChange={mockOnOpenChange}
       />
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/переместить вещь/i)).toBeInTheDocument()
+      expect(screen.getByText(/переместить место/i)).toBeInTheDocument()
     }, { timeout: 2000 })
 
     // Проверяем, что кнопка submit существует (может быть disabled)
@@ -115,15 +99,15 @@ describe('MoveItemForm', () => {
     expect(mockCreateTransition).not.toHaveBeenCalled()
   })
 
-  it('перемещает вещь при валидных данных', async () => {
+  it('перемещает место при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreateTransition = jest.fn().mockResolvedValue({ data: { id: 1 } })
     ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
 
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={true}
         onOpenChange={mockOnOpenChange}
         onSuccess={mockOnSuccess}
@@ -131,7 +115,7 @@ describe('MoveItemForm', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/переместить вещь/i)).toBeInTheDocument()
+      expect(screen.getByText(/переместить место/i)).toBeInTheDocument()
     }, { timeout: 2000 })
 
     // Проверяем, что форма отображается и кнопка submit существует
@@ -152,16 +136,16 @@ describe('MoveItemForm', () => {
     ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
 
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={true}
         onOpenChange={mockOnOpenChange}
       />
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/переместить вещь/i)).toBeInTheDocument()
+      expect(screen.getByText(/переместить место/i)).toBeInTheDocument()
     }, { timeout: 2000 })
 
     // Проверяем, что форма отображается
@@ -176,16 +160,16 @@ describe('MoveItemForm', () => {
   it('закрывает форму при клике на отмену', async () => {
     const user = userEvent.setup()
     render(
-      <MoveItemForm
-        itemId={1}
-        itemName="Вещь"
+      <MovePlaceForm
+        placeId={1}
+        placeName="Место"
         open={true}
         onOpenChange={mockOnOpenChange}
       />
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/переместить вещь/i)).toBeInTheDocument()
+      expect(screen.getByText(/переместить место/i)).toBeInTheDocument()
     }, { timeout: 2000 })
 
     // Ищем кнопку отмены - она может быть в SheetFooter
@@ -195,17 +179,11 @@ describe('MoveItemForm', () => {
     const cancelButton = cancelButtons[0]
     expect(cancelButton).toBeInTheDocument()
     
-    // Проверяем, что кнопка отмены существует и доступна
-    // Sheet может обрабатывать закрытие через onOpenChange автоматически
     await user.click(cancelButton)
 
-    // Проверяем, что onOpenChange был вызван (может быть вызван через Sheet)
-    // Если не вызван напрямую, это нормально - Sheet может обрабатывать закрытие сам
     await waitFor(() => {
-      // Проверяем, что либо onOpenChange был вызван, либо форма закрылась
       const isCalled = mockOnOpenChange.mock.calls.length > 0
       if (!isCalled) {
-        // Если не вызван, проверяем, что кнопка существует и работает
         expect(cancelButton).toBeInTheDocument()
       } else {
         expect(mockOnOpenChange).toHaveBeenCalledWith(false)
