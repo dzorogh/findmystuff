@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 
-// Supabase и контексты
-import { createClient } from "@/lib/supabase/client";
+// Контексты
 import { useCurrentPage } from "@/contexts/current-page-context";
 import { useUser } from "@/hooks/use-user";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
+
+// API Client
+import { apiClient } from "@/lib/api-client";
 
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +40,7 @@ import MovePlaceForm from "@/components/forms/move-place-form";
 import { useEntityActions } from "@/hooks/use-entity-actions";
 
 // Типы
-import type { Transition, Location, PlaceEntity } from "@/types/entity";
+import type { Transition, PlaceEntity } from "@/types/entity";
 
 interface Place extends PlaceEntity {}
 
@@ -82,18 +84,17 @@ export default function PlaceDetailPage() {
     setError(null);
 
     try {
-      const supabase = createClient();
+      const response = await apiClient.getPlace(placeId);
 
-      // Загружаем место
-      const { data: placeData, error: placeError } = await supabase
-        .from("places")
-        .select("id, name, entity_type_id, marking_number, photo_url, created_at, deleted_at, entity_types(code, name)")
-        .eq("id", placeId)
-        .single();
-
-      if (placeError) {
-        throw placeError;
+      if (response.error || !response.data) {
+        setError("Место не найдено");
+        setIsPageLoading(false);
+        setIsLoading(false);
+        setEntityName(null);
+        return;
       }
+
+      const { place: placeData, transitions: transitionsWithNames, items, containers } = response.data;
 
       if (!placeData) {
         setError("Место не найдено");
@@ -111,188 +112,10 @@ export default function PlaceDetailPage() {
       });
       setIsLoading(false);
 
-      // Загружаем все transitions для этого места
-      const { data: transitionsData, error: transitionsError } = await supabase
-        .from("transitions")
-        .select("*")
-        .eq("place_id", placeId)
-        .order("created_at", { ascending: false });
-
-      if (transitionsError) {
-        throw transitionsError;
-      }
-
-      // Загружаем названия помещений
-      const roomIds = (transitionsData || [])
-        .filter((t) => t.destination_type === "room" && t.destination_id)
-        .map((t) => t.destination_id);
-
-      const roomsData = roomIds.length > 0
-        ? await supabase
-            .from("rooms")
-            .select("id, name")
-            .in("id", roomIds)
-            .is("deleted_at", null)
-        : { data: [] };
-
-      const roomsMap = new Map(
-        (roomsData.data || []).map((r) => [r.id, r.name])
-      );
-
-      // Формируем transitions с названиями
-      const transitionsWithNames = (transitionsData || []).map((t): Transition => {
-        const transition: Transition = {
-          id: t.id,
-          created_at: t.created_at,
-          destination_type: t.destination_type,
-          destination_id: t.destination_id,
-        };
-
-        if (t.destination_type === "room" && t.destination_id) {
-          transition.destination_name = roomsMap.get(t.destination_id) || null;
-        }
-
-        return transition;
-      });
-
-      // Определяем последнее местоположение
-      const lastTransition = transitionsWithNames[0];
-      const lastLocation: Location | null = lastTransition
-        ? {
-            destination_type: lastTransition.destination_type,
-            destination_id: lastTransition.destination_id,
-            destination_name: lastTransition.destination_name || null,
-            moved_at: lastTransition.created_at,
-          }
-        : null;
-
-      let entityType: { code: string; name: string } | null = null;
-      if (placeData.entity_types) {
-        if (Array.isArray(placeData.entity_types) && placeData.entity_types.length > 0) {
-          entityType = placeData.entity_types[0];
-        } else if (!Array.isArray(placeData.entity_types)) {
-          entityType = placeData.entity_types;
-        }
-      }
-
-      const placeObject = {
-        id: placeData.id,
-        name: placeData.name,
-        entity_type_id: placeData.entity_type_id || null,
-        entity_type: entityType,
-        marking_number: placeData.marking_number,
-        photo_url: placeData.photo_url,
-        created_at: placeData.created_at,
-        deleted_at: placeData.deleted_at,
-        last_location: lastLocation,
-      };
-
-      setPlace(placeObject);
+      setPlace(placeData);
       setTransitions(transitionsWithNames);
-
-      // Загружаем все transitions для этого места одним запросом (items и containers)
-      const { data: allTransitionsData } = await supabase
-        .from("transitions")
-        .select("item_id, container_id, created_at")
-        .eq("destination_type", "place")
-        .eq("destination_id", placeId)
-        .order("created_at", { ascending: false });
-
-      // Разделяем transitions по типам
-      const itemTransitionsMap = new Map<number, any>();
-      const containerTransitionsMap = new Map<number, any>();
-
-      (allTransitionsData || []).forEach((t) => {
-        if (t.item_id && !itemTransitionsMap.has(t.item_id)) {
-          itemTransitionsMap.set(t.item_id, t);
-        }
-        if (t.container_id && !containerTransitionsMap.has(t.container_id)) {
-          containerTransitionsMap.set(t.container_id, t);
-        }
-      });
-
-      // Обрабатываем вещи и контейнеры
-      const itemIds = Array.from(itemTransitionsMap.keys());
-      const containerIds = Array.from(containerTransitionsMap.keys());
-
-      // Объединяем запросы transitions для items и containers в один
-      if (itemIds.length > 0 || containerIds.length > 0) {
-        let allTransitionsQuery = supabase
-          .from("transitions")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        // Используем OR условие для объединения запросов
-        if (itemIds.length > 0 && containerIds.length > 0) {
-          allTransitionsQuery = allTransitionsQuery.or(
-            `item_id.in.(${itemIds.join(',')}),container_id.in.(${containerIds.join(',')})`
-          );
-        } else if (itemIds.length > 0) {
-          allTransitionsQuery = allTransitionsQuery.in("item_id", itemIds);
-        } else if (containerIds.length > 0) {
-          allTransitionsQuery = allTransitionsQuery.in("container_id", containerIds);
-        }
-
-        const { data: allTransitionsData } = await allTransitionsQuery;
-
-        // Разделяем transitions по типам
-        const lastItemTransitions = new Map<number, any>();
-        const lastContainerTransitions = new Map<number, any>();
-
-        (allTransitionsData || []).forEach((t) => {
-          if (t.item_id && !lastItemTransitions.has(t.item_id)) {
-            lastItemTransitions.set(t.item_id, t);
-          }
-          if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
-            lastContainerTransitions.set(t.container_id, t);
-          }
-        });
-
-        // Обрабатываем вещи
-        const itemsInPlace = Array.from(lastItemTransitions.entries())
-          .filter(([itemId, transition]) => 
-            transition.destination_type === "place" && 
-            transition.destination_id === placeId
-          )
-          .map(([itemId]) => itemId);
-
-        if (itemsInPlace.length > 0) {
-          const { data: itemsData } = await supabase
-            .from("items")
-            .select("id, name, photo_url, created_at")
-            .in("id", itemsInPlace)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false });
-
-          setPlaceItems(itemsData || []);
-        } else {
-          setPlaceItems([]);
-        }
-
-        // Обрабатываем контейнеры
-        const containersInPlace = Array.from(lastContainerTransitions.entries())
-          .filter(([containerId, transition]) => 
-            transition.destination_type === "place" && 
-            transition.destination_id === placeId
-          )
-          .map(([containerId]) => containerId);
-
-        if (containersInPlace.length > 0) {
-          const { data: containersData } = await supabase
-            .from("containers")
-            .select("id, name, photo_url, created_at")
-            .in("id", containersInPlace)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false });
-
-          setPlaceContainers(containersData || []);
-        } else {
-          setPlaceContainers([]);
-        }
-      } else {
-        setPlaceItems([]);
-        setPlaceContainers([]);
-      }
+      setPlaceItems(items || []);
+      setPlaceContainers(containers || []);
     } catch (err) {
       console.error("Ошибка загрузки данных места:", err);
       setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");

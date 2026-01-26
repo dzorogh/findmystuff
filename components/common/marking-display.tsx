@@ -3,7 +3,7 @@
 interface MarkingDisplayProps {
   typeCode: string | null | undefined;
   markingNumber: number | null | undefined;
-  generateMarking: (typeCode: any, markingNumber: number | null | undefined) => string | null;
+  generateMarking: (typeCode: string, markingNumber: number | null | undefined) => string | null;
   className?: string;
 }
 

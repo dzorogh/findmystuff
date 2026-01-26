@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -46,16 +46,14 @@ const EditRoomForm = ({
     if (open && roomId) {
       setName(roomName || "");
       const loadPhoto = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("rooms")
-          .select("photo_url")
-          .eq("id", roomId)
-          .single();
-        
-        if (data?.photo_url) {
-          setPhotoUrl(data.photo_url);
-        } else {
+        try {
+          const response = await apiClient.getRoom(roomId);
+          if (response.data?.photo_url) {
+            setPhotoUrl(response.data.photo_url);
+          } else {
+            setPhotoUrl(null);
+          }
+        } catch (error) {
           setPhotoUrl(null);
         }
       };
@@ -73,22 +71,13 @@ const EditRoomForm = ({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
+      const response = await apiClient.updateRoom(roomId, {
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
 
-
-      const updateData: { name: string | null; photo_url: string | null } = {
-        name: name.trim() || null,
-        photo_url: photoUrl || null,
-      };
-      
-      const { error: updateError } = await supabase
-        .from("rooms")
-        .update(updateData)
-        .eq("id", roomId);
-
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw updateError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Помещение успешно обновлено");

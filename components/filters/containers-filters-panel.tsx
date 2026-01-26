@@ -8,7 +8,6 @@ import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { useEntityTypes } from "@/hooks/use-entity-types";
-import { createClient } from "@/lib/supabase/client";
 
 export interface ContainersFilters {
   showDeleted: boolean;

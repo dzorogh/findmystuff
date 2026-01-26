@@ -1,0 +1,172 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import type { Container } from "@/types/entity";
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("query") || null;
+    const showDeleted = searchParams.get("showDeleted") === "true";
+
+    const { data: containersData, error: fetchError } = await supabase.rpc(
+      "get_containers_with_location",
+      {
+        search_query: query?.trim() || null,
+        show_deleted: showDeleted,
+        page_limit: 2000,
+        page_offset: 0,
+      }
+    );
+
+    if (fetchError) {
+      return NextResponse.json(
+        { error: fetchError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!containersData || containersData.length === 0) {
+      return NextResponse.json({
+        data: [],
+      });
+    }
+
+    const containers: Container[] = containersData.map((container: {
+      id: number;
+      name: string | null;
+      entity_type_id: number | null;
+      entity_type_code: string | null;
+      entity_type_name: string | null;
+      marking_number: number | null;
+      created_at: string;
+      deleted_at: string | null;
+      photo_url: string | null;
+      items_count: number;
+      destination_type: string | null;
+      destination_id: number | null;
+      destination_name: string | null;
+      moved_at: string | null;
+    }) => ({
+      id: container.id,
+      name: container.name,
+      entity_type_id: container.entity_type_id || null,
+      entity_type: container.entity_type_code
+        ? {
+            code: container.entity_type_code,
+            name: container.entity_type_name,
+          }
+        : null,
+      marking_number: container.marking_number,
+      created_at: container.created_at,
+      deleted_at: container.deleted_at,
+      photo_url: container.photo_url,
+      itemsCount: container.items_count ?? 0,
+      last_location: container.destination_type
+        ? {
+            destination_type: container.destination_type,
+            destination_id: container.destination_id,
+            destination_name: container.destination_name,
+            moved_at: container.moved_at,
+          }
+        : null,
+    }));
+
+    return NextResponse.json({
+      data: containers,
+    });
+  } catch (error) {
+    console.error("Ошибка загрузки списка контейнеров:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Произошла ошибка при загрузке данных",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, entity_type_id, marking_number, photo_url, destination_type, destination_id } = body;
+
+    const insertData: {
+      name: string | null;
+      entity_type_id: number | null;
+      marking_number: number | null;
+      photo_url: string | null;
+    } = {
+      name: name?.trim() || null,
+      entity_type_id: entity_type_id || null,
+      marking_number: marking_number || null,
+      photo_url: photo_url || null,
+    };
+
+    const { data: newContainer, error: insertError } = await supabase
+      .from("containers")
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: insertError.message },
+        { status: 500 }
+      );
+    }
+
+    // Если указано местоположение, создаем transition
+    if (destination_type && destination_id && newContainer) {
+      const { error: transitionError } = await supabase
+        .from("transitions")
+        .insert({
+          container_id: newContainer.id,
+          destination_type,
+          destination_id: parseInt(destination_id),
+        });
+
+      if (transitionError) {
+        // Удаляем созданный контейнер, если не удалось создать transition
+        await supabase.from("containers").delete().eq("id", newContainer.id);
+        return NextResponse.json(
+          { error: transitionError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    return NextResponse.json({ data: newContainer });
+  } catch (error) {
+    console.error("Ошибка создания контейнера:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Произошла ошибка при создании контейнера",
+      },
+      { status: 500 }
+    );
+  }
+}

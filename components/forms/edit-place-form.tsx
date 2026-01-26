@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -58,16 +58,14 @@ const EditPlaceForm = ({
       
       // Загружаем текущее фото только при открытии формы
       const loadPhoto = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("places")
-          .select("photo_url")
-          .eq("id", placeId)
-          .single();
-        
-        if (data?.photo_url) {
-          setPhotoUrl(data.photo_url);
-        } else {
+        try {
+          const response = await apiClient.getPlace(placeId);
+          if (response.data?.photo_url) {
+            setPhotoUrl(response.data.photo_url);
+          } else {
+            setPhotoUrl(null);
+          }
+        } catch (error) {
           setPhotoUrl(null);
         }
       };
@@ -87,9 +85,6 @@ const EditPlaceForm = ({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
-
       if (!initialPlaceTypeId) {
         setError("Тип места не определен");
         setIsSubmitting(false);
@@ -97,19 +92,13 @@ const EditPlaceForm = ({
       }
 
       // Обновляем только название и фото (тип места нельзя менять)
-      const updateData: { name: string | null; photo_url: string | null } = {
-        name: name.trim() || null,
-        photo_url: photoUrl || null,
-      };
-      
-      const { error: updateError } = await supabase
-        .from("places")
-        .update(updateData)
-        .eq("id", placeId);
+      const response = await apiClient.updatePlace(placeId, {
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
 
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw updateError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       // Местоположение не изменяется через форму редактирования

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, forwardRef, useImperativeHandle } from "react";
+import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,20 +54,14 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
 
     setIsAdding(true);
     try {
-      const response = await fetch("/api/entity-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entity_category: category,
-          code: newCode.trim(),
-          name: newName.trim(),
-        }),
+      const response = await apiClient.createEntityType({
+        entity_category: category,
+        code: newCode.trim(),
+        name: newName.trim(),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка добавления типа");
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Тип успешно добавлен");
@@ -95,20 +90,14 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await fetch("/api/entity-types", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: isEditing,
-          code: newCode.trim(),
-          name: newName.trim(),
-        }),
+      const response = await apiClient.updateEntityType({
+        id: isEditing,
+        code: newCode.trim(),
+        name: newName.trim(),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка обновления типа");
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Тип успешно обновлен");
@@ -130,14 +119,10 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await fetch(`/api/entity-types?id=${id}`, {
-        method: "DELETE",
-      });
+      const response = await apiClient.deleteEntityType(id);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка удаления типа");
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Тип успешно удален");

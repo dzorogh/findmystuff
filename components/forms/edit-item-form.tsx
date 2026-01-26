@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -44,16 +44,14 @@ const EditItemForm = ({
   useEffect(() => {
     if (open && itemId) {
       const loadPhoto = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("items")
-          .select("photo_url")
-          .eq("id", itemId)
-          .single();
-        
-        if (data?.photo_url) {
-          setPhotoUrl(data.photo_url);
-        } else {
+        try {
+          const response = await apiClient.getItem(itemId);
+          if (response.data?.photo_url) {
+            setPhotoUrl(response.data.photo_url);
+          } else {
+            setPhotoUrl(null);
+          }
+        } catch (error) {
           setPhotoUrl(null);
         }
       };
@@ -67,20 +65,14 @@ const EditItemForm = ({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
-
       // Обновляем только название вещи и фото
-      const { error: updateError } = await supabase
-        .from("items")
-        .update({
-          name: name.trim() || null,
-          photo_url: photoUrl || null,
-        })
-        .eq("id", itemId);
+      const response = await apiClient.updateItem(itemId, {
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
 
-      if (updateError) {
-        throw updateError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       // Сначала показываем toast

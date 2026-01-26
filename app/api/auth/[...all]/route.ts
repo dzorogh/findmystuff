@@ -7,9 +7,9 @@ const handler = toNextJsHandler(auth);
 export async function GET(request: Request) {
   try {
     return await handler.GET(request);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Better Auth GET Error:", error);
-    if (error.code === "ECONNREFUSED") {
+    if (error && typeof error === "object" && "code" in error && error.code === "ECONNREFUSED") {
       return NextResponse.json(
         {
           error: "Database connection failed",
@@ -25,9 +25,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     return await handler.POST(request);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Better Auth POST Error:", error);
-    if (error.code === "ECONNREFUSED") {
+    if (error && typeof error === "object" && "code" in error && error.code === "ECONNREFUSED") {
       return NextResponse.json(
         {
           error: "Database connection failed",

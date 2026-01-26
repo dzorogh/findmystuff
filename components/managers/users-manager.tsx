@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
+import { apiClient } from "@/lib/api-client";
 
 interface UsersManagerProps {
   isLoading?: boolean;
@@ -47,12 +48,11 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/users");
-      if (!response.ok) {
-        throw new Error("Ошибка загрузки пользователей");
+      const response = await apiClient.getUsers();
+      if (response.error) {
+        throw new Error(response.error);
       }
-      const data = await response.json();
-      setUsers(data.users || []);
+      setUsers(response.data?.users || []);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error(
@@ -88,13 +88,10 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
 
     try {
       setIsDeleting(true);
-      const response = await fetch(`/api/users?id=${userToDelete.id}`, {
-        method: "DELETE",
-      });
+      const response = await apiClient.deleteUser(userToDelete.id);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Ошибка удаления пользователя");
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Пользователь успешно удален");

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
+import type { Container } from "@/types/entity";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -125,50 +126,18 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     startLoading(isInitialLoad);
 
     try {
-      const supabase = createClient();
-      const { data: containersData, error: fetchError } = await supabase.rpc(
-        "get_containers_with_location",
-        {
-          search_query: query?.trim() || null,
-          show_deleted: showDeleted,
-          page_limit: 2000,
-          page_offset: 0,
-        }
-      );
+      const response = await apiClient.getContainers({
+        query: query?.trim(),
+        showDeleted,
+      });
 
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      if (!containersData || containersData.length === 0) {
+      if (!response.data || response.data.length === 0) {
         setContainers([]);
         finishLoading(isInitialLoad, 0);
         return;
       }
-      const containersWithLocation: Container[] = containersData.map((container: any) => ({
-        id: container.id,
-        name: container.name,
-        entity_type_id: container.entity_type_id || null,
-        entity_type: container.entity_type_code
-          ? {
-              code: container.entity_type_code,
-              name: container.entity_type_name,
-            }
-          : null,
-        marking_number: container.marking_number,
-        created_at: container.created_at,
-        deleted_at: container.deleted_at,
-        photo_url: container.photo_url,
-        itemsCount: container.items_count ?? 0,
-        last_location: container.destination_type
-          ? {
-              destination_type: container.destination_type,
-              destination_id: container.destination_id,
-              destination_name: container.destination_name,
-              moved_at: container.moved_at,
-            }
-          : null,
-      }));
+
+      const containersWithLocation: Container[] = response.data;
 
       let filteredContainers = containersWithLocation;
 
@@ -221,7 +190,10 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
 
     try {
-      await softDelete("containers", containerId);
+      const response = await apiClient.softDelete("containers", containerId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Контейнер успешно удален");
       loadContainers(searchQuery, false);
     } catch (err) {
@@ -232,7 +204,10 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
 
   const handleRestoreContainer = async (containerId: number) => {
     try {
-      await restoreDeleted("containers", containerId);
+      const response = await apiClient.restoreDeleted("containers", containerId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Контейнер успешно восстановлен");
       loadContainers(searchQuery, false);
     } catch (err) {
@@ -319,9 +294,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             >
                               {container.name || `Контейнер #${container.id}`}
                             </Link>
-                            {container.entity_type && generateMarking(container.entity_type.code as any, container.marking_number) && (
+                            {container.entity_type && generateMarking(container.entity_type.code, container.marking_number) && (
                               <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                                {generateMarking(container.entity_type.code as any, container.marking_number)}
+                                {generateMarking(container.entity_type.code, container.marking_number)}
                               </p>
                             )}
                             <div className="md:hidden mt-1 text-xs text-muted-foreground">

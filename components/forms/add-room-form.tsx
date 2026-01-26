@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -39,21 +39,13 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      
+      const response = await apiClient.createRoom({
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
 
-      const insertData: { name: string | null; photo_url: string | null } = {
-        name: name.trim() || null,
-        photo_url: photoUrl || null,
-      };
-      
-      const { error: insertError } = await supabase
-        .from("rooms")
-        .insert(insertData);
-
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw insertError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       setName("");

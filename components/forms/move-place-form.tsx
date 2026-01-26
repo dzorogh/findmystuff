@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { Divider } from "@/components/ui/divider";
@@ -49,16 +49,14 @@ const MovePlaceForm = ({ placeId, placeName, open, onOpenChange, onSuccess }: Mo
         return;
       }
 
-      const supabase = createClient();
-
-      const { error: insertError } = await supabase.from("transitions").insert({
+      const response = await apiClient.createTransition({
         place_id: placeId,
         destination_type: "room",
         destination_id: parseInt(selectedRoomId),
       });
 
-      if (insertError) {
-        throw insertError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       const destinationName = rooms.find((r) => r.id === parseInt(selectedRoomId))?.name ?? undefined;

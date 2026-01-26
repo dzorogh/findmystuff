@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,153 +35,8 @@ export default function Home() {
 
     setIsSearching(true);
     try {
-      const supabase = createClient();
-      const query = queryToSearch.trim();
-
-        // Поиск по вещам, местам, контейнерам и помещениям параллельно
-        const [itemsResult, placesResult, containersResult, roomsResult] = await Promise.all([
-          supabase
-            .from("items")
-            .select("id, name")
-            .ilike("name", `%${query}%`)
-            .is("deleted_at", null)
-            .limit(10),
-          supabase
-            .from("places")
-            .select("id, name")
-            .ilike("name", `%${query}%`)
-            .is("deleted_at", null)
-            .limit(10),
-          supabase
-            .from("containers")
-            .select("id, name")
-            .ilike("name", `%${query}%`)
-            .is("deleted_at", null)
-            .limit(10),
-          supabase
-            .from("rooms")
-            .select("id, name")
-            .ilike("name", `%${query}%`)
-            .is("deleted_at", null)
-            .limit(10),
-        ]);
-
-      const results: SearchResult[] = [];
-
-      // Добавляем вещи с их местоположениями
-      if (itemsResult.data) {
-        const itemIds = itemsResult.data.map((item) => item.id);
-        
-        // Получаем последние переходы для найденных вещей
-        const { data: transitions } = await supabase
-          .from("transitions")
-          .select("*")
-          .in("item_id", itemIds)
-          .order("created_at", { ascending: false });
-
-        // Группируем по item_id и берем последний
-        const lastTransitions = new Map<number, any>();
-        transitions?.forEach((t) => {
-          if (!lastTransitions.has(t.item_id)) {
-            lastTransitions.set(t.item_id, t);
-          }
-        });
-
-          // Получаем названия мест, контейнеров и помещений
-          const placeIds = Array.from(lastTransitions.values())
-            .filter((t) => t.destination_type === "place")
-            .map((t) => t.destination_id);
-          const containerIds = Array.from(lastTransitions.values())
-            .filter((t) => t.destination_type === "container")
-            .map((t) => t.destination_id);
-          const roomIds = Array.from(lastTransitions.values())
-            .filter((t) => t.destination_type === "room")
-            .map((t) => t.destination_id);
-
-          const [placesData, containersData, roomsData] = await Promise.all([
-            placeIds.length > 0
-              ? supabase.from("places").select("id, name").in("id", placeIds)
-              : { data: [] },
-            containerIds.length > 0
-              ? supabase.from("containers").select("id, name").in("id", containerIds)
-              : { data: [] },
-            roomIds.length > 0
-              ? supabase.from("rooms").select("id, name").in("id", roomIds)
-              : { data: [] },
-          ]);
-
-          const placesMap = new Map(
-            (placesData.data || []).map((p) => [p.id, p.name])
-          );
-          const containersMap = new Map(
-            (containersData.data || []).map((c) => [c.id, c.name])
-          );
-          const roomsMap = new Map(
-            (roomsData.data || []).map((r) => [r.id, r.name])
-          );
-
-        itemsResult.data.forEach((item) => {
-          const transition = lastTransitions.get(item.id);
-          let location: string | undefined;
-          let locationType: "place" | "container" | "room" | undefined;
-
-            if (transition) {
-              if (transition.destination_type === "place") {
-                location = placesMap.get(transition.destination_id) || undefined;
-                locationType = "place";
-              } else if (transition.destination_type === "container") {
-                location = containersMap.get(transition.destination_id) || undefined;
-                locationType = "container";
-              } else if (transition.destination_type === "room") {
-                location = roomsMap.get(transition.destination_id) || undefined;
-                locationType = "room";
-              }
-            }
-
-          results.push({
-            type: "item",
-            id: item.id,
-            name: item.name,
-            location,
-            locationType,
-          });
-        });
-      }
-
-      // Добавляем места
-      if (placesResult.data) {
-        placesResult.data.forEach((place) => {
-          results.push({
-            type: "place",
-            id: place.id,
-            name: place.name,
-          });
-        });
-      }
-
-        // Добавляем контейнеры
-        if (containersResult.data) {
-          containersResult.data.forEach((container) => {
-            results.push({
-              type: "container",
-              id: container.id,
-              name: container.name,
-            });
-          });
-        }
-
-        // Добавляем помещения
-        if (roomsResult.data) {
-          roomsResult.data.forEach((room) => {
-            results.push({
-              type: "room",
-              id: room.id,
-              name: room.name,
-            });
-          });
-        }
-
-        setSearchResults(results);
+      const response = await apiClient.search(queryToSearch.trim());
+      setSearchResults(response.data || []);
     } catch (error) {
       console.error("Ошибка поиска:", error);
       setSearchResults([]);

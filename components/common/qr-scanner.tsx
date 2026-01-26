@@ -16,7 +16,7 @@ interface QRScannerProps {
 
 const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   const [mounted, setMounted] = useState(false);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<{ clear: () => Promise<void>; stop: () => Promise<void> } | null>(null);
   const isScanningRef = useRef(false);
   const isInitializingRef = useRef(false);
   const initAttemptRef = useRef(0);
@@ -270,13 +270,23 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         const html5QrcodeModule = await import("html5-qrcode");
         
         // Различные варианты экспорта модуля
-        let Html5Qrcode: any;
-        if (html5QrcodeModule.Html5Qrcode) {
-          Html5Qrcode = html5QrcodeModule.Html5Qrcode;
-        } else if ((html5QrcodeModule as any).default?.Html5Qrcode) {
-          Html5Qrcode = (html5QrcodeModule as any).default.Html5Qrcode;
-        } else if ((html5QrcodeModule as any).default) {
-          Html5Qrcode = (html5QrcodeModule as any).default;
+        type Html5QrcodeConstructor = new (elementId: string) => {
+          start: (cameraId: string, config: { fps: number }, callback: (decodedText: string) => void) => Promise<void>;
+          stop: () => Promise<void>;
+          clear: () => Promise<void>;
+        };
+        type Html5QrcodeModule = {
+          Html5Qrcode?: Html5QrcodeConstructor;
+          default?: Html5QrcodeConstructor | { Html5Qrcode?: Html5QrcodeConstructor };
+        };
+        let Html5Qrcode: Html5QrcodeConstructor | undefined;
+        const module = html5QrcodeModule as unknown as Html5QrcodeModule;
+        if (module.Html5Qrcode) {
+          Html5Qrcode = module.Html5Qrcode;
+        } else if (module.default && typeof module.default === "object" && "Html5Qrcode" in module.default) {
+          Html5Qrcode = module.default.Html5Qrcode;
+        } else if (module.default && typeof module.default === "function") {
+          Html5Qrcode = module.default as Html5QrcodeConstructor;
         } else {
           throw new Error("Не удалось найти Html5Qrcode в модуле. Проверьте установку пакета html5-qrcode.");
         }
@@ -293,7 +303,8 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         }
 
         // Получаем список камер
-        let devices: any[] = [];
+        type CameraDevice = { id: string; label: string };
+        let devices: CameraDevice[] = [];
         try {
           devices = await Html5Qrcode.getCameras();
         } catch (cameraError) {

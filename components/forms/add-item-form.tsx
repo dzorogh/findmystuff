@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -42,9 +42,6 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      
-
       // Проверяем, что если выбран тип назначения, то и ID тоже выбран
       if (destinationType && !selectedDestinationId) {
         setError("Выберите конкретное место или контейнер");
@@ -53,33 +50,15 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       }
 
       // Добавляем вещь
-      const { data: newItem, error: insertError } = await supabase
-        .from("items")
-        .insert({
-          name: name.trim() || null,
-          photo_url: photoUrl || null,
-        })
-        .select()
-        .single();
+      const response = await apiClient.createItem({
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+        destination_type: destinationType || undefined,
+        destination_id: selectedDestinationId ? parseInt(selectedDestinationId) : undefined,
+      });
 
-      if (insertError) {
-        throw insertError;
-      }
-
-      // Если указано местоположение, создаем transition
-      if (destinationType && selectedDestinationId && newItem) {
-        const { error: transitionError } = await supabase
-          .from("transitions")
-          .insert({
-            item_id: newItem.id,
-            destination_type: destinationType,
-            destination_id: parseInt(selectedDestinationId),
-          });
-
-        if (transitionError) {
-          console.error("Ошибка при создании transition:", transitionError);
-          // Не прерываем процесс, вещь уже добавлена
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       setName("");

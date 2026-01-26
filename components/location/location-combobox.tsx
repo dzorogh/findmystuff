@@ -87,7 +87,7 @@ const LocationCombobox = ({
     (dest) => dest.id.toString() === selectedDestinationId
   );
 
-  const getDisplayName = (dest: any) => {
+  const getDisplayName = (dest: { entity_type?: { code: string } | null; marking_number?: number | null; name?: string | null }) => {
     const containerMarking =
       destinationType === "container" &&
       dest.entity_type &&

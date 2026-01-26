@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -49,26 +49,24 @@ const EditContainerForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Загружаем текущее фото при открытии формы
-  useEffect(() => {
-    if (open && containerId) {
-      const loadPhoto = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("containers")
-          .select("photo_url")
-          .eq("id", containerId)
-          .single();
-        
-        if (data?.photo_url) {
-          setPhotoUrl(data.photo_url);
-        } else {
-          setPhotoUrl(null);
+      // Загружаем текущее фото при открытии формы
+      useEffect(() => {
+        if (open && containerId) {
+          const loadPhoto = async () => {
+            try {
+              const response = await apiClient.getContainer(containerId);
+              if (response.data?.photo_url) {
+                setPhotoUrl(response.data.photo_url);
+              } else {
+                setPhotoUrl(null);
+              }
+            } catch (error) {
+              setPhotoUrl(null);
+            }
+          };
+          loadPhoto();
         }
-      };
-      loadPhoto();
-    }
-  }, [open, containerId]);
+      }, [open, containerId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,20 +74,14 @@ const EditContainerForm = ({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-
-
       // Обновляем только название и фото (тип контейнера нельзя менять)
-      const { error: updateError } = await supabase
-        .from("containers")
-        .update({
-          name: name.trim() || null,
-          photo_url: photoUrl || null,
-        })
-        .eq("id", containerId);
+      const response = await apiClient.updateContainer(containerId, {
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
 
-      if (updateError) {
-        throw updateError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       toast.success("Контейнер успешно обновлен");

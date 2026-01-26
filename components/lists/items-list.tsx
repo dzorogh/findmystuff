@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import MoveItemForm from "@/components/forms/move-item-form";
 import EditItemForm from "@/components/forms/edit-item-form";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -159,26 +159,19 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     startLoadingRef.current(isInitialLoad);
 
     try {
-      const supabase = createClient();
-
-      const from = (page - 1) * itemsPerPage;
-      const { data: itemsData, error: itemsError } = await supabase.rpc("get_items_with_room", {
-        search_query: query?.trim() || null,
-        show_deleted: showDeleted,
-        page_limit: itemsPerPage,
-        page_offset: from,
-        location_type: filters.locationType,
-        room_id: filters.roomId,
-        has_photo: filters.hasPhoto,
+      const response = await apiClient.getItems({
+        query: query?.trim(),
+        showDeleted,
+        page,
+        limit: itemsPerPage,
+        locationType: filters.locationType,
+        roomId: filters.roomId,
+        hasPhoto: filters.hasPhoto,
       });
 
       if (!isMountedRef.current) return;
 
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      if (!itemsData || itemsData.length === 0) {
+      if (!response.data || response.data.length === 0) {
         if (isMountedRef.current) {
           setItems([]);
           setTotalCount(0);
@@ -186,29 +179,9 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         }
         return;
       }
-      const totalCountValue = itemsData[0]?.total_count ?? 0;
-      setTotalCount(totalCountValue);
 
-      const itemsWithLocation: Item[] = itemsData.map((item: any) => {
-        const hasLocation = Boolean(item.destination_type);
-
-        return {
-          id: item.id,
-          name: item.name,
-          created_at: item.created_at,
-          deleted_at: item.deleted_at,
-          photo_url: item.photo_url,
-          last_location: hasLocation
-            ? {
-                destination_type: item.destination_type,
-                destination_id: item.destination_id,
-                moved_at: item.moved_at,
-                room_name: item.room_name ?? null,
-                room_id: item.room_id ?? null,
-              }
-            : null,
-        };
-      });
+      setTotalCount(response.totalCount || 0);
+      const itemsWithLocation: Item[] = response.data;
 
       if (isMountedRef.current) {
         setItems(itemsWithLocation);
@@ -250,7 +223,10 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
 
     try {
-      await softDelete("items", itemId);
+      const response = await apiClient.softDelete("items", itemId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Вещь успешно удалена");
       loadItems(searchQuery, false, currentPage);
     } catch (err) {
@@ -261,7 +237,10 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const handleRestoreItem = async (itemId: number) => {
     try {
-      await restoreDeleted("items", itemId);
+      const response = await apiClient.restoreDeleted("items", itemId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Вещь успешно восстановлена");
       loadItems(searchQuery, false, currentPage);
     } catch (err) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import Image from "next/image";
 import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -102,36 +102,18 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     startLoading(isInitialLoad);
 
     try {
-      const supabase = createClient();
-      const { data: roomsData, error: fetchError } = await supabase.rpc(
-        "get_rooms_with_counts",
-        {
-          search_query: query?.trim() || null,
-          show_deleted: showDeleted,
-          page_limit: 2000,
-          page_offset: 0,
-        }
-      );
+      const response = await apiClient.getRooms({
+        query: query?.trim(),
+        showDeleted,
+      });
 
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      if (!roomsData || roomsData.length === 0) {
+      if (!response.data || response.data.length === 0) {
         setRooms([]);
         finishLoading(isInitialLoad, 0);
         return;
       }
-      let roomsWithCounts: Room[] = roomsData.map((room: any) => ({
-        id: room.id,
-        name: room.name,
-        created_at: room.created_at,
-        deleted_at: room.deleted_at,
-        photo_url: room.photo_url,
-        items_count: room.items_count ?? 0,
-        places_count: room.places_count ?? 0,
-        containers_count: room.containers_count ?? 0,
-      }));
+
+      let roomsWithCounts: Room[] = response.data;
 
       // Применяем фильтры
       if (filters.hasItems !== null) {
@@ -187,7 +169,10 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
 
     try {
-      await softDelete("rooms", roomId);
+      const response = await apiClient.softDelete("rooms", roomId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Помещение успешно удалено");
       loadRooms(searchQuery, false);
     } catch (err) {
@@ -198,7 +183,10 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const handleRestoreRoom = async (roomId: number) => {
     try {
-      await restoreDeleted("rooms", roomId);
+      const response = await apiClient.restoreDeleted("rooms", roomId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Помещение успешно восстановлено");
       loadRooms(searchQuery, false);
     } catch (err) {

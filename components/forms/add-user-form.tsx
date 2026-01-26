@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -40,26 +41,17 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          email_confirm: true,
-        }),
+      const response = await apiClient.createUser({
+        email: email.trim(),
+        email_confirm: true,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Ошибка создания пользователя");
+      if (response.error) {
+        throw new Error(response.error);
       }
-
-      const data = await response.json();
       
       toast.success("Пользователь успешно создан", {
-        description: data.password ? `Пароль: ${data.password}` : undefined,
+        description: response.data?.password ? `Пароль: ${response.data.password}` : undefined,
       });
       setEmail("");
 

@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-interface Room {
-  id: number;
-  name: string | null;
-}
+import { apiClient } from "@/lib/api-client";
+import type { Room } from "@/types/entity";
 
 export const useRooms = (includeDeleted = false) => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -18,22 +14,15 @@ export const useRooms = (includeDeleted = false) => {
     setIsLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      let query = supabase
-        .from("rooms")
-        .select("id, name")
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (!includeDeleted) {
-        query = query.is("deleted_at", null);
-      }
-
-      const { data, error: fetchError } = await query;
+      const response = await apiClient.getRoomsSimple(includeDeleted);
 
       if (!isMountedRef.current) return;
 
-      if (fetchError) throw fetchError;
-      setRooms(data || []);
+      if (response.error) throw new Error(response.error);
+      setRooms((response.data || []).map((room: Room) => ({
+        id: room.id,
+        name: room.name,
+      })));
     } catch (err) {
       if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки помещений");

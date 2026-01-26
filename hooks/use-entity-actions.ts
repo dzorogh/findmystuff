@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { apiClient } from "@/lib/api-client";
 
 interface UseEntityActionsOptions {
   entityType: "containers" | "items" | "places" | "rooms";
@@ -25,7 +25,10 @@ export const useEntityActions = ({
 
     setIsDeleting(true);
     try {
-      await softDelete(entityType, entityId);
+      const response = await apiClient.softDelete(entityType, entityId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success(`${entityName} успешно удален`);
       onSuccess?.();
     } catch (err) {
@@ -39,7 +42,10 @@ export const useEntityActions = ({
   const handleRestore = async () => {
     setIsRestoring(true);
     try {
-      await restoreDeleted(entityType, entityId);
+      const response = await apiClient.restoreDeleted(entityType, entityId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success(`${entityName} успешно восстановлен`);
       onSuccess?.();
     } catch (err) {

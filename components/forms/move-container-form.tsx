@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { Divider } from "@/components/ui/divider";
@@ -54,16 +54,14 @@ const MoveContainerForm = ({ containerId, containerName, open, onOpenChange, onS
         return;
       }
 
-      const supabase = createClient();
-
-      const { error: insertError } = await supabase.from("transitions").insert({
+      const response = await apiClient.createTransition({
         container_id: containerId,
         destination_type: destinationType,
         destination_id: parseInt(selectedDestinationId),
       });
 
-      if (insertError) {
-        throw insertError;
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       // Получаем название места назначения для toast

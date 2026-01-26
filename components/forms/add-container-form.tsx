@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -46,9 +46,6 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      
-
       // Проверяем, что если выбран тип назначения, то и ID тоже выбран
       if (destinationType && !selectedDestinationId) {
         setError("Выберите конкретное место или контейнер");
@@ -62,35 +59,16 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         return;
       }
 
-      // Добавляем контейнер
-      const { data: newContainer, error: insertError } = await supabase
-        .from("containers")
-        .insert({
-          name: name.trim() || null,
-          entity_type_id: parseInt(containerTypeId),
-          photo_url: photoUrl || null,
-        })
-        .select()
-        .single();
+      const response = await apiClient.createContainer({
+        name: name.trim() || undefined,
+        entity_type_id: parseInt(containerTypeId),
+        photo_url: photoUrl || undefined,
+        destination_type: destinationType || undefined,
+        destination_id: selectedDestinationId ? parseInt(selectedDestinationId) : undefined,
+      });
 
-      if (insertError) {
-        throw insertError;
-      }
-
-      // Если указано местоположение, создаем transition для контейнера
-      if (destinationType && selectedDestinationId && newContainer) {
-        const { error: transitionError } = await supabase
-          .from("transitions")
-          .insert({
-            container_id: newContainer.id,
-            destination_type: destinationType,
-            destination_id: parseInt(selectedDestinationId),
-          });
-
-        if (transitionError) {
-          console.error("Ошибка при создании transition:", transitionError);
-          // Не прерываем процесс, контейнер уже добавлен
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       setName("");

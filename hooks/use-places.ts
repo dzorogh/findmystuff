@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-interface Place {
-  id: number;
-  name: string | null;
-}
+import { apiClient } from "@/lib/api-client";
+import type { Place } from "@/types/entity";
 
 export const usePlaces = (includeDeleted = false) => {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -18,22 +14,15 @@ export const usePlaces = (includeDeleted = false) => {
     setIsLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      let query = supabase
-        .from("places")
-        .select("id, name")
-        .order("name", { ascending: true, nullsFirst: false });
-
-      if (!includeDeleted) {
-        query = query.is("deleted_at", null);
-      }
-
-      const { data, error: fetchError } = await query;
+      const response = await apiClient.getPlacesSimple(includeDeleted);
 
       if (!isMountedRef.current) return;
 
-      if (fetchError) throw fetchError;
-      setPlaces(data || []);
+      if (response.error) throw new Error(response.error);
+      setPlaces((response.data || []).map((place: Place) => ({
+        id: place.id,
+        name: place.name,
+      })));
     } catch (err) {
       if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки мест");

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import MovePlaceForm from "@/components/forms/move-place-form";
 import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { softDelete, restoreDeleted } from "@/lib/soft-delete";
+import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -113,47 +113,18 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     startLoading(isInitialLoad);
 
     try {
-      const supabase = createClient();
-      const { data: placesData, error: fetchError } = await supabase.rpc(
-        "get_places_with_room",
-        {
-          search_query: query?.trim() || null,
-          show_deleted: showDeleted,
-          page_limit: 2000,
-          page_offset: 0,
-        }
-      );
+      const response = await apiClient.getPlaces({
+        query: query?.trim(),
+        showDeleted,
+      });
 
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      if (!placesData || placesData.length === 0) {
+      if (!response.data || response.data.length === 0) {
         setPlaces([]);
         finishLoading(isInitialLoad, 0);
         return;
       }
-      const placesWithRooms: Place[] = placesData.map((place: any) => ({
-        id: place.id,
-        name: place.name,
-        entity_type_id: place.entity_type_id || null,
-        entity_type: place.entity_type_code
-          ? {
-              code: place.entity_type_code,
-              name: place.entity_type_name,
-            }
-          : null,
-        marking_number: place.marking_number ?? null,
-        created_at: place.created_at,
-        deleted_at: place.deleted_at,
-        photo_url: place.photo_url,
-        room: place.room_id
-          ? {
-              room_id: place.room_id,
-              room_name: place.room_name || null,
-            }
-          : null,
-      }));
+
+      const placesWithRooms: Place[] = response.data;
 
       // Применяем фильтры
       let filteredPlaces = placesWithRooms;
@@ -200,7 +171,10 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     }
 
     try {
-      await softDelete("places", placeId);
+      const response = await apiClient.softDelete("places", placeId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Место успешно удалено");
       loadPlaces(searchQuery, false);
     } catch (err) {
@@ -211,7 +185,10 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
 
   const handleRestorePlace = async (placeId: number) => {
     try {
-      await restoreDeleted("places", placeId);
+      const response = await apiClient.restoreDeleted("places", placeId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
       toast.success("Место успешно восстановлено");
       loadPlaces(searchQuery, false);
     } catch (err) {

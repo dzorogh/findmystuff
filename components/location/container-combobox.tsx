@@ -54,7 +54,7 @@ const ContainerCombobox = ({
     (container) => container.id.toString() === selectedContainerId
   );
 
-  const getDisplayName = (container: any) => {
+  const getDisplayName = (container: { entity_type?: { code: string } | null; marking_number?: number | null; name?: string | null }) => {
     const containerMarking =
       container.entity_type && "marking_number" in container
         ? generateMarking(

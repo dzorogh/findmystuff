@@ -45,7 +45,7 @@ const Sidebar = () => {
       { href: "/settings", label: "Настройки", icon: Settings },
     ];
 
-    const renderNavItem = (item: { href: string; label: string; icon: any }) => {
+    const renderNavItem = (item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
       const Icon = item.icon;
       const isActive = pathname === item.href;
       return (

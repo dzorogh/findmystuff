@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -49,26 +50,17 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/users", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: user.id,
-          email: email.trim(),
-        }),
+      const response = await apiClient.updateUser({
+        id: user.id,
+        email: email.trim(),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Ошибка обновления пользователя");
+      if (response.error) {
+        throw new Error(response.error);
       }
-
-      const data = await response.json();
       
       toast.success("Пользователь успешно обновлен", {
-        description: data.password ? `Новый пароль: ${data.password}` : undefined,
+        description: response.data?.password ? `Новый пароль: ${response.data.password}` : undefined,
       });
 
       if (onSuccess) {

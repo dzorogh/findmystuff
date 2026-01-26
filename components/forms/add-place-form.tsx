@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
@@ -45,29 +45,10 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      
-
       if (!placeTypeId) {
         setError("Необходимо выбрать тип места");
         setIsSubmitting(false);
         return;
-      }
-
-      const insertData: { name: string | null; entity_type_id: number; photo_url: string | null } = {
-        name: name.trim() || null,
-        entity_type_id: parseInt(placeTypeId),
-        photo_url: photoUrl || null,
-      };
-      
-      const { data: newPlace, error: insertError } = await supabase
-        .from("places")
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
       }
 
       // Помещение обязательно
@@ -77,17 +58,16 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         return;
       }
 
-      // Создаем transition для помещения
-      if (newPlace) {
-        const { error: transitionError } = await supabase.from("transitions").insert({
-          place_id: newPlace.id,
-          destination_type: "room",
-          destination_id: parseInt(selectedRoomId),
-        });
+      const response = await apiClient.createPlace({
+        name: name.trim() || undefined,
+        entity_type_id: parseInt(placeTypeId),
+        photo_url: photoUrl || undefined,
+        destination_type: "room",
+        destination_id: parseInt(selectedRoomId),
+      });
 
-        if (transitionError) {
-          throw transitionError;
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       setName("");

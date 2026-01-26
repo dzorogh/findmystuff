@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
@@ -59,32 +60,15 @@ const ImageUpload = ({
     setIsUploading(true);
     isUploadingRef.current = true;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const response = await apiClient.uploadPhoto(file);
 
-      const response = await fetch("/api/upload-photo", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Ошибка загрузки фото";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch {
-          errorMessage = `Ошибка сервера: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+      if (response.error || !response.data?.url) {
+        throw new Error(response.error || "Сервер не вернул URL загруженного файла");
       }
 
-      const data = await response.json();
-      if (!data.url) {
-        throw new Error("Сервер не вернул URL загруженного файла");
-      }
       // Обновляем preview на реальный URL и вызываем onChange
-      setPreview(data.url);
-      onChange(data.url);
+      setPreview(response.data.url);
+      onChange(response.data.url);
       // Даем время для обновления value prop перед снятием флага загрузки
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
