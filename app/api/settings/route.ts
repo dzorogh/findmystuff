@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = isUserSetting ? user.id : null;
+    const userId = isUserSetting ? user?.id ?? null : null;
 
     // Проверяем, существует ли настройка
     const { data: existing, error: checkError } = await supabase

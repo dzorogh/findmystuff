@@ -6,7 +6,7 @@ import type { Container } from "@/types/entity";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container, MapPin, Building2, Package, PackageX } from "lucide-react";
+import { Container as ContainerIcon, MapPin, Building2, Package, PackageX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -34,27 +34,6 @@ import {
 } from "@/components/ui/sheet";
 import { ContainersFiltersPanel, type ContainersFilters } from "@/components/filters/containers-filters-panel";
 import { toast } from "sonner";
-
-interface Container {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  entity_type?: {
-    code: string;
-    name: string;
-  } | null;
-  marking_number: number | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  itemsCount?: number;
-  last_location?: {
-    destination_type: string | null;
-    destination_id: number | null;
-    destination_name: string | null;
-    moved_at: string;
-  } | null;
-}
 
 interface ContainersListProps {
   refreshTrigger?: number;
@@ -144,7 +123,10 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         showDeleted,
       });
 
-      if (!response.data || response.data.length === 0) {
+      // API возвращает { data: Container[] }
+      // request возвращает это напрямую, поэтому response будет { data: Container[] }
+      // И response.data будет Container[]
+      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
         setContainers([]);
         finishLoading(isInitialLoad, 0);
         return;
@@ -265,7 +247,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         <ListSkeleton variant="table" rows={6} columns={5} />
       ) : containers.length === 0 ? (
         <EmptyState
-          icon={Container}
+          icon={ContainerIcon}
           title={searchQuery ? "По вашему запросу ничего не найдено" : "Контейнеры не найдены"}
         />
       ) : (
@@ -312,7 +294,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             </div>
                           ) : (
                             <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
-                              <Container className="h-5 w-5 text-muted-foreground" />
+                              <ContainerIcon className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
@@ -350,7 +332,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                   )}
                                   {container.last_location.destination_type === "container" && (
                                     <>
-                                      <Container className="h-3 w-3" />
+                                      <ContainerIcon className="h-3 w-3" />
                                       <span className="truncate">
                                         {container.last_location.destination_name ||
                                           `Контейнер #${container.last_location.destination_id}`}
@@ -388,7 +370,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             )}
                             {container.last_location.destination_type === "container" && (
                               <div className="flex items-center gap-2 text-sm">
-                                <Container className="h-4 w-4 text-primary flex-shrink-0" />
+                                <ContainerIcon className="h-4 w-4 text-primary flex-shrink-0" />
                                 <span>
                                   {container.last_location.destination_name ||
                                     `Контейнер #${container.last_location.destination_id}`}

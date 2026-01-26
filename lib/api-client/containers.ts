@@ -17,7 +17,10 @@ export class ContainersApi extends ApiClientBase {
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
 
     const queryString = searchParams.toString();
-    return this.request<{ data: Container[] }>(
+    // API возвращает { data: Container[] }
+    // request возвращает это напрямую, поэтому response будет { data: Container[] }
+    // И response.data будет Container[]
+    return this.request<Container[]>(
       `/containers${queryString ? `?${queryString}` : ""}`
     );
   }
@@ -31,7 +34,7 @@ export class ContainersApi extends ApiClientBase {
   }
 
   async getContainersSimple(includeDeleted = false) {
-    return this.request<{ data: Container[] }>(`/containers?showDeleted=${includeDeleted}`);
+    return this.request<Container[]>(`/containers?showDeleted=${includeDeleted}`);
   }
 
   async createContainer(data: {

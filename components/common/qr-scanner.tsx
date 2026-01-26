@@ -270,10 +270,23 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         const html5QrcodeModule = await import("html5-qrcode");
         
         // Различные варианты экспорта модуля
-        type Html5QrcodeConstructor = new (elementId: string) => {
-          start: (cameraId: string, config: { fps: number }, callback: (decodedText: string) => void) => Promise<void>;
+        type Html5QrcodeInstance = {
+          start: (
+            cameraId: string,
+            config: {
+              fps?: number;
+              qrbox?: { width: number; height: number };
+              aspectRatio?: number;
+              disableFlip?: boolean;
+            },
+            callback: (decodedText: string) => void,
+            errorCallback?: (errorMessage: string) => void
+          ) => Promise<void>;
           stop: () => Promise<void>;
           clear: () => Promise<void>;
+        };
+        type Html5QrcodeConstructor = (new (elementId: string, config?: { verbose?: boolean }) => Html5QrcodeInstance) & {
+          getCameras: () => Promise<Array<{ id: string; label: string }>>;
         };
         type Html5QrcodeModule = {
           Html5Qrcode?: Html5QrcodeConstructor;

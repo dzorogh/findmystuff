@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
           id: item.id,
           name: item.name,
           location: location || undefined,
+          locationType: locationType,
         });
       });
     }

@@ -109,7 +109,7 @@ export async function GET(
       if (itemsInRoom.length > 0) {
         const { data: itemsData } = await supabase
           .from("items")
-          .select("id, name, photo_url, created_at")
+          .select("id, name, photo_url, created_at, deleted_at")
           .in("id", itemsInRoom)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -145,7 +145,7 @@ export async function GET(
       if (placesInRoom.length > 0) {
         const { data: placesData } = await supabase
           .from("places")
-          .select("id, name, photo_url, created_at")
+          .select("id, name, photo_url, created_at, deleted_at, entity_type_id, marking_number")
           .in("id", placesInRoom)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -181,7 +181,7 @@ export async function GET(
       if (containersInRoom.length > 0) {
         const { data: containersData } = await supabase
           .from("containers")
-          .select("id, name, photo_url, created_at")
+          .select("id, name, photo_url, created_at, deleted_at, entity_type_id, marking_number")
           .in("id", containersInRoom)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });

@@ -48,8 +48,8 @@ const EditRoomForm = ({
       const loadPhoto = async () => {
         try {
           const response = await apiClient.getRoom(roomId);
-          if (response.data?.photo_url) {
-            setPhotoUrl(response.data.photo_url);
+          if (response.data?.room?.photo_url) {
+            setPhotoUrl(response.data.room.photo_url);
           } else {
             setPhotoUrl(null);
           }

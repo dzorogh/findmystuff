@@ -31,7 +31,11 @@ export class ItemsApi extends ApiClientBase {
     }
 
     const queryString = searchParams.toString();
-    return this.request<{ data: Item[]; totalCount: number }>(
+    // API возвращает { data: Item[], totalCount: number }
+    // request возвращает это напрямую как jsonData
+    // Так что response будет { data: Item[], totalCount: number }
+    // И response.data будет Item[]
+    return this.request<Item[]>(
       `/items${queryString ? `?${queryString}` : ""}`
     );
   }

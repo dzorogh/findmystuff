@@ -60,8 +60,8 @@ const EditPlaceForm = ({
       const loadPhoto = async () => {
         try {
           const response = await apiClient.getPlace(placeId);
-          if (response.data?.photo_url) {
-            setPhotoUrl(response.data.photo_url);
+          if (response.data?.place?.photo_url) {
+            setPhotoUrl(response.data.place.photo_url);
           } else {
             setPhotoUrl(null);
           }

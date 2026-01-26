@@ -11,14 +11,7 @@ import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucid
 import GoogleSignIn from "@/components/auth/google-signin";
 import Logo from "@/components/common/logo";
 import { useUser } from "@/hooks/use-user";
-
-interface SearchResult {
-  type: "item" | "place" | "container" | "room";
-  id: number;
-  name: string | null;
-  location?: string;
-  locationType?: "place" | "container" | "room";
-}
+import type { SearchResult } from "@/types/entity";
 
 export default function Home() {
   const { user, isLoading } = useUser();
@@ -36,6 +29,9 @@ export default function Home() {
     setIsSearching(true);
     try {
       const response = await apiClient.search(queryToSearch.trim());
+      // API возвращает { data: SearchResult[] }
+      // request возвращает это напрямую, поэтому response будет { data: SearchResult[] }
+      // И response.data будет SearchResult[]
       setSearchResults(response.data || []);
     } catch (error) {
       console.error("Ошибка поиска:", error);

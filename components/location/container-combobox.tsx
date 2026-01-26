@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Container } from "lucide-react";
+import { Check, ChevronsUpDown, Container as ContainerIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ import { FormField } from "@/components/ui/form-field";
 import { useContainers } from "@/hooks/use-containers";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { type ContainerType } from "@/lib/utils";
+import type { Container } from "@/types/entity";
 
 interface ContainerComboboxProps {
   selectedContainerId: string;
@@ -54,7 +55,7 @@ const ContainerCombobox = ({
     (container) => container.id.toString() === selectedContainerId
   );
 
-  const getDisplayName = (container: { entity_type?: { code: string } | null; marking_number?: number | null; name?: string | null }) => {
+  const getDisplayName = (container: Container) => {
     const containerMarking =
       container.entity_type && "marking_number" in container
         ? generateMarking(

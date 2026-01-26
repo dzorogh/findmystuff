@@ -18,7 +18,10 @@ export class PlacesApi extends ApiClientBase {
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
 
     const queryString = searchParams.toString();
-    return this.request<{ data: Place[] }>(
+    // API возвращает { data: Place[] }
+    // request возвращает это напрямую, поэтому response будет { data: Place[] }
+    // И response.data будет Place[]
+    return this.request<Place[]>(
       `/places${queryString ? `?${queryString}` : ""}`
     );
   }
@@ -33,7 +36,7 @@ export class PlacesApi extends ApiClientBase {
   }
 
   async getPlacesSimple(includeDeleted = false) {
-    return this.request<{ data: Place[] }>(`/places?showDeleted=${includeDeleted}`);
+    return this.request<Place[]>(`/places?showDeleted=${includeDeleted}`);
   }
 
   async createPlace(data: {

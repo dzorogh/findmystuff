@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useEntityTypes, type EntityType } from "@/hooks/use-entity-types";
+import { useEntityTypes } from "@/hooks/use-entity-types";
+import type { EntityType } from "@/types/entity";
 import {
   Table,
   TableBody,

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
@@ -31,18 +31,85 @@ export default function SettingsPage() {
 
   if (isLoading || isUserLoading) {
     return (
-      <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
+      <div className="container mx-auto py-8 px-4">
         <div className="mx-auto max-w-4xl space-y-6">
-          <Skeleton className="h-10 w-48" />
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-64 mt-2" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
-          </Card>
+          {/* Раздел: Контейнеры */}
+          <div className="space-y-4">
+            <Skeleton className="h-7 w-32" />
+            
+            {/* Типы контейнеров */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                  </div>
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Шаблон маркировки контейнеров */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-56" />
+                <Skeleton className="h-4 w-64 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Раздел: Места */}
+          <div className="space-y-4">
+            <Skeleton className="h-7 w-24" />
+            
+            {/* Типы мест */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                  </div>
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Шаблон маркировки мест */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
@@ -55,16 +122,6 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex items-center gap-3">
-          <Settings className="h-6 w-6 sm:h-8 sm:w-8" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Настройки</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Управление настройками приложения
-            </p>
-          </div>
-        </div>
-
         {error && (
           <Card className="border-destructive">
             <CardContent className="pt-6">

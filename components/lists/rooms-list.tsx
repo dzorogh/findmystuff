@@ -23,17 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { RoomsFiltersPanel, type RoomsFilters } from "@/components/filters/rooms-filters-panel";
 import { toast } from "sonner";
-
-interface Room {
-  id: number;
-  name: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  items_count: number;
-  places_count: number;
-  containers_count: number;
-}
+import type { Room } from "@/types/entity";
 
 interface RoomsListProps {
   refreshTrigger?: number;
@@ -125,7 +115,10 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         return;
       }
 
-      if (!response.data || response.data.length === 0) {
+      // API возвращает { data: Room[] }
+      // request возвращает это напрямую, поэтому response будет { data: Room[] }
+      // И response.data будет Room[]
+      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
         setRooms([]);
         finishLoading(isInitialLoad, 0);
         return;
@@ -136,17 +129,17 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       // Применяем фильтры
       if (filters.hasItems !== null) {
         roomsWithCounts = roomsWithCounts.filter((room) =>
-          filters.hasItems ? room.items_count > 0 : room.items_count === 0
+          filters.hasItems ? (room.items_count || 0) > 0 : (room.items_count || 0) === 0
         );
       }
       if (filters.hasContainers !== null) {
         roomsWithCounts = roomsWithCounts.filter((room) =>
-          filters.hasContainers ? room.containers_count > 0 : room.containers_count === 0
+          filters.hasContainers ? (room.containers_count || 0) > 0 : (room.containers_count || 0) === 0
         );
       }
       if (filters.hasPlaces !== null) {
         roomsWithCounts = roomsWithCounts.filter((room) =>
-          filters.hasPlaces ? room.places_count > 0 : room.places_count === 0
+          filters.hasPlaces ? (room.places_count || 0) > 0 : (room.places_count || 0) === 0
         );
       }
 

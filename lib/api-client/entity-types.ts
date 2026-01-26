@@ -12,7 +12,10 @@ import type {
 export class EntityTypesApi extends ApiClientBase {
   async getEntityTypes(category?: string) {
     const url = category ? `/entity-types?category=${category}` : "/entity-types";
-    return this.request<{ data: EntityType[] }>(url);
+    // API возвращает { data: EntityType[] }
+    // request возвращает это напрямую, поэтому response будет { data: EntityType[] }
+    // И response.data будет EntityType[]
+    return this.request<EntityType[]>(url);
   }
 
   async createEntityType(data: {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, MapPin, Container, Building2 } from "lucide-react";
+import { Check, ChevronsUpDown, MapPin, Container as ContainerIcon, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
 import { useContainerMarking } from "@/hooks/use-container-marking";
 import { type ContainerType } from "@/lib/utils";
+import type { Container, Place, Room } from "@/types/entity";
 
 interface LocationComboboxProps {
   destinationType: "room" | "place" | "container" | null;
@@ -75,11 +76,11 @@ const LocationCombobox = ({
     ? [
         { type: "room" as const, label: "Помещение", icon: Building2 },
         { type: "place" as const, label: "Место", icon: MapPin },
-        { type: "container" as const, label: "Контейнер", icon: Container },
+        { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
       ]
     : [
         { type: "place" as const, label: "Место", icon: MapPin },
-        { type: "container" as const, label: "Контейнер", icon: Container },
+        { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
         { type: "room" as const, label: "Помещение", icon: Building2 },
       ];
 
@@ -87,14 +88,16 @@ const LocationCombobox = ({
     (dest) => dest.id.toString() === selectedDestinationId
   );
 
-  const getDisplayName = (dest: { entity_type?: { code: string } | null; marking_number?: number | null; name?: string | null }) => {
+  const getDisplayName = (dest: Container | Place | Room) => {
+    // Проверяем, что это Container или Place (у них есть entity_type и marking_number)
+    const isContainerOrPlace = "entity_type" in dest && "marking_number" in dest;
     const containerMarking =
       destinationType === "container" &&
-      dest.entity_type &&
-      "marking_number" in dest
+      isContainerOrPlace &&
+      (dest as Container | Place).entity_type
         ? generateMarking(
-            dest.entity_type.code as ContainerType,
-            dest.marking_number as number | null
+            (dest as Container | Place).entity_type!.code as ContainerType,
+            (dest as Container | Place).marking_number as number | null
           )
         : null;
 

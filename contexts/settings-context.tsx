@@ -45,7 +45,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(response.error);
       }
 
-      setSettings(response.data?.data || []);
+      // getSettings() возвращает { data: Setting[]; error: string | null }
+      // а не ApiResponse, поэтому используем response.data напрямую
+      setSettings(response.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки настроек");
       setSettings([]);

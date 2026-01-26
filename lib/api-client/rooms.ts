@@ -18,7 +18,10 @@ export class RoomsApi extends ApiClientBase {
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
 
     const queryString = searchParams.toString();
-    return this.request<{ data: Room[] }>(
+    // API возвращает { data: Room[] }
+    // request возвращает это напрямую, поэтому response будет { data: Room[] }
+    // И response.data будет Room[]
+    return this.request<Room[]>(
       `/rooms${queryString ? `?${queryString}` : ""}`
     );
   }
@@ -33,7 +36,7 @@ export class RoomsApi extends ApiClientBase {
   }
 
   async getRoomsSimple(includeDeleted = false) {
-    return this.request<{ data: Room[] }>(`/rooms?showDeleted=${includeDeleted}`);
+    return this.request<Room[]>(`/rooms?showDeleted=${includeDeleted}`);
   }
 
   async createRoom(data: {

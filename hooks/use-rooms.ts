@@ -19,10 +19,8 @@ export const useRooms = (includeDeleted = false) => {
       if (!isMountedRef.current) return;
 
       if (response.error) throw new Error(response.error);
-      setRooms((response.data || []).map((room: Room) => ({
-        id: room.id,
-        name: room.name,
-      })));
+      // API возвращает полные объекты Room[], используем их напрямую
+      setRooms(response.data || []);
     } catch (err) {
       if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки помещений");

@@ -128,20 +128,21 @@ export async function GET(
       .eq("destination_id", placeId)
       .order("created_at", { ascending: false });
 
-    const itemTransitionsMap = new Map<number, Transition>();
-    const containerTransitionsMap = new Map<number, Transition>();
+    // Используем Set для хранения ID, так как нам не нужны полные объекты Transition
+    const itemIdsSet = new Set<number>();
+    const containerIdsSet = new Set<number>();
 
     (allTransitionsData || []).forEach((t) => {
-      if (t.item_id && !itemTransitionsMap.has(t.item_id)) {
-        itemTransitionsMap.set(t.item_id, t);
+      if (t.item_id) {
+        itemIdsSet.add(t.item_id);
       }
-      if (t.container_id && !containerTransitionsMap.has(t.container_id)) {
-        containerTransitionsMap.set(t.container_id, t);
+      if (t.container_id) {
+        containerIdsSet.add(t.container_id);
       }
     });
 
-    const itemIds = Array.from(itemTransitionsMap.keys());
-    const containerIds = Array.from(containerTransitionsMap.keys());
+    const itemIds = Array.from(itemIdsSet);
+    const containerIds = Array.from(containerIdsSet);
 
     let placeItems: Item[] = [];
     let placeContainers: Container[] = [];
@@ -167,12 +168,23 @@ export async function GET(
       const lastItemTransitions = new Map<number, Transition>();
       const lastContainerTransitions = new Map<number, Transition>();
 
-      (allTransitionsData || []).forEach((t) => {
+      (allTransitionsData || []).forEach((t: any) => {
+        // Преобразуем данные из базы в тип Transition
+        const transition: Transition = {
+          id: t.id,
+          created_at: t.created_at,
+          item_id: t.item_id ?? null,
+          container_id: t.container_id ?? null,
+          place_id: t.place_id ?? null,
+          destination_type: t.destination_type,
+          destination_id: t.destination_id ?? null,
+        };
+
         if (t.item_id && !lastItemTransitions.has(t.item_id)) {
-          lastItemTransitions.set(t.item_id, t);
+          lastItemTransitions.set(t.item_id, transition);
         }
         if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
-          lastContainerTransitions.set(t.container_id, t);
+          lastContainerTransitions.set(t.container_id, transition);
         }
       });
 
@@ -186,7 +198,7 @@ export async function GET(
       if (itemsInPlace.length > 0) {
         const { data: itemsData } = await supabase
           .from("items")
-          .select("id, name, photo_url, created_at")
+          .select("id, name, photo_url, created_at, deleted_at")
           .in("id", itemsInPlace)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -204,7 +216,7 @@ export async function GET(
       if (containersInPlace.length > 0) {
         const { data: containersData } = await supabase
           .from("containers")
-          .select("id, name, photo_url, created_at")
+          .select("id, name, photo_url, created_at, deleted_at, entity_type_id, marking_number")
           .in("id", containersInPlace)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -261,6 +273,8 @@ export async function PUT(
 
     const updateData: {
       name?: string | null;
+      entity_type_id?: number | null;
+      marking_number?: string | null;
       photo_url?: string | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;

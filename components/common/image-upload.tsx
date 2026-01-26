@@ -62,8 +62,8 @@ const ImageUpload = ({
     try {
       const response = await apiClient.uploadPhoto(file);
 
-      if (response.error || !response.data?.url) {
-        throw new Error(response.error || "Сервер не вернул URL загруженного файла");
+      if (!response.data?.url) {
+        throw new Error("Сервер не вернул URL загруженного файла");
       }
 
       // Обновляем preview на реальный URL и вызываем onChange

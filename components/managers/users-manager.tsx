@@ -52,7 +52,14 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
       if (response.error) {
         throw new Error(response.error);
       }
-      setUsers(response.data?.users || []);
+      // API возвращает { users: User[] }
+      // request возвращает jsonData напрямую, поэтому response будет { users: User[] }
+      // Но ApiResponse<T> означает, что response.data будет T, то есть { users: User[] }
+      // Поэтому response.data.users будет User[]
+      // Но на самом деле request возвращает jsonData напрямую, поэтому response может быть { users: User[] }
+      // Проверяем оба варианта для совместимости
+      const users = (response.data as { users?: User[] })?.users || (response as unknown as { users?: User[] }).users || [];
+      setUsers(users);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error(

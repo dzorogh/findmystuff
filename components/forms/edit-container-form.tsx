@@ -55,8 +55,8 @@ const EditContainerForm = ({
           const loadPhoto = async () => {
             try {
               const response = await apiClient.getContainer(containerId);
-              if (response.data?.photo_url) {
-                setPhotoUrl(response.data.photo_url);
+              if (response.data?.container?.photo_url) {
+                setPhotoUrl(response.data.container.photo_url);
               } else {
                 setPhotoUrl(null);
               }

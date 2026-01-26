@@ -19,16 +19,8 @@ export const useContainers = (includeDeleted = false) => {
       if (!isMountedRef.current) return;
 
       if (response.error) throw new Error(response.error);
-      setContainers((response.data || []).map((container: Container) => ({
-        id: container.id,
-        name: container.name,
-        entity_type_id: container.entity_type_id || null,
-        entity_type: container.entity_type ? {
-          code: container.entity_type.code,
-          name: container.entity_type.name,
-        } : null,
-        marking_number: container.marking_number,
-      })));
+      // API возвращает полные объекты Container[], используем их напрямую
+      setContainers(response.data || []);
     } catch (err) {
       if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки контейнеров");

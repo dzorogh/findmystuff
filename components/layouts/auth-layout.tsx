@@ -14,9 +14,10 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const { user, isLoading } = useUser();
   const isAuthenticated = Boolean(user);
   const isHomePage = pathname === "/";
+  const isSettingsPage = pathname === "/settings";
   const baseMainClasses =
     "h-[100svh] h-[100dvh] bg-background overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch]";
-  const mobileTopPadding = isAuthenticated && !isHomePage
+  const mobileTopPadding = isAuthenticated && !isHomePage && !isSettingsPage
     ? "pt-[calc(var(--app-safe-top)+var(--app-header-height))]"
     : "pt-[var(--app-safe-top)]";
   const mobileBottomPadding = isAuthenticated

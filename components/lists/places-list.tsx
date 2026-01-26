@@ -131,7 +131,10 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         showDeleted,
       });
 
-      if (!response.data || response.data.length === 0) {
+      // API возвращает { data: Place[] }
+      // request возвращает это напрямую, поэтому response будет { data: Place[] }
+      // И response.data будет Place[]
+      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
         setPlaces([]);
         finishLoading(isInitialLoad, 0);
         return;

@@ -46,8 +46,8 @@ const EditItemForm = ({
       const loadPhoto = async () => {
         try {
           const response = await apiClient.getItem(itemId);
-          if (response.data?.photo_url) {
-            setPhotoUrl(response.data.photo_url);
+          if (response.data?.item?.photo_url) {
+            setPhotoUrl(response.data.item.photo_url);
           } else {
             setPhotoUrl(null);
           }

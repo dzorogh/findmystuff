@@ -231,7 +231,7 @@ export async function GET(
         if (itemsInContainer.length > 0) {
           const { data: itemsData } = await supabase
             .from("items")
-            .select("id, name, photo_url, created_at")
+            .select("id, name, photo_url, created_at, deleted_at")
             .in("id", itemsInContainer)
             .is("deleted_at", null)
             .order("created_at", { ascending: false });
@@ -288,6 +288,8 @@ export async function PUT(
 
     const updateData: {
       name?: string | null;
+      entity_type_id?: number | null;
+      marking_number?: string | null;
       photo_url?: string | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;

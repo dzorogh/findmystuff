@@ -69,6 +69,7 @@ export interface Container extends BaseEntity {
   location_type?: string | null;
   location_id?: number | null;
   location_name?: string | null;
+  itemsCount?: number;
 }
 
 export interface Room extends BaseEntity {
@@ -90,6 +91,7 @@ export interface SearchResult {
   name: string | null;
   type: "item" | "place" | "container" | "room";
   location?: string | null;
+  locationType?: "place" | "container" | "room";
 }
 
 // Типы для пользователей

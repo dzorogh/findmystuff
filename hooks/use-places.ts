@@ -19,10 +19,8 @@ export const usePlaces = (includeDeleted = false) => {
       if (!isMountedRef.current) return;
 
       if (response.error) throw new Error(response.error);
-      setPlaces((response.data || []).map((place: Place) => ({
-        id: place.id,
-        name: place.name,
-      })));
+      // API возвращает полные объекты Place[], используем их напрямую
+      setPlaces(response.data || []);
     } catch (err) {
       if (!isMountedRef.current) return;
       const error = err instanceof Error ? err : new Error("Ошибка загрузки мест");

@@ -50,7 +50,10 @@ export const useEntityTypes = (category?: "place" | "container") => {
           if (response.error) {
             throw new Error(response.error);
           }
-          const loadedTypes = (response.data?.data as EntityType[]) || [];
+          // API возвращает { data: EntityType[] }
+          // request возвращает это напрямую, поэтому response будет { data: EntityType[] }
+          // И response.data будет EntityType[]
+          const loadedTypes = (response.data as EntityType[]) || [];
           const result = { types: loadedTypes, error: null };
           
           // Сохраняем результат в кеш

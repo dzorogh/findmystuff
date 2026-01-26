@@ -188,7 +188,10 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         return;
       }
 
-      if (!response.data || response.data.length === 0) {
+      // API возвращает { data: Item[], totalCount: number }
+      // request возвращает это напрямую, поэтому response будет { data: Item[], totalCount: number }
+      // Но ApiResponse<T> означает, что response.data будет T, то есть Item[]
+      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
         if (isMountedRef.current) {
           setItems([]);
           setTotalCount(0);
