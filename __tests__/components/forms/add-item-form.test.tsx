@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddItemForm from '@/components/forms/add-item-form'
 import { apiClient } from '@/lib/api-client'
@@ -77,7 +77,9 @@ describe('AddItemForm', () => {
     
     // Попытка отправить форму без заполнения полей
     const submitButton = screen.getByRole('button', { name: /добавить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     // Форма может отправиться с undefined значениями, что допустимо
     // Проверяем, что если форма отправилась, то с правильными данными
@@ -109,10 +111,14 @@ describe('AddItemForm', () => {
     )
 
     const nameInput = screen.getByLabelText(/название/i)
-    await user.type(nameInput, 'Новая вещь')
+    await act(async () => {
+      await user.type(nameInput, 'Новая вещь')
+    })
 
     const submitButton = screen.getByRole('button', { name: /добавить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockCreateItem).toHaveBeenCalledWith(
@@ -136,10 +142,14 @@ describe('AddItemForm', () => {
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 
     const nameInput = screen.getByLabelText(/название/i)
-    await user.type(nameInput, 'Вещь с ошибкой')
+    await act(async () => {
+      await user.type(nameInput, 'Вещь с ошибкой')
+    })
 
     const submitButton = screen.getByRole('button', { name: /добавить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/ошибка создания/i)).toBeInTheDocument()
@@ -151,7 +161,9 @@ describe('AddItemForm', () => {
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 
     const cancelButton = screen.getByRole('button', { name: /отмена/i })
-    await user.click(cancelButton)
+    await act(async () => {
+      await user.click(cancelButton)
+    })
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
@@ -164,10 +176,14 @@ describe('AddItemForm', () => {
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 
     const nameInput = screen.getByLabelText(/название/i)
-    await user.type(nameInput, 'Вещь для очистки')
+    await act(async () => {
+      await user.type(nameInput, 'Вещь для очистки')
+    })
 
     const submitButton = screen.getByRole('button', { name: /добавить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockCreateItem).toHaveBeenCalled()

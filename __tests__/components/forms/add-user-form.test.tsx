@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddUserForm from '@/components/forms/add-user-form'
 import { apiClient } from '@/lib/api-client'
@@ -46,7 +46,9 @@ describe('AddUserForm', () => {
 
     // Попытка отправить форму без email
     const submitButton = await screen.findByRole('button', { name: /добавить пользователя/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     // Проверяем, что ошибка отображается или API не вызывается
     await waitFor(() => {
@@ -83,10 +85,14 @@ describe('AddUserForm', () => {
     }, { timeout: 2000 })
 
     const emailInput = screen.getByLabelText(/email/i)
-    await user.type(emailInput, 'test@example.com')
+    await act(async () => {
+      await user.type(emailInput, 'test@example.com')
+    })
 
     const submitButton = screen.getByRole('button', { name: /добавить пользователя/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockCreateUser).toHaveBeenCalledWith({
@@ -114,10 +120,14 @@ describe('AddUserForm', () => {
     }, { timeout: 2000 })
 
     const emailInput = screen.getByLabelText(/email/i)
-    await user.type(emailInput, 'test@example.com')
+    await act(async () => {
+      await user.type(emailInput, 'test@example.com')
+    })
 
     const submitButton = screen.getByRole('button', { name: /добавить пользователя/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/ошибка создания/i)).toBeInTheDocument()
@@ -133,7 +143,9 @@ describe('AddUserForm', () => {
     }, { timeout: 2000 })
 
     const cancelButton = screen.getByRole('button', { name: /отмена/i })
-    await user.click(cancelButton)
+    await act(async () => {
+      await user.click(cancelButton)
+    })
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })

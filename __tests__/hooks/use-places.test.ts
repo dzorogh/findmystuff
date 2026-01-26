@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { usePlaces } from '@/hooks/use-places'
 import { apiClient } from '@/lib/api-client'
 
@@ -61,7 +61,9 @@ describe('usePlaces', () => {
 
     const callCount = (apiClient.getPlacesSimple as jest.Mock).mock.calls.length
 
-    result.current.refetch()
+    await act(async () => {
+      result.current.refetch()
+    })
 
     await waitFor(() => {
       expect((apiClient.getPlacesSimple as jest.Mock).mock.calls.length).toBe(

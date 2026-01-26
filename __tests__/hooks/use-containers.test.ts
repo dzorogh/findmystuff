@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useContainers } from '@/hooks/use-containers'
 import { apiClient } from '@/lib/api-client'
 
@@ -80,7 +80,9 @@ describe('useContainers', () => {
 
     const callCount = (apiClient.getContainersSimple as jest.Mock).mock.calls.length
 
-    result.current.refetch()
+    await act(async () => {
+      result.current.refetch()
+    })
 
     await waitFor(() => {
       expect((apiClient.getContainersSimple as jest.Mock).mock.calls.length).toBe(
@@ -90,11 +92,11 @@ describe('useContainers', () => {
   })
 
   it('показывает состояние загрузки', () => {
-    ;(apiClient.getContainers as jest.Mock).mockImplementation(
+    ;(apiClient.getContainersSimple as jest.Mock).mockImplementation(
       () => new Promise(() => {}) // Никогда не резолвится
     )
 
-    const { result } = renderHook(() => useContainers({ includeDeleted: false }))
+    const { result } = renderHook(() => useContainers(false))
 
     expect(result.current.isLoading).toBe(true)
     expect(result.current.containers).toEqual([])

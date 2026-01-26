@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   Dialog,
@@ -26,16 +26,18 @@ describe('Dialog', () => {
   })
 
   it('отображается, когда open = true', async () => {
-    render(
-      <Dialog open={true}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Тест Dialog</DialogTitle>
-            <DialogDescription>Описание</DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    )
+    await act(async () => {
+      render(
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Тест Dialog</DialogTitle>
+              <DialogDescription>Описание</DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Тест Dialog')).toBeInTheDocument()
@@ -44,15 +46,17 @@ describe('Dialog', () => {
   })
 
   it('отображает DialogHeader с правильными классами', async () => {
-    render(
-      <Dialog open={true}>
-        <DialogContent>
-          <DialogHeader className="custom-class">
-            <DialogTitle>Заголовок</DialogTitle>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    )
+    await act(async () => {
+      render(
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogHeader className="custom-class">
+              <DialogTitle>Заголовок</DialogTitle>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      )
+    })
 
     await waitFor(() => {
       const header = screen.getByText('Заголовок').closest('div')
@@ -61,15 +65,17 @@ describe('Dialog', () => {
   })
 
   it('отображает DialogFooter', async () => {
-    render(
-      <Dialog open={true}>
-        <DialogContent>
-          <DialogFooter>
-            <Button>Кнопка</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    )
+    await act(async () => {
+      render(
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogFooter>
+              <Button>Кнопка</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Кнопка')).toBeInTheDocument()
@@ -80,13 +86,15 @@ describe('Dialog', () => {
     const user = userEvent.setup()
     const mockOnOpenChange = jest.fn()
 
-    render(
-      <Dialog open={true} onOpenChange={mockOnOpenChange}>
-        <DialogContent>
-          <DialogTitle>Тест</DialogTitle>
-        </DialogContent>
-      </Dialog>
-    )
+    await act(async () => {
+      render(
+        <Dialog open={true} onOpenChange={mockOnOpenChange}>
+          <DialogContent>
+            <DialogTitle>Тест</DialogTitle>
+          </DialogContent>
+        </Dialog>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Тест')).toBeInTheDocument()
@@ -94,7 +102,9 @@ describe('Dialog', () => {
 
     // Ищем кнопку закрытия
     const closeButton = screen.getByRole('button', { name: /close/i })
-    await user.click(closeButton)
+    await act(async () => {
+      await user.click(closeButton)
+    })
 
     await waitFor(() => {
       expect(mockOnOpenChange).toHaveBeenCalledWith(false)
@@ -105,19 +115,23 @@ describe('Dialog', () => {
     const user = userEvent.setup()
     const mockOnOpenChange = jest.fn()
 
-    render(
-      <Dialog onOpenChange={mockOnOpenChange}>
-        <DialogTrigger asChild>
-          <Button>Открыть</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogTitle>Диалог</DialogTitle>
-        </DialogContent>
-      </Dialog>
-    )
+    await act(async () => {
+      render(
+        <Dialog onOpenChange={mockOnOpenChange}>
+          <DialogTrigger asChild>
+            <Button>Открыть</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogTitle>Диалог</DialogTitle>
+          </DialogContent>
+        </Dialog>
+      )
+    })
 
     const triggerButton = screen.getByText('Открыть')
-    await user.click(triggerButton)
+    await act(async () => {
+      await user.click(triggerButton)
+    })
 
     await waitFor(() => {
       expect(mockOnOpenChange).toHaveBeenCalledWith(true)

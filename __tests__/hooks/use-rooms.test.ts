@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useRooms } from '@/hooks/use-rooms'
 import { apiClient } from '@/lib/api-client'
 
@@ -82,7 +82,9 @@ describe('useRooms', () => {
 
     const callCount = (apiClient.getRoomsSimple as jest.Mock).mock.calls.length
 
-    result.current.refetch()
+    await act(async () => {
+      result.current.refetch()
+    })
 
     await waitFor(() => {
       expect((apiClient.getRoomsSimple as jest.Mock).mock.calls.length).toBe(

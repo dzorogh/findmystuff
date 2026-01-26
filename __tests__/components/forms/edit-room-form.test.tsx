@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditRoomForm from '@/components/forms/edit-room-form'
 import { apiClient } from '@/lib/api-client'
@@ -82,11 +82,15 @@ describe('EditRoomForm', () => {
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название/i)
-    await user.clear(nameInput)
-    await user.type(nameInput, 'Новое название')
+    await act(async () => {
+      await user.clear(nameInput)
+      await user.type(nameInput, 'Новое название')
+    })
 
     const submitButton = screen.getByRole('button', { name: /сохранить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(
       () => {

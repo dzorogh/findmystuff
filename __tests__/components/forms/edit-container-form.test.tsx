@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditContainerForm from '@/components/forms/edit-container-form'
 import { apiClient } from '@/lib/api-client'
@@ -100,11 +100,15 @@ describe('EditContainerForm', () => {
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название контейнера/i)
-    await user.clear(nameInput)
-    await user.type(nameInput, 'Новое название')
+    await act(async () => {
+      await user.clear(nameInput)
+      await user.type(nameInput, 'Новое название')
+    })
 
     const submitButton = screen.getByRole('button', { name: /сохранить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(
       () => {
@@ -149,10 +153,14 @@ describe('EditContainerForm', () => {
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название контейнера/i)
-    await user.type(nameInput, 'Новое название')
+    await act(async () => {
+      await user.type(nameInput, 'Новое название')
+    })
 
     const submitButton = screen.getByRole('button', { name: /сохранить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/ошибка обновления/i)).toBeInTheDocument()

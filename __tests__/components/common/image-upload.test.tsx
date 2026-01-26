@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ImageUpload from '@/components/common/image-upload'
 import { apiClient } from '@/lib/api-client'
@@ -155,7 +155,6 @@ describe('ImageUpload', () => {
   it('обрабатывает ошибку загрузки', async () => {
     const user = userEvent.setup()
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {})
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const mockUploadPhoto = jest
       .fn()
       .mockRejectedValue(new Error('Ошибка загрузки'))
@@ -167,13 +166,14 @@ describe('ImageUpload', () => {
     )
 
     const input = container.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(input, file)
+    await act(async () => {
+      await user.upload(input, file)
+    })
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalled()
     }, { timeout: 3000 })
 
     alertSpy.mockRestore()
-    consoleErrorSpy.mockRestore()
   })
 })

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   Sheet,
@@ -26,16 +26,18 @@ describe('Sheet', () => {
   })
 
   it('отображается, когда open = true', async () => {
-    render(
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Тест Sheet</SheetTitle>
-            <SheetDescription>Описание</SheetDescription>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
-    )
+    await act(async () => {
+      render(
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Тест Sheet</SheetTitle>
+              <SheetDescription>Описание</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Тест Sheet')).toBeInTheDocument()
@@ -44,15 +46,17 @@ describe('Sheet', () => {
   })
 
   it('отображает SheetHeader с правильными классами', async () => {
-    render(
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetHeader className="custom-class">
-            <SheetTitle>Заголовок</SheetTitle>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
-    )
+    await act(async () => {
+      render(
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetHeader className="custom-class">
+              <SheetTitle>Заголовок</SheetTitle>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      )
+    })
 
     await waitFor(() => {
       const header = screen.getByText('Заголовок').closest('div')
@@ -61,15 +65,17 @@ describe('Sheet', () => {
   })
 
   it('отображает SheetFooter', async () => {
-    render(
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetFooter>
-            <Button>Кнопка</Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    )
+    await act(async () => {
+      render(
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetFooter>
+              <Button>Кнопка</Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Кнопка')).toBeInTheDocument()
@@ -77,25 +83,31 @@ describe('Sheet', () => {
   })
 
   it('поддерживает разные стороны (side)', async () => {
-    const { rerender } = render(
-      <Sheet open={true}>
-        <SheetContent side="right">
-          <SheetTitle>Справа</SheetTitle>
-        </SheetContent>
-      </Sheet>
-    )
+    let rerender: any
+    await act(async () => {
+      const result = render(
+        <Sheet open={true}>
+          <SheetContent side="right">
+            <SheetTitle>Справа</SheetTitle>
+          </SheetContent>
+        </Sheet>
+      )
+      rerender = result.rerender
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Справа')).toBeInTheDocument()
     }, { timeout: 2000 })
 
-    rerender(
-      <Sheet open={true}>
-        <SheetContent side="left">
-          <SheetTitle>Слева</SheetTitle>
-        </SheetContent>
-      </Sheet>
-    )
+    await act(async () => {
+      rerender(
+        <Sheet open={true}>
+          <SheetContent side="left">
+            <SheetTitle>Слева</SheetTitle>
+          </SheetContent>
+        </Sheet>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Слева')).toBeInTheDocument()
@@ -106,13 +118,15 @@ describe('Sheet', () => {
     const user = userEvent.setup()
     const mockOnOpenChange = jest.fn()
 
-    render(
-      <Sheet open={true} onOpenChange={mockOnOpenChange}>
-        <SheetContent>
-          <SheetTitle>Тест</SheetTitle>
-        </SheetContent>
-      </Sheet>
-    )
+    await act(async () => {
+      render(
+        <Sheet open={true} onOpenChange={mockOnOpenChange}>
+          <SheetContent>
+            <SheetTitle>Тест</SheetTitle>
+          </SheetContent>
+        </Sheet>
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Тест')).toBeInTheDocument()
@@ -120,7 +134,9 @@ describe('Sheet', () => {
 
     // Ищем кнопку закрытия
     const closeButton = screen.getByRole('button', { name: /close/i })
-    await user.click(closeButton)
+    await act(async () => {
+      await user.click(closeButton)
+    })
 
     await waitFor(() => {
       expect(mockOnOpenChange).toHaveBeenCalledWith(false)

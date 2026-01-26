@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditItemForm from '@/components/forms/edit-item-form'
 import { apiClient } from '@/lib/api-client'
@@ -115,12 +115,16 @@ describe('EditItemForm', () => {
         { timeout: 2000 }
       )
 
-      const nameInput = screen.getByLabelText(/название вещи/i)
+    const nameInput = screen.getByLabelText(/название вещи/i)
+    await act(async () => {
       await user.clear(nameInput)
       await user.type(nameInput, 'Новое название')
+    })
 
-      const submitButton = screen.getByRole('button', { name: /сохранить/i })
+    const submitButton = screen.getByRole('button', { name: /сохранить/i })
+    await act(async () => {
       await user.click(submitButton)
+    })
 
       await waitFor(
         () => {

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditPlaceForm from '@/components/forms/edit-place-form'
 import { apiClient } from '@/lib/api-client'
@@ -101,11 +101,15 @@ describe('EditPlaceForm', () => {
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название места/i)
-    await user.clear(nameInput)
-    await user.type(nameInput, 'Новое название')
+    await act(async () => {
+      await user.clear(nameInput)
+      await user.type(nameInput, 'Новое название')
+    })
 
     const submitButton = screen.getByRole('button', { name: /сохранить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(
       () => {
@@ -150,10 +154,14 @@ describe('EditPlaceForm', () => {
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название места/i)
-    await user.type(nameInput, 'Новое название')
+    await act(async () => {
+      await user.type(nameInput, 'Новое название')
+    })
 
     const submitButton = screen.getByRole('button', { name: /сохранить/i })
-    await user.click(submitButton)
+    await act(async () => {
+      await user.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/ошибка обновления/i)).toBeInTheDocument()
