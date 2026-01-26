@@ -214,10 +214,12 @@ export async function GET(
     }
 
     return NextResponse.json({
-      place,
-      transitions: transitionsWithNames,
-      items: placeItems,
-      containers: placeContainers,
+      data: {
+        place,
+        transitions: transitionsWithNames,
+        items: placeItems,
+        containers: placeContainers,
+      },
     });
   } catch (error) {
     console.error("Ошибка загрузки данных места:", error);

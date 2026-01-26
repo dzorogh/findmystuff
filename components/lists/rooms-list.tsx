@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,6 @@ import Image from "next/image";
 import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -96,8 +95,22 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     hasPlaces: null,
   });
 
+  const isLoadingRef = useRef(false);
+  const requestKeyRef = useRef<string>("");
+
   const loadRooms = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
+
+    // Создаем уникальный ключ для запроса на основе параметров
+    const requestKey = `${query || ""}-${showDeleted}-${filters.hasItems}-${filters.hasContainers}-${filters.hasPlaces}-${filters.showDeleted}`;
+
+    // Проверяем, не выполняется ли уже такой же запрос
+    if (isLoadingRef.current && requestKeyRef.current === requestKey) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    requestKeyRef.current = requestKey;
 
     startLoading(isInitialLoad);
 
@@ -106,6 +119,11 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         query: query?.trim(),
         showDeleted,
       });
+
+      // Проверяем, не изменились ли параметры запроса во время выполнения
+      if (requestKeyRef.current !== requestKey) {
+        return;
+      }
 
       if (!response.data || response.data.length === 0) {
         setRooms([]);
@@ -132,11 +150,26 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         );
       }
 
+      // Проверяем еще раз перед обновлением состояния
+      if (requestKeyRef.current !== requestKey) {
+        return;
+      }
+
       setRooms(roomsWithCounts);
       finishLoading(isInitialLoad, roomsWithCounts.length);
     } catch (err) {
+      // Проверяем, не изменились ли параметры запроса во время выполнения
+      if (requestKeyRef.current !== requestKey) {
+        return;
+      }
       handleError(err, isInitialLoad);
       setRooms([]);
+    } finally {
+      // Сбрасываем флаг только если это был последний запрос
+      if (requestKeyRef.current === requestKey) {
+        isLoadingRef.current = false;
+        requestKeyRef.current = "";
+      }
     }
   };
 

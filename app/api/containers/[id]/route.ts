@@ -242,9 +242,11 @@ export async function GET(
     }
 
     return NextResponse.json({
-      container,
-      transitions: transitionsWithNames,
-      items: containerItems,
+      data: {
+        container,
+        transitions: transitionsWithNames,
+        items: containerItems,
+      },
     });
   } catch (error) {
     console.error("Ошибка загрузки данных контейнера:", error);

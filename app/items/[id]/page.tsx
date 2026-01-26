@@ -68,6 +68,17 @@ export default function ItemDetailPage() {
     try {
       const response = await apiClient.getItem(itemId);
 
+      // Проверяем наличие ошибки в ответе
+      if (response.error) {
+        setError(response.error);
+        setIsPageLoading(false);
+        setIsLoading(false);
+        setEntityName(null);
+        return;
+      }
+
+      // API endpoint возвращает { item, transitions } напрямую, но request оборачивает в ApiResponse
+      // Структура: { data: { item, transitions }, error?: string }
       if (!response.data || !response.data.item) {
         setError("Вещь не найдена");
         setIsPageLoading(false);

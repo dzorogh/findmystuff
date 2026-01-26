@@ -1,379 +1,189 @@
 /**
  * Общий API клиент для работы с бэкендом
+ * Объединяет все модули API в единый интерфейс
  */
 
-import type {
-  Item,
-  Place,
-  Container,
-  Room,
-  Transition,
-  EntityType,
-  User,
-  SearchResult,
-  CreateItemResponse,
-  CreatePlaceResponse,
-  CreateContainerResponse,
-  CreateRoomResponse,
-  CreateTransitionResponse,
-  CreateEntityTypeResponse,
-  UpdateEntityTypeResponse,
-} from "@/types/entity";
+import { ApiClientBase } from "./api-client/base";
+import { ItemsApi } from "./api-client/items";
+import { PlacesApi } from "./api-client/places";
+import { ContainersApi } from "./api-client/containers";
+import { RoomsApi } from "./api-client/rooms";
+import { TransitionsApi } from "./api-client/transitions";
+import { UsersApi } from "./api-client/users";
+import { EntityTypesApi } from "./api-client/entity-types";
+import { SearchApi } from "./api-client/search";
+import { SoftDeleteApi } from "./api-client/soft-delete";
+import { PhotoApi } from "./api-client/photo";
+import { SettingsApi } from "./api-client/settings";
+import { AuthApi } from "./api-client/auth";
 
-const API_BASE_URL = "/api";
-
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  totalCount?: number;
-}
-
-class ApiClient {
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
-      throw error;
-    }
-  }
+/**
+ * Главный класс API клиента, объединяющий все модули
+ */
+class ApiClient extends ApiClientBase {
+  private readonly itemsApi = new ItemsApi();
+  private readonly placesApi = new PlacesApi();
+  private readonly containersApi = new ContainersApi();
+  private readonly roomsApi = new RoomsApi();
+  private readonly transitionsApi = new TransitionsApi();
+  private readonly usersApi = new UsersApi();
+  private readonly entityTypesApi = new EntityTypesApi();
+  private readonly searchApi = new SearchApi();
+  private readonly softDeleteApi = new SoftDeleteApi();
+  private readonly photoApi = new PhotoApi();
+  private readonly settingsApi = new SettingsApi();
+  private readonly authApi = new AuthApi();
 
   // Items
-  async getItems(params?: {
-    query?: string;
-    showDeleted?: boolean;
-    page?: number;
-    limit?: number;
-    locationType?: string | null;
-    roomId?: number | null;
-    hasPhoto?: boolean | null;
-  }) {
-    const searchParams = new URLSearchParams();
-    if (params?.query) searchParams.set("query", params.query);
-    if (params?.showDeleted) searchParams.set("showDeleted", "true");
-    if (params?.page) searchParams.set("page", params.page.toString());
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.locationType) searchParams.set("locationType", params.locationType);
-    if (params?.roomId) searchParams.set("roomId", params.roomId.toString());
-    if (params?.hasPhoto !== undefined && params.hasPhoto !== null) {
-      searchParams.set("hasPhoto", params.hasPhoto ? "true" : "false");
-    }
-
-    const queryString = searchParams.toString();
-    return this.request<{ data: Item[]; totalCount: number }>(
-      `/items${queryString ? `?${queryString}` : ""}`
-    );
+  async getItems(params?: Parameters<ItemsApi["getItems"]>[0]) {
+    return this.itemsApi.getItems(params);
   }
 
   async getItem(id: number) {
-    return this.request<{ item: Item; transitions: Transition[] }>(`/items/${id}`);
+    return this.itemsApi.getItem(id);
+  }
+
+  async createItem(data: Parameters<ItemsApi["createItem"]>[0]) {
+    return this.itemsApi.createItem(data);
+  }
+
+  async updateItem(id: number, data: Parameters<ItemsApi["updateItem"]>[1]) {
+    return this.itemsApi.updateItem(id, data);
   }
 
   // Places
-  async getPlaces(params?: { query?: string; showDeleted?: boolean }) {
-    const searchParams = new URLSearchParams();
-    if (params?.query) searchParams.set("query", params.query);
-    if (params?.showDeleted) searchParams.set("showDeleted", "true");
-
-    const queryString = searchParams.toString();
-    return this.request<{ data: Place[] }>(
-      `/places${queryString ? `?${queryString}` : ""}`
-    );
+  async getPlaces(params?: Parameters<PlacesApi["getPlaces"]>[0]) {
+    return this.placesApi.getPlaces(params);
   }
 
   async getPlace(id: number) {
-    return this.request<{
-      place: Place;
-      transitions: Transition[];
-      items: Item[];
-      containers: Container[];
-    }>(`/places/${id}`);
+    return this.placesApi.getPlace(id);
+  }
+
+  async getPlacesSimple(includeDeleted = false) {
+    return this.placesApi.getPlacesSimple(includeDeleted);
+  }
+
+  async createPlace(data: Parameters<PlacesApi["createPlace"]>[0]) {
+    return this.placesApi.createPlace(data);
+  }
+
+  async updatePlace(id: number, data: Parameters<PlacesApi["updatePlace"]>[1]) {
+    return this.placesApi.updatePlace(id, data);
   }
 
   // Containers
-  async getContainers(params?: { query?: string; showDeleted?: boolean }) {
-    const searchParams = new URLSearchParams();
-    if (params?.query) searchParams.set("query", params.query);
-    if (params?.showDeleted) searchParams.set("showDeleted", "true");
-
-    const queryString = searchParams.toString();
-    return this.request<{ data: Container[] }>(
-      `/containers${queryString ? `?${queryString}` : ""}`
-    );
+  async getContainers(params?: Parameters<ContainersApi["getContainers"]>[0]) {
+    return this.containersApi.getContainers(params);
   }
 
   async getContainer(id: number) {
-    return this.request<{
-      container: Container;
-      transitions: Transition[];
-      items: Item[];
-    }>(`/containers/${id}`);
-  }
-
-  // Rooms
-  async getRooms(params?: { query?: string; showDeleted?: boolean }) {
-    const searchParams = new URLSearchParams();
-    if (params?.query) searchParams.set("query", params.query);
-    if (params?.showDeleted) searchParams.set("showDeleted", "true");
-
-    const queryString = searchParams.toString();
-    return this.request<{ data: Room[] }>(
-      `/rooms${queryString ? `?${queryString}` : ""}`
-    );
-  }
-
-  async getRoom(id: number) {
-    return this.request<{
-      room: Room;
-      items: Item[];
-      places: Place[];
-      containers: Container[];
-    }>(`/rooms/${id}`);
-  }
-
-  // Search
-  async search(query: string) {
-    return this.request<{ data: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}`);
-  }
-
-  // Simple lists (for hooks)
-  async getPlacesSimple(includeDeleted = false) {
-    return this.request<{ data: Place[] }>(`/places?showDeleted=${includeDeleted}`);
+    return this.containersApi.getContainer(id);
   }
 
   async getContainersSimple(includeDeleted = false) {
-    return this.request<{ data: Container[] }>(`/containers?showDeleted=${includeDeleted}`);
+    return this.containersApi.getContainersSimple(includeDeleted);
+  }
+
+  async createContainer(data: Parameters<ContainersApi["createContainer"]>[0]) {
+    return this.containersApi.createContainer(data);
+  }
+
+  async updateContainer(id: number, data: Parameters<ContainersApi["updateContainer"]>[1]) {
+    return this.containersApi.updateContainer(id, data);
+  }
+
+  // Rooms
+  async getRooms(params?: Parameters<RoomsApi["getRooms"]>[0]) {
+    return this.roomsApi.getRooms(params);
+  }
+
+  async getRoom(id: number) {
+    return this.roomsApi.getRoom(id);
   }
 
   async getRoomsSimple(includeDeleted = false) {
-    return this.request<{ data: Room[] }>(`/rooms?showDeleted=${includeDeleted}`);
+    return this.roomsApi.getRoomsSimple(includeDeleted);
   }
 
-  // Create operations
-  async createItem(data: {
-    name?: string;
-    photo_url?: string;
-    destination_type?: string;
-    destination_id?: number;
-  }) {
-    return this.request<CreateItemResponse>("/items", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  async createRoom(data: Parameters<RoomsApi["createRoom"]>[0]) {
+    return this.roomsApi.createRoom(data);
   }
 
-  async createPlace(data: {
-    name?: string;
-    entity_type_id?: number;
-    marking_number?: string;
-    photo_url?: string;
-    destination_type?: string;
-    destination_id?: number;
-  }) {
-    return this.request<CreatePlaceResponse>("/places", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async createContainer(data: {
-    name?: string;
-    entity_type_id?: number;
-    marking_number?: string;
-    photo_url?: string;
-    destination_type?: string;
-    destination_id?: number;
-  }) {
-    return this.request<CreateContainerResponse>("/containers", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async createRoom(data: {
-    name?: string;
-    photo_url?: string;
-  }) {
-    return this.request<CreateRoomResponse>("/rooms", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  // Update operations
-  async updateItem(id: number, data: { name?: string; photo_url?: string }) {
-    return this.request<Item>(`/items/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updatePlace(
-    id: number,
-    data: {
-      name?: string;
-      entity_type_id?: number;
-      marking_number?: string;
-      photo_url?: string;
-    }
-  ) {
-    return this.request<Place>(`/places/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateContainer(
-    id: number,
-    data: {
-      name?: string;
-      entity_type_id?: number;
-      marking_number?: string;
-      photo_url?: string;
-    }
-  ) {
-    return this.request<Container>(`/containers/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateRoom(id: number, data: { name?: string; photo_url?: string }) {
-    return this.request<Room>(`/rooms/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+  async updateRoom(id: number, data: Parameters<RoomsApi["updateRoom"]>[1]) {
+    return this.roomsApi.updateRoom(id, data);
   }
 
   // Transitions
-  async createTransition(data: {
-    item_id?: number;
-    place_id?: number;
-    container_id?: number;
-    destination_type: string;
-    destination_id: number;
-  }) {
-    return this.request<CreateTransitionResponse>("/transitions", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  async createTransition(data: Parameters<TransitionsApi["createTransition"]>[0]) {
+    return this.transitionsApi.createTransition(data);
   }
 
   // Users
   async getUsers() {
-    return this.request<{ users: User[] }>("/users");
+    return this.usersApi.getUsers();
   }
 
-  async createUser(data: { email: string; email_confirm?: boolean }) {
-    return this.request<{ user: User; password: string }>("/users", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  async createUser(data: Parameters<UsersApi["createUser"]>[0]) {
+    return this.usersApi.createUser(data);
   }
 
-  async updateUser(data: { id: string; email: string }) {
-    return this.request<{ user: User; password: string }>("/users", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+  async updateUser(data: Parameters<UsersApi["updateUser"]>[0]) {
+    return this.usersApi.updateUser(data);
   }
 
   async deleteUser(userId: string) {
-    return this.request<{ success: boolean }>(`/users?id=${userId}`, {
-      method: "DELETE",
-    });
+    return this.usersApi.deleteUser(userId);
   }
 
   // Entity Types
   async getEntityTypes(category?: string) {
-    const url = category ? `/entity-types?category=${category}` : "/entity-types";
-    return this.request<{ data: EntityType[] }>(url);
+    return this.entityTypesApi.getEntityTypes(category);
   }
 
-  async createEntityType(data: {
-    entity_category: "place" | "container";
-    code: string;
-    name: string;
-  }) {
-    return this.request<CreateEntityTypeResponse>("/entity-types", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  async createEntityType(data: Parameters<EntityTypesApi["createEntityType"]>[0]) {
+    return this.entityTypesApi.createEntityType(data);
   }
 
-  async updateEntityType(data: {
-    id: number;
-    code?: string;
-    name?: string;
-  }) {
-    return this.request<UpdateEntityTypeResponse>("/entity-types", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+  async updateEntityType(data: Parameters<EntityTypesApi["updateEntityType"]>[0]) {
+    return this.entityTypesApi.updateEntityType(data);
   }
 
   async deleteEntityType(id: number) {
-    return this.request<{ success: boolean }>(`/entity-types?id=${id}`, {
-      method: "DELETE",
-    });
+    return this.entityTypesApi.deleteEntityType(id);
+  }
+
+  // Search
+  async search(query: string) {
+    return this.searchApi.search(query);
   }
 
   // Soft Delete / Restore
   async softDelete(table: "items" | "places" | "containers" | "rooms", id: number) {
-    return this.request<{ success: boolean }>(`/entities/${table}/${id}`, {
-      method: "DELETE",
-    });
+    return this.softDeleteApi.softDelete(table, id);
   }
 
   async restoreDeleted(table: "items" | "places" | "containers" | "rooms", id: number) {
-    return this.request<{ success: boolean }>(`/entities/${table}/${id}`, {
-      method: "POST",
-    });
+    return this.softDeleteApi.restoreDeleted(table, id);
   }
 
   // Photo Upload
   async uploadPhoto(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
+    return this.photoApi.uploadPhoto(file);
+  }
 
-    const response = await fetch(`${API_BASE_URL}/upload-photo`, {
-      method: "POST",
-      body: formData,
-    });
+  // Settings
+  async getSettings() {
+    return this.settingsApi.getSettings();
+  }
 
-    if (!response.ok) {
-      let errorMessage = "Ошибка загрузки фото";
-      try {
-        const error = await response.json();
-        errorMessage = error.error || errorMessage;
-      } catch {
-        errorMessage = `Ошибка сервера: ${response.status} ${response.statusText}`;
-      }
-      throw new Error(errorMessage);
-    }
+  async updateSetting(key: string, value: string, isUserSetting = false) {
+    return this.settingsApi.updateSetting(key, value, isUserSetting);
+  }
 
-    const data = await response.json();
-    if (!data.url) {
-      throw new Error("Сервер не вернул URL загруженного файла");
-    }
-
-    return { data: { url: data.url } };
+  // Auth
+  async getCurrentUser() {
+    return this.authApi.getCurrentUser();
   }
 }
 

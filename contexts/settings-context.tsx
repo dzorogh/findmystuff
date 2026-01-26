@@ -1,20 +1,13 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { useUser } from "@/hooks/use-user";
 import { ThemeSync } from "@/components/theme/theme-sync";
+import type { Setting } from "@/lib/api-client/settings";
 
-export interface Setting {
-  id: number;
-  key: string;
-  value: string;
-  description: string | null;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string | null;
-}
+// Re-export Setting type from API client
+export type { Setting } from "@/lib/api-client/settings";
 
 interface SettingsContextType {
   settings: Setting[];
@@ -46,28 +39,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const supabase = createClient();
-      
-      // Загружаем персональные настройки пользователя и глобальные (где user_id IS NULL)
-      let query = supabase
-        .from("settings")
-        .select("*");
+      const response = await apiClient.getSettings();
 
-      if (user?.id) {
-        query = query.or(`user_id.eq.${user.id},user_id.is.null`);
-      } else {
-        query = query.is("user_id", null);
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const { data, error: fetchError } = await query
-        .order("category", { ascending: true })
-        .order("key", { ascending: true });
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      setSettings(data || []);
+      setSettings(response.data?.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки настроек");
       setSettings([]);
@@ -78,47 +56,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSetting = async (key: string, value: string) => {
     try {
-      const supabase = createClient();
-      
-      // Проверяем, существует ли глобальная настройка (user_id IS NULL)
-      const { data: existing, error: checkError } = await supabase
-        .from("settings")
-        .select("id")
-        .eq("key", key)
-        .is("user_id", null)
-        .maybeSingle();
+      const response = await apiClient.updateSetting(key, value, false);
 
-      if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
-      }
-
-      if (existing) {
-        // Обновляем существующую глобальную настройку
-        // updated_at обновляется автоматически через триггер
-        const { error: updateError } = await supabase
-          .from("settings")
-          .update({ value })
-          .eq("key", key)
-          .is("user_id", null);
-
-        if (updateError) {
-          throw updateError;
-        }
-      } else {
-        // Создаем новую глобальную настройку
-        const { error: insertError } = await supabase
-          .from("settings")
-          .insert({
-            key,
-            value,
-            category: "marking",
-            description: null,
-            user_id: null,
-          });
-
-        if (insertError) {
-          throw insertError;
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       await loadSettings();
@@ -140,47 +81,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const supabase = createClient();
-      
-      // Проверяем, существует ли персональная настройка пользователя
-      const { data: existing, error: checkError } = await supabase
-        .from("settings")
-        .select("id")
-        .eq("key", key)
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const response = await apiClient.updateSetting(key, value, true);
 
-      if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
-      }
-
-      if (existing) {
-        // Обновляем существующую персональную настройку
-        // updated_at обновляется автоматически через триггер
-        const { error: updateError } = await supabase
-          .from("settings")
-          .update({ value })
-          .eq("key", key)
-          .eq("user_id", user.id);
-
-        if (updateError) {
-          throw updateError;
-        }
-      } else {
-        // Создаем новую персональную настройку
-        const { error: insertError } = await supabase
-          .from("settings")
-          .insert({
-            key,
-            value,
-            category: "account",
-            description: null,
-            user_id: user.id,
-          });
-
-        if (insertError) {
-          throw insertError;
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
       await loadSettings();

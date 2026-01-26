@@ -223,8 +223,10 @@ export async function GET(
     };
 
     return NextResponse.json({
-      item,
-      transitions: transitionsWithNames,
+      data: {
+        item,
+        transitions: transitionsWithNames,
+      },
     });
   } catch (error) {
     console.error("Ошибка загрузки данных вещи:", error);

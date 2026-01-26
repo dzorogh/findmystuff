@@ -20,7 +20,6 @@ import MoveItemForm from "@/components/forms/move-item-form";
 import EditItemForm from "@/components/forms/edit-item-form";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
-import { apiClient } from "@/lib/api-client";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -138,6 +137,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   const finishLoadingRef = useRef(finishLoading);
   const handleErrorRef = useRef(handleError);
   const isMountedRef = useRef(true);
+  const isLoadingRef = useRef(false);
+  const requestKeyRef = useRef<string>("");
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -156,6 +157,17 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     if (!user) return;
     if (!isMountedRef.current) return;
 
+    // Создаем уникальный ключ для запроса на основе параметров
+    const requestKey = `${query || ""}-${showDeleted}-${page}-${filters.locationType}-${filters.hasPhoto}-${filters.roomId}-${filters.showDeleted}`;
+
+    // Проверяем, не выполняется ли уже такой же запрос
+    if (isLoadingRef.current && requestKeyRef.current === requestKey) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    requestKeyRef.current = requestKey;
+
     startLoadingRef.current(isInitialLoad);
 
     try {
@@ -171,6 +183,11 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
       if (!isMountedRef.current) return;
 
+      // Проверяем, не изменились ли параметры запроса во время выполнения
+      if (requestKeyRef.current !== requestKey) {
+        return;
+      }
+
       if (!response.data || response.data.length === 0) {
         if (isMountedRef.current) {
           setItems([]);
@@ -183,14 +200,25 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
       setTotalCount(response.totalCount || 0);
       const itemsWithLocation: Item[] = response.data;
 
-      if (isMountedRef.current) {
-        setItems(itemsWithLocation);
-        finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
+      // Проверяем еще раз перед обновлением состояния
+      if (requestKeyRef.current !== requestKey || !isMountedRef.current) {
+        return;
       }
+
+      setItems(itemsWithLocation);
+      finishLoadingRef.current(isInitialLoad, itemsWithLocation.length);
     } catch (err) {
-      if (isMountedRef.current) {
-        handleErrorRef.current(err, isInitialLoad);
-        setItems([]);
+      // Проверяем, не изменились ли параметры запроса во время выполнения
+      if (requestKeyRef.current !== requestKey || !isMountedRef.current) {
+        return;
+      }
+      handleErrorRef.current(err, isInitialLoad);
+      setItems([]);
+    } finally {
+      // Сбрасываем флаг только если это был последний запрос
+      if (requestKeyRef.current === requestKey) {
+        isLoadingRef.current = false;
+        requestKeyRef.current = "";
       }
     }
   }, [user?.id, showDeleted, filters.roomId, filters.locationType, filters.hasPhoto, filters.showDeleted]);

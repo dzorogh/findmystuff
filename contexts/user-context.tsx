@@ -27,14 +27,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const getUser = async () => {
       try {
+        // Используем getSession для быстрого получения сессии из cookies
         const {
           data: { session },
         } = await supabase.auth.getSession();
         log("getSession", session?.user?.id || null);
+        
         if (session?.user) {
           setUser(session.user);
         }
 
+        // Затем проверяем актуальность через getUser (делает запрос к серверу)
         const {
           data: { user: currentUser },
         } = await supabase.auth.getUser();
@@ -43,6 +46,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         console.error("Ошибка получения пользователя:", error);
         log("getUser error", error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }

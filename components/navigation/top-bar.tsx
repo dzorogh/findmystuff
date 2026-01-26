@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { Menu, Settings, LogOut, Moon, Sun, User as UserIcon, Plus, ChevronRight } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { useCurrentPage } from "@/contexts/current-page-context";
+import { authClient } from "@/lib/auth-client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Logo from "@/components/common/logo";
@@ -115,7 +116,7 @@ const TopBar = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.signOut();
     setIsMenuOpen(false);
   };
 

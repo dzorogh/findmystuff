@@ -191,10 +191,12 @@ export async function GET(
     }
 
     return NextResponse.json({
-      room,
-      items: roomItems,
-      places: roomPlaces,
-      containers: roomContainers,
+      data: {
+        room,
+        items: roomItems,
+        places: roomPlaces,
+        containers: roomContainers,
+      },
     });
   } catch (error) {
     console.error("Ошибка загрузки данных помещения:", error);

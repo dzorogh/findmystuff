@@ -26,6 +26,7 @@ const eslintConfig = defineConfig([
       "app/api/**",           // API routes разрешены
       "components/auth/**",   // Auth компоненты разрешены
       "components/navigation/sidebar.tsx", // Использует только для auth.signOut()
+      "components/navigation/top-bar.tsx", // Использует только для auth.signOut()
     ],
     rules: {
       // Запрещаем импорт createClient из @/lib/supabase/client
@@ -72,6 +73,15 @@ const eslintConfig = defineConfig([
         {
           selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='delete'][callee.object.type='MemberExpression']",
           message: "Прямые Supabase запросы (.delete()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
+        },
+        // Запрещаем Supabase auth методы .auth.getUser() и .auth.getSession() - только в компонентах (не в контекстах и auth компонентах)
+        {
+          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getUser'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
+          message: "Прямые запросы к auth API (.auth.getUser()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах (contexts/) и auth компонентах (components/auth/). Используйте apiClient или хук useUser из @/hooks/use-user",
+        },
+        {
+          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getSession'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
+          message: "Прямые запросы к auth API (.auth.getSession()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах (contexts/) и auth компонентах (components/auth/). Используйте apiClient или хук useUser из @/hooks/use-user",
         },
       ],
     },
