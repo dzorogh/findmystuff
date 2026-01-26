@@ -8,6 +8,12 @@ import type { EntityType } from "@/types/entity";
 const loadingRequests = new Map<string, Promise<{ types: EntityType[]; error: string | null }>>();
 const requestResults = new Map<string, { types: EntityType[]; error: string | null }>();
 
+// Экспортируем функции для очистки кеша (для тестов)
+export const clearEntityTypesCache = () => {
+  loadingRequests.clear();
+  requestResults.clear();
+};
+
 export const useEntityTypes = (category?: "place" | "container") => {
   const [types, setTypes] = useState<EntityType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
