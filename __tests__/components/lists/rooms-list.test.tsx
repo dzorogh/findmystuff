@@ -130,10 +130,10 @@ describe('RoomsList', () => {
       expect(screen.getByText('Комната 1')).toBeInTheDocument()
     }, { timeout: 3000 })
 
-    // Проверяем что счетчики отображаются (используем более специфичные селекторы)
-    expect(screen.getByText(/5 вещей/i)).toBeInTheDocument() // items_count
-    expect(screen.getByText(/3 контейнеров/i)).toBeInTheDocument() // containers_count
-    expect(screen.getByText(/2 мест/i)).toBeInTheDocument() // places_count
+    // В таблице счетчики: в десктопе — числа в ячейках, в мобиле — кратко в строке (5 вещ., 2 мест, 3 конт.)
+    expect(screen.getByText(/5 вещ/i)).toBeInTheDocument()
+    expect(screen.getByText(/2 мест/i)).toBeInTheDocument()
+    expect(screen.getByText(/3 конт/i)).toBeInTheDocument()
   })
 
   it('отображает EmptyState когда нет помещений', async () => {

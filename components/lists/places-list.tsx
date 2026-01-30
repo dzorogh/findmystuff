@@ -3,11 +3,20 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2 } from "lucide-react";
+import { MapPin, Building2, MoreHorizontal, Printer, RotateCcw } from "lucide-react";
 import Image from "next/image";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EditPlaceForm from "@/components/forms/edit-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { useListState } from "@/hooks/use-list-state";
@@ -102,6 +111,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
   const [places, setPlaces] = useState<Place[]>([]);
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
   const [movingPlaceId, setMovingPlaceId] = useState<number | null>(null);
+  const [mobileActionsPlaceId, setMobileActionsPlaceId] = useState<number | null>(null);
 
   const isLoadingRef = useRef(false);
   const requestKeyRef = useRef<string>("");
@@ -243,94 +253,212 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (
-        <ListSkeleton variant="grid" rows={6} />
+        <div className="overflow-x-hidden">
+          <ListSkeleton variant="table" rows={6} columns={5} />
+        </div>
       ) : isSearching && places.length === 0 ? (
-        <ListSkeleton variant="grid" rows={6} />
+        <div className="overflow-x-hidden">
+          <ListSkeleton variant="table" rows={6} columns={5} />
+        </div>
       ) : places.length === 0 ? (
         <EmptyState
           icon={MapPin}
           title={searchQuery ? "По вашему запросу ничего не найдено" : "Местоположения не найдены"}
         />
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {places.map((place) => (
-            <Card key={place.id} className={place.deleted_at ? "opacity-60 border-destructive/50" : ""}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 flex-1 min-w-0">
-                    {place.photo_url ? (
-                      <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
-                        <Image
-                          src={place.photo_url}
-                          alt={place.name || `Место #${place.id}`}
-                          fill
-                          className="object-cover"
-                          sizes="40px"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
-                        <MapPin className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <Link
-                        href={`/places/${place.id}`}
-                        className="font-medium hover:underline break-words leading-tight block"
-                      >
-                        <CardTitle className="text-lg truncate">
-                          {place.name || `Место #${place.id}`}
-                        </CardTitle>
-                      </Link>
-                      {place.entity_type?.name && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {place.entity_type.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {place.deleted_at && (
-                      <Badge variant="destructive" className="text-xs">Удалено</Badge>
-                    )}
-                    <Badge variant="secondary" className="text-xs">#{place.id}</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {place.room?.room_name && place.room.room_id && (
-                  <Link
-                    href={`/rooms/${place.room.room_id}`}
-                    className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-                  >
-                    <Building2 className="h-4 w-4 text-primary" />
-                    <span className="font-medium hover:underline">
-                      {place.room.room_name}
-                    </span>
-                  </Link>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Создано:{" "}
-                  {new Date(place.created_at).toLocaleDateString("ru-RU", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </CardContent>
-              <div className="border-t px-6 py-3">
-                <ListActions
-                  isDeleted={!!place.deleted_at}
-                  onEdit={() => setEditingPlaceId(place.id)}
-                  onMove={() => setMovingPlaceId(place.id)}
-                  onPrintLabel={() => printLabel(place.id, place.name)}
-                  onDelete={() => handleDeletePlace(place.id)}
-                  onRestore={() => handleRestorePlace(place.id)}
-                />
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-hidden md:overflow-x-auto">
+              <Table data-testid="places-list">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
+                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Тип</TableHead>
+                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
+                    <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Создано</TableHead>
+                    <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {places.map((place) => (
+                    <TableRow
+                      key={place.id}
+                      className={place.deleted_at ? "opacity-60" : ""}
+                    >
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex items-center gap-2">
+                          {place.deleted_at && (
+                            <Badge variant="destructive" className="text-xs">Удалено</Badge>
+                          )}
+                          <span className="text-muted-foreground">#{place.id}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {place.photo_url ? (
+                            <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
+                              <Image
+                                src={place.photo_url}
+                                alt={place.name || `Место #${place.id}`}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                                unoptimized={place.photo_url.includes("storage.supabase.co")}
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
+                              <MapPin className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={`/places/${place.id}`}
+                              className="font-medium hover:underline break-words leading-tight block"
+                            >
+                              {place.name || `Место #${place.id}`}
+                            </Link>
+                            <div className="md:hidden mt-1 text-xs text-muted-foreground space-y-0.5">
+                              {place.entity_type?.name && (
+                                <span className="block truncate">{place.entity_type.name}</span>
+                              )}
+                              {place.room?.room_name && place.room.room_id && (
+                                <div className="flex items-center gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  <span className="truncate">{place.room.room_name}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {place.entity_type?.name ? (
+                          <span className="text-sm">{place.entity_type.name}</span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {place.room?.room_name && place.room.room_id ? (
+                          <Link
+                            href={`/rooms/${place.room.room_id}`}
+                            className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                          >
+                            <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
+                            <span>{place.room.room_name}</span>
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(place.created_at).toLocaleDateString("ru-RU", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="hidden md:flex">
+                          <ListActions
+                            isDeleted={!!place.deleted_at}
+                            onEdit={() => setEditingPlaceId(place.id)}
+                            onMove={() => setMovingPlaceId(place.id)}
+                            onPrintLabel={() => printLabel(place.id, place.name)}
+                            onDelete={() => handleDeletePlace(place.id)}
+                            onRestore={() => handleRestorePlace(place.id)}
+                          />
+                        </div>
+                        <div className="flex md:hidden items-center justify-end gap-1">
+                          {place.deleted_at ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRestorePlace(place.id)}
+                              className="h-8 w-8 text-green-600 hover:text-green-700"
+                              aria-label="Восстановить"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Popover
+                              open={mobileActionsPlaceId === place.id}
+                              onOpenChange={(open) => {
+                                setMobileActionsPlaceId(open ? place.id : null);
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Открыть меню действий"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="w-40 p-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    setEditingPlaceId(place.id);
+                                    setMobileActionsPlaceId(null);
+                                  }}
+                                >
+                                  <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    setMovingPlaceId(place.id);
+                                    setMobileActionsPlaceId(null);
+                                  }}
+                                >
+                                  <span>Переместить</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    printLabel(place.id, place.name);
+                                    setMobileActionsPlaceId(null);
+                                  }}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                  <span>Печать этикетки</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    handleDeletePlace(place.id);
+                                    setMobileActionsPlaceId(null);
+                                  }}
+                                >
+                                  <span>Удалить</span>
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {editingPlaceId && (
