@@ -103,9 +103,17 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   };
 
   const handleQRScanSuccess = (result: EntityQrPayload) => {
+    if (result.type !== "room" && result.type !== "place" && result.type !== "container") {
+      toast.error("Недопустимое местоположение", {
+        description: "Вещь можно переместить только в помещение, место или контейнер.",
+      });
+      setIsQRScannerOpen(false);
+      return;
+    }
+
     // Проверяем, существует ли выбранное местоположение
     let destinationExists = false;
-    
+
     if (result.type === "container") {
       destinationExists = containers.some((c) => c.id === result.id);
     } else if (result.type === "place") {

@@ -299,7 +299,7 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          {step === "confirm" && (
+          {(step === "confirm" || step === "submitting") && (
             <>
               <Button
                 type="button"

@@ -37,7 +37,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
       return getEntityDisplayName(
         transition.destination_type as LabelEntityType,
         transition.destination_id,
-        transition.destination_name
+        transition.destination_name ?? null
       );
     }
     return "Неизвестно";

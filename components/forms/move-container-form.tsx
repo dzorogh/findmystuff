@@ -102,11 +102,18 @@ const MoveContainerForm = ({ containerId, containerName, open, onOpenChange, onS
   };
 
   const handleQRScanSuccess = (result: EntityQrPayload) => {
+    if (result.type !== "room" && result.type !== "place" && result.type !== "container") {
+      toast.error("Недопустимое местоположение", {
+        description: "Контейнер можно переместить только в помещение, место или другой контейнер.",
+      });
+      setIsQRScannerOpen(false);
+      return;
+    }
+
     // Проверяем, существует ли выбранное местоположение
     let destinationExists = false;
-    
+
     if (result.type === "container") {
-      // Исключаем текущий контейнер из списка доступных
       destinationExists = containers.some((c) => c.id === result.id && c.id !== containerId);
     } else if (result.type === "place") {
       destinationExists = places.some((p) => p.id === result.id);
@@ -125,7 +132,7 @@ const MoveContainerForm = ({ containerId, containerName, open, onOpenChange, onS
     setDestinationType(result.type);
     setSelectedDestinationId(result.id.toString());
     setIsQRScannerOpen(false);
-    
+
     toast.success("QR-код отсканирован", {
       description: `Выбрано: ${result.type === "container" ? "Контейнер" : result.type === "place" ? "Место" : "Помещение"} #${result.id}`,
     });
