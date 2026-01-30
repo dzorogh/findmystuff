@@ -130,8 +130,7 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10 md:pt-10">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <div className="space-y-8">
         {/* Поиск */}
         <div className="space-y-4">
           <div className="relative">
@@ -288,7 +287,6 @@ export default function Home() {
             </Card>
           </div>
         )}
-      </div>
     </div>
   );
 }

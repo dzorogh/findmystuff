@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface EntityTypesManagerProps {
   category: "place" | "container";
@@ -144,7 +145,29 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
   return (
     <div className="space-y-4">
       {isLoading && (
-        <div className="text-sm text-muted-foreground">Загрузка...</div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Название</TableHead>
+              <TableHead className="text-right">Действия</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[1, 2, 3].map((i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-5 w-24" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {error && (

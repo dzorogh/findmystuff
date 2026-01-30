@@ -42,8 +42,7 @@ const ContainersPageContent = () => {
   }, [shouldOpenCreateForm]);
 
   return (
-    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
         <CompactSearchBar
           placeholder="Название, тип или маркировка (КОР-001)..."
           searchQuery={searchQuery}
@@ -89,14 +88,13 @@ const ContainersPageContent = () => {
           }}
           onSuccess={handleContainerAdded}
         />
-      </div>
     </div>
   );
 };
 
 const ContainersPage = () => {
   return (
-    <Suspense fallback={<div className="container mx-auto pb-10 pt-4 px-4 md:py-10" />}>
+    <Suspense fallback={null}>
       <ContainersPageContent />
     </Suspense>
   );

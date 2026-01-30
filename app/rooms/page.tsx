@@ -42,8 +42,7 @@ const RoomsPageContent = () => {
   }, [shouldOpenCreateForm]);
 
   return (
-    <div className="container mx-auto pb-10 pt-4 px-4 md:py-10">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
         <CompactSearchBar
           placeholder="Введите название помещения..."
           searchQuery={searchQuery}
@@ -89,14 +88,13 @@ const RoomsPageContent = () => {
           }}
           onSuccess={handleRoomAdded}
         />
-      </div>
     </div>
   );
 };
 
 const RoomsPage = () => {
   return (
-    <Suspense fallback={<div className="container mx-auto pb-10 pt-4 px-4 md:py-10" />}>
+    <Suspense fallback={null}>
       <RoomsPageContent />
     </Suspense>
   );

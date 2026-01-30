@@ -7,6 +7,7 @@ import { YesNoAllFilter } from "./yes-no-all-filter";
 import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/hooks/use-rooms";
 
 export interface ItemsFilters {
@@ -106,15 +107,18 @@ export const ItemsFiltersPanel = ({
       />
 
       <FormField label="Помещение">
-        <Combobox
-          options={roomOptions}
-          value={filters.roomId ? filters.roomId.toString() : "all"}
-          onValueChange={handleRoomChange}
-          placeholder={isLoadingRooms ? "Загрузка..." : "Выберите помещение..."}
-          searchPlaceholder="Поиск помещения..."
-          emptyText="Помещения не найдены"
-          disabled={isLoadingRooms}
-        />
+        {isLoadingRooms ? (
+          <Skeleton className="h-10 w-full" />
+        ) : (
+          <Combobox
+            options={roomOptions}
+            value={filters.roomId ? filters.roomId.toString() : "all"}
+            onValueChange={handleRoomChange}
+            placeholder="Выберите помещение..."
+            searchPlaceholder="Поиск помещения..."
+            emptyText="Помещения не найдены"
+          />
+        )}
       </FormField>
 
       {hasActiveFilters && (

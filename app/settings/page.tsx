@@ -26,8 +26,7 @@ export default function SettingsPage() {
 
   if (isLoading || isUserLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="mx-auto max-w-4xl space-y-6">
+      <div className="space-y-6">
           {/* Раздел: Контейнеры */}
           <div className="space-y-4">
             <Skeleton className="h-7 w-32" />
@@ -79,7 +78,6 @@ export default function SettingsPage() {
             </Card>
 
           </div>
-        </div>
       </div>
     );
   }
@@ -89,8 +87,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
         {error && (
           <Card className="border-destructive">
             <CardContent className="pt-6">
@@ -172,8 +169,6 @@ export default function SettingsPage() {
           </Card>
 
         </div>
-
-      </div>
     </div>
   );
 }

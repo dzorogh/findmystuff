@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 interface ImageUploadProps {
@@ -150,10 +151,7 @@ const ImageUpload = ({
               className="flex-1"
             >
               {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Загрузка...
-                </>
+                <Skeleton className="h-4 w-24" aria-hidden />
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />

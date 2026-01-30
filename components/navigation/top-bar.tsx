@@ -178,7 +178,6 @@ const TopBar = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={handleCreateClick}
                   className="hidden md:inline-flex gap-2"
                 >

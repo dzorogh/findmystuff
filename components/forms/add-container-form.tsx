@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AddContainerFormProps {
   open: boolean;
@@ -113,8 +114,19 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           {isLoading || isLoadingTypes ? (
-            <div className="py-8 text-center text-muted-foreground">
-              Загрузка...
+            <div className="space-y-6 py-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
             </div>
           ) : (
             <FormGroup>

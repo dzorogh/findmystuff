@@ -5,6 +5,7 @@ import { useUser } from "@/hooks/use-user";
 import Sidebar from "@/components/navigation/sidebar";
 import TopBar from "@/components/navigation/top-bar";
 import { QuickMoveProvider } from "@/contexts/quick-move-context";
+import { PageContainer } from "@/components/layouts/page-container";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -54,7 +55,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
 
           {/* Content area - scrollable */}
           <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] md:pb-0">
-            {children}
+            <PageContainer>{children}</PageContainer>
           </div>
         </main>
 

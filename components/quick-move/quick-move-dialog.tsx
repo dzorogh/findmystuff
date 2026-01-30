@@ -20,6 +20,7 @@ import {
 import QRScanner from "@/components/common/qr-scanner";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Step = "scan_first" | "scan_second" | "confirm" | "submitting";
 
@@ -283,10 +284,10 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
                   <span className="font-medium">{destName}</span>
                 </>
               ) : (
-                <>
-                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
-                  Загрузка названий…
-                </>
+                <span className="inline-flex items-center gap-2">
+                  <Skeleton className="h-4 w-24 inline-block" />
+                  <Skeleton className="h-4 w-20 inline-block" />
+                </span>
               )}
             </p>
             {error && (

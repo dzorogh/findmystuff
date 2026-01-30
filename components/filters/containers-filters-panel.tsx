@@ -7,6 +7,7 @@ import { YesNoAllFilter } from "./yes-no-all-filter";
 import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEntityTypes } from "@/hooks/use-entity-types";
 
 export interface ContainersFilters {
@@ -90,15 +91,18 @@ export const ContainersFiltersPanel = ({
       />
 
       <FormField label="Тип контейнера">
-        <Combobox
-          options={containerTypeOptions}
-          value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
-          onValueChange={handleEntityTypeChange}
-          placeholder={isLoadingTypes ? "Загрузка..." : "Выберите тип..."}
-          searchPlaceholder="Поиск типа..."
-          emptyText="Типы не найдены"
-          disabled={isLoadingTypes}
-        />
+        {isLoadingTypes ? (
+          <Skeleton className="h-10 w-full" />
+        ) : (
+          <Combobox
+            options={containerTypeOptions}
+            value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
+            onValueChange={handleEntityTypeChange}
+            placeholder="Выберите тип..."
+            searchPlaceholder="Поиск типа..."
+            emptyText="Типы не найдены"
+          />
+        )}
       </FormField>
 
       <YesNoAllFilter
