@@ -20,9 +20,8 @@ import {
 import QRScanner from "@/components/common/qr-scanner";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
-type Step = "scan_first" | "scan_second" | "confirm" | "submitting";
+type Step = "scan_first" | "scan_second" | "submitting";
 
 interface QuickMoveDialogProps {
   open: boolean;
@@ -85,8 +84,6 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
   const [first, setFirst] = useState<EntityQrPayload | null>(null);
   const [second, setSecond] = useState<EntityQrPayload | null>(null);
   const [move, setMove] = useState<QuickMoveResult | null>(null);
-  const [sourceName, setSourceName] = useState<string | null>(null);
-  const [destName, setDestName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scannerRemountKey, setScannerRemountKey] = useState(0);
   const lastScanTimeRef = useRef(0);
@@ -98,8 +95,6 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
     setFirst(null);
     setSecond(null);
     setMove(null);
-    setSourceName(null);
-    setDestName(null);
     setError(null);
     setScannerRemountKey((k) => k + 1);
   }, []);
@@ -139,6 +134,54 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
     setStep("scan_second");
   }, []);
 
+  const doSubmit = useCallback(
+    async (moveResult: QuickMoveResult) => {
+      setError(null);
+      try {
+        const payload: {
+          item_id?: number;
+          place_id?: number;
+          container_id?: number;
+          destination_type: string;
+          destination_id: number;
+        } = {
+          destination_type: moveResult.destType,
+          destination_id: moveResult.destId,
+        };
+        if (moveResult.sourceType === "item") {
+          payload.item_id = moveResult.sourceId;
+        } else if (moveResult.sourceType === "place") {
+          payload.place_id = moveResult.sourceId;
+        } else if (moveResult.sourceType === "container") {
+          payload.container_id = moveResult.sourceId;
+        }
+        const response = await apiClient.createTransition(payload);
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        const destLabel =
+          (await fetchEntityName(moveResult.destType, moveResult.destId)) ??
+          getEntityDisplayName(moveResult.destType, moveResult.destId, null);
+        toast.success(`Успешно перемещено в ${destLabel}`, {
+          description: "Перемещение выполнено",
+        });
+        if (onSuccess) {
+          onSuccess();
+        }
+        handleClose();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Ошибка при перемещении");
+      }
+    },
+    [onSuccess, handleClose]
+  );
+
+  const handleRetry = useCallback(() => {
+    if (move) {
+      doSubmit(move);
+    }
+  }, [move, doSubmit]);
+
   const handleSecondScan = useCallback(
     (payload: EntityQrPayload) => {
       if (!first) {
@@ -169,60 +212,12 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
         return;
       }
       setMove(result);
-      setStep("confirm");
+      setStep("submitting");
       setError(null);
-      Promise.all([
-        fetchEntityName(result.sourceType, result.sourceId),
-        fetchEntityName(result.destType, result.destId),
-      ]).then(([src, dest]) => {
-        setSourceName(src);
-        setDestName(dest);
-      });
+      doSubmit(result);
     },
-    [first]
+    [first, doSubmit]
   );
-
-  const handleConfirm = useCallback(async () => {
-    if (!move) {
-      return;
-    }
-    setStep("submitting");
-    setError(null);
-    try {
-      const payload: {
-        item_id?: number;
-        place_id?: number;
-        container_id?: number;
-        destination_type: string;
-        destination_id: number;
-      } = {
-        destination_type: move.destType,
-        destination_id: move.destId,
-      };
-      if (move.sourceType === "item") {
-        payload.item_id = move.sourceId;
-      } else if (move.sourceType === "place") {
-        payload.place_id = move.sourceId;
-      } else if (move.sourceType === "container") {
-        payload.container_id = move.sourceId;
-      }
-      const response = await apiClient.createTransition(payload);
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      const destLabel = destName ?? getEntityDisplayName(move.destType, move.destId, null);
-      toast.success(`Успешно перемещено в ${destLabel}`, {
-        description: "Перемещение выполнено",
-      });
-      if (onSuccess) {
-        onSuccess();
-      }
-      handleClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при перемещении");
-      setStep("confirm");
-    }
-  }, [move, destName, onSuccess, handleClose]);
 
   const handleScanSuccess = useCallback(
     (payload: EntityQrPayload) => {
@@ -262,72 +257,47 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
     return null;
   }
 
-  LOG(open, "render: return Dialog (confirm step)");
+  LOG(open, "render: return Dialog (submitting step)");
   return (
     <Dialog open={true} onOpenChange={(newOpen) => !newOpen && handleClose()}>
       <DialogContent className="max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Быстрое перемещение</DialogTitle>
           <DialogDescription id="quick-move-desc">
-            {step === "confirm" && "Проверьте и подтвердите перемещение."}
-            {step === "submitting" && "Выполняется перемещение…"}
+            {error
+              ? "Ошибка при перемещении. Можно повторить или отменить."
+              : "Выполняется перемещение…"}
           </DialogDescription>
         </DialogHeader>
 
-        {step === "confirm" && move && (
-          <div className="space-y-4 py-2">
-            <p className="text-sm">
-              {sourceName !== null && destName !== null ? (
-                <>
-                  Переместить{" "}
-                  <span className="font-medium">{sourceName}</span> в{" "}
-                  <span className="font-medium">{destName}</span>
-                </>
-              ) : (
-                <span className="inline-flex items-center gap-2">
-                  <Skeleton className="h-4 w-24 inline-block" />
-                  <Skeleton className="h-4 w-20 inline-block" />
-                </span>
-              )}
-            </p>
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-          </div>
+        {error && (
+          <p className="text-sm text-destructive py-2" role="alert">
+            {error}
+          </p>
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          {(step === "confirm" || step === "submitting") && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  resetState();
-                  setStep("scan_first");
-                }}
-                disabled={step === "submitting"}
-              >
-                Отмена
-              </Button>
-              <Button
-                type="button"
-                onClick={handleConfirm}
-                disabled={step === "submitting"}
-                aria-busy={step === "submitting"}
-              >
-                {step === "submitting" ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                    Подтвердить
-                  </>
-                ) : (
-                  "Подтвердить"
-                )}
-              </Button>
-            </>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              resetState();
+              setStep("scan_first");
+            }}
+            disabled={!error}
+          >
+            Отмена
+          </Button>
+          {error && (
+            <Button type="button" onClick={handleRetry} aria-label="Повторить перемещение">
+              Повторить
+            </Button>
+          )}
+          {!error && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              <span>Отправка…</span>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>
