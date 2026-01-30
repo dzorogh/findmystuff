@@ -44,9 +44,7 @@ export async function GET(request: NextRequest) {
       id: number;
       name: string | null;
       entity_type_id: number | null;
-      entity_type_code: string | null;
       entity_type_name: string | null;
-      marking_number: number | null;
       created_at: string;
       deleted_at: string | null;
       photo_url: string | null;
@@ -59,13 +57,9 @@ export async function GET(request: NextRequest) {
       id: container.id,
       name: container.name,
       entity_type_id: container.entity_type_id || null,
-      entity_type: container.entity_type_code
-        ? {
-            code: container.entity_type_code,
-            name: container.entity_type_name,
-          }
+      entity_type: container.entity_type_name
+        ? { name: container.entity_type_name }
         : null,
-      marking_number: container.marking_number,
       created_at: container.created_at,
       deleted_at: container.deleted_at,
       photo_url: container.photo_url,
@@ -109,17 +103,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, entity_type_id, marking_number, photo_url, destination_type, destination_id } = body;
+    const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
     const insertData: {
       name: string | null;
       entity_type_id: number | null;
-      marking_number: number | null;
       photo_url: string | null;
     } = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
-      marking_number: marking_number || null,
       photo_url: photo_url || null,
     };
 

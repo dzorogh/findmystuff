@@ -54,7 +54,6 @@ describe('EntityTypesApi', () => {
         data: {
           id: 1,
           entity_category: 'container',
-          code: 'НОВ',
           name: 'Новый тип',
         },
       }),
@@ -62,7 +61,6 @@ describe('EntityTypesApi', () => {
 
     const response = await entityTypesApi.createEntityType({
       entity_category: 'container',
-      code: 'НОВ',
       name: 'Новый тип',
     })
 
@@ -75,7 +73,7 @@ describe('EntityTypesApi', () => {
       json: async () => ({
         data: {
           id: 1,
-          code: 'ОБН',
+          entity_category: 'container',
           name: 'Обновленный тип',
         },
       }),
@@ -83,7 +81,6 @@ describe('EntityTypesApi', () => {
 
     const response = await entityTypesApi.updateEntityType({
       id: 1,
-      code: 'ОБН',
       name: 'Обновленный тип',
     })
 
@@ -113,7 +110,6 @@ describe('EntityTypesApi', () => {
 
     const response = await entityTypesApi.createEntityType({
       entity_category: 'container',
-      code: 'ТЕСТ',
       name: 'Тест',
     })
 

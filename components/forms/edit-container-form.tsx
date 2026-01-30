@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import ImageUpload from "@/components/common/image-upload";
 import { useEntityTypes } from "@/hooks/use-entity-types";
-import { useContainerMarking } from "@/hooks/use-container-marking";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -25,7 +24,6 @@ interface EditContainerFormProps {
   containerId: number;
   containerName: string | null;
   containerTypeId?: number | null;
-  markingNumber?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -35,14 +33,12 @@ const EditContainerForm = ({
   containerId,
   containerName,
   containerTypeId: initialContainerTypeId,
-  markingNumber,
   open,
   onOpenChange,
   onSuccess,
 }: EditContainerFormProps) => {
   const { user, isLoading } = useUser();
   const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
-  const { generateMarking } = useContainerMarking();
   const [name, setName] = useState(containerName || "");
   const [containerTypeId, setContainerTypeId] = useState(initialContainerTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -130,33 +126,17 @@ const EditContainerForm = ({
               />
             </FormField>
 
-            {(() => {
-              const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
-              const typeCode = selectedType?.code;
-              const marking = typeCode && markingNumber !== null && markingNumber !== undefined
-                ? generateMarking(typeCode, markingNumber)
-                : null;
-              
-              return marking ? (
-                <FormField label="Маркировка">
-                  <div className="rounded-md border bg-muted px-3 py-2">
-                    <p className="text-sm font-medium">{marking}</p>
-                  </div>
-                </FormField>
-              ) : null;
-            })()}
-
             <FormField
               label="Тип контейнера"
               htmlFor={`container-type-${containerId}`}
-              description="Тип контейнера нельзя изменить после создания, чтобы сохранить код маркировки"
+              description="Тип контейнера нельзя изменить после создания"
             >
               <div className="rounded-md border bg-muted px-3 py-2">
                 {(() => {
                   const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
                   return (
                     <p className="text-sm font-medium">
-                      {selectedType ? `${selectedType.code} - ${selectedType.name}` : "Тип не выбран"}
+                      {selectedType ? selectedType.name : "Тип не выбран"}
                     </p>
                   );
                 })()}

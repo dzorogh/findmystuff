@@ -8,7 +8,6 @@ import { useParams, useRouter } from "next/navigation";
 // Контексты
 import { useCurrentPage } from "@/contexts/current-page-context";
 import { useUser } from "@/hooks/use-user";
-import { useContainerMarking } from "@/hooks/use-container-marking";
 
 // API Client
 import { apiClient } from "@/lib/api-client";
@@ -18,7 +17,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Container } from "lucide-react";
 
 // Общие компоненты
-import { MarkingDisplay } from "@/components/common/marking-display";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
@@ -37,13 +35,14 @@ import MoveContainerForm from "@/components/forms/move-container-form";
 
 // Утилиты
 import { useEntityActions } from "@/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { getEntityDisplayName } from "@/lib/entity-display-name";
 
 // Типы
 import type { Transition, ContainerEntity } from "@/types/entity";
 
 interface Container extends ContainerEntity {
   entity_type?: {
-    code: string;
     name: string;
   } | null;
 }
@@ -53,7 +52,6 @@ export default function ContainerDetailPage() {
   const router = useRouter();
   const containerId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
-  const { generateMarking } = useContainerMarking();
   const { setEntityName, setIsLoading } = useCurrentPage();
   const [container, setContainer] = useState<Container | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
@@ -104,7 +102,7 @@ export default function ContainerDetailPage() {
 
       // Устанавливаем имя в контекст сразу после получения данных контейнера
       // чтобы оно отображалось в крошках как можно раньше
-      const nameToSet = containerData.name || `Контейнер #${containerData.id}`;
+      const nameToSet = getEntityDisplayName("container", containerData.id, containerData.name);
       flushSync(() => {
         setEntityName(nameToSet);
       });
@@ -137,6 +135,8 @@ export default function ContainerDetailPage() {
     onSuccess: loadContainerData,
   });
 
+  const printLabel = usePrintEntityLabel("container");
+
   const handleEditSuccess = () => {
     setIsEditing(false);
     loadContainerData();
@@ -160,7 +160,7 @@ export default function ContainerDetailPage() {
         <Card>
           <EntityHeader
             id={container.id}
-            name={container.name}
+            name={getEntityDisplayName("container", container.id, container.name)}
             photoUrl={container.photo_url}
             isDeleted={!!container.deleted_at}
             defaultIcon={<Container className="h-12 w-12 text-muted-foreground" />}
@@ -172,17 +172,13 @@ export default function ContainerDetailPage() {
                 isRestoring={isRestoring}
                 onEdit={() => setIsEditing(true)}
                 onMove={() => setIsMoving(true)}
+                onPrintLabel={container ? () => printLabel(container.id, container.name) : undefined}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
               />
             }
           />
           <CardContent className="space-y-4">
-            <MarkingDisplay
-              typeCode={container.entity_type?.code}
-              markingNumber={container.marking_number}
-              generateMarking={generateMarking}
-            />
             <EntityLocation location={container.last_location || null} />
             <EntityCreatedDate createdAt={container.created_at} />
           </CardContent>
@@ -224,7 +220,6 @@ export default function ContainerDetailPage() {
             containerId={container.id}
             containerName={container.name}
             containerTypeId={container.entity_type_id}
-            markingNumber={container.marking_number}
             open={isEditing}
             onOpenChange={setIsEditing}
             onSuccess={handleEditSuccess}

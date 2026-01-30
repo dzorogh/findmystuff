@@ -12,8 +12,10 @@ import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
 import LocationCombobox from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
+import { getEntityDisplayName } from "@/lib/entity-display-name";
 import { FormFooter } from "@/components/common/form-footer";
 import QRScanner from "@/components/common/qr-scanner";
+import type { EntityQrPayload } from "@/lib/entity-qr-code";
 import { Scan } from "lucide-react";
 import {
   Sheet,
@@ -99,7 +101,7 @@ const MoveContainerForm = ({ containerId, containerName, open, onOpenChange, onS
     }
   };
 
-  const handleQRScanSuccess = (result: { type: "room" | "place" | "container"; id: number }) => {
+  const handleQRScanSuccess = (result: EntityQrPayload) => {
     // Проверяем, существует ли выбранное местоположение
     let destinationExists = false;
     
@@ -151,7 +153,7 @@ const MoveContainerForm = ({ containerId, containerName, open, onOpenChange, onS
           <SheetHeader>
             <SheetTitle>Переместить контейнер</SheetTitle>
             <SheetDescription>
-              {containerName || `Контейнер #${containerId}`}
+              {getEntityDisplayName("container", containerId, containerName)}
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit} className="mt-6">

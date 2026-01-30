@@ -6,12 +6,11 @@ import type { Container } from "@/types/entity";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, MapPin, Building2, Package, PackageX, ArrowRightLeft, MoreHorizontal, RotateCcw } from "lucide-react";
+import { Container as ContainerIcon, MapPin, Building2, Package, PackageX, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
 import MoveContainerForm from "@/components/forms/move-container-form";
-import { useContainerMarking } from "@/hooks/use-container-marking";
 import {
   Table,
   TableBody,
@@ -35,6 +34,8 @@ import {
 } from "@/components/ui/sheet";
 import { ContainersFiltersPanel, type ContainersFilters } from "@/components/filters/containers-filters-panel";
 import { toast } from "sonner";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { getEntityDisplayName } from "@/lib/entity-display-name";
 
 interface ContainersListProps {
   refreshTrigger?: number;
@@ -98,7 +99,6 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
   const [editingContainerId, setEditingContainerId] = useState<number | null>(null);
   const [movingContainerId, setMovingContainerId] = useState<number | null>(null);
   const [mobileActionsContainerId, setMobileActionsContainerId] = useState<number | null>(null);
-  const { generateMarking } = useContainerMarking();
 
   const isLoadingRef = useRef(false);
   const requestKeyRef = useRef<string>("");
@@ -228,6 +228,8 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
   };
 
+  const printLabel = usePrintEntityLabel("container");
+
   const hasActiveFilters = filters.entityTypeId !== null || filters.hasItems !== null || filters.locationType !== null || filters.showDeleted;
   const activeFiltersCount = [filters.entityTypeId !== null, filters.hasItems !== null, filters.locationType !== null, filters.showDeleted].filter(Boolean).length;
 
@@ -287,7 +289,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
                               <Image
                                 src={container.photo_url}
-                                alt={container.name || `Контейнер #${container.id}`}
+                                alt={getEntityDisplayName("container", container.id, container.name)}
                                 fill
                                 className="object-cover"
                                 sizes="40px"
@@ -304,11 +306,11 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                               href={`/containers/${container.id}`}
                               className="font-medium hover:underline break-words leading-tight block"
                             >
-                              {container.name || `Контейнер #${container.id}`}
+                              {getEntityDisplayName("container", container.id, container.name)}
                             </Link>
-                            {container.entity_type && generateMarking(container.entity_type.code, container.marking_number) && (
-                              <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                                {generateMarking(container.entity_type.code, container.marking_number)}
+                            {container.entity_type?.name && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {container.entity_type.name}
                               </p>
                             )}
                             <div className="md:hidden mt-1 text-xs text-muted-foreground">
@@ -318,8 +320,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     <>
                                       <Building2 className="h-3 w-3" />
                                       <span className="truncate">
-                                        {container.last_location.destination_name ||
-                                          `Помещение #${container.last_location.destination_id}`}
+                                        {getEntityDisplayName("room", container.last_location.destination_id!, container.last_location.destination_name)}
                                       </span>
                                     </>
                                   )}
@@ -327,8 +328,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     <>
                                       <MapPin className="h-3 w-3" />
                                       <span className="truncate">
-                                        {container.last_location.destination_name ||
-                                          `Место #${container.last_location.destination_id}`}
+                                        {getEntityDisplayName("place", container.last_location.destination_id!, container.last_location.destination_name)}
                                       </span>
                                     </>
                                   )}
@@ -336,8 +336,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     <>
                                       <ContainerIcon className="h-3 w-3" />
                                       <span className="truncate">
-                                        {container.last_location.destination_name ||
-                                          `Контейнер #${container.last_location.destination_id}`}
+                                        {getEntityDisplayName("container", container.last_location.destination_id!, container.last_location.destination_name)}
                                       </span>
                                     </>
                                   )}
@@ -356,8 +355,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                               <div className="flex items-center gap-2 text-sm">
                                 <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
                                 <span>
-                                  {container.last_location.destination_name ||
-                                    `Помещение #${container.last_location.destination_id}`}
+                                  {getEntityDisplayName("room", container.last_location.destination_id!, container.last_location.destination_name)}
                                 </span>
                               </div>
                             )}
@@ -365,8 +363,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                               <div className="flex items-center gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                                 <span>
-                                  {container.last_location.destination_name ||
-                                    `Место #${container.last_location.destination_id}`}
+                                  {getEntityDisplayName("place", container.last_location.destination_id!, container.last_location.destination_name)}
                                 </span>
                               </div>
                             )}
@@ -374,8 +371,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                               <div className="flex items-center gap-2 text-sm">
                                 <ContainerIcon className="h-4 w-4 text-primary flex-shrink-0" />
                                 <span>
-                                  {container.last_location.destination_name ||
-                                    `Контейнер #${container.last_location.destination_id}`}
+                                  {getEntityDisplayName("container", container.last_location.destination_id!, container.last_location.destination_name)}
                                 </span>
                               </div>
                             )}
@@ -415,6 +411,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                           isDeleted={!!container.deleted_at}
                           onEdit={() => setEditingContainerId(container.id)}
                           onMove={() => setMovingContainerId(container.id)}
+                          onPrintLabel={() => printLabel(container.id, container.name)}
                           onDelete={() => handleDeleteContainer(container.id)}
                           onRestore={() => handleRestoreContainer(container.id)}
                         />
@@ -472,6 +469,18 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    printLabel(container.id, container.name);
+                                    setMobileActionsContainerId(null);
+                                  }}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                  <span>Печать этикетки</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   className="w-full justify-start gap-2 text-destructive hover:text-destructive"
                                   onClick={() => {
                                     handleDeleteContainer(container.id);
@@ -500,7 +509,6 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
           containerId={editingContainerId}
           containerName={containers.find((c) => c.id === editingContainerId)?.name || null}
           containerTypeId={containers.find((c) => c.id === editingContainerId)?.entity_type_id || null}
-          markingNumber={containers.find((c) => c.id === editingContainerId)?.marking_number || null}
           open={!!editingContainerId}
           onOpenChange={(open) => !open && setEditingContainerId(null)}
           onSuccess={() => {

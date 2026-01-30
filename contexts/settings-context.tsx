@@ -18,12 +18,6 @@ interface SettingsContextType {
   updateUserSetting: (key: string, value: string) => Promise<{ success: boolean; error?: string }>;
   getSetting: (key: string) => string | null;
   getUserSetting: (key: string) => string | null;
-  getContainerTypes: () => string[];
-  getDefaultContainerType: () => string;
-  getMarkingTemplate: () => string;
-  getPlaceTypes: () => string[];
-  getDefaultPlaceType: () => string;
-  getPlaceMarkingTemplate: () => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -118,46 +112,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     return getSetting(key);
   };
 
-  const getContainerTypes = (): string[] => {
-    const typesJson = getSetting("container_types");
-    if (!typesJson) {
-      return ["КОР", "ПЛА", "ЯЩ", "МЕТ", "СУМ", "ПАК", "ДРУ"];
-    }
-    try {
-      return JSON.parse(typesJson);
-    } catch {
-      return ["КОР", "ПЛА", "ЯЩ", "МЕТ", "СУМ", "ПАК", "ДРУ"];
-    }
-  };
-
-  const getDefaultContainerType = (): string => {
-    return getSetting("container_type_default") || "КОР";
-  };
-
-  const getMarkingTemplate = (): string => {
-    return getSetting("container_marking_template") || "{TYPE}-{NUMBER}";
-  };
-
-  const getPlaceTypes = (): string[] => {
-    const typesJson = getSetting("place_types");
-    if (!typesJson) {
-      return ["Ш", "С", "П", "Я", "К", "ДРУ"];
-    }
-    try {
-      return JSON.parse(typesJson);
-    } catch {
-      return ["Ш", "С", "П", "Я", "К", "ДРУ"];
-    }
-  };
-
-  const getDefaultPlaceType = (): string => {
-    return getSetting("place_type_default") || "Ш";
-  };
-
-  const getPlaceMarkingTemplate = (): string => {
-    return getSetting("place_marking_template") || "{TYPE}{NUMBER}";
-  };
-
   useEffect(() => {
     if (user !== undefined) {
       loadSettings();
@@ -176,12 +130,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         updateUserSetting,
         getSetting,
         getUserSetting,
-        getContainerTypes,
-        getDefaultContainerType,
-        getMarkingTemplate,
-        getPlaceTypes,
-        getDefaultPlaceType,
-        getPlaceMarkingTemplate,
       }}
     >
       <ThemeSync>{children}</ThemeSync>

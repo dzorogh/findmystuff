@@ -1,13 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Pencil, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
+import { Pencil, ArrowRightLeft, Trash2, RotateCcw, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ListActionsProps {
   isDeleted: boolean;
   onEdit?: () => void;
   onMove?: () => void;
+  onPrintLabel?: () => void;
   onDelete?: () => void;
   onRestore?: () => void;
   disabled?: boolean;
@@ -18,6 +19,7 @@ export const ListActions = ({
   isDeleted,
   onEdit,
   onMove,
+  onPrintLabel,
   onDelete,
   onRestore,
   disabled = false,
@@ -49,6 +51,19 @@ export const ListActions = ({
               title="Переместить"
             >
               <ArrowRightLeft className="h-4 w-4" />
+            </Button>
+          )}
+          {onPrintLabel && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onPrintLabel}
+              disabled={disabled}
+              className="h-8 w-8"
+              title="Печать этикетки"
+              aria-label="Печать этикетки"
+            >
+              <Printer className="h-4 w-4" />
             </Button>
           )}
           {onDelete && (

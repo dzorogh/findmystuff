@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw } from "lucide-react";
+import { Package, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/sheet";
 import { ItemsFiltersPanel, type ItemsFilters } from "@/components/filters/items-filters-panel";
 import { toast } from "sonner";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 import {
   Pagination,
   PaginationContent,
@@ -280,6 +281,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
+  const printLabel = usePrintEntityLabel("item");
+
   const hasActiveFilters = filters.locationType !== null || filters.hasPhoto !== null || filters.roomId !== null || filters.showDeleted;
   const activeFiltersCount = [filters.locationType !== null, filters.hasPhoto !== null, filters.roomId !== null, filters.showDeleted].filter(Boolean).length;
 
@@ -411,6 +414,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                           isDeleted={!!item.deleted_at}
                           onEdit={() => setEditingItemId(item.id)}
                           onMove={() => setMovingItemId(item.id)}
+                          onPrintLabel={() => printLabel(item.id, item.name)}
                           onDelete={() => handleDeleteItem(item.id)}
                           onRestore={() => handleRestoreItem(item.id)}
                         />
@@ -464,6 +468,18 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                   }}
                                 >
                                   <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    printLabel(item.id, item.name);
+                                    setMobileActionsItemId(null);
+                                  }}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                  <span>Печать этикетки</span>
                                 </Button>
                                 <Button
                                   variant="ghost"

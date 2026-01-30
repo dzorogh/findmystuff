@@ -33,6 +33,7 @@ import MoveItemForm from "@/components/forms/move-item-form";
 
 // Утилиты
 import { useEntityActions } from "@/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 
 // Типы
 import type { Transition, ItemEntity } from "@/types/entity";
@@ -142,6 +143,7 @@ export default function ItemDetailPage() {
     onSuccess: loadItemData,
   });
 
+  const printLabel = usePrintEntityLabel("item");
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
@@ -173,6 +175,7 @@ export default function ItemDetailPage() {
                 isRestoring={isRestoring}
                 onEdit={() => setIsEditDialogOpen(true)}
                 onMove={() => setIsMoveDialogOpen(true)}
+                onPrintLabel={item ? () => printLabel(item.id, item.name) : undefined}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
               />

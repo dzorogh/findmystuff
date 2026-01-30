@@ -156,8 +156,9 @@ npm run test:watch
 
 ## 📁 Структура тестов
 
-### Unit тесты (lib/) - 17 файлов
-- ✅ `utils.test.ts` - утилиты (cn, generateContainerMarking, containerTypesToOptions, placeTypesToOptions)
+### Unit тесты (lib/) - 18 файлов
+- ✅ `utils.test.ts` - утилиты (cn, containerTypesToOptions, placeTypesToOptions)
+- ✅ `entity-qr-code.test.ts` - формат QR этикеток (encode/parse)
 - ✅ `api-client/base.test.ts` - базовый API клиент
 - ✅ `api-client/items.test.ts` - API для вещей
 - ✅ `api-client/containers.test.ts` - API для контейнеров
@@ -173,9 +174,7 @@ npm run test:watch
 - ✅ `api-client/entity-types.test.ts` - API для типов сущностей
 - ✅ `api-client.test.ts` - главный API клиент
 - ✅ `query-builder.test.ts` - построитель запросов
-- ✅ `marking-templates.test.ts` - шаблоны маркировки
-
-### Hook тесты (hooks/) - 10 файлов
+### Hook тесты (hooks/) - 8 файлов
 - ✅ `use-debounced-search.test.ts` - debounce логика
 - ✅ `use-containers.test.ts` - хук контейнеров
 - ✅ `use-rooms.test.ts` - хук помещений
@@ -184,8 +183,6 @@ npm run test:watch
 - ✅ `use-entity-data-loader.test.ts` - загрузка данных
 - ✅ `use-entity-types.test.ts` - типы сущностей
 - ✅ `use-list-state.test.ts` - состояние списка
-- ✅ `use-container-marking.test.ts` - маркировка контейнеров
-- ✅ `use-place-marking.test.ts` - маркировка мест
 
 ### Component тесты (components/) - 29+ файлов
 
@@ -232,7 +229,6 @@ npm run test:watch
 - ✅ `form-footer.test.tsx` - футер формы
 - ✅ `search-form.test.tsx` - форма поиска
 - ✅ `list-actions.test.tsx` - действия списка
-- ✅ `marking-display.test.tsx` - отображение маркировки
 - ✅ `image-upload.test.tsx` - загрузка изображений
 
 ### E2E тесты (e2e/) - 6 файлов
@@ -332,7 +328,6 @@ npm run test
 
 #### Другие компоненты
 - `components/common/compact-search-bar.tsx`
-- `components/common/types-manager.tsx`
 - `components/common/page-header.tsx`
 - `components/navigation/top-bar.tsx`
 - `components/navigation/sidebar.tsx`
@@ -370,7 +365,6 @@ coverageThreshold: {
 - `lib/s3.ts` - Server-only
 - `lib/icon-image.tsx` - Server-only
 - `hooks/use-settings.ts`, `hooks/use-user.ts`, `hooks/use-toast.ts` - Реэкспорты
-- `lib/marking-templates.ts` - Только константы
 - `app/**/page.tsx` - Страницы (тестируются через E2E)
 - `components/providers.tsx` - Провайдеры контекста
 - `components/common/qr-scanner.tsx` - Требует нативных API

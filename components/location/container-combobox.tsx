@@ -20,8 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { useContainers } from "@/hooks/use-containers";
-import { useContainerMarking } from "@/hooks/use-container-marking";
-import { type ContainerType } from "@/lib/utils";
+import { getEntityDisplayName } from "@/lib/entity-display-name";
 import type { Container } from "@/types/entity";
 
 interface ContainerComboboxProps {
@@ -44,7 +43,6 @@ const ContainerCombobox = ({
   excludeContainerId,
 }: ContainerComboboxProps) => {
   const { containers } = useContainers();
-  const { generateMarking } = useContainerMarking();
   const [open, setOpen] = React.useState(false);
 
   const availableContainers = excludeContainerId
@@ -56,18 +54,9 @@ const ContainerCombobox = ({
   );
 
   const getDisplayName = (container: Container) => {
-    const containerMarking =
-      container.entity_type && "marking_number" in container
-        ? generateMarking(
-            container.entity_type.code as ContainerType,
-            container.marking_number as number | null
-          )
-        : null;
-
-    const displayName =
-      container.name || `Контейнер #${container.id}`;
-
-    return containerMarking ? `${displayName} (${containerMarking})` : displayName;
+    const displayName = getEntityDisplayName("container", container.id, container.name);
+    const typeName = container.entity_type?.name;
+    return typeName ? `${displayName} (${typeName})` : displayName;
   };
 
   return (
@@ -110,12 +99,7 @@ const ContainerCombobox = ({
                         container.id.toString(),
                         displayName,
                         container.name || "",
-                        container.entity_type?.code || "",
                         container.entity_type?.name || "",
-                        generateMarking(
-                          container.entity_type?.code as ContainerType,
-                          container.marking_number as number | null
-                        ) || "",
                       ]}
                       onSelect={() => {
                         onContainerIdChange(container.id.toString());

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Edit, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
+import { Edit, ArrowRightLeft, Trash2, RotateCcw, Printer } from "lucide-react";
 
 interface EntityActionsProps {
   isDeleted: boolean;
@@ -7,6 +7,7 @@ interface EntityActionsProps {
   isRestoring: boolean;
   onEdit: () => void;
   onMove?: () => void;
+  onPrintLabel?: () => void;
   onDelete: () => void;
   onRestore: () => void;
   showMove?: boolean;
@@ -18,6 +19,7 @@ export const EntityActions = ({
   isRestoring,
   onEdit,
   onMove,
+  onPrintLabel,
   onDelete,
   onRestore,
   showMove = true,
@@ -44,6 +46,18 @@ export const EntityActions = ({
         >
           <ArrowRightLeft className="h-4 w-4 mr-2" />
           Переместить
+        </Button>
+      )}
+      {!isDeleted && onPrintLabel && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrintLabel}
+          disabled={isDisabled}
+          aria-label="Печать этикетки"
+        >
+          <Printer className="h-4 w-4 mr-2" />
+          Печать этикетки
         </Button>
       )}
       {isDeleted ? (

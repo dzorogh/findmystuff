@@ -5,11 +5,12 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseEntityQrPayload, type EntityQrPayload } from "@/lib/entity-qr-code";
 import { Capacitor } from "@capacitor/core";
 import { BarcodeFormat, BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 
 interface QRScannerProps {
-  onScanSuccess: (result: { type: "room" | "place" | "container"; id: number }) => void;
+  onScanSuccess: (result: EntityQrPayload) => void;
   onClose: () => void;
   open: boolean;
 }
@@ -28,29 +29,8 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   const nativeScanInProgressRef = useRef(false);
   const isNativePlatform = Capacitor.isNativePlatform();
 
-  const parseQrPayload = useCallback((decodedText: string) => {
-    try {
-      const parsed = JSON.parse(decodedText);
-      if (
-        parsed.type &&
-        (parsed.type === "room" || parsed.type === "place" || parsed.type === "container") &&
-        typeof parsed.id === "number"
-      ) {
-        return { type: parsed.type, id: parsed.id } as const;
-      }
-    } catch {
-      // ignore
-    }
-
-    const match = decodedText.match(/^(room|place|container):(\d+)$/);
-    if (match) {
-      return {
-        type: match[1] as "room" | "place" | "container",
-        id: parseInt(match[2], 10),
-      } as const;
-    }
-
-    return null;
+  const parseQrPayload = useCallback((decodedText: string): EntityQrPayload | null => {
+    return parseEntityQrPayload(decodedText);
   }, []);
 
   const handleNativeScan = useCallback(async () => {
@@ -91,7 +71,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
       const parsed = parseQrPayload(rawValue);
 
       if (!parsed) {
-        setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
+        setError("Неверный формат QR-кода. Ожидается формат этикетки: тип:id (например, item:123).");
         return;
       }
 
@@ -229,7 +209,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           const parsed = parseQrPayload(rawValue);
 
           if (!parsed) {
-            setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
+            setError("Неверный формат QR-кода. Ожидается формат этикетки: тип:id (например, item:123).");
             isScanningRef.current = false;
             setIsScanning(false);
             isInitializingRef.current = false;
@@ -380,7 +360,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
               scanSuccessCallbackRef.current(parsed);
               stopScanner();
             } else {
-              setError("Неверный формат QR-кода. Ожидается JSON или формат 'type:id'.");
+              setError("Неверный формат QR-кода. Ожидается формат этикетки: тип:id (например, item:123).");
             }
           },
           (errorMessage: string) => {
@@ -436,6 +416,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   }, [open, qrReaderId, isNativePlatform, stopScanner]);
 
   const handleClose = useCallback((e?: React.MouseEvent) => {
+    console.log("[QuickMove] QRScanner handleClose called", { hasEvent: !!e });
     // Останавливаем распространение события, чтобы оно не влияло на другие модальные окна
     if (e) {
       e.stopPropagation();

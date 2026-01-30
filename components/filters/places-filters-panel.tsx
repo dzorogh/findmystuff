@@ -44,7 +44,7 @@ export const PlacesFiltersPanel = ({
           { value: "all", label: "Все типы" },
           ...entityTypes.map((type) => ({
             value: type.id.toString(),
-            label: `${type.code} - ${type.name}`,
+            label: type.name,
           })),
         ];
         setPlaceTypeOptions(options);

@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getEntityDisplayName, type LabelEntityType } from "@/lib/entity-display-name";
 import type { Transition } from "@/types/entity";
 
 interface TransitionsTableProps {
@@ -31,21 +32,15 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
     }
   };
 
-  const getLocationName = (transition: Transition) => {
-    if (transition.destination_name) {
-      return transition.destination_name;
+  const getLocationName = (transition: Transition): string => {
+    if (transition.destination_type && transition.destination_id != null) {
+      return getEntityDisplayName(
+        transition.destination_type as LabelEntityType,
+        transition.destination_id,
+        transition.destination_name
+      );
     }
-    
-    switch (transition.destination_type) {
-      case "room":
-        return `Помещение #${transition.destination_id}`;
-      case "place":
-        return `Место #${transition.destination_id}`;
-      case "container":
-        return `Контейнер #${transition.destination_id}`;
-      default:
-        return "Неизвестно";
-    }
+    return "Неизвестно";
   };
 
   if (isLoading) {

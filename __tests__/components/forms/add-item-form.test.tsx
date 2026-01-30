@@ -27,12 +27,6 @@ jest.mock('@/contexts/settings-context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
-    getMarkingTemplate: () => '{TYPE}-{NUMBER}',
-    getPlaceMarkingTemplate: () => '{TYPE}-{NUMBER}',
-    getContainerTypes: () => ['КОР', 'ПЛА'],
-    getDefaultContainerType: () => 'КОР',
-    getPlaceTypes: () => ['ПОЛ', 'СТОЛ'],
-    getDefaultPlaceType: () => 'ПОЛ',
   }),
   SettingsProvider: ({ children }: { children: React.ReactNode }) => children,
 }))

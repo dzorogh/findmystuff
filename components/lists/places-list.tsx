@@ -10,7 +10,6 @@ import { MapPin, Building2 } from "lucide-react";
 import Image from "next/image";
 import EditPlaceForm from "@/components/forms/edit-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
-import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { useListState } from "@/hooks/use-list-state";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
@@ -25,16 +24,15 @@ import {
 } from "@/components/ui/sheet";
 import { PlacesFiltersPanel, type PlacesFilters } from "@/components/filters/places-filters-panel";
 import { toast } from "sonner";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 
 interface Place {
   id: number;
   name: string | null;
   entity_type_id: number | null;
   entity_type?: {
-    code: string;
     name: string;
   } | null;
-  marking_number: number | null;
   created_at: string;
   deleted_at: string | null;
   photo_url: string | null;
@@ -104,7 +102,6 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
   const [places, setPlaces] = useState<Place[]>([]);
   const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
   const [movingPlaceId, setMovingPlaceId] = useState<number | null>(null);
-  const { generateMarking } = usePlaceMarking();
 
   const isLoadingRef = useRef(false);
   const requestKeyRef = useRef<string>("");
@@ -228,6 +225,8 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     }
   };
 
+  const printLabel = usePrintEntityLabel("place");
+
   const hasActiveFilters = filters.entityTypeId !== null || filters.roomId !== null || filters.showDeleted;
   const activeFiltersCount = [filters.entityTypeId !== null, filters.roomId !== null, filters.showDeleted].filter(Boolean).length;
 
@@ -283,9 +282,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                           {place.name || `Место #${place.id}`}
                         </CardTitle>
                       </Link>
-                      {place.entity_type && place.marking_number != null && (
-                        <p className="text-sm font-semibold font-mono text-primary mt-0.5">
-                          {generateMarking(place.entity_type.code, place.marking_number) || `${place.entity_type.code}${place.marking_number}`}
+                      {place.entity_type?.name && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {place.entity_type.name}
                         </p>
                       )}
                     </div>
@@ -324,6 +323,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                   isDeleted={!!place.deleted_at}
                   onEdit={() => setEditingPlaceId(place.id)}
                   onMove={() => setMovingPlaceId(place.id)}
+                  onPrintLabel={() => printLabel(place.id, place.name)}
                   onDelete={() => handleDeletePlace(place.id)}
                   onRestore={() => handleRestorePlace(place.id)}
                 />
@@ -338,7 +338,6 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
           placeId={editingPlaceId}
           placeName={places.find((p) => p.id === editingPlaceId)?.name || null}
           placeTypeId={places.find((p) => p.id === editingPlaceId)?.entity_type_id || null}
-          markingNumber={places.find((p) => p.id === editingPlaceId)?.marking_number || null}
           open={!!editingPlaceId}
           onOpenChange={(open) => !open && setEditingPlaceId(null)}
           onSuccess={() => {

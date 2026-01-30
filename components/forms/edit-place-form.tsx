@@ -9,7 +9,6 @@ import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useEntityTypes } from "@/hooks/use-entity-types";
-import { usePlaceMarking } from "@/hooks/use-place-marking";
 import { Combobox } from "@/components/ui/combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -26,7 +25,6 @@ interface EditPlaceFormProps {
   placeId: number;
   placeName: string | null;
   placeTypeId?: number | null;
-  markingNumber?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -36,14 +34,12 @@ const EditPlaceForm = ({
   placeId,
   placeName,
   placeTypeId: initialPlaceTypeId,
-  markingNumber,
   open,
   onOpenChange,
   onSuccess,
 }: EditPlaceFormProps) => {
   const { user, isLoading } = useUser();
   const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
-  const { generateMarking } = usePlaceMarking();
   const [name, setName] = useState(placeName || "");
   const [placeTypeId, setPlaceTypeId] = useState(initialPlaceTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -150,30 +146,14 @@ const EditPlaceForm = ({
 
             {(() => {
               const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
-              const typeCode = selectedType?.code;
-              const marking = typeCode && markingNumber !== null && markingNumber !== undefined
-                ? generateMarking(typeCode, markingNumber)
-                : null;
-              
-              return marking ? (
-                <FormField label="Маркировка">
-                  <div className="rounded-md border bg-muted px-3 py-2">
-                    <p className="text-sm font-medium">{marking}</p>
-                  </div>
-                </FormField>
-              ) : null;
-            })()}
-
-            {(() => {
-              const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
               return selectedType ? (
                 <FormField
                   label="Тип места"
-                  description="Тип места нельзя изменить после создания, чтобы сохранить код маркировки"
+                  description="Тип места нельзя изменить после создания"
                 >
                   <div className="rounded-md border bg-muted px-3 py-2">
                     <p className="text-sm font-medium">
-                      {selectedType.code} - {selectedType.name}
+                      {selectedType.name}
                     </p>
                   </div>
                 </FormField>

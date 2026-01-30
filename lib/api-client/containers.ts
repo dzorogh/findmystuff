@@ -40,7 +40,6 @@ export class ContainersApi extends ApiClientBase {
   async createContainer(data: {
     name?: string;
     entity_type_id?: number;
-    marking_number?: string;
     photo_url?: string;
     destination_type?: string;
     destination_id?: number;
@@ -56,7 +55,6 @@ export class ContainersApi extends ApiClientBase {
     data: {
       name?: string;
       entity_type_id?: number;
-      marking_number?: string;
       photo_url?: string;
     }
   ) {

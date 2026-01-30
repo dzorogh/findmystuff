@@ -126,7 +126,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 <Combobox
                   options={containerTypes.map((type) => ({
                     value: type.id.toString(),
-                    label: `${type.code} - ${type.name}`,
+                    label: type.name,
                   }))}
                   value={containerTypeId}
                   onValueChange={setContainerTypeId}

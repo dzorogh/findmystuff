@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useEntityTypes } from "@/hooks/use-entity-types";
 import type { EntityType } from "@/types/entity";
@@ -43,13 +43,12 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
   const { types, isLoading, error } = useEntityTypes(category);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<number | null>(null);
-  const [newCode, setNewCode] = useState("");
   const [newName, setName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleAdd = async () => {
-    if (!newCode.trim() || !newName.trim()) {
-      toast.error("Заполните код и название");
+    if (!newName.trim()) {
+      toast.error("Заполните название");
       return;
     }
 
@@ -57,7 +56,6 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     try {
       const response = await apiClient.createEntityType({
         entity_category: category,
-        code: newCode.trim(),
         name: newName.trim(),
       });
 
@@ -66,7 +64,6 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       }
 
       toast.success("Тип успешно добавлен");
-      setNewCode("");
       setName("");
       setDialogOpen(false);
       window.location.reload();
@@ -77,23 +74,21 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
   };
 
-  const handleEdit = async (id: number, code: string, name: string) => {
+  const handleEdit = async (id: number, name: string) => {
     setIsEditing(id);
-    setNewCode(code);
     setName(name);
     setDialogOpen(true);
   };
 
   const handleUpdate = async () => {
-    if (!isEditing || !newCode.trim() || !newName.trim()) {
-      toast.error("Заполните код и название");
+    if (!isEditing || !newName.trim()) {
+      toast.error("Заполните название");
       return;
     }
 
     try {
       const response = await apiClient.updateEntityType({
         id: isEditing,
-        code: newCode.trim(),
         name: newName.trim(),
       });
 
@@ -102,7 +97,6 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       }
 
       toast.success("Тип успешно обновлен");
-      setNewCode("");
       setName("");
       setIsEditing(null);
       setDialogOpen(false);
@@ -135,14 +129,12 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
 
   const handleDialogClose = () => {
     setDialogOpen(false);
-    setNewCode("");
     setName("");
     setIsEditing(null);
   };
 
   useImperativeHandle(ref, () => ({
     openAddDialog: () => {
-      setNewCode("");
       setName("");
       setIsEditing(null);
       setDialogOpen(true);
@@ -169,21 +161,11 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
               </DialogTitle>
               <DialogDescription>
                 {isEditing
-                  ? "Измените код и название типа"
-                  : "Введите код и название нового типа"}
+                  ? "Измените название типа"
+                  : "Введите название нового типа"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Код</Label>
-                <Input
-                  id="code"
-                  value={newCode}
-                  onChange={(e) => setNewCode(e.target.value)}
-                  placeholder="Например: Ш, КОР"
-                  disabled={isAdding}
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="name">Название</Label>
                 <Input
@@ -199,7 +181,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
                 </Button>
                 <Button
                   onClick={isEditing ? handleUpdate : handleAdd}
-                  disabled={isAdding || !newCode.trim() || !newName.trim()}
+                  disabled={isAdding || !newName.trim()}
                 >
                   {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {isEditing ? "Сохранить" : "Добавить"}
@@ -215,7 +197,6 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Код</TableHead>
               <TableHead>Название</TableHead>
               <TableHead className="text-right">Действия</TableHead>
             </TableRow>
@@ -223,22 +204,24 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
           <TableBody>
             {types.map((type) => (
               <TableRow key={type.id}>
-                <TableCell className="font-mono">{type.code}</TableCell>
                 <TableCell>{type.name}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(type.id, type.code, type.name)}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(type.id, type.name)}
+                      aria-label="Редактировать"
                     >
-                      Редактировать
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => handleDelete(type.id)}
-                      className="text-destructive hover:text-destructive"
+                      aria-label="Удалить"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -249,54 +232,6 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
           </TableBody>
         </Table>
       )}
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? "Редактировать тип" : "Добавить тип"}
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing
-                ? "Измените код и название типа"
-                : "Введите код и название нового типа"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="code">Код</Label>
-              <Input
-                id="code"
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value)}
-                placeholder="Например: Ш, КОР"
-                disabled={isAdding}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Название</Label>
-              <Input
-                id="name"
-                value={newName}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Например: Шкаф, Коробка"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleDialogClose}>
-                Отмена
-              </Button>
-              <Button
-                onClick={isEditing ? handleUpdate : handleAdd}
-                disabled={isAdding || !newCode.trim() || !newName.trim()}
-              >
-                {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isEditing ? "Сохранить" : "Добавить"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 });

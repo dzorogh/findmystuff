@@ -30,8 +30,6 @@ jest.mock('@/contexts/settings-context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
-    getMarkingTemplate: () => '{TYPE}-{NUMBER}',
-    getPlaceMarkingTemplate: () => '{TYPE}-{NUMBER}',
   }),
   SettingsProvider: ({ children }: { children: React.ReactNode }) => children,
 }))

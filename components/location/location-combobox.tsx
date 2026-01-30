@@ -24,8 +24,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePlaces } from "@/hooks/use-places";
 import { useContainers } from "@/hooks/use-containers";
-import { useContainerMarking } from "@/hooks/use-container-marking";
-import { type ContainerType } from "@/lib/utils";
 import type { Container, Place, Room } from "@/types/entity";
 
 interface LocationComboboxProps {
@@ -52,7 +50,6 @@ const LocationCombobox = ({
   const { rooms, isLoading: isLoadingRooms } = useRooms();
   const { places, isLoading: isLoadingPlaces } = usePlaces();
   const { containers, isLoading: isLoadingContainers } = useContainers();
-  const { generateMarking } = useContainerMarking();
   const [open, setOpen] = React.useState(false);
 
   const isLoading =
@@ -99,18 +96,6 @@ const LocationCombobox = ({
   );
 
   const getDisplayName = (dest: Container | Place | Room) => {
-    // Проверяем, что это Container или Place (у них есть entity_type и marking_number)
-    const isContainerOrPlace = "entity_type" in dest && "marking_number" in dest;
-    const containerMarking =
-      destinationType === "container" &&
-      isContainerOrPlace &&
-      (dest as Container | Place).entity_type
-        ? generateMarking(
-            (dest as Container | Place).entity_type!.code as ContainerType,
-            (dest as Container | Place).marking_number as number | null
-          )
-        : null;
-
     const displayName =
       dest.name ||
       `${
@@ -121,7 +106,12 @@ const LocationCombobox = ({
           : "Помещение"
       } #${dest.id}`;
 
-    return containerMarking ? `${displayName} (${containerMarking})` : displayName;
+    const typeName =
+      destinationType === "container" || destinationType === "place"
+        ? (dest as Container | Place).entity_type?.name
+        : null;
+
+    return typeName ? `${displayName} (${typeName})` : displayName;
   };
 
   return (

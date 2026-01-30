@@ -26,7 +26,7 @@ export async function GET(
     // Загружаем контейнер
     const { data: containerData, error: containerError } = await supabase
       .from("containers")
-      .select("id, name, entity_type_id, marking_number, photo_url, created_at, deleted_at, entity_types(code, name)")
+      .select("id, name, entity_type_id, photo_url, created_at, deleted_at, entity_types(name)")
       .eq("id", containerId)
       .single();
 
@@ -169,7 +169,7 @@ export async function GET(
         }
       : null;
 
-    let entityType: { code: string; name: string } | null = null;
+    let entityType: { name: string } | null = null;
     if (containerData.entity_types) {
       if (Array.isArray(containerData.entity_types) && containerData.entity_types.length > 0) {
         entityType = containerData.entity_types[0];
@@ -183,7 +183,6 @@ export async function GET(
       name: containerData.name,
       entity_type_id: containerData.entity_type_id || null,
       entity_type: entityType,
-      marking_number: containerData.marking_number,
       photo_url: containerData.photo_url,
       created_at: containerData.created_at,
       deleted_at: containerData.deleted_at,
@@ -284,17 +283,15 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, entity_type_id, marking_number, photo_url } = body;
+    const { name, entity_type_id, photo_url } = body;
 
     const updateData: {
       name?: string | null;
       entity_type_id?: number | null;
-      marking_number?: string | null;
       photo_url?: string | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (entity_type_id !== undefined) updateData.entity_type_id = entity_type_id || null;
-    if (marking_number !== undefined) updateData.marking_number = marking_number || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
 
     const { data, error } = await supabase

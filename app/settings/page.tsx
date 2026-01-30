@@ -9,8 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
-import MarkingTemplateManager from "@/components/managers/marking-template-manager";
-import PlaceMarkingTemplateManager from "@/components/managers/place-marking-template-manager";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -54,19 +52,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Шаблон маркировки контейнеров */}
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-56" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-9 w-24" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Раздел: Места */}
@@ -93,19 +78,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Шаблон маркировки мест */}
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-9 w-24" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
@@ -140,7 +112,7 @@ export default function SettingsPage() {
                 <div>
                   <CardTitle>Типы контейнеров</CardTitle>
                   <CardDescription>
-                    Управление типами контейнеров для системы маркировки
+                    Управление типами контейнеров
                   </CardDescription>
                 </div>
                 <Button
@@ -157,23 +129,11 @@ export default function SettingsPage() {
                 ref={containerTypesManagerRef}
                 category="container"
                 title="Типы контейнеров"
-                description="Управление типами контейнеров для системы маркировки"
+                description="Управление типами контейнеров"
               />
             </CardContent>
           </Card>
 
-          {/* Шаблон маркировки контейнеров */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Шаблон маркировки контейнеров</CardTitle>
-              <CardDescription>
-                Настройка формата маркировки для контейнеров
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MarkingTemplateManager />
-            </CardContent>
-          </Card>
         </div>
 
         {/* Раздел: Места */}
@@ -189,7 +149,7 @@ export default function SettingsPage() {
                 <div>
                   <CardTitle>Типы мест</CardTitle>
                   <CardDescription>
-                    Управление типами мест для системы маркировки
+                    Управление типами мест
                   </CardDescription>
                 </div>
                 <Button
@@ -206,23 +166,11 @@ export default function SettingsPage() {
                 ref={placeTypesManagerRef}
                 category="place"
                 title="Типы мест"
-                description="Управление типами мест для системы маркировки"
+                description="Управление типами мест"
               />
             </CardContent>
           </Card>
 
-          {/* Шаблон маркировки мест */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Шаблон маркировки мест</CardTitle>
-              <CardDescription>
-                Настройка формата маркировки для мест
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PlaceMarkingTemplateManager />
-            </CardContent>
-          </Card>
         </div>
 
       </div>

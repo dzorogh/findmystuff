@@ -1,0 +1,339 @@
+"use client";
+
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { flushSync } from "react-dom";
+import { apiClient } from "@/lib/api-client";
+import { resolveQuickMove, type QuickMoveResult } from "@/lib/quick-move";
+import type { EntityQrPayload } from "@/lib/entity-qr-code";
+import { getEntityDisplayName } from "@/lib/entity-display-name";
+import type { EntityTypeName } from "@/types/entity";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import QRScanner from "@/components/common/qr-scanner";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+type Step = "scan_first" | "scan_second" | "confirm" | "submitting";
+
+interface QuickMoveDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+const fetchEntityName = async (
+  entityType: EntityTypeName,
+  entityId: number
+): Promise<string> => {
+  try {
+    if (entityType === "item") {
+      const res = await apiClient.getItem(entityId, false);
+      if (res.error || !res.data) {
+        return getEntityDisplayName(entityType, entityId, null);
+      }
+      const name = res.data.item?.name ?? null;
+      return getEntityDisplayName(entityType, entityId, name);
+    }
+    if (entityType === "container") {
+      const res = await apiClient.getContainer(entityId);
+      if (res.error || !res.data) {
+        return getEntityDisplayName(entityType, entityId, null);
+      }
+      const name = res.data.container?.name ?? null;
+      return getEntityDisplayName(entityType, entityId, name);
+    }
+    if (entityType === "place") {
+      const res = await apiClient.getPlace(entityId);
+      if (res.error || !res.data) {
+        return getEntityDisplayName(entityType, entityId, null);
+      }
+      const name = res.data.place?.name ?? null;
+      return getEntityDisplayName(entityType, entityId, name);
+    }
+    if (entityType === "room") {
+      const res = await apiClient.getRoom(entityId);
+      if (res.error || !res.data) {
+        return getEntityDisplayName(entityType, entityId, null);
+      }
+      const name = res.data.room?.name ?? null;
+      return getEntityDisplayName(entityType, entityId, name);
+    }
+  } catch {
+    // ignore
+  }
+  return getEntityDisplayName(entityType, entityId, null);
+};
+
+/** Логи только при открытом диалоге, чтобы не засорять консоль при загрузке. */
+const LOG = (open: boolean, msg: string, data?: object) => {
+  if (open) {
+    console.log("[QuickMove]", msg, data ?? "");
+  }
+};
+
+const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialogProps) => {
+  const [step, setStep] = useState<Step>("scan_first");
+  const [first, setFirst] = useState<EntityQrPayload | null>(null);
+  const [second, setSecond] = useState<EntityQrPayload | null>(null);
+  const [move, setMove] = useState<QuickMoveResult | null>(null);
+  const [sourceName, setSourceName] = useState<string | null>(null);
+  const [destName, setDestName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [scannerRemountKey, setScannerRemountKey] = useState(0);
+  const lastScanTimeRef = useRef(0);
+  const IGNORE_CLOSE_MS = 150;
+
+  const resetState = useCallback(() => {
+    LOG(true, "resetState");
+    setStep("scan_first");
+    setFirst(null);
+    setSecond(null);
+    setMove(null);
+    setSourceName(null);
+    setDestName(null);
+    setError(null);
+    setScannerRemountKey((k) => k + 1);
+  }, []);
+
+  useEffect(() => {
+    LOG(open, "useEffect [open]", { open });
+    if (open) {
+      resetState();
+    }
+  }, [open, resetState]);
+
+  const handleClose = useCallback(() => {
+    LOG(true, "handleClose called");
+    flushSync(() => {
+      onOpenChange(false);
+      LOG(true, "handleClose: onOpenChange(false) done");
+    });
+    resetState();
+    LOG(true, "handleClose: resetState done");
+  }, [onOpenChange, resetState]);
+
+  const handleScannerClose = useCallback(() => {
+    const now = Date.now();
+    const sinceScan = now - lastScanTimeRef.current;
+    LOG(true, "handleScannerClose called", { sinceScan });
+    if (sinceScan < IGNORE_CLOSE_MS) {
+      LOG(true, "handleScannerClose: ignored (recent scan), returning");
+      return;
+    }
+    LOG(true, "handleScannerClose: calling handleClose()");
+    handleClose();
+  }, [handleClose]);
+
+  const handleFirstScan = useCallback((payload: EntityQrPayload) => {
+    lastScanTimeRef.current = Date.now();
+    setFirst(payload);
+    setStep("scan_second");
+  }, []);
+
+  const handleSecondScan = useCallback(
+    (payload: EntityQrPayload) => {
+      if (!first) {
+        return;
+      }
+      const isSameEntity = payload.type === first.type && payload.id === first.id;
+      if (isSameEntity) {
+        lastScanTimeRef.current = Date.now();
+        toast.error("Отсканирована та же сущность", {
+          description: "Отсканируйте другую сущность (другой QR-код)",
+        });
+        setScannerRemountKey((k) => k + 1);
+        return;
+      }
+      if (payload.type === first.type) {
+        lastScanTimeRef.current = Date.now();
+        toast.error("Нужна сущность другого типа", {
+          description: "Отсканируйте QR-код вещи, контейнера, места или помещения другого типа",
+        });
+        setScannerRemountKey((k) => k + 1);
+        return;
+      }
+      lastScanTimeRef.current = Date.now();
+      setSecond(payload);
+      const result = resolveQuickMove(first, payload);
+      if (!result) {
+        toast.error("Невозможно определить перемещение");
+        return;
+      }
+      setMove(result);
+      setStep("confirm");
+      setError(null);
+      Promise.all([
+        fetchEntityName(result.sourceType, result.sourceId),
+        fetchEntityName(result.destType, result.destId),
+      ]).then(([src, dest]) => {
+        setSourceName(src);
+        setDestName(dest);
+      });
+    },
+    [first]
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!move) {
+      return;
+    }
+    setStep("submitting");
+    setError(null);
+    try {
+      const payload: {
+        item_id?: number;
+        place_id?: number;
+        container_id?: number;
+        destination_type: string;
+        destination_id: number;
+      } = {
+        destination_type: move.destType,
+        destination_id: move.destId,
+      };
+      if (move.sourceType === "item") {
+        payload.item_id = move.sourceId;
+      } else if (move.sourceType === "place") {
+        payload.place_id = move.sourceId;
+      } else if (move.sourceType === "container") {
+        payload.container_id = move.sourceId;
+      }
+      const response = await apiClient.createTransition(payload);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      const destLabel = destName ?? getEntityDisplayName(move.destType, move.destId, null);
+      toast.success(`Успешно перемещено в ${destLabel}`, {
+        description: "Перемещение выполнено",
+      });
+      if (onSuccess) {
+        onSuccess();
+      }
+      handleClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка при перемещении");
+      setStep("confirm");
+    }
+  }, [move, destName, onSuccess, handleClose]);
+
+  const handleScanSuccess = useCallback(
+    (payload: EntityQrPayload) => {
+      if (step === "scan_first") {
+        handleFirstScan(payload);
+        return;
+      }
+      if (step === "scan_second") {
+        handleSecondScan(payload);
+      }
+    },
+    [step, handleFirstScan, handleSecondScan]
+  );
+
+  const showScanner = step === "scan_first" || step === "scan_second";
+
+  LOG(open, "render", { open, step, showScanner });
+
+  // На шагах сканирования — один слой: непрозрачный фон в body скрывает приложение,
+  // поверх только сканер. Так не видно сайдбар/контент под сканером.
+  if (open && showScanner) {
+    LOG(open, "render: return scanner + backdrop");
+    return (
+      <>
+        <QRScanner
+          key={`${step}-${scannerRemountKey}`}
+          open={true}
+          onClose={handleScannerClose}
+          onScanSuccess={handleScanSuccess}
+        />
+      </>
+    );
+  }
+
+  if (!open) {
+    LOG(open, "render: return null (!open)");
+    return null;
+  }
+
+  LOG(open, "render: return Dialog (confirm step)");
+  return (
+    <Dialog open={true} onOpenChange={(newOpen) => !newOpen && handleClose()}>
+      <DialogContent className="max-w-lg" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>Быстрое перемещение</DialogTitle>
+          <DialogDescription id="quick-move-desc">
+            {step === "confirm" && "Проверьте и подтвердите перемещение."}
+            {step === "submitting" && "Выполняется перемещение…"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === "confirm" && move && (
+          <div className="space-y-4 py-2">
+            <p className="text-sm">
+              {sourceName !== null && destName !== null ? (
+                <>
+                  Переместить{" "}
+                  <span className="font-medium">{sourceName}</span> в{" "}
+                  <span className="font-medium">{destName}</span>
+                </>
+              ) : (
+                <>
+                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
+                  Загрузка названий…
+                </>
+              )}
+            </p>
+            {error && (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          {step === "confirm" && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetState();
+                  setStep("scan_first");
+                }}
+                disabled={step === "submitting"}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirm}
+                disabled={step === "submitting"}
+                aria-busy={step === "submitting"}
+              >
+                {step === "submitting" ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    Подтвердить
+                  </>
+                ) : (
+                  "Подтвердить"
+                )}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const QuickMoveDialog = React.memo(QuickMoveDialogInner);
+
+export default QuickMoveDialog;

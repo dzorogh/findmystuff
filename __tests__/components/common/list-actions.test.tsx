@@ -73,4 +73,36 @@ describe('ListActions', () => {
     render(<ListActions isDeleted={false} />)
     expect(screen.queryByTitle('Редактировать')).not.toBeInTheDocument()
   })
+
+  it('отображает кнопку печати этикетки, когда onPrintLabel передан', () => {
+    const mockOnPrintLabel = jest.fn()
+    render(
+      <ListActions
+        isDeleted={false}
+        onEdit={mockOnEdit}
+        onMove={mockOnMove}
+        onPrintLabel={mockOnPrintLabel}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    expect(screen.getByTitle('Печать этикетки')).toBeInTheDocument()
+  })
+
+  it('вызывает onPrintLabel при клике на печать этикетки', async () => {
+    const user = userEvent.setup()
+    const mockOnPrintLabel = jest.fn()
+    render(
+      <ListActions
+        isDeleted={false}
+        onEdit={mockOnEdit}
+        onMove={mockOnMove}
+        onPrintLabel={mockOnPrintLabel}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    await user.click(screen.getByTitle('Печать этикетки'))
+    expect(mockOnPrintLabel).toHaveBeenCalledTimes(1)
+  })
 })

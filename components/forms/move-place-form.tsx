@@ -12,6 +12,7 @@ import RoomCombobox from "@/components/location/room-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import QRScanner from "@/components/common/qr-scanner";
+import type { EntityQrPayload } from "@/lib/entity-qr-code";
 import { Scan } from "lucide-react";
 import {
   Sheet,
@@ -83,7 +84,7 @@ const MovePlaceForm = ({ placeId, placeName, open, onOpenChange, onSuccess }: Mo
     }
   };
 
-  const handleQRScanSuccess = (result: { type: "room" | "place" | "container"; id: number }) => {
+  const handleQRScanSuccess = (result: EntityQrPayload) => {
     if (result.type !== "room") {
       toast.error("Некорректный QR-код", {
         description: "Для перемещения места необходимо отсканировать QR-код помещения",

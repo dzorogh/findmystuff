@@ -5,14 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
+import { useQuickMove } from "@/contexts/quick-move-context";
 import { Button } from "@/components/ui/button";
-import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun } from "lucide-react";
+import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun, ArrowRightLeft } from "lucide-react";
 import Logo from "@/components/common/logo";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
   const { user, isLoading } = useUser();
+  const { setOpen: setQuickMoveOpen } = useQuickMove();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const supabase = createClient();
@@ -63,6 +65,16 @@ const Sidebar = () => {
 
     return (
       <nav className="flex flex-col gap-1">
+        {/* Быстрое перемещение */}
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-10 px-3"
+          onClick={() => setQuickMoveOpen(true)}
+          aria-label="Быстрое перемещение"
+        >
+          <ArrowRightLeft className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">Быстрое перемещение</span>
+        </Button>
         {/* Поиск */}
         {renderNavItem(searchItem)}
         
@@ -149,38 +161,66 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav: 2 links | center Quick Move | 2 links */}
       <nav className="md:hidden border-t bg-background">
-        <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-around gap-2 px-2 pb-[var(--app-safe-bottom)]">
-          {[
-            { href: "/", label: "Поиск", icon: Search },
-            { href: "/rooms", label: "Помещения", icon: Building2 },
-            { href: "/places", label: "Места", icon: MapPin },
-            { href: "/containers", label: "Контейнеры", icon: Container },
-            { href: "/items", label: "Вещи", icon: Box },
-          ].map((item) => {
-            const Icon = item.icon;
-            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            const linkTextClassName = isActive
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground";
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                aria-label={item.label}
-                className={cn(
-                  "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
-                  linkTextClassName
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="sr-only">{item.label}</span>
-              </Link>
-            );
-          })}
+        <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-between gap-1 px-1 pb-[var(--app-safe-bottom)]">
+          <Link
+            href="/rooms"
+            aria-current={pathname.startsWith("/rooms") ? "page" : undefined}
+            aria-label="Помещения"
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
+              pathname.startsWith("/rooms") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Building2 className="h-5 w-5" />
+            <span className="sr-only">Помещения</span>
+          </Link>
+          <Link
+            href="/places"
+            aria-current={pathname.startsWith("/places") ? "page" : undefined}
+            aria-label="Места"
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
+              pathname.startsWith("/places") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MapPin className="h-5 w-5" />
+            <span className="sr-only">Места</span>
+          </Link>
+          <Button
+            type="button"
+            size="icon"
+            className="h-12 w-12 shrink-0 rounded-full"
+            onClick={() => setQuickMoveOpen(true)}
+            aria-label="Быстрое перемещение"
+          >
+            <ArrowRightLeft className="h-6 w-6" />
+          </Button>
+          <Link
+            href="/containers"
+            aria-current={pathname.startsWith("/containers") ? "page" : undefined}
+            aria-label="Контейнеры"
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
+              pathname.startsWith("/containers") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Container className="h-5 w-5" />
+            <span className="sr-only">Контейнеры</span>
+          </Link>
+          <Link
+            href="/items"
+            aria-current={pathname.startsWith("/items") ? "page" : undefined}
+            aria-label="Вещи"
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] font-medium transition-colors",
+              pathname.startsWith("/items") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Box className="h-5 w-5" />
+            <span className="sr-only">Вещи</span>
+          </Link>
         </div>
       </nav>
     </>

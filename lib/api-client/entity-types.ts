@@ -20,7 +20,6 @@ export class EntityTypesApi extends ApiClientBase {
 
   async createEntityType(data: {
     entity_category: "place" | "container";
-    code: string;
     name: string;
   }) {
     return this.request<CreateEntityTypeResponse>("/entity-types", {
@@ -31,7 +30,6 @@ export class EntityTypesApi extends ApiClientBase {
 
   async updateEntityType(data: {
     id: number;
-    code?: string;
     name?: string;
   }) {
     return this.request<UpdateEntityTypeResponse>("/entity-types", {

@@ -1,5 +1,8 @@
 export type DestinationType = "room" | "place" | "container";
 
+/** Тип сущности по имени (для отображения, этикеток, поиска). */
+export type EntityTypeName = "item" | "place" | "container" | "room";
+
 export interface Transition {
   id: number;
   created_at: string;
@@ -25,7 +28,6 @@ export interface Location {
 export interface EntityType {
   id: number;
   entity_category: "place" | "container";
-  code: string;
   name: string;
   created_at: string;
   deleted_at: string | null;
@@ -48,9 +50,7 @@ export interface Item extends BaseEntity {
 
 export interface Place extends BaseEntity {
   entity_type_id: number | null;
-  marking_number: number | null;
   entity_type?: {
-    code: string;
     name: string;
   } | null;
   // Дополнительные поля из списков
@@ -60,9 +60,7 @@ export interface Place extends BaseEntity {
 
 export interface Container extends BaseEntity {
   entity_type_id: number | null;
-  marking_number: number | null;
   entity_type?: {
-    code: string;
     name: string;
   } | null;
   // Дополнительные поля из списков
@@ -89,7 +87,7 @@ export interface RoomEntity extends Room {}
 export interface SearchResult {
   id: number;
   name: string | null;
-  type: "item" | "place" | "container" | "room";
+  type: EntityTypeName;
   location?: string | null;
   locationType?: "place" | "container" | "room";
 }
@@ -115,7 +113,6 @@ export interface CreatePlaceResponse {
   id: number;
   name: string | null;
   entity_type_id: number | null;
-  marking_number: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
@@ -125,7 +122,6 @@ export interface CreateContainerResponse {
   id: number;
   name: string | null;
   entity_type_id: number | null;
-  marking_number: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
@@ -152,7 +148,6 @@ export interface CreateTransitionResponse {
 export interface CreateEntityTypeResponse {
   id: number;
   entity_category: "place" | "container";
-  code: string;
   name: string;
   created_at: string;
   deleted_at: string | null;
@@ -161,7 +156,6 @@ export interface CreateEntityTypeResponse {
 export interface UpdateEntityTypeResponse {
   id: number;
   entity_category: "place" | "container";
-  code: string;
   name: string;
   created_at: string;
   deleted_at: string | null;

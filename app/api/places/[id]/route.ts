@@ -26,7 +26,7 @@ export async function GET(
     // Загружаем место
     const { data: placeData, error: placeError } = await supabase
       .from("places")
-      .select("id, name, entity_type_id, marking_number, photo_url, created_at, deleted_at, entity_types(code, name)")
+      .select("id, name, entity_type_id, photo_url, created_at, deleted_at, entity_types(name)")
       .eq("id", placeId)
       .single();
 
@@ -99,7 +99,7 @@ export async function GET(
         }
       : null;
 
-    let entityType: { code: string; name: string } | null = null;
+    let entityType: { name: string } | null = null;
     if (placeData.entity_types) {
       if (Array.isArray(placeData.entity_types) && placeData.entity_types.length > 0) {
         entityType = placeData.entity_types[0];
@@ -113,7 +113,6 @@ export async function GET(
       name: placeData.name,
       entity_type_id: placeData.entity_type_id || null,
       entity_type: entityType,
-      marking_number: placeData.marking_number,
       photo_url: placeData.photo_url,
       created_at: placeData.created_at,
       deleted_at: placeData.deleted_at,
@@ -216,7 +215,7 @@ export async function GET(
       if (containersInPlace.length > 0) {
         const { data: containersData } = await supabase
           .from("containers")
-          .select("id, name, photo_url, created_at, deleted_at, entity_type_id, marking_number")
+          .select("id, name, photo_url, created_at, deleted_at, entity_type_id")
           .in("id", containersInPlace)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
@@ -269,17 +268,15 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, entity_type_id, marking_number, photo_url } = body;
+    const { name, entity_type_id, photo_url } = body;
 
     const updateData: {
       name?: string | null;
       entity_type_id?: number | null;
-      marking_number?: string | null;
       photo_url?: string | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (entity_type_id !== undefined) updateData.entity_type_id = entity_type_id || null;
-    if (marking_number !== undefined) updateData.marking_number = marking_number || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
 
     const { data, error } = await supabase

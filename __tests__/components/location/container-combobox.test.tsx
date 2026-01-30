@@ -8,37 +8,23 @@ jest.mock('@/hooks/use-containers', () => ({
       {
         id: 1,
         name: 'Контейнер 1',
-        entity_type: { code: 'BOX', name: 'Коробка' },
-        marking_number: 1,
+        entity_type: { name: 'Коробка' },
       },
       {
         id: 2,
         name: 'Контейнер 2',
-        entity_type: { code: 'BOX', name: 'Коробка' },
-        marking_number: 2,
+        entity_type: { name: 'Коробка' },
       },
       {
         id: 3,
         name: '',
         entity_type: null,
-        marking_number: null,
       },
     ],
     isLoading: false,
     error: null,
     refetch: jest.fn(),
   })),
-}))
-
-jest.mock('@/hooks/use-container-marking', () => ({
-  useContainerMarking: () => ({
-    generateMarking: jest.fn((type, number) => {
-      if (type === 'BOX' && number) {
-        return `BOX-${number.toString().padStart(3, '0')}`
-      }
-      return null
-    }),
-  }),
 }))
 
 describe('ContainerCombobox', () => {
@@ -92,22 +78,10 @@ describe('ContainerCombobox', () => {
     )
 
     const button = screen.getByRole('combobox')
-    expect(button).toHaveTextContent('Контейнер 1 (BOX-001)')
+    expect(button).toHaveTextContent('Контейнер 1 (Коробка)')
   })
 
-  it('отображает контейнер с маркировкой', () => {
-    render(
-      <ContainerCombobox
-        selectedContainerId="2"
-        onContainerIdChange={mockOnContainerIdChange}
-      />
-    )
-
-    const button = screen.getByRole('combobox')
-    expect(button).toHaveTextContent('Контейнер 2 (BOX-002)')
-  })
-
-  it('отображает ID для контейнера без имени и маркировки', () => {
+  it('отображает ID для контейнера без имени и типа', () => {
     render(
       <ContainerCombobox
         selectedContainerId="3"
@@ -153,8 +127,8 @@ describe('ContainerCombobox', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Контейнер 1 (BOX-001)')).toBeInTheDocument()
-      expect(screen.getByText('Контейнер 2 (BOX-002)')).toBeInTheDocument()
+      expect(screen.getByText('Контейнер 1 (Коробка)')).toBeInTheDocument()
+      expect(screen.getByText('Контейнер 2 (Коробка)')).toBeInTheDocument()
       expect(screen.getByText('Контейнер #3')).toBeInTheDocument()
     })
   })
@@ -174,10 +148,10 @@ describe('ContainerCombobox', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Контейнер 1 (BOX-001)')).toBeInTheDocument()
+      expect(screen.getByText('Контейнер 1 (Коробка)')).toBeInTheDocument()
     })
 
-    const containerItem = screen.getByText('Контейнер 1 (BOX-001)')
+    const containerItem = screen.getByText('Контейнер 1 (Коробка)')
     await act(async () => {
       await user.click(containerItem)
     })
@@ -201,8 +175,8 @@ describe('ContainerCombobox', () => {
     })
 
     await waitFor(() => {
-      expect(screen.queryByText('Контейнер 1 (BOX-001)')).not.toBeInTheDocument()
-      expect(screen.getByText('Контейнер 2 (BOX-002)')).toBeInTheDocument()
+      expect(screen.queryByText('Контейнер 1 (Коробка)')).not.toBeInTheDocument()
+      expect(screen.getByText('Контейнер 2 (Коробка)')).toBeInTheDocument()
       expect(screen.getByText('Контейнер #3')).toBeInTheDocument()
     })
   })

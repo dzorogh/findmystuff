@@ -31,6 +31,7 @@ import EditRoomForm from "@/components/forms/edit-room-form";
 
 // Утилиты
 import { useEntityActions } from "@/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 
 // Типы
 import type { RoomEntity } from "@/types/entity";
@@ -143,6 +144,7 @@ export default function RoomDetailPage() {
     onSuccess: loadRoomData,
   });
 
+  const printLabel = usePrintEntityLabel("room");
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
@@ -173,6 +175,7 @@ export default function RoomDetailPage() {
                 isDeleting={isDeleting}
                 isRestoring={isRestoring}
                 onEdit={() => setIsEditDialogOpen(true)}
+                onPrintLabel={room ? () => printLabel(room.id, room.name) : undefined}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
                 showMove={false}

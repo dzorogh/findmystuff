@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import Sidebar from "@/components/navigation/sidebar";
 import TopBar from "@/components/navigation/top-bar";
+import { QuickMoveProvider } from "@/contexts/quick-move-context";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -31,36 +32,39 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   // Grid layout для авторизованных пользователей
   // Desktop: [Sidebar | TopBar+Content]
   // Mobile: [TopBar+Content+BottomNav] - все в grid
+  // QuickMoveProvider рендерит один QuickMoveDialog — оба Sidebar (desktop и mobile) используют контекст
   return (
-    <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr] grid-rows-[1fr_auto] md:grid-rows-1">
-      {/* Desktop Sidebar - первая колонка */}
-      {showSidebar && (
-        <div className="hidden md:block row-start-1 row-end-2 col-start-1 col-end-2 overflow-y-auto">
-          <Sidebar />
-        </div>
-      )}
-      
-      {/* Main content area - вторая колонка на desktop, вся ширина на mobile */}
-      <main className="row-start-1 row-end-2 md:row-start-1 md:row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
-        {/* TopBar - sticky вверху */}
-        {showTopBar && (
-          <div className="shrink-0 relative z-40">
-            <TopBar />
+    <QuickMoveProvider>
+      <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr] grid-rows-[1fr_auto] md:grid-rows-1">
+        {/* Desktop Sidebar - первая колонка */}
+        {showSidebar && (
+          <div className="hidden md:block row-start-1 row-end-2 col-start-1 col-end-2 overflow-y-auto">
+            <Sidebar />
           </div>
         )}
-        
-        {/* Content area - scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] md:pb-0">
-          {children}
-        </div>
-      </main>
-      
-      {/* Mobile Bottom Nav - часть grid, внизу */}
-      {showSidebar && (
-        <div className="md:hidden row-start-2 row-end-3 col-start-1 col-end-2 shrink-0 border-t bg-background">
-          <Sidebar />
-        </div>
-      )}
-    </div>
+
+        {/* Main content area - вторая колонка на desktop, вся ширина на mobile */}
+        <main className="row-start-1 row-end-2 md:row-start-1 md:row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
+          {/* TopBar - sticky вверху; на десктопе скрыт на главной */}
+          {showTopBar && (
+            <div className={isHomePage ? "shrink-0 relative z-40 md:hidden" : "shrink-0 relative z-40"}>
+              <TopBar />
+            </div>
+          )}
+
+          {/* Content area - scrollable */}
+          <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] md:pb-0">
+            {children}
+          </div>
+        </main>
+
+        {/* Mobile Bottom Nav - часть grid, внизу */}
+        {showSidebar && (
+          <div className="md:hidden row-start-2 row-end-3 col-start-1 col-end-2 shrink-0 border-t bg-background">
+            <Sidebar />
+          </div>
+        )}
+      </div>
+    </QuickMoveProvider>
   );
 };

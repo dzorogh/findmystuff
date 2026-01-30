@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       .from("entity_types")
       .select("*")
       .is("deleted_at", null)
-      .order("code", { ascending: true });
+      .order("name", { ascending: true });
 
     if (category) {
       query = query.eq("entity_category", category);
@@ -36,11 +36,11 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { entity_category, code, name } = body;
+    const { entity_category, name } = body;
 
-    if (!entity_category || !code || !name) {
+    if (!entity_category || !name) {
       return NextResponse.json(
-        { error: "Необходимы поля: entity_category, code, name" },
+        { error: "Необходимы поля: entity_category, name" },
         { status: 400 }
       );
     }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("entity_types")
-      .insert({ entity_category, code, name })
+      .insert({ entity_category, name })
       .select()
       .single();
 
@@ -75,14 +75,13 @@ export async function PUT(request: NextRequest) {
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { id, code, name } = body;
+    const { id, name } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Необходим id" }, { status: 400 });
     }
 
-    const updateData: { code?: string; name?: string } = {};
-    if (code !== undefined) updateData.code = code;
+    const updateData: { name?: string } = {};
     if (name !== undefined) updateData.name = name;
 
     const { data, error } = await supabase

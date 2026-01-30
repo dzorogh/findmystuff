@@ -16,8 +16,6 @@ export const DEFAULT_CONTAINER_TYPES = [
   { value: "ДРУ", label: "ДРУ - Другое" },
 ] as const;
 
-export type ContainerType = string;
-
 /**
  * Преобразует массив типов контейнеров в формат для select
  */
@@ -52,40 +50,4 @@ const getContainerTypeLabel = (type: string): string => {
     ДРУ: "Другое",
   };
   return labels[type] || type;
-};
-
-/**
- * Генерирует маркировку контейнера по шаблону
- * @param containerType - тип контейнера
- * @param markingNumber - номер маркировки
- * @param template - шаблон маркировки (по умолчанию "{TYPE}-{NUMBER}")
- */
-export const generateContainerMarking = (
-  containerType: ContainerType | null | undefined,
-  markingNumber: number | null | undefined,
-  template: string = "{TYPE}-{NUMBER}"
-): string | null => {
-  if (!containerType || !markingNumber) {
-    return null;
-  }
-
-  try {
-    let result = template;
-    
-    // Заменяем {TYPE} на тип контейнера
-    result = result.replace(/{TYPE}/g, containerType);
-    
-    // Обрабатываем {NUMBER} с указанием ширины (например, {NUMBER:2} или {NUMBER:4})
-    result = result.replace(/{NUMBER:(\d+)}/g, (_, width) => {
-      return String(markingNumber).padStart(parseInt(width), "0");
-    });
-    
-    // Заменяем обычный {NUMBER} на номер с шириной 3 по умолчанию
-    result = result.replace(/{NUMBER}/g, String(markingNumber).padStart(3, "0"));
-    
-    return result;
-  } catch {
-    // В случае ошибки возвращаем простой формат
-    return `${containerType}-${String(markingNumber).padStart(3, "0")}`;
-  }
 };

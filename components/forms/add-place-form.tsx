@@ -119,7 +119,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 <Combobox
                   options={placeTypes.map((type) => ({
                     value: type.id.toString(),
-                    label: `${type.code} - ${type.name}`,
+                    label: type.name,
                   }))}
                   value={placeTypeId}
                   onValueChange={setPlaceTypeId}

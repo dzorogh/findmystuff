@@ -1,59 +1,9 @@
 import {
-  generateContainerMarking,
   containerTypesToOptions,
   placeTypesToOptions,
   DEFAULT_CONTAINER_TYPES,
   cn,
 } from '@/lib/utils'
-
-describe('generateContainerMarking', () => {
-  it('генерирует маркировку с дефолтным шаблоном', () => {
-    const result = generateContainerMarking('КОР', 5)
-    expect(result).toBe('КОР-005')
-  })
-
-  it('генерирует маркировку с кастомным шаблоном', () => {
-    const result = generateContainerMarking('КОР', 5, '{TYPE}-{NUMBER:4}')
-    expect(result).toBe('КОР-0005')
-  })
-
-  it('генерирует маркировку с шаблоном без указания ширины', () => {
-    const result = generateContainerMarking('ПЛА', 12, '{TYPE}-{NUMBER}')
-    expect(result).toBe('ПЛА-012')
-  })
-
-  it('обрабатывает большие номера', () => {
-    const result = generateContainerMarking('ЯЩ', 1234)
-    expect(result).toBe('ЯЩ-1234')
-  })
-
-  it('возвращает null при отсутствии типа', () => {
-    const result = generateContainerMarking(null, 5)
-    expect(result).toBeNull()
-  })
-
-  it('возвращает null при отсутствии номера', () => {
-    const result = generateContainerMarking('КОР', null)
-    expect(result).toBeNull()
-  })
-
-  it('возвращает null при undefined значениях', () => {
-    const result = generateContainerMarking(undefined, undefined)
-    expect(result).toBeNull()
-  })
-
-  it('обрабатывает сложные шаблоны', () => {
-    const result = generateContainerMarking('МЕТ', 7, 'CONTAINER-{TYPE}-{NUMBER:2}')
-    expect(result).toBe('CONTAINER-МЕТ-07')
-  })
-
-  it('возвращает простой формат при ошибке обработки', () => {
-    // Тест с некорректным шаблоном, который может вызвать ошибку
-    const result = generateContainerMarking('КОР', 1, '{TYPE}-{NUMBER:invalid}')
-    // Должен вернуть простой формат или обработать ошибку
-    expect(result).toBeTruthy()
-  })
-})
 
 describe('containerTypesToOptions', () => {
   it('преобразует массив типов в опции', () => {

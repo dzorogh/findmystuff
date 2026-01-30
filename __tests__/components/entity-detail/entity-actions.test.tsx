@@ -169,4 +169,42 @@ describe('EntityActions', () => {
 
     expect(screen.queryByText(/переместить/i)).not.toBeInTheDocument()
   })
+
+  it('отображает кнопку печати этикетки, когда onPrintLabel передан', () => {
+    const mockOnPrintLabel = jest.fn()
+    render(
+      <EntityActions
+        isDeleted={false}
+        isDeleting={false}
+        isRestoring={false}
+        onEdit={mockOnEdit}
+        onMove={mockOnMove}
+        onPrintLabel={mockOnPrintLabel}
+        onDelete={mockOnDelete}
+        onRestore={mockOnRestore}
+      />
+    )
+
+    expect(screen.getByText(/печать этикетки/i)).toBeInTheDocument()
+  })
+
+  it('вызывает onPrintLabel при клике на печать этикетки', async () => {
+    const user = userEvent.setup()
+    const mockOnPrintLabel = jest.fn()
+    render(
+      <EntityActions
+        isDeleted={false}
+        isDeleting={false}
+        isRestoring={false}
+        onEdit={mockOnEdit}
+        onMove={mockOnMove}
+        onPrintLabel={mockOnPrintLabel}
+        onDelete={mockOnDelete}
+        onRestore={mockOnRestore}
+      />
+    )
+
+    await user.click(screen.getByText(/печать этикетки/i))
+    expect(mockOnPrintLabel).toHaveBeenCalledTimes(1)
+  })
 })

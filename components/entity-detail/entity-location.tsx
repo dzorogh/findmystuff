@@ -1,4 +1,5 @@
 import { Building2, MapPin, Container } from "lucide-react";
+import { getEntityDisplayName, type LabelEntityType } from "@/lib/entity-display-name";
 import type { Location } from "@/types/entity";
 
 interface EntityLocationProps {
@@ -29,21 +30,15 @@ export const EntityLocation = ({ location, variant = "default" }: EntityLocation
     }
   };
 
-  const getLocationName = () => {
-    if (location.destination_name) {
-      return location.destination_name;
+  const getLocationName = (): string => {
+    if (location.destination_type && location.destination_id != null) {
+      return getEntityDisplayName(
+        location.destination_type as LabelEntityType,
+        location.destination_id,
+        location.destination_name
+      );
     }
-    
-    switch (location.destination_type) {
-      case "room":
-        return `Помещение #${location.destination_id}`;
-      case "place":
-        return `Место #${location.destination_id}`;
-      case "container":
-        return `Контейнер #${location.destination_id}`;
-      default:
-        return "Неизвестно";
-    }
+    return "Неизвестно";
   };
 
   if (variant === "detailed") {

@@ -16,6 +16,7 @@ import LocationCombobox from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import QRScanner from "@/components/common/qr-scanner";
+import type { EntityQrPayload } from "@/lib/entity-qr-code";
 import { Scan } from "lucide-react";
 import {
   Sheet,
@@ -101,7 +102,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
     }
   };
 
-  const handleQRScanSuccess = (result: { type: "room" | "place" | "container"; id: number }) => {
+  const handleQRScanSuccess = (result: EntityQrPayload) => {
     // Проверяем, существует ли выбранное местоположение
     let destinationExists = false;
     

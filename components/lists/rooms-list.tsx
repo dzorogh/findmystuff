@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { RoomsFiltersPanel, type RoomsFilters } from "@/components/filters/rooms-filters-panel";
 import { toast } from "sonner";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 import type { Room } from "@/types/entity";
 
 interface RoomsListProps {
@@ -221,6 +222,8 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
+  const printLabel = usePrintEntityLabel("room");
+
   if (!user) {
     return null;
   }
@@ -305,6 +308,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                 <ListActions
                   isDeleted={!!room.deleted_at}
                   onEdit={() => setEditingRoomId(room.id)}
+                  onPrintLabel={() => printLabel(room.id, room.name)}
                   onDelete={() => handleDeleteRoom(room.id)}
                   onRestore={() => handleRestoreRoom(room.id)}
                 />

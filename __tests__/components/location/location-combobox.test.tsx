@@ -17,8 +17,8 @@ jest.mock('@/hooks/use-rooms', () => ({
 jest.mock('@/hooks/use-places', () => ({
   usePlaces: jest.fn(() => ({
     places: [
-      { id: 1, name: 'Место 1', entity_type: { code: 'PLACE', name: 'Место' }, marking_number: 1 },
-      { id: 2, name: 'Место 2', entity_type: { code: 'PLACE', name: 'Место' }, marking_number: 2 },
+      { id: 1, name: 'Место 1', entity_type: { name: 'Место' } },
+      { id: 2, name: 'Место 2', entity_type: { name: 'Место' } },
     ],
     isLoading: false,
     error: null,
@@ -32,31 +32,18 @@ jest.mock('@/hooks/use-containers', () => ({
       {
         id: 1,
         name: 'Контейнер 1',
-        entity_type: { code: 'BOX', name: 'Коробка' },
-        marking_number: 1,
+        entity_type: { name: 'Коробка' },
       },
       {
         id: 2,
         name: 'Контейнер 2',
-        entity_type: { code: 'BOX', name: 'Коробка' },
-        marking_number: 2,
+        entity_type: { name: 'Коробка' },
       },
     ],
     isLoading: false,
     error: null,
     refetch: jest.fn(),
   })),
-}))
-
-jest.mock('@/hooks/use-container-marking', () => ({
-  useContainerMarking: () => ({
-    generateMarking: jest.fn((type, number) => {
-      if (type === 'BOX' && number) {
-        return `BOX-${number.toString().padStart(3, '0')}`
-      }
-      return null
-    }),
-  }),
 }))
 
 describe('LocationCombobox', () => {
@@ -228,10 +215,10 @@ describe('LocationCombobox', () => {
     )
 
     const combobox = screen.getByRole('combobox')
-    expect(combobox).toHaveTextContent('Место 1')
+    expect(combobox).toHaveTextContent('Место 1 (Место)')
   })
 
-  it('отображает выбранный контейнер с маркировкой', () => {
+  it('отображает выбранный контейнер с типом', () => {
     render(
       <LocationCombobox
         destinationType="container"
@@ -242,7 +229,7 @@ describe('LocationCombobox', () => {
     )
 
     const combobox = screen.getByRole('combobox')
-    expect(combobox).toHaveTextContent('Контейнер 1')
+    expect(combobox).toHaveTextContent('Контейнер 1 (Коробка)')
   })
 
   it('открывает popover при клике на combobox', async () => {
@@ -333,10 +320,10 @@ describe('LocationCombobox', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Место 1')).toBeInTheDocument()
+      expect(screen.getByText('Место 1 (Место)')).toBeInTheDocument()
     })
 
-    const placeItem = screen.getByText('Место 1')
+    const placeItem = screen.getByText('Место 1 (Место)')
     await act(async () => {
       await user.click(placeItem)
     })
@@ -361,10 +348,10 @@ describe('LocationCombobox', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText(/Контейнер 1/)).toBeInTheDocument()
+      expect(screen.getByText(/Контейнер 1 \(Коробка\)/)).toBeInTheDocument()
     })
 
-    const containerItem = screen.getByText(/Контейнер 1/)
+    const containerItem = screen.getByText(/Контейнер 1 \(Коробка\)/)
     await act(async () => {
       await user.click(containerItem)
     })

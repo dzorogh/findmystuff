@@ -17,24 +17,17 @@ jest.mock('@/hooks/use-user', () => ({
 jest.mock('@/hooks/use-entity-types', () => ({
   useEntityTypes: () => ({
     types: [
-      { id: 1, name: 'Полка', code: 'ПОЛ', category: 'place' },
-      { id: 2, name: 'Стол', code: 'СТОЛ', category: 'place' },
+      { id: 1, name: 'Полка', entity_category: 'place' },
+      { id: 2, name: 'Стол', entity_category: 'place' },
     ],
     isLoading: false,
     error: null,
-  }),
-}))
-jest.mock('@/hooks/use-place-marking', () => ({
-  usePlaceMarking: () => ({
-    generateMarking: jest.fn(() => 'ПОЛ-001'),
   }),
 }))
 jest.mock('@/contexts/settings-context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
-    getMarkingTemplate: () => '{TYPE}-{NUMBER}',
-    getPlaceMarkingTemplate: () => '{TYPE}-{NUMBER}',
   }),
   SettingsProvider: ({ children }: { children: React.ReactNode }) => children,
 }))

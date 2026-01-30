@@ -8,7 +8,6 @@ import { useParams, useRouter } from "next/navigation";
 // Контексты
 import { useCurrentPage } from "@/contexts/current-page-context";
 import { useUser } from "@/hooks/use-user";
-import { usePlaceMarking } from "@/hooks/use-place-marking";
 
 // API Client
 import { apiClient } from "@/lib/api-client";
@@ -18,7 +17,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MapPin } from "lucide-react";
 
 // Общие компоненты
-import { MarkingDisplay } from "@/components/common/marking-display";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
@@ -38,6 +36,7 @@ import MovePlaceForm from "@/components/forms/move-place-form";
 
 // Утилиты
 import { useEntityActions } from "@/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 
 // Типы
 import type { Transition, PlaceEntity } from "@/types/entity";
@@ -49,7 +48,6 @@ export default function PlaceDetailPage() {
   const router = useRouter();
   const placeId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
-  const { generateMarking } = usePlaceMarking();
   const { setEntityName, setIsLoading } = useCurrentPage();
   const [place, setPlace] = useState<Place | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
@@ -140,6 +138,7 @@ export default function PlaceDetailPage() {
     onSuccess: loadPlaceData,
   });
 
+  const printLabel = usePrintEntityLabel("place");
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
@@ -171,6 +170,7 @@ export default function PlaceDetailPage() {
                 isRestoring={isRestoring}
                 onEdit={() => setIsEditDialogOpen(true)}
                 onMove={() => setIsMoveDialogOpen(true)}
+                onPrintLabel={place ? () => printLabel(place.id, place.name) : undefined}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
               />
@@ -178,11 +178,6 @@ export default function PlaceDetailPage() {
             layout="compact"
           />
           <CardContent className="space-y-4">
-            <MarkingDisplay
-              typeCode={place.entity_type?.code}
-              markingNumber={place.marking_number}
-              generateMarking={generateMarking}
-            />
             <EntityPhoto
               photoUrl={place.photo_url}
               name={place.name || `Место #${place.id}`}
@@ -250,7 +245,6 @@ export default function PlaceDetailPage() {
             placeId={place.id}
             placeName={place.name}
             placeTypeId={place.entity_type_id}
-            markingNumber={place.marking_number}
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onSuccess={() => {
