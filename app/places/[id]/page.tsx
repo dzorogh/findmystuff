@@ -16,7 +16,8 @@ import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
 
-// Общие компоненты
+// Layouts
+import { PageContainer } from "@/components/layouts/page-container";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
@@ -173,7 +174,7 @@ export default function PlaceDetailPage() {
   }
 
   return (
-    <div className="container pb-10 pt-4 px-4 md:py-10">
+    <PageContainer>
       <div className="mx-auto max-w-4xl space-y-6">
         <Card>
           <EntityHeader
@@ -275,6 +276,6 @@ export default function PlaceDetailPage() {
           />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

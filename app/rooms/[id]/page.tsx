@@ -12,6 +12,9 @@ import { useUser } from "@/hooks/use-user";
 // API Client
 import { apiClient } from "@/lib/api-client";
 
+// Layouts
+import { PageContainer } from "@/components/layouts/page-container";
+
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
@@ -179,7 +182,7 @@ export default function RoomDetailPage() {
   }
 
   return (
-    <div className="container pb-10 pt-4 px-4 md:py-10">
+    <PageContainer>
       <div className="mx-auto max-w-4xl space-y-6">
         <Card>
           <EntityHeader
@@ -259,6 +262,6 @@ export default function RoomDetailPage() {
           />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
