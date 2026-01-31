@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { flushSync } from "react-dom";
 import { apiClient } from "@/lib/api-client";
 import { resolveQuickMove, type QuickMoveResult } from "@/lib/quick-move";
@@ -82,7 +81,7 @@ const LOG = (open: boolean, msg: string, data?: object) => {
 const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialogProps) => {
   const [step, setStep] = useState<Step>("scan_first");
   const [first, setFirst] = useState<EntityQrPayload | null>(null);
-  const [second, setSecond] = useState<EntityQrPayload | null>(null);
+  const [_second, setSecond] = useState<EntityQrPayload | null>(null);
   const [move, setMove] = useState<QuickMoveResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scannerRemountKey, setScannerRemountKey] = useState(0);

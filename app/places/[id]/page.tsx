@@ -41,7 +41,7 @@ import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 // Типы
 import type { Transition, PlaceEntity } from "@/types/entity";
 
-interface Place extends PlaceEntity {}
+type Place = PlaceEntity;
 
 export default function PlaceDetailPage() {
   const params = useParams();

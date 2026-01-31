@@ -31,12 +31,19 @@ interface MovePlaceFormProps {
 }
 
 const MovePlaceForm = ({ placeId, placeName, open, onOpenChange, onSuccess }: MovePlaceFormProps) => {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const { rooms } = useRooms();
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+
+  const handleSheetOpenChange = useCallback((newOpen: boolean) => {
+    if (!newOpen && isQRScannerOpen) {
+      return;
+    }
+    onOpenChange(newOpen);
+  }, [isQRScannerOpen, onOpenChange]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,13 +121,6 @@ const MovePlaceForm = ({ placeId, placeName, open, onOpenChange, onSuccess }: Mo
   if (isLoading) {
     return null;
   }
-
-  const handleSheetOpenChange = useCallback((newOpen: boolean) => {
-    if (!newOpen && isQRScannerOpen) {
-      return;
-    }
-    onOpenChange(newOpen);
-  }, [isQRScannerOpen, onOpenChange]);
 
   return (
     <>

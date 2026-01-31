@@ -221,7 +221,7 @@ export async function GET(
         });
 
         const itemsInContainer = Array.from(lastItemTransitions.entries())
-          .filter(([itemId, transition]) => 
+          .filter(([, transition]) => 
             transition.destination_type === "container" && 
             transition.destination_id === containerId
           )

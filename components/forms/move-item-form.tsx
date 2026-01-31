@@ -2,9 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { apiClient } from "@/lib/api-client";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Divider } from "@/components/ui/divider";
 import { toast } from "sonner";
@@ -35,7 +33,7 @@ interface MoveItemFormProps {
 }
 
 const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveItemFormProps) => {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const { rooms } = useRooms();
   const { places } = usePlaces();
   const { containers } = useContainers();
@@ -44,6 +42,13 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+
+  const handleSheetOpenChange = useCallback((newOpen: boolean) => {
+    if (!newOpen && isQRScannerOpen) {
+      return;
+    }
+    onOpenChange(newOpen);
+  }, [isQRScannerOpen, onOpenChange]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -142,17 +147,6 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
   if (isLoading) {
     return null;
   }
-
-  const handleSheetOpenChange = useCallback((newOpen: boolean) => {
-    // Предотвращаем закрытие Sheet только если открыт QRScanner И это попытка закрыть Sheet
-    // Но позволяем закрыть Sheet, если пользователь явно хочет его закрыть (например, через кнопку отмены)
-    if (!newOpen && isQRScannerOpen) {
-      // Игнорируем попытку закрыть Sheet, если открыт QRScanner
-      // Это предотвращает автоматическое закрытие Sheet при закрытии QRScanner
-      return;
-    }
-    onOpenChange(newOpen);
-  }, [isQRScannerOpen, onOpenChange]);
 
   return (
     <>

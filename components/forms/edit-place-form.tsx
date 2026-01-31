@@ -3,13 +3,11 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/use-user";
 import { useEntityTypes } from "@/hooks/use-entity-types";
-import { Combobox } from "@/components/ui/combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -38,8 +36,8 @@ const EditPlaceForm = ({
   onOpenChange,
   onSuccess,
 }: EditPlaceFormProps) => {
-  const { user, isLoading } = useUser();
-  const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
+  const { isLoading } = useUser();
+  const { types: placeTypes } = useEntityTypes("place");
   const [name, setName] = useState(placeName || "");
   const [placeTypeId, setPlaceTypeId] = useState(initialPlaceTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -61,7 +59,7 @@ const EditPlaceForm = ({
           } else {
             setPhotoUrl(null);
           }
-        } catch (error) {
+        } catch {
           setPhotoUrl(null);
         }
       };

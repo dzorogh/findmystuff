@@ -273,13 +273,13 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
           default?: Html5QrcodeConstructor | { Html5Qrcode?: Html5QrcodeConstructor };
         };
         let Html5Qrcode: Html5QrcodeConstructor | undefined;
-        const module = html5QrcodeModule as unknown as Html5QrcodeModule;
-        if (module.Html5Qrcode) {
-          Html5Qrcode = module.Html5Qrcode;
-        } else if (module.default && typeof module.default === "object" && "Html5Qrcode" in module.default) {
-          Html5Qrcode = module.default.Html5Qrcode;
-        } else if (module.default && typeof module.default === "function") {
-          Html5Qrcode = module.default as Html5QrcodeConstructor;
+        const html5Mod = html5QrcodeModule as unknown as Html5QrcodeModule;
+        if (html5Mod.Html5Qrcode) {
+          Html5Qrcode = html5Mod.Html5Qrcode;
+        } else if (html5Mod.default && typeof html5Mod.default === "object" && "Html5Qrcode" in html5Mod.default) {
+          Html5Qrcode = html5Mod.default.Html5Qrcode;
+        } else if (html5Mod.default && typeof html5Mod.default === "function") {
+          Html5Qrcode = html5Mod.default as Html5QrcodeConstructor;
         } else {
           throw new Error("Не удалось найти Html5Qrcode в модуле. Проверьте установку пакета html5-qrcode.");
         }
@@ -413,6 +413,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
       initAttemptRef.current++;
       stopScanner();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNativeScan, onClose, parseQrPayload stable or intentionally excluded
   }, [open, qrReaderId, isNativePlatform, stopScanner]);
 
   const handleClose = useCallback((e?: React.MouseEvent) => {

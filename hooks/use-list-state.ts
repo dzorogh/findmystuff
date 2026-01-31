@@ -14,7 +14,6 @@ interface UseListStateProps {
 export const useListState = ({
   externalSearchQuery,
   externalShowDeleted,
-  refreshTrigger,
   onSearchStateChange,
 }: UseListStateProps = {}) => {
   const router = useRouter();
@@ -22,26 +21,17 @@ export const useListState = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
-  const [showDeleted, setShowDeleted] = useState(externalShowDeleted || false);
+  const [internalSearch] = useState("");
+  const [internalShowDeleted] = useState(false);
+
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearch;
+  const showDeleted = externalShowDeleted !== undefined ? externalShowDeleted : internalShowDeleted;
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push("/");
     }
   }, [isUserLoading, user, router]);
-
-  useEffect(() => {
-    if (externalSearchQuery !== undefined) {
-      setSearchQuery(externalSearchQuery);
-    }
-  }, [externalSearchQuery]);
-
-  useEffect(() => {
-    if (externalShowDeleted !== undefined) {
-      setShowDeleted(externalShowDeleted);
-    }
-  }, [externalShowDeleted]);
 
   const updateSearchState = (isSearchingValue: boolean, resultsCount: number) => {
     setIsSearching(isSearchingValue);

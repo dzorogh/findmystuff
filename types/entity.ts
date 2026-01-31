@@ -78,10 +78,10 @@ export interface Room extends BaseEntity {
 }
 
 // Для обратной совместимости
-export interface ItemEntity extends Item {}
-export interface PlaceEntity extends Place {}
-export interface ContainerEntity extends Container {}
-export interface RoomEntity extends Room {}
+export type ItemEntity = Item;
+export type PlaceEntity = Place;
+export type ContainerEntity = Container;
+export type RoomEntity = Room;
 
 // Типы для поиска
 export interface SearchResult {

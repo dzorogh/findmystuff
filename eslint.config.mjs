@@ -86,6 +86,28 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // Игнорировать переменные/аргументы с префиксом _ (намеренно неиспользуемые)
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    },
+  },
+  // Тесты и скрипты: разрешаем any, require и неиспользуемые переменные
+  {
+    files: [
+      "**/__tests__/**/*.{ts,tsx}",
+      "**/e2e/**/*.{ts,tsx}",
+      "jest.config.js",
+      "scripts/**/*.js",
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@next/next/no-img-element": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

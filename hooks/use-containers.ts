@@ -39,6 +39,7 @@ export const useContainers = (includeDeleted = false) => {
     return () => {
       isMountedRef.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadContainers stable, mount-only effect
   }, [includeDeleted]);
 
   return { containers, isLoading, error, refetch: loadContainers };

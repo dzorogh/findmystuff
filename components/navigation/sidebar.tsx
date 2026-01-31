@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -12,17 +12,78 @@ import Logo from "@/components/common/logo";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+interface NavItemConfig {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const SidebarNavContent = ({
+  pathname,
+  onQuickMoveOpen,
+}: {
+  pathname: string;
+  onQuickMoveOpen: () => void;
+}) => {
+  const searchItem: NavItemConfig = { href: "/", label: "Поиск", icon: Search };
+  const storageItems: NavItemConfig[] = [
+    { href: "/rooms", label: "Помещения", icon: Building2 },
+    { href: "/places", label: "Места", icon: MapPin },
+    { href: "/containers", label: "Контейнеры", icon: Container },
+    { href: "/items", label: "Вещи", icon: Box },
+  ];
+  const managementItems: NavItemConfig[] = [
+    { href: "/users", label: "Пользователи", icon: Users },
+    { href: "/settings", label: "Настройки", icon: Settings },
+  ];
+
+  const renderNavItem = (item: NavItemConfig) => {
+    const Icon = item.icon;
+    const isActive = pathname === item.href;
+    return (
+      <Link key={item.href} href={item.href}>
+        <Button
+          variant={isActive ? "secondary" : "ghost"}
+          className="w-full justify-start gap-3 h-10 px-3"
+        >
+          <Icon className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">{item.label}</span>
+        </Button>
+      </Link>
+    );
+  };
+
+  return (
+    <nav className="flex flex-col gap-1">
+      <Button
+        variant="ghost"
+        className="w-full justify-start gap-3 h-10 px-3"
+        onClick={onQuickMoveOpen}
+        aria-label="Быстрое перемещение"
+      >
+        <ArrowRightLeft className="h-4 w-4 shrink-0" />
+        <span className="text-sm font-medium">Быстрое перемещение</span>
+      </Button>
+      {renderNavItem(searchItem)}
+      <div className="h-[1px] bg-border my-1" />
+      {storageItems.map(renderNavItem)}
+      <div className="h-[1px] bg-border my-1" />
+      {managementItems.map(renderNavItem)}
+    </nav>
+  );
+};
+
 const Sidebar = () => {
   const { user, isLoading } = useUser();
   const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
   const pathname = usePathname();
   const supabase = createClient();
   const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -30,67 +91,6 @@ const Sidebar = () => {
 
   const handleThemeToggle = () => {
     setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const NavContent = () => {
-    const searchItem = { href: "/", label: "Поиск", icon: Search };
-    
-    const storageItems = [
-      { href: "/rooms", label: "Помещения", icon: Building2 },
-      { href: "/places", label: "Места", icon: MapPin },
-      { href: "/containers", label: "Контейнеры", icon: Container },
-      { href: "/items", label: "Вещи", icon: Box },
-    ];
-
-    const managementItems = [
-      { href: "/users", label: "Пользователи", icon: Users },
-      { href: "/settings", label: "Настройки", icon: Settings },
-    ];
-
-    const renderNavItem = (item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
-      const Icon = item.icon;
-      const isActive = pathname === item.href;
-      return (
-        <Link key={item.href} href={item.href}>
-          <Button
-            variant={isActive ? "secondary" : "ghost"}
-            className="w-full justify-start gap-3 h-10 px-3"
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-medium">{item.label}</span>
-          </Button>
-        </Link>
-      );
-    };
-
-    return (
-      <nav className="flex flex-col gap-1">
-        {/* Быстрое перемещение */}
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 h-10 px-3"
-          onClick={() => setQuickMoveOpen(true)}
-          aria-label="Быстрое перемещение"
-        >
-          <ArrowRightLeft className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-medium">Быстрое перемещение</span>
-        </Button>
-        {/* Поиск */}
-        {renderNavItem(searchItem)}
-        
-        {/* Разделитель */}
-        <div className="h-[1px] bg-border my-1" />
-        
-        {/* Помещения, Места, Контейнеры, Вещи */}
-        {storageItems.map(renderNavItem)}
-        
-        {/* Разделитель */}
-        <div className="h-[1px] bg-border my-1" />
-        
-        {/* Управление */}
-        {managementItems.map(renderNavItem)}
-      </nav>
-    );
   };
 
   if (isLoading) {
@@ -126,7 +126,7 @@ const Sidebar = () => {
           </Link>
         </div>
         <div className="flex-1 p-4 overflow-y-auto">
-          <NavContent />
+          <SidebarNavContent pathname={pathname} onQuickMoveOpen={() => setQuickMoveOpen(true)} />
         </div>
         <div className="border-t p-4 space-y-2">
           <div className="px-3 py-2">

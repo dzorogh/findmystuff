@@ -39,6 +39,7 @@ export const usePlaces = (includeDeleted = false) => {
     return () => {
       isMountedRef.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadPlaces stable, mount-only effect
   }, [includeDeleted]);
 
   return { places, isLoading, error, refetch: loadPlaces };

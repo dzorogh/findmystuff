@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import type { Transition, Location, Item, Container } from "@/types/entity";
+import type { Transition, Location, Item, Container, DestinationType } from "@/types/entity";
+
+interface TransitionRow {
+  id: number;
+  created_at: string;
+  item_id?: number | null;
+  container_id?: number | null;
+  place_id?: number | null;
+  destination_type: string;
+  destination_id: number | null;
+}
 
 export async function GET(
   request: NextRequest,
@@ -167,7 +177,7 @@ export async function GET(
       const lastItemTransitions = new Map<number, Transition>();
       const lastContainerTransitions = new Map<number, Transition>();
 
-      (allTransitionsData || []).forEach((t: any) => {
+      (allTransitionsData || []).forEach((t: TransitionRow) => {
         // Преобразуем данные из базы в тип Transition
         const transition: Transition = {
           id: t.id,
@@ -175,7 +185,7 @@ export async function GET(
           item_id: t.item_id ?? null,
           container_id: t.container_id ?? null,
           place_id: t.place_id ?? null,
-          destination_type: t.destination_type,
+          destination_type: (t.destination_type ?? null) as DestinationType | null,
           destination_id: t.destination_id ?? null,
         };
 
@@ -188,7 +198,7 @@ export async function GET(
       });
 
       const itemsInPlace = Array.from(lastItemTransitions.entries())
-        .filter(([itemId, transition]) => 
+        .filter(([, transition]) => 
           transition.destination_type === "place" && 
           transition.destination_id === placeId
         )
@@ -206,7 +216,7 @@ export async function GET(
       }
 
       const containersInPlace = Array.from(lastContainerTransitions.entries())
-        .filter(([containerId, transition]) => 
+        .filter(([, transition]) => 
           transition.destination_type === "place" && 
           transition.destination_id === placeId
         )

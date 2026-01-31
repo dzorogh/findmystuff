@@ -36,7 +36,7 @@ import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 // Типы
 import type { RoomEntity } from "@/types/entity";
 
-interface Room extends RoomEntity {}
+type Room = RoomEntity;
 
 export default function RoomDetailPage() {
   const params = useParams();

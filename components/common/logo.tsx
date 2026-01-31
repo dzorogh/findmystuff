@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 interface LogoProps {
   className?: string;
@@ -9,13 +9,13 @@ interface LogoProps {
   size?: "sm" | "md" | "lg";
 }
 
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
   const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
   const sizes = {
     sm: "h-6",
@@ -28,6 +28,7 @@ const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
   if (showText) {
     return (
       <div className={`${className || ""} ${sizes[size]}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- SVG logo, next/image not needed */}
         <img
           src="/logo-with-name.svg"
           alt="FindMyStuff"
@@ -39,6 +40,7 @@ const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
 
   return (
     <div className={`${className || ""} ${sizes[size]}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- SVG logo, next/image not needed */}
       <img
         src="/logo-icon.svg"
         alt="FindMyStuff"

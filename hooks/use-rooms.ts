@@ -39,6 +39,7 @@ export const useRooms = (includeDeleted = false) => {
     return () => {
       isMountedRef.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadRooms stable, mount-only effect
   }, [includeDeleted]);
 
   return { rooms, isLoading, error, refetch: loadRooms };

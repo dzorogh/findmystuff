@@ -65,6 +65,7 @@ export const EntityPhoto = ({
     }
     return (
       <div className="flex-shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element -- dynamic S3 URL, next/image not used */}
         <img
           src={photoUrl}
           alt={name}

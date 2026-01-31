@@ -44,7 +44,7 @@ describe('createClient (supabase/client)', () => {
   })
 
   it('создает браузерный клиент когда window определен', () => {
-    // @ts-ignore
+    // @ts-expect-error - мок window для теста
     global.window = {}
     jest.resetModules()
     const { createClient } = require('@/lib/supabase/client')
@@ -59,7 +59,7 @@ describe('createClient (supabase/client)', () => {
   })
 
   it('переиспользует браузерный клиент при повторных вызовах', () => {
-    // @ts-ignore
+    // @ts-expect-error - мок window для теста
     global.window = {}
     jest.resetModules()
     const { createClient } = require('@/lib/supabase/client')

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ContainersList from "@/components/lists/containers-list";
 import AddContainerForm from "@/components/forms/add-container-form";
@@ -11,7 +11,7 @@ import { CompactSearchBar } from "@/components/common/compact-search-bar";
 
 const ContainersPageContent = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [userOpenedAdd, setUserOpenedAdd] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [resultsCount, setResultsCount] = useState(0);
@@ -21,6 +21,7 @@ const ContainersPageContent = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const shouldOpenCreateForm = searchParams.get("create") === "1";
+  const isAddDialogOpen = shouldOpenCreateForm || userOpenedAdd;
 
   const handleContainerAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -35,11 +36,15 @@ const ContainersPageContent = () => {
     setResultsCount(state.resultsCount);
   };
 
-  useEffect(() => {
-    if (shouldOpenCreateForm) {
-      setIsAddDialogOpen(true);
+  const handleAddDialogOpenChange = (open: boolean) => {
+    setUserOpenedAdd(open);
+    if (!open && shouldOpenCreateForm) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("create");
+      const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(nextUrl, { scroll: false });
     }
-  }, [shouldOpenCreateForm]);
+  };
 
   return (
     <div className="space-y-6">
@@ -77,15 +82,7 @@ const ContainersPageContent = () => {
         />
         <AddContainerForm
           open={isAddDialogOpen}
-          onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (!open && shouldOpenCreateForm) {
-              const params = new URLSearchParams(searchParams.toString());
-              params.delete("create");
-              const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-              router.replace(nextUrl, { scroll: false });
-            }
-          }}
+          onOpenChange={handleAddDialogOpenChange}
           onSuccess={handleContainerAdded}
         />
     </div>

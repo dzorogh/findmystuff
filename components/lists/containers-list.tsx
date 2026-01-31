@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/api-client";
 import type { Container } from "@/types/entity";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, MapPin, Building2, Package, PackageX, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer } from "lucide-react";
+import { Container as ContainerIcon, MapPin, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";

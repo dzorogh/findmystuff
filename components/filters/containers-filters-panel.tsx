@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { YesNoAllFilter } from "./yes-no-all-filter";
@@ -38,26 +38,20 @@ export const ContainersFiltersPanel = ({
   hasActiveFilters,
 }: ContainersFiltersPanelProps) => {
   const { types: entityTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
-  const [containerTypeOptions, setContainerTypeOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([{ value: "all", label: "Все типы" }]);
-
-  useEffect(() => {
-    if (!isLoadingTypes) {
-      if (entityTypes && entityTypes.length > 0) {
-        const options = [
-          { value: "all", label: "Все типы" },
-          ...entityTypes.map((type) => ({
-            value: type.id.toString(),
-            label: type.name,
-          })),
-        ];
-        setContainerTypeOptions(options);
-      } else {
-        // Если загрузка завершена, но типов нет, показываем только "Все типы"
-        setContainerTypeOptions([{ value: "all", label: "Все типы" }]);
-      }
+  const containerTypeOptions = useMemo(() => {
+    if (isLoadingTypes) {
+      return [{ value: "all", label: "Все типы" }];
     }
+    if (entityTypes && entityTypes.length > 0) {
+      return [
+        { value: "all", label: "Все типы" },
+        ...entityTypes.map((type) => ({
+          value: type.id.toString(),
+          label: type.name,
+        })),
+      ];
+    }
+    return [{ value: "all", label: "Все типы" }];
   }, [entityTypes, isLoadingTypes]);
 
   const handleShowDeletedChange = (checked: boolean) => {

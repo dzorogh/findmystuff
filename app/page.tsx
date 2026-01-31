@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
@@ -242,7 +241,7 @@ export default function Home() {
               className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1" 
               onClick={() => router.push("/places")}
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="">
                 <div className="flex items-center justify-between mb-2">
                   <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                     <MapPin className="h-5 w-5 text-primary" />
@@ -287,6 +286,6 @@ export default function Home() {
             </Card>
           </div>
         )}
-    </div>
+      </div>
   );
 }

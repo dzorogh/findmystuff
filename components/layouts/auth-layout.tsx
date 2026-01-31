@@ -14,7 +14,6 @@ interface AuthLayoutProps {
 export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const pathname = usePathname();
   const { user, isLoading } = useUser();
-  const isAuthenticated = Boolean(user);
   const isHomePage = pathname === "/";
   const showTopBar = !isLoading && user;
   const showSidebar = !isLoading && user;

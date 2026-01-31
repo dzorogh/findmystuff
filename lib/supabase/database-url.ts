@@ -12,7 +12,7 @@ export const getDatabaseUrl = (): string => {
 
   // Пытаемся построить из Supabase переменных
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const _supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseDbPassword = process.env.SUPABASE_DB_PASSWORD;
 
   if (supabaseUrl && supabaseDbPassword) {

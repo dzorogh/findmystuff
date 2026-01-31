@@ -5,10 +5,9 @@ import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2, Pencil } from "lucide-react";
+import { Trash2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useEntityTypes } from "@/hooks/use-entity-types";
-import type { EntityType } from "@/types/entity";
 import {
   Table,
   TableBody,
@@ -38,8 +37,8 @@ export interface EntityTypesManagerRef {
 
 export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesManagerProps>(({
   category,
-  title,
-  description,
+  title: _title,
+  description: _description,
 }, ref) => {
   const { types, isLoading, error } = useEntityTypes(category);
   const [isAdding, setIsAdding] = useState(false);

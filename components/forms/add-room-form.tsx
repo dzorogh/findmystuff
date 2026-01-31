@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
@@ -28,7 +27,7 @@ interface AddRoomFormProps {
 }
 
 const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

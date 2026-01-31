@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
@@ -31,7 +30,7 @@ interface AddContainerFormProps {
 }
 
 const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState<string>("");

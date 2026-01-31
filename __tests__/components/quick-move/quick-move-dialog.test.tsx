@@ -1,6 +1,5 @@
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import QuickMoveDialog from "@/components/quick-move/quick-move-dialog";
 import { apiClient } from "@/lib/api-client";
 
@@ -67,8 +66,7 @@ describe("QuickMoveDialog", () => {
     window.__quickMoveScanSuccess?.({ type, id });
   };
 
-  it("full flow: scan first → scan second (different type) → confirm → createTransition", async () => {
-    const user = userEvent.setup();
+  it("full flow: scan first → scan second (different type) → createTransition", async () => {
     const mockCreateTransition = jest.fn().mockResolvedValue({ data: { id: 1 } });
     (apiClient.createTransition as jest.Mock) = mockCreateTransition;
 
@@ -87,13 +85,6 @@ describe("QuickMoveDialog", () => {
     await act(async () => {
       triggerScan("container", 2);
     });
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Подтвердить/i })).toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/Переместить/)).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /Подтвердить/i }));
 
     await waitFor(() => {
       expect(mockCreateTransition).toHaveBeenCalledTimes(1);

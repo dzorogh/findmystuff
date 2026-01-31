@@ -38,7 +38,7 @@ import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
 // Типы
 import type { Transition, ItemEntity } from "@/types/entity";
 
-interface Item extends ItemEntity {}
+type Item = ItemEntity;
 
 export default function ItemDetailPage() {
   const params = useParams();

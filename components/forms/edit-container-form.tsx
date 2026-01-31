@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
@@ -37,10 +36,10 @@ const EditContainerForm = ({
   onOpenChange,
   onSuccess,
 }: EditContainerFormProps) => {
-  const { user, isLoading } = useUser();
-  const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
+  const { isLoading } = useUser();
+  const { types: containerTypes } = useEntityTypes("container");
   const [name, setName] = useState(containerName || "");
-  const [containerTypeId, setContainerTypeId] = useState(initialContainerTypeId?.toString() || "");
+  const [containerTypeId] = useState(initialContainerTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +55,7 @@ const EditContainerForm = ({
               } else {
                 setPhotoUrl(null);
               }
-            } catch (error) {
+            } catch {
               setPhotoUrl(null);
             }
           };

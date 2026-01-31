@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
@@ -31,47 +31,35 @@ export const PlacesFiltersPanel = ({
 }: PlacesFiltersPanelProps) => {
   const { types: entityTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const { rooms, isLoading: isLoadingRooms } = useRooms();
-  const [placeTypeOptions, setPlaceTypeOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([{ value: "all", label: "Все типы" }]);
-  const [roomOptions, setRoomOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([{ value: "all", label: "Все помещения" }]);
-
-  useEffect(() => {
-    if (!isLoadingTypes) {
-      if (entityTypes && entityTypes.length > 0) {
-        const options = [
-          { value: "all", label: "Все типы" },
-          ...entityTypes.map((type) => ({
-            value: type.id.toString(),
-            label: type.name,
-          })),
-        ];
-        setPlaceTypeOptions(options);
-      } else {
-        // Если загрузка завершена, но типов нет, показываем только "Все типы"
-        setPlaceTypeOptions([{ value: "all", label: "Все типы" }]);
-      }
+  const placeTypeOptions = useMemo(() => {
+    if (isLoadingTypes) {
+      return [{ value: "all", label: "Все типы" }];
     }
+    if (entityTypes && entityTypes.length > 0) {
+      return [
+        { value: "all", label: "Все типы" },
+        ...entityTypes.map((type) => ({
+          value: type.id.toString(),
+          label: type.name,
+        })),
+      ];
+    }
+    return [{ value: "all", label: "Все типы" }];
   }, [entityTypes, isLoadingTypes]);
-
-  useEffect(() => {
-    if (!isLoadingRooms) {
-      if (rooms && rooms.length > 0) {
-        const options = [
-          { value: "all", label: "Все помещения" },
-          ...rooms.map((room) => ({
-            value: room.id.toString(),
-            label: room.name || `Помещение #${room.id}`,
-          })),
-        ];
-        setRoomOptions(options);
-      } else {
-        // Если загрузка завершена, но помещений нет, показываем только "Все помещения"
-        setRoomOptions([{ value: "all", label: "Все помещения" }]);
-      }
+  const roomOptions = useMemo(() => {
+    if (isLoadingRooms) {
+      return [{ value: "all", label: "Все помещения" }];
     }
+    if (rooms && rooms.length > 0) {
+      return [
+        { value: "all", label: "Все помещения" },
+        ...rooms.map((room) => ({
+          value: room.id.toString(),
+          label: room.name || `Помещение #${room.id}`,
+        })),
+      ];
+    }
+    return [{ value: "all", label: "Все помещения" }];
   }, [rooms, isLoadingRooms]);
 
   const handleShowDeletedChange = (checked: boolean) => {

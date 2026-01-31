@@ -107,7 +107,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     error,
     searchQuery,
     showDeleted,
-    setError,
+    setError: _setError,
     startLoading,
     finishLoading,
     handleError,
@@ -225,6 +225,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         requestKeyRef.current = "";
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- user checked inside callback, stable deps
   }, [user?.id, showDeleted, filters.roomId, filters.locationType, filters.hasPhoto, filters.showDeleted]);
 
   useEffect(() => {

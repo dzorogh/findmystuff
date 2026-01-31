@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
@@ -34,7 +33,7 @@ const EditRoomForm = ({
   onOpenChange,
   onSuccess,
 }: EditRoomFormProps) => {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const [name, setName] = useState(roomName || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +52,7 @@ const EditRoomForm = ({
           } else {
             setPhotoUrl(null);
           }
-        } catch (error) {
+        } catch {
           setPhotoUrl(null);
         }
       };

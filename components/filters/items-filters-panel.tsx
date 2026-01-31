@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { YesNoAllFilter } from "./yes-no-all-filter";
@@ -38,25 +38,20 @@ export const ItemsFiltersPanel = ({
   hasActiveFilters,
 }: ItemsFiltersPanelProps) => {
   const { rooms, isLoading: isLoadingRooms } = useRooms();
-  const [roomOptions, setRoomOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([{ value: "all", label: "Все помещения" }]);
-
-  useEffect(() => {
-    if (!isLoadingRooms) {
-      if (rooms && rooms.length > 0) {
-        const options = [
-          { value: "all", label: "Все помещения" },
-          ...rooms.map((room) => ({
-            value: room.id.toString(),
-            label: room.name || `Помещение #${room.id}`,
-          })),
-        ];
-        setRoomOptions(options);
-      } else {
-        setRoomOptions([{ value: "all", label: "Все помещения" }]);
-      }
+  const roomOptions = useMemo(() => {
+    if (isLoadingRooms) {
+      return [{ value: "all", label: "Все помещения" }];
     }
+    if (rooms && rooms.length > 0) {
+      return [
+        { value: "all", label: "Все помещения" },
+        ...rooms.map((room) => ({
+          value: room.id.toString(),
+          label: room.name || `Помещение #${room.id}`,
+        })),
+      ];
+    }
+    return [{ value: "all", label: "Все помещения" }];
   }, [rooms, isLoadingRooms]);
 
   const handleShowDeletedChange = (checked: boolean) => {
