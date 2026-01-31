@@ -48,6 +48,10 @@ export default function ItemDetailPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
+        <CardHeader>
+          <CardTitle>{displayName}</CardTitle>
+          <CardDescription>ID: #{item.id}</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4 pt-4">
           <EntityPhoto
             photoUrl={item.photo_url}
