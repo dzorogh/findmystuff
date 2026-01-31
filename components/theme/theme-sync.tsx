@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { useSettings } from "@/contexts/settings-context";
-import { useUser } from "@/hooks/use-user";
+import { useSettings } from "@/lib/settings/context";
+import { useUser } from "@/lib/users/context";
 
 export const ThemeSync = ({ children }: { children: React.ReactNode }) => {
   const { theme, setTheme } = useTheme();

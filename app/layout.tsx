@@ -6,9 +6,9 @@ import NativeAppMarker from "@/components/common/native-app-marker";
 import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { UserProvider } from "@/contexts/user-context";
-import { SettingsProvider } from "@/contexts/settings-context";
-import { CurrentPageProvider } from "@/contexts/current-page-context";
+import { UserProvider } from "@/lib/users/context";
+import { SettingsProvider } from "@/lib/settings/context";
+import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
 
 const geistSans = Geist({
   subsets: ["latin"],

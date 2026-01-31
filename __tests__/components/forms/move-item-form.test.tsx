@@ -1,20 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MoveItemForm from '@/components/forms/move-item-form'
-import { apiClient } from '@/lib/api-client'
+import * as entitiesApi from '@/lib/entities/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/entities/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: () => ({
     rooms: [{ id: 1, name: 'Комната 1' }],
     isLoading: false,
@@ -22,7 +22,7 @@ jest.mock('@/hooks/use-rooms', () => ({
     refetch: jest.fn(),
   }),
 }))
-jest.mock('@/hooks/use-places', () => ({
+jest.mock('@/lib/places/hooks/use-places', () => ({
   usePlaces: () => ({
     places: [{ id: 1, name: 'Место 1' }],
     isLoading: false,
@@ -30,7 +30,7 @@ jest.mock('@/hooks/use-places', () => ({
     refetch: jest.fn(),
   }),
 }))
-jest.mock('@/hooks/use-containers', () => ({
+jest.mock('@/lib/containers/hooks/use-containers', () => ({
   useContainers: () => ({
     containers: [{ id: 1, name: 'Контейнер 1' }],
     isLoading: false,
@@ -42,7 +42,7 @@ jest.mock('@/components/common/qr-scanner', () => ({
   __esModule: true,
   default: () => null,
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -88,7 +88,7 @@ describe('MoveItemForm', () => {
   it('валидирует обязательное поле назначения', async () => {
     const user = userEvent.setup()
     const mockCreateTransition = jest.fn()
-    ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
+    ;(entitiesApi.createTransition as jest.Mock).mockImplementation(mockCreateTransition)
 
     render(
       <MoveItemForm
@@ -116,7 +116,7 @@ describe('MoveItemForm', () => {
   it('перемещает вещь при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreateTransition = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
+    ;(entitiesApi.createTransition as jest.Mock).mockImplementation(mockCreateTransition)
 
     render(
       <MoveItemForm
@@ -147,7 +147,7 @@ describe('MoveItemForm', () => {
     const mockCreateTransition = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка перемещения' })
-    ;(apiClient.createTransition as jest.Mock) = mockCreateTransition
+    ;(entitiesApi.createTransition as jest.Mock).mockImplementation(mockCreateTransition)
 
     render(
       <MoveItemForm

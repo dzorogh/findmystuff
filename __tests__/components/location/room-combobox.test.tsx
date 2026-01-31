@@ -2,7 +2,7 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import RoomCombobox from '@/components/location/room-combobox'
 
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: jest.fn(() => ({
     rooms: [
       { id: 1, name: 'Комната 1' },
@@ -183,7 +183,7 @@ describe('RoomCombobox', () => {
   })
 
   it('disabled когда нет помещений', () => {
-    const { useRooms } = require('@/hooks/use-rooms')
+    const { useRooms } = require('@/lib/rooms/hooks/use-rooms')
     useRooms.mockReturnValueOnce({
       rooms: [],
       isLoading: false,
@@ -203,7 +203,7 @@ describe('RoomCombobox', () => {
   })
 
   it('отображает сообщение когда нет помещений', () => {
-    const { useRooms } = require('@/hooks/use-rooms')
+    const { useRooms } = require('@/lib/rooms/hooks/use-rooms')
     useRooms.mockReturnValueOnce({
       rooms: [],
       isLoading: false,

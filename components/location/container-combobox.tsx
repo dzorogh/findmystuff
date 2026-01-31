@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,8 +18,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { FormField } from "@/components/ui/form-field";
-import { useContainers } from "@/hooks/use-containers";
-import { getEntityDisplayName } from "@/lib/entity-display-name";
+import { useContainers } from "@/lib/containers/hooks/use-containers";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { Container } from "@/types/entity";
 
 interface ContainerComboboxProps {

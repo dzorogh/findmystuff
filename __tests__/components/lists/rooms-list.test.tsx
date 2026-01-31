@@ -1,10 +1,12 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import RoomsList from '@/components/lists/rooms-list'
-import { apiClient } from '@/lib/api-client'
+import * as roomsApi from '@/lib/rooms/api'
+import { softDeleteApi } from '@/lib/shared/api/soft-delete'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/rooms/api')
+jest.mock('@/lib/shared/api/soft-delete')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
@@ -13,7 +15,7 @@ jest.mock('sonner', () => ({
 }))
 
 const mockUseUser = jest.fn(() => ({ user: { id: '1' }, isLoading: false }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => mockUseUser(),
 }))
 
@@ -31,11 +33,11 @@ const mockUseListState = jest.fn(({ externalSearchQuery, externalShowDeleted }) 
   handleError: jest.fn(),
 }))
 
-jest.mock('@/hooks/use-list-state', () => ({
+jest.mock('@/lib/app/hooks/use-list-state', () => ({
   useListState: (props: any) => mockUseListState(props),
 }))
 
-jest.mock('@/hooks/use-debounced-search', () => ({
+jest.mock('@/lib/app/hooks/use-debounced-search', () => ({
   useDebouncedSearch: jest.fn(),
 }))
 
@@ -105,7 +107,7 @@ describe('RoomsList', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(apiClient.getRooms as jest.Mock).mockResolvedValue({
+    ;(roomsApi.getRooms as jest.Mock).mockResolvedValue({
       data: mockRooms,
     })
   })
@@ -137,7 +139,7 @@ describe('RoomsList', () => {
   })
 
   it('отображает EmptyState когда нет помещений', async () => {
-    ;(apiClient.getRooms as jest.Mock).mockResolvedValue({
+    ;(roomsApi.getRooms as jest.Mock).mockResolvedValue({
       data: [],
     })
 
@@ -166,7 +168,7 @@ describe('RoomsList', () => {
     })
 
     // Мокаем пустой ответ
-    ;(apiClient.getRooms as jest.Mock).mockResolvedValueOnce({
+    ;(roomsApi.getRooms as jest.Mock).mockResolvedValueOnce({
       data: [],
     })
 
@@ -270,7 +272,7 @@ describe('RoomsList', () => {
   it('обрабатывает удаление помещения', async () => {
     const user = userEvent.setup()
     window.confirm = jest.fn(() => true)
-    ;(apiClient.softDelete as jest.Mock).mockResolvedValue({ data: {} })
+    ;(softDeleteApi.softDelete as jest.Mock).mockResolvedValue({ data: {} })
 
     await act(async () => {
       render(<RoomsList />)
@@ -293,14 +295,14 @@ describe('RoomsList', () => {
       })
 
       await waitFor(() => {
-        expect(apiClient.softDelete).toHaveBeenCalledWith('rooms', expect.any(Number))
+        expect(softDeleteApi.softDelete).toHaveBeenCalledWith('rooms', expect.any(Number))
       }, { timeout: 2000 })
     }
   })
 
   it('обрабатывает восстановление помещения', async () => {
     const user = userEvent.setup()
-    ;(apiClient.restoreDeleted as jest.Mock).mockResolvedValue({ data: {} })
+    ;(softDeleteApi.restoreDeleted as jest.Mock).mockResolvedValue({ data: {} })
 
     const deletedRooms = [
       {
@@ -309,7 +311,7 @@ describe('RoomsList', () => {
       },
     ]
 
-    ;(apiClient.getRooms as jest.Mock).mockResolvedValue({
+    ;(roomsApi.getRooms as jest.Mock).mockResolvedValue({
       data: deletedRooms,
     })
 
@@ -334,7 +336,7 @@ describe('RoomsList', () => {
       })
 
       await waitFor(() => {
-        expect(apiClient.restoreDeleted).toHaveBeenCalledWith('rooms', expect.any(Number))
+        expect(softDeleteApi.restoreDeleted).toHaveBeenCalledWith('rooms', expect.any(Number))
       }, { timeout: 2000 })
     }
   })

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { updateUser } from "@/lib/users/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
@@ -49,7 +49,7 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
     setIsSubmitting(true);
 
     try {
-      const response = await apiClient.updateUser({
+      const response = await updateUser({
         id: user.id,
         email: email.trim(),
       });
@@ -57,7 +57,7 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
       if (response.error) {
         throw new Error(response.error);
       }
-      
+
       toast.success("Пользователь успешно обновлен", {
         description: response.data?.password ? `Новый пароль: ${response.data.password}` : undefined,
       });

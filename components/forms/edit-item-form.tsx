@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getItem, updateItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -44,7 +44,7 @@ const EditItemForm = ({
     if (open && itemId) {
       const loadPhoto = async () => {
         try {
-          const response = await apiClient.getItem(itemId);
+          const response = await getItem(itemId);
           if (response.data?.item?.photo_url) {
             setPhotoUrl(response.data.item.photo_url);
           } else {
@@ -65,7 +65,7 @@ const EditItemForm = ({
 
     try {
       // Обновляем только название вещи и фото
-      const response = await apiClient.updateItem(itemId, {
+      const response = await updateItem(itemId, {
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
       });

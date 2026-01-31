@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getContainer, updateContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import ImageUpload from "@/components/common/image-upload";
-import { useEntityTypes } from "@/hooks/use-entity-types";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import {
@@ -49,7 +49,7 @@ const EditContainerForm = ({
         if (open && containerId) {
           const loadPhoto = async () => {
             try {
-              const response = await apiClient.getContainer(containerId);
+              const response = await getContainer(containerId);
               if (response.data?.container?.photo_url) {
                 setPhotoUrl(response.data.container.photo_url);
               } else {
@@ -70,7 +70,7 @@ const EditContainerForm = ({
 
     try {
       // Обновляем только название и фото (тип контейнера нельзя менять)
-      const response = await apiClient.updateContainer(containerId, {
+      const response = await updateContainer(containerId, {
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
       });

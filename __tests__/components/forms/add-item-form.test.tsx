@@ -1,29 +1,29 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddItemForm from '@/components/forms/add-item-form'
-import { apiClient } from '@/lib/api-client'
+import * as entitiesApi from '@/lib/entities/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/entities/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: () => ({ rooms: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/hooks/use-places', () => ({
+jest.mock('@/lib/places/hooks/use-places', () => ({
   usePlaces: () => ({ places: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/hooks/use-containers', () => ({
+jest.mock('@/lib/containers/hooks/use-containers', () => ({
   useContainers: () => ({ containers: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -57,7 +57,7 @@ describe('AddItemForm', () => {
   it('валидирует обязательные поля при выборе destinationType', async () => {
     const user = userEvent.setup()
     const mockCreateItem = jest.fn()
-    ;(apiClient.createItem as jest.Mock) = mockCreateItem
+    ;(entitiesApi.createItem as jest.Mock).mockImplementation(mockCreateItem)
 
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 
@@ -94,7 +94,7 @@ describe('AddItemForm', () => {
   it('создает вещь при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreateItem = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createItem as jest.Mock) = mockCreateItem
+    ;(entitiesApi.createItem as jest.Mock).mockImplementation(mockCreateItem)
 
     render(
       <AddItemForm
@@ -131,7 +131,7 @@ describe('AddItemForm', () => {
     const mockCreateItem = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка создания' })
-    ;(apiClient.createItem as jest.Mock) = mockCreateItem
+    ;(entitiesApi.createItem as jest.Mock).mockImplementation(mockCreateItem)
 
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 
@@ -165,7 +165,7 @@ describe('AddItemForm', () => {
   it('очищает форму после успешного создания', async () => {
     const user = userEvent.setup()
     const mockCreateItem = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createItem as jest.Mock) = mockCreateItem
+    ;(entitiesApi.createItem as jest.Mock).mockImplementation(mockCreateItem)
 
     render(<AddItemForm open={true} onOpenChange={mockOnOpenChange} />)
 

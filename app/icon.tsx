@@ -1,4 +1,4 @@
-import { createIconResponse } from "@/lib/icon-image";
+import { createIconResponse } from "@/lib/shared/og/icon-image";
 import { headers } from "next/headers";
 
 export const size = {

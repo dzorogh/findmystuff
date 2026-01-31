@@ -1,10 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import Sidebar from "@/components/navigation/sidebar";
 import TopBar from "@/components/navigation/top-bar";
-import { QuickMoveProvider } from "@/contexts/quick-move-context";
+import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
 import { PageContainer } from "@/components/layouts/page-container";
 
 interface AuthLayoutProps {

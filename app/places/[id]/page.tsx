@@ -6,11 +6,10 @@ import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 
 // Контексты
-import { useCurrentPage } from "@/contexts/current-page-context";
-import { useUser } from "@/hooks/use-user";
+import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
+import { useUser } from "@/lib/users/context";
 
-// API Client
-import { apiClient } from "@/lib/api-client";
+import { getPlace } from "@/lib/places/api";
 
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,7 @@ import { MapPin } from "lucide-react";
 import { PageContainer } from "@/components/layouts/page-container";
 
 // Компоненты entity-detail
-import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
+import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityHeader } from "@/components/entity-detail/entity-header";
@@ -36,8 +35,8 @@ import EditPlaceForm from "@/components/forms/edit-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
 
 // Утилиты
-import { useEntityActions } from "@/hooks/use-entity-actions";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 
 // Типы
 import type { Transition, PlaceEntity } from "@/types/entity";
@@ -83,7 +82,7 @@ export default function PlaceDetailPage() {
     setError(null);
 
     try {
-      const response = await apiClient.getPlace(placeId);
+      const response = await getPlace(placeId);
 
       if (response.error || !response.data) {
         setError("Место не найдено");
@@ -159,6 +158,7 @@ export default function PlaceDetailPage() {
       />
     );
     return () => setEntityActions(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [place, isDeleting, isRestoring]);
 
   if (isUserLoading || isLoading) {

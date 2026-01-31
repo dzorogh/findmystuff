@@ -1,4 +1,4 @@
-import { applyDeletedFilter, applyNameSearch } from '@/lib/query-builder'
+import { applyDeletedFilter, applyNameSearch } from '@/lib/shared/supabase/query-builder'
 
 describe('query-builder', () => {
   describe('applyDeletedFilter', () => {

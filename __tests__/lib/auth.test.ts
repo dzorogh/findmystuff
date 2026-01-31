@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@/lib/auth/config'
 
 jest.mock('better-auth', () => ({
   betterAuth: jest.fn((config) => ({
@@ -15,7 +15,7 @@ jest.mock('pg', () => ({
   })),
 }))
 
-jest.mock('@/lib/supabase/database-url', () => ({
+jest.mock('@/lib/shared/supabase/database-url', () => ({
   getDatabaseUrl: jest.fn(() => 'postgresql://test:test@localhost:5432/test'),
 }))
 
@@ -35,7 +35,7 @@ describe('auth', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth')
+    require('@/lib/auth/config')
     
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -48,7 +48,7 @@ describe('auth', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
     jest.resetModules()
     expect(() => {
-      require('@/lib/auth')
+      require('@/lib/auth/config')
     }).toThrow('NEXT_PUBLIC_APP_URL is not set')
   })
 
@@ -56,7 +56,7 @@ describe('auth', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth')
+    require('@/lib/auth/config')
     
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -73,7 +73,7 @@ describe('auth', () => {
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth')
+    require('@/lib/auth/config')
     
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({

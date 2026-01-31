@@ -1,10 +1,10 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddUserForm from '@/components/forms/add-user-form'
-import { apiClient } from '@/lib/api-client'
+import * as usersApi from '@/lib/users/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/users/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
@@ -36,7 +36,7 @@ describe('AddUserForm', () => {
   it('валидирует обязательное поле email', async () => {
     const user = userEvent.setup()
     const mockCreateUser = jest.fn()
-    ;(apiClient.createUser as jest.Mock) = mockCreateUser
+    ;(usersApi.createUser as jest.Mock).mockImplementation(mockCreateUser)
 
     render(<AddUserForm open={true} onOpenChange={mockOnOpenChange} />)
 
@@ -70,7 +70,7 @@ describe('AddUserForm', () => {
     const mockCreateUser = jest.fn().mockResolvedValue({ 
       data: { id: '1', password: 'temp123' } 
     })
-    ;(apiClient.createUser as jest.Mock) = mockCreateUser
+    ;(usersApi.createUser as jest.Mock).mockImplementation(mockCreateUser)
 
     render(
       <AddUserForm
@@ -111,7 +111,7 @@ describe('AddUserForm', () => {
     const mockCreateUser = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка создания' })
-    ;(apiClient.createUser as jest.Mock) = mockCreateUser
+    ;(usersApi.createUser as jest.Mock).mockImplementation(mockCreateUser)
 
     render(<AddUserForm open={true} onOpenChange={mockOnOpenChange} />)
 

@@ -77,11 +77,11 @@ const eslintConfig = defineConfig([
         // Запрещаем Supabase auth методы .auth.getUser() и .auth.getSession() - только в компонентах (не в контекстах и auth компонентах)
         {
           selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getUser'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
-          message: "Прямые запросы к auth API (.auth.getUser()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах (contexts/) и auth компонентах (components/auth/). Используйте apiClient или хук useUser из @/hooks/use-user",
+          message: "Прямые запросы к auth API (.auth.getUser()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах и auth компонентах (components/auth/). Используйте хук useUser из @/lib/users/context",
         },
         {
           selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getSession'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
-          message: "Прямые запросы к auth API (.auth.getSession()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах (contexts/) и auth компонентах (components/auth/). Используйте apiClient или хук useUser из @/hooks/use-user",
+          message: "Прямые запросы к auth API (.auth.getSession()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах и auth компонентах (components/auth/). Используйте хук useUser из @/lib/users/context",
         },
       ],
     },

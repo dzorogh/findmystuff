@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown, MapPin, Container as ContainerIcon, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -20,9 +20,9 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRooms } from "@/hooks/use-rooms";
-import { usePlaces } from "@/hooks/use-places";
-import { useContainers } from "@/hooks/use-containers";
+import { useRooms } from "@/lib/rooms/hooks/use-rooms";
+import { usePlaces } from "@/lib/places/hooks/use-places";
+import { useContainers } from "@/lib/containers/hooks/use-containers";
 import type { Container, Place, Room } from "@/types/entity";
 
 interface LocationComboboxProps {

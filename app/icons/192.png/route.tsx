@@ -1,7 +1,7 @@
 import {
   createIconErrorResponse,
   createIconResponse
-} from "@/lib/icon-image";
+} from "@/lib/shared/og/icon-image";
 
 export const size = {
   width: 192,

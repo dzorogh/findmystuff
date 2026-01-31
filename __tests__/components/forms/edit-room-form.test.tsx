@@ -1,20 +1,20 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditRoomForm from '@/components/forms/edit-room-form'
-import { apiClient } from '@/lib/api-client'
+import * as roomsApi from '@/lib/rooms/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/rooms/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -28,7 +28,7 @@ describe('EditRoomForm', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(apiClient.getRoom as jest.Mock).mockResolvedValue({
+    ;(roomsApi.getRoom as jest.Mock).mockResolvedValue({
       data: {
         room: { id: 1, name: 'Старое название', photo_url: null },
       },
@@ -65,7 +65,7 @@ describe('EditRoomForm', () => {
   it('обновляет помещение при валидных данных', async () => {
     const user = userEvent.setup({ delay: null })
     const mockUpdateRoom = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.updateRoom as jest.Mock).mockImplementation(mockUpdateRoom)
+    ;(roomsApi.updateRoom as jest.Mock).mockImplementation(mockUpdateRoom)
 
     render(
       <EditRoomForm
@@ -78,7 +78,7 @@ describe('EditRoomForm', () => {
     )
 
     await waitFor(() => {
-      expect(apiClient.getRoom).toHaveBeenCalledWith(1)
+      expect(roomsApi.getRoom).toHaveBeenCalledWith(1)
     }, { timeout: 2000 })
 
     const nameInput = screen.getByLabelText(/название/i)
@@ -118,7 +118,7 @@ describe('EditRoomForm', () => {
     const mockUpdateRoom = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка обновления' })
-    ;(apiClient.updateRoom as jest.Mock) = mockUpdateRoom
+    ;(roomsApi.updateRoom as jest.Mock).mockImplementation(mockUpdateRoom)
 
     render(
       <EditRoomForm

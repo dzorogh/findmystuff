@@ -2,7 +2,7 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LocationCombobox from '@/components/location/location-combobox'
 
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: jest.fn(() => ({
     rooms: [
       { id: 1, name: 'Комната 1' },
@@ -14,7 +14,7 @@ jest.mock('@/hooks/use-rooms', () => ({
   })),
 }))
 
-jest.mock('@/hooks/use-places', () => ({
+jest.mock('@/lib/places/hooks/use-places', () => ({
   usePlaces: jest.fn(() => ({
     places: [
       { id: 1, name: 'Место 1', entity_type: { name: 'Место' } },
@@ -26,7 +26,7 @@ jest.mock('@/hooks/use-places', () => ({
   })),
 }))
 
-jest.mock('@/hooks/use-containers', () => ({
+jest.mock('@/lib/containers/hooks/use-containers', () => ({
   useContainers: jest.fn(() => ({
     containers: [
       {
@@ -381,7 +381,7 @@ describe('LocationCombobox', () => {
   })
 
   it('disabled combobox когда нет элементов', () => {
-    const { useRooms } = require('@/hooks/use-rooms')
+    const { useRooms } = require('@/lib/rooms/hooks/use-rooms')
     useRooms.mockReturnValueOnce({
       rooms: [],
       isLoading: false,
@@ -403,7 +403,7 @@ describe('LocationCombobox', () => {
   })
 
   it('отображает сообщение когда нет элементов', () => {
-    const { useRooms } = require('@/hooks/use-rooms')
+    const { useRooms } = require('@/lib/rooms/hooks/use-rooms')
     useRooms.mockReturnValueOnce({
       rooms: [],
       isLoading: false,

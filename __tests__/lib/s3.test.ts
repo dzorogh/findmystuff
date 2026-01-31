@@ -26,14 +26,14 @@ describe('S3', () => {
     it('использует значение из переменной окружения', () => {
       process.env.S3_BUCKET_NAME = 'custom-bucket'
       jest.resetModules()
-      const { BUCKET_NAME: newBucketName } = require('@/lib/s3')
+      const { BUCKET_NAME: newBucketName } = require('@/lib/shared/storage')
       expect(newBucketName).toBe('custom-bucket')
     })
 
     it('использует значение по умолчанию если переменная не установлена', () => {
       delete process.env.S3_BUCKET_NAME
       jest.resetModules()
-      const { BUCKET_NAME: defaultBucketName } = require('@/lib/s3')
+      const { BUCKET_NAME: defaultBucketName } = require('@/lib/shared/storage')
       expect(defaultBucketName).toBe('b536986d-storage')
     })
   })
@@ -54,7 +54,7 @@ describe('S3', () => {
       delete process.env.S3_ACCESS_KEY_ID
       delete process.env.S3_SECRET_ACCESS_KEY
       jest.resetModules()
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
 
       await expect(
         uploadToS3(mockFile, mockFileName, mockContentType)
@@ -69,7 +69,7 @@ describe('S3', () => {
     it('загружает файл в S3 и возвращает URL', async () => {
       process.env.S3_ENDPOINT = 'https://s3.example.com'
       process.env.S3_BUCKET_NAME = 'test-bucket'
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       mockSend.mockResolvedValue({})
 
       const result = await uploadToS3(mockFile, mockFileName, mockContentType)
@@ -83,7 +83,7 @@ describe('S3', () => {
     it('формирует URL для обычного S3', async () => {
       process.env.S3_ENDPOINT = 'https://s3.example.com'
       process.env.S3_BUCKET_NAME = 'test-bucket'
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       mockSend.mockResolvedValue({})
 
       const result = await uploadToS3(mockFile, mockFileName, mockContentType)
@@ -96,7 +96,7 @@ describe('S3', () => {
       process.env.S3_BUCKET_NAME = 'test-bucket'
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://project.supabase.co'
       jest.resetModules()
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       mockSend.mockResolvedValue({})
 
       const result = await uploadToS3(mockFile, mockFileName, mockContentType)
@@ -109,7 +109,7 @@ describe('S3', () => {
       process.env.S3_BUCKET_NAME = 'test-bucket'
       delete process.env.NEXT_PUBLIC_SUPABASE_URL
       jest.resetModules()
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       mockSend.mockResolvedValue({})
 
       const result = await uploadToS3(mockFile, mockFileName, mockContentType)
@@ -119,7 +119,7 @@ describe('S3', () => {
 
     it('обрабатывает ошибки загрузки', async () => {
       process.env.S3_BUCKET_NAME = 'test-bucket'
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       const error = new Error('S3 upload failed')
       mockSend.mockRejectedValue(error)
 
@@ -130,7 +130,7 @@ describe('S3', () => {
 
     it('обрабатывает неизвестные ошибки', async () => {
       process.env.S3_BUCKET_NAME = 'test-bucket'
-      const { uploadToS3 } = require('@/lib/s3')
+      const { uploadToS3 } = require('@/lib/shared/storage')
       mockSend.mockRejectedValue('Unknown error')
 
       await expect(

@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useListState } from '@/hooks/use-list-state'
-import { useUser } from '@/hooks/use-user'
+import { useListState } from '@/lib/app/hooks/use-list-state'
+import { useUser } from '@/lib/users/context'
 import { useRouter } from 'next/navigation'
 
 jest.mock('next/navigation', () => ({
@@ -10,7 +10,7 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(() => '/'),
 }))
 
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: jest.fn(),
 }))
 

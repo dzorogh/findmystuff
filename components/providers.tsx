@@ -2,8 +2,8 @@
 
 import { memo } from "react";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { UserProvider } from "@/contexts/user-context";
-import { SettingsProvider } from "@/contexts/settings-context";
+import { UserProvider } from "@/lib/users/context";
+import { SettingsProvider } from "@/lib/settings/context";
 import { Toaster } from "sonner";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";

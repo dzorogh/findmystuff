@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Menu, Settings, LogOut, Moon, Sun, User as UserIcon, Plus, ChevronRight } from "lucide-react";
-import { useUser } from "@/hooks/use-user";
-import { useCurrentPage } from "@/contexts/current-page-context";
-import { authClient } from "@/lib/auth-client";
+import { useUser } from "@/lib/users/context";
+import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
+import { authClient } from "@/lib/auth/config/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Logo from "@/components/common/logo";
@@ -18,7 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 const sectionTitleConfig = [
   { prefix: "/containers/", title: "Контейнер", listTitle: "Контейнеры", listPath: "/containers" },

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -39,7 +39,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await apiClient.createRoom({
+      const response = await createRoom({
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
       });

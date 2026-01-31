@@ -2,7 +2,7 @@ jest.mock("qrcode", () => ({
   toDataURL: jest.fn().mockResolvedValue("data:image/png;base64,qr123"),
 }));
 
-import { printItemLabel, printEntityLabel } from "@/lib/label-print";
+import { printItemLabel, printEntityLabel } from "@/lib/entities/helpers/label-print";
 import * as qrcode from "qrcode";
 
 describe("label-print", () => {

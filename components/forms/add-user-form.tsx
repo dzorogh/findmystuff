@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createUser } from "@/lib/users/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
@@ -40,7 +40,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await apiClient.createUser({
+      const response = await createUser({
         email: email.trim(),
         email_confirm: true,
       });
@@ -48,7 +48,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
       if (response.error) {
         throw new Error(response.error);
       }
-      
+
       toast.success("Пользователь успешно создан", {
         description: response.data?.password ? `Пароль: ${response.data.password}` : undefined,
       });

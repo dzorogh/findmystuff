@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, forwardRef, useImperativeHandle } from "react";
-import { apiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { useEntityTypes } from "@/hooks/use-entity-types";
+import {
+  createEntityType,
+  updateEntityType,
+  deleteEntityType,
+} from "@/lib/entities/api";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import {
   Table,
   TableBody,
@@ -54,7 +58,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
 
     setIsAdding(true);
     try {
-      const response = await apiClient.createEntityType({
+      const response = await createEntityType({
         entity_category: category,
         name: newName.trim(),
       });
@@ -87,7 +91,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await apiClient.updateEntityType({
+      const response = await updateEntityType({
         id: isEditing,
         name: newName.trim(),
       });
@@ -114,7 +118,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await apiClient.deleteEntityType(id);
+      const response = await deleteEntityType(id);
 
       if (response.error) {
         throw new Error(response.error);

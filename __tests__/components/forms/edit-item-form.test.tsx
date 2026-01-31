@@ -1,17 +1,17 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditItemForm from '@/components/forms/edit-item-form'
-import { apiClient } from '@/lib/api-client'
+import * as entitiesApi from '@/lib/entities/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/entities/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
 
@@ -57,7 +57,7 @@ describe('EditItemForm', () => {
         },
       },
     })
-    ;(apiClient.getItem as jest.Mock) = mockGetItem
+    ;(entitiesApi.getItem as jest.Mock).mockImplementation(mockGetItem)
 
     const { rerender } = render(
       <EditItemForm
@@ -90,8 +90,8 @@ describe('EditItemForm', () => {
     async () => {
       const user = userEvent.setup({ delay: null })
       const mockUpdateItem = jest.fn().mockResolvedValue({ data: { id: 1 } })
-      ;(apiClient.updateItem as jest.Mock).mockImplementation(mockUpdateItem)
-      ;(apiClient.getItem as jest.Mock).mockResolvedValue({
+;(entitiesApi.updateItem as jest.Mock).mockImplementation(mockUpdateItem)
+    ;(entitiesApi.getItem as jest.Mock).mockResolvedValue({
         data: {
           item: { id: 1, name: 'Старое название', photo_url: null },
         },
@@ -110,7 +110,7 @@ describe('EditItemForm', () => {
       // Ждем загрузки фото
       await waitFor(
         () => {
-          expect(apiClient.getItem).toHaveBeenCalledWith(1)
+          expect(entitiesApi.getItem).toHaveBeenCalledWith(1)
         },
         { timeout: 2000 }
       )
@@ -155,7 +155,7 @@ describe('EditItemForm', () => {
     const mockUpdateItem = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка обновления' })
-    ;(apiClient.updateItem as jest.Mock) = mockUpdateItem
+    ;(entitiesApi.updateItem as jest.Mock).mockImplementation(mockUpdateItem)
 
     render(
       <EditItemForm

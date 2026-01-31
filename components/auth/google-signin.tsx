@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/shared/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 

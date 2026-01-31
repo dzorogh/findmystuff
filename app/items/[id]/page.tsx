@@ -11,7 +11,7 @@ import { EntityCreatedDate } from "@/components/entity-detail/entity-created-dat
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
-import { useItemDetail } from "@/hooks/use-item-detail";
+import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 
 export default function ItemDetailPage() {
   const {

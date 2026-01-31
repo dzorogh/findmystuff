@@ -1,9 +1,9 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ImageUpload from '@/components/common/image-upload'
-import { apiClient } from '@/lib/api-client'
+import { photoApi } from '@/lib/shared/api/photo'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/shared/api/photo')
 jest.mock('next/image', () => ({
   __esModule: true,
   default: ({ src, alt, ...props }: any) => {
@@ -60,7 +60,7 @@ describe('ImageUpload', () => {
     const mockUploadPhoto = jest.fn().mockResolvedValue({
       data: { url: 'https://example.com/uploaded.jpg' },
     })
-    ;(apiClient.uploadPhoto as jest.Mock) = mockUploadPhoto
+    ;(photoApi.uploadPhoto as jest.Mock).mockImplementation(mockUploadPhoto)
 
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
     const { container } = render(<ImageUpload onChange={mockOnChange} />)
@@ -158,7 +158,7 @@ describe('ImageUpload', () => {
     const mockUploadPhoto = jest
       .fn()
       .mockRejectedValue(new Error('Ошибка загрузки'))
-    ;(apiClient.uploadPhoto as jest.Mock) = mockUploadPhoto
+    ;(photoApi.uploadPhoto as jest.Mock) = mockUploadPhoto
 
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
     const { container } = render(

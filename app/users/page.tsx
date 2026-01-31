@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import { Skeleton } from "@/components/ui/skeleton";
 import UsersManager from "@/components/managers/users-manager";
 

@@ -1,4 +1,4 @@
-import { createIconResponse, createIconErrorResponse, IconSize } from '@/lib/icon-image'
+import { createIconResponse, createIconErrorResponse, IconSize } from '@/lib/shared/og/icon-image'
 import { ImageResponse } from 'next/og'
 
 jest.mock('next/og', () => ({

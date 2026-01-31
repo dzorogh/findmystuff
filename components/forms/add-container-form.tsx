@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
-import { useEntityTypes } from "@/hooks/use-entity-types";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -59,7 +59,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
         return;
       }
 
-      const response = await apiClient.createContainer({
+      const response = await createContainer({
         name: name.trim() || undefined,
         entity_type_id: parseInt(containerTypeId),
         photo_url: photoUrl || undefined,

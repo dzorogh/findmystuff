@@ -1,5 +1,5 @@
 import { Building2, MapPin, Container } from "lucide-react";
-import { getEntityDisplayName, type LabelEntityType } from "@/lib/entity-display-name";
+import { getEntityDisplayName, type LabelEntityType } from "@/lib/entities/helpers/display-name";
 import type { Location } from "@/types/entity";
 
 interface EntityLocationProps {

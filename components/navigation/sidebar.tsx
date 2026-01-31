@@ -3,14 +3,14 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/hooks/use-user";
-import { useQuickMove } from "@/contexts/quick-move-context";
+import { createClient } from "@/lib/shared/supabase/client";
+import { useUser } from "@/lib/users/context";
+import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 import { Button } from "@/components/ui/button";
 import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun, ArrowRightLeft } from "lucide-react";
 import Logo from "@/components/common/logo";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;

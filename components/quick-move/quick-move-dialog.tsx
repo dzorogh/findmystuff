@@ -2,10 +2,13 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
-import { apiClient } from "@/lib/api-client";
-import { resolveQuickMove, type QuickMoveResult } from "@/lib/quick-move";
-import type { EntityQrPayload } from "@/lib/entity-qr-code";
-import { getEntityDisplayName } from "@/lib/entity-display-name";
+import { getItem, createTransition } from "@/lib/entities/api";
+import { getContainer } from "@/lib/containers/api";
+import { getPlace } from "@/lib/places/api";
+import { getRoom } from "@/lib/rooms/api";
+import { resolveQuickMove, type QuickMoveResult } from "@/lib/entities/helpers/quick-move";
+import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { EntityTypeName } from "@/types/entity";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +37,7 @@ const fetchEntityName = async (
 ): Promise<string> => {
   try {
     if (entityType === "item") {
-      const res = await apiClient.getItem(entityId, false);
+      const res = await getItem(entityId, false);
       if (res.error || !res.data) {
         return getEntityDisplayName(entityType, entityId, null);
       }
@@ -42,7 +45,7 @@ const fetchEntityName = async (
       return getEntityDisplayName(entityType, entityId, name);
     }
     if (entityType === "container") {
-      const res = await apiClient.getContainer(entityId);
+      const res = await getContainer(entityId);
       if (res.error || !res.data) {
         return getEntityDisplayName(entityType, entityId, null);
       }
@@ -50,7 +53,7 @@ const fetchEntityName = async (
       return getEntityDisplayName(entityType, entityId, name);
     }
     if (entityType === "place") {
-      const res = await apiClient.getPlace(entityId);
+      const res = await getPlace(entityId);
       if (res.error || !res.data) {
         return getEntityDisplayName(entityType, entityId, null);
       }
@@ -58,7 +61,7 @@ const fetchEntityName = async (
       return getEntityDisplayName(entityType, entityId, name);
     }
     if (entityType === "room") {
-      const res = await apiClient.getRoom(entityId);
+      const res = await getRoom(entityId);
       if (res.error || !res.data) {
         return getEntityDisplayName(entityType, entityId, null);
       }
@@ -154,7 +157,7 @@ const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialog
         } else if (moveResult.sourceType === "container") {
           payload.container_id = moveResult.sourceId;
         }
-        const response = await apiClient.createTransition(payload);
+        const response = await createTransition(payload);
         if (response.error) {
           throw new Error(response.error);
         }

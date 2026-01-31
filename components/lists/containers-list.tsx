@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getContainers } from "@/lib/containers/api";
+import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import type { Container } from "@/types/entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useListState } from "@/hooks/use-list-state";
-import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { useListState } from "@/lib/app/hooks/use-list-state";
+import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -34,8 +35,8 @@ import {
 } from "@/components/ui/sheet";
 import { ContainersFiltersPanel, type ContainersFilters } from "@/components/filters/containers-filters-panel";
 import { toast } from "sonner";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
-import { getEntityDisplayName } from "@/lib/entity-display-name";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 interface ContainersListProps {
   refreshTrigger?: number;
@@ -120,7 +121,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     startLoading(isInitialLoad);
 
     try {
-      const response = await apiClient.getContainers({
+      const response = await getContainers({
         query: query?.trim(),
         showDeleted,
       });
@@ -202,7 +203,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
 
     try {
-      const response = await apiClient.softDelete("containers", containerId);
+      const response = await softDeleteApi.softDelete("containers", containerId);
       if (response.error) {
         throw new Error(response.error);
       }
@@ -216,7 +217,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
 
   const handleRestoreContainer = async (containerId: number) => {
     try {
-      const response = await apiClient.restoreDeleted("containers", containerId);
+      const response = await softDeleteApi.restoreDeleted("containers", containerId);
       if (response.error) {
         throw new Error(response.error);
       }

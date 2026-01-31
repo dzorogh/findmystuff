@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getItems } from "@/lib/entities/api";
+import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,8 @@ import {
 } from "@/components/ui/table";
 import MoveItemForm from "@/components/forms/move-item-form";
 import EditItemForm from "@/components/forms/edit-item-form";
-import { useListState } from "@/hooks/use-list-state";
-import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { useListState } from "@/lib/app/hooks/use-list-state";
+import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { ItemsFiltersPanel, type ItemsFilters } from "@/components/filters/items-filters-panel";
 import { toast } from "sonner";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import {
   Pagination,
   PaginationContent,
@@ -172,7 +173,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     startLoadingRef.current(isInitialLoad);
 
     try {
-      const response = await apiClient.getItems({
+      const response = await getItems({
         query: query?.trim(),
         showDeleted,
         page,
@@ -256,7 +257,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
 
     try {
-      const response = await apiClient.softDelete("items", itemId);
+      const response = await softDeleteApi.softDelete("items", itemId);
       if (response.error) {
         throw new Error(response.error);
       }
@@ -270,7 +271,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const handleRestoreItem = async (itemId: number) => {
     try {
-      const response = await apiClient.restoreDeleted("items", itemId);
+      const response = await softDeleteApi.restoreDeleted("items", itemId);
       if (response.error) {
         throw new Error(response.error);
       }

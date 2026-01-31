@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { useEntityDataLoader } from '@/hooks/use-entity-data-loader'
+import { useEntityDataLoader } from '@/lib/entities/hooks/use-entity-data-loader'
 
 describe('useEntityDataLoader', () => {
   const mockLoadData = jest.fn().mockResolvedValue(undefined)

@@ -7,8 +7,8 @@ import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEntityTypes } from "@/hooks/use-entity-types";
-import { useRooms } from "@/hooks/use-rooms";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
+import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 
 export interface PlacesFilters {
   showDeleted: boolean;

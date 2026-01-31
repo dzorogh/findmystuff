@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createTransition } from "@/lib/entities/api";
 import { Button } from "@/components/ui/button";
 import { FormGroup } from "@/components/ui/form-group";
 import { Divider } from "@/components/ui/divider";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
-import { useRooms } from "@/hooks/use-rooms";
-import { usePlaces } from "@/hooks/use-places";
-import { useContainers } from "@/hooks/use-containers";
+import { useUser } from "@/lib/users/context";
+import { useRooms } from "@/lib/rooms/hooks/use-rooms";
+import { usePlaces } from "@/lib/places/hooks/use-places";
+import { useContainers } from "@/lib/containers/hooks/use-containers";
 import LocationCombobox from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
 import QRScanner from "@/components/common/qr-scanner";
-import type { EntityQrPayload } from "@/lib/entity-qr-code";
+import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 import { Scan } from "lucide-react";
 import {
   Sheet,
@@ -62,7 +62,7 @@ const MoveItemForm = ({ itemId, itemName, open, onOpenChange, onSuccess }: MoveI
         return;
       }
 
-      const response = await apiClient.createTransition({
+      const response = await createTransition({
         item_id: itemId,
         destination_type: destinationType,
         destination_id: parseInt(selectedDestinationId),

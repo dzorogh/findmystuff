@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useDebouncedSearch } from '@/hooks/use-debounced-search'
+import { useDebouncedSearch } from '@/lib/app/hooks/use-debounced-search'
 
 // Вспомогательная функция для промисов
 const flushPromises = async () => {

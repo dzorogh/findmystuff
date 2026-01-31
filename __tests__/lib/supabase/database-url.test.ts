@@ -1,4 +1,4 @@
-import { getDatabaseUrl } from '@/lib/supabase/database-url'
+import { getDatabaseUrl } from '@/lib/shared/supabase/database-url'
 
 describe('getDatabaseUrl', () => {
   const originalEnv = process.env
@@ -15,7 +15,7 @@ describe('getDatabaseUrl', () => {
   it('возвращает DATABASE_URL если установлен', () => {
     process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db'
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     expect(getUrl()).toBe('postgresql://user:pass@localhost:5432/db')
   })
 
@@ -25,7 +25,7 @@ describe('getDatabaseUrl', () => {
     process.env.SUPABASE_DB_PASSWORD = 'test-password'
     process.env.SUPABASE_REGION = 'us-east-1'
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     const url = getUrl()
     expect(url).toContain('postgres.project')
     expect(url).toContain('test-password')
@@ -39,7 +39,7 @@ describe('getDatabaseUrl', () => {
     process.env.SUPABASE_DB_PASSWORD = 'test-password'
     delete process.env.SUPABASE_REGION
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     const url = getUrl()
     expect(url).toContain('us-east-1')
   })
@@ -49,7 +49,7 @@ describe('getDatabaseUrl', () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL
     process.env.NEXT_PHASE = 'phase-production-build'
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     expect(getUrl()).toBe('postgresql://placeholder:placeholder@localhost:5432/placeholder')
   })
 
@@ -58,7 +58,7 @@ describe('getDatabaseUrl', () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL
     delete process.env.NEXT_PHASE
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     expect(() => getUrl()).toThrow('DATABASE_URL не установлен')
     expect(() => getUrl()).toThrow('DATABASE_URL')
     expect(() => getUrl()).toThrow('SUPABASE_DB_PASSWORD')
@@ -70,7 +70,7 @@ describe('getDatabaseUrl', () => {
     process.env.SUPABASE_DB_PASSWORD = 'test-password'
     delete process.env.NEXT_PHASE
     jest.resetModules()
-    const { getDatabaseUrl: getUrl } = require('@/lib/supabase/database-url')
+    const { getDatabaseUrl: getUrl } = require('@/lib/shared/supabase/database-url')
     expect(() => getUrl()).toThrow('DATABASE_URL не установлен')
   })
 })

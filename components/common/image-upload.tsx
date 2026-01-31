@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { photoApi } from "@/lib/shared/api/photo";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,7 +61,7 @@ const ImageUpload = ({
     setIsUploading(true);
     isUploadingRef.current = true;
     try {
-      const response = await apiClient.uploadPhoto(file);
+      const response = await photoApi.uploadPhoto(file);
 
       if (!response.data?.url) {
         throw new Error("Сервер не вернул URL загруженного файла");

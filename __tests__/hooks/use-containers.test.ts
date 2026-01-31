@@ -1,8 +1,8 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { useContainers } from '@/hooks/use-containers'
-import { apiClient } from '@/lib/api-client'
+import { useContainers } from '@/lib/containers/hooks/use-containers'
+import * as containersApi from '@/lib/containers/api'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/containers/api')
 
 describe('useContainers', () => {
   beforeEach(() => {
@@ -14,8 +14,7 @@ describe('useContainers', () => {
       { id: 1, name: 'Контейнер 1' },
       { id: 2, name: 'Контейнер 2' },
     ]
-
-    ;(apiClient.getContainersSimple as jest.Mock).mockResolvedValue({
+    ;(containersApi.getContainersSimple as jest.Mock).mockResolvedValue({
       data: mockContainers,
     })
 
@@ -24,80 +23,66 @@ describe('useContainers', () => {
     await waitFor(() => {
       expect(result.current.containers).toEqual(mockContainers)
     })
-
     expect(result.current.isLoading).toBe(false)
     expect(result.current.error).toBeNull()
   })
 
   it('обрабатывает ошибку загрузки', async () => {
     const errorMessage = 'Ошибка загрузки контейнеров'
-    ;(apiClient.getContainersSimple as jest.Mock).mockRejectedValue(
+    ;(containersApi.getContainersSimple as jest.Mock).mockRejectedValue(
       new Error(errorMessage)
     )
-
     const { result } = renderHook(() => useContainers(false))
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy()
     })
-
     expect(result.current.containers).toEqual([])
     expect(result.current.isLoading).toBe(false)
   })
 
   it('загружает контейнеры с учетом includeDeleted', async () => {
-    ;(apiClient.getContainersSimple as jest.Mock).mockResolvedValue({
+    ;(containersApi.getContainersSimple as jest.Mock).mockResolvedValue({
       data: [],
     })
-
     const { result, rerender } = renderHook(
       ({ includeDeleted }) => useContainers(includeDeleted),
       { initialProps: { includeDeleted: false } }
     )
-
     await waitFor(() => {
-      expect(apiClient.getContainersSimple).toHaveBeenCalledWith(false)
+      expect(containersApi.getContainersSimple).toHaveBeenCalledWith(false)
     })
-
     rerender({ includeDeleted: true })
-
     await waitFor(() => {
-      expect(apiClient.getContainersSimple).toHaveBeenCalledWith(true)
+      expect(containersApi.getContainersSimple).toHaveBeenCalledWith(true)
     })
   })
 
   it('предоставляет функцию refetch', async () => {
     const mockContainers = [{ id: 1, name: 'Контейнер 1' }]
-    ;(apiClient.getContainersSimple as jest.Mock).mockResolvedValue({
+    ;(containersApi.getContainersSimple as jest.Mock).mockResolvedValue({
       data: mockContainers,
     })
-
     const { result } = renderHook(() => useContainers(false))
-
     await waitFor(() => {
       expect(result.current.containers).toEqual(mockContainers)
     })
-
-    const callCount = (apiClient.getContainersSimple as jest.Mock).mock.calls.length
-
+    const callCount = (containersApi.getContainersSimple as jest.Mock).mock.calls.length
     await act(async () => {
       result.current.refetch()
     })
-
     await waitFor(() => {
-      expect((apiClient.getContainersSimple as jest.Mock).mock.calls.length).toBe(
+      expect((containersApi.getContainersSimple as jest.Mock).mock.calls.length).toBe(
         callCount + 1
       )
     })
   })
 
   it('показывает состояние загрузки', () => {
-    ;(apiClient.getContainersSimple as jest.Mock).mockImplementation(
-      () => new Promise(() => {}) // Никогда не резолвится
+    ;(containersApi.getContainersSimple as jest.Mock).mockImplementation(
+      () => new Promise(() => {})
     )
-
     const { result } = renderHook(() => useContainers(false))
-
     expect(result.current.isLoading).toBe(true)
     expect(result.current.containers).toEqual([])
   })

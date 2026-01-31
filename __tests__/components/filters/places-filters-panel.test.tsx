@@ -18,11 +18,11 @@ const mockUseRooms = jest.fn(() => ({
   refetch: jest.fn(),
 }))
 
-jest.mock('@/hooks/use-entity-types', () => ({
+jest.mock('@/lib/entities/hooks/use-entity-types', () => ({
   useEntityTypes: () => mockUseEntityTypes(),
 }))
 
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: () => mockUseRooms(),
 }))
 

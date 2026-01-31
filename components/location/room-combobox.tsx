@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { FormField } from "@/components/ui/form-field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRooms } from "@/hooks/use-rooms";
+import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 
 interface RoomComboboxProps {
   selectedRoomId: string;

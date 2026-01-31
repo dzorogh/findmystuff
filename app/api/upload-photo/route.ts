@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadToS3 } from "@/lib/s3";
-import { createClient } from "@/lib/supabase/server";
+import { uploadToS3 } from "@/lib/shared/storage";
+import { createClient } from "@/lib/shared/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {

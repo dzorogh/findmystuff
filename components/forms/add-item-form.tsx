@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -50,7 +50,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       }
 
       // Добавляем вещь
-      const response = await apiClient.createItem({
+      const response = await createItem({
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
         destination_type: destinationType || undefined,

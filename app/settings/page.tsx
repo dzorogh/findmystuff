@@ -2,12 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings } from "@/lib/settings/context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
 
 export default function SettingsPage() {

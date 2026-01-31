@@ -6,11 +6,11 @@ import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 
 // Контексты
-import { useCurrentPage } from "@/contexts/current-page-context";
-import { useUser } from "@/hooks/use-user";
+import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
+import { useUser } from "@/lib/users/context";
 
 // API Client
-import { apiClient } from "@/lib/api-client";
+import { getContainer } from "@/lib/containers/api";
 
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import { Container } from "lucide-react";
 import { PageContainer } from "@/components/layouts/page-container";
 
 // Компоненты entity-detail
-import { useEntityDataLoader } from "@/hooks/use-entity-data-loader";
+import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityHeader } from "@/components/entity-detail/entity-header";
@@ -35,9 +35,9 @@ import EditContainerForm from "@/components/forms/edit-container-form";
 import MoveContainerForm from "@/components/forms/move-container-form";
 
 // Утилиты
-import { useEntityActions } from "@/hooks/use-entity-actions";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
-import { getEntityDisplayName } from "@/lib/entity-display-name";
+import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 // Типы
 import type { Transition, ContainerEntity } from "@/types/entity";
@@ -81,7 +81,7 @@ export default function ContainerDetailPage() {
     setError(null);
 
     try {
-      const response = await apiClient.getContainer(containerId);
+      const response = await getContainer(containerId);
 
       if (response.error || !response.data) {
         setError("Контейнер не найден");
@@ -161,6 +161,7 @@ export default function ContainerDetailPage() {
       />
     );
     return () => setEntityActions(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [container, isDeleting, isRestoring]);
 
   if (isUserLoading || isLoading) {

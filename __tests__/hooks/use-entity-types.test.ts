@@ -1,8 +1,8 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { useEntityTypes, clearEntityTypesCache } from '@/hooks/use-entity-types'
-import { apiClient } from '@/lib/api-client'
+import { useEntityTypes, clearEntityTypesCache } from '@/lib/entities/hooks/use-entity-types'
+import * as entitiesApi from '@/lib/entities/api'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/entities/api')
 
 describe('useEntityTypes', () => {
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe('useEntityTypes', () => {
       { id: 2, name: 'Тип 2', category: 'container' },
     ]
 
-    ;(apiClient.getEntityTypes as jest.Mock).mockResolvedValue({
+    ;(entitiesApi.getEntityTypes as jest.Mock).mockResolvedValue({
       data: mockTypes,
     })
 
@@ -35,14 +35,14 @@ describe('useEntityTypes', () => {
   it('загружает типы с категорией', async () => {
     const mockTypes = [{ id: 1, name: 'Тип 1', category: 'container' }]
 
-    ;(apiClient.getEntityTypes as jest.Mock).mockResolvedValue({
+    ;(entitiesApi.getEntityTypes as jest.Mock).mockResolvedValue({
       data: mockTypes,
     })
 
     const { result } = renderHook(() => useEntityTypes('container'))
 
     await waitFor(() => {
-      expect(apiClient.getEntityTypes).toHaveBeenCalledWith('container')
+      expect(entitiesApi.getEntityTypes).toHaveBeenCalledWith('container')
     })
 
     await waitFor(() => {
@@ -57,7 +57,7 @@ describe('useEntityTypes', () => {
     clearEntityTypesCache()
     
     // Мокаем API чтобы он возвращал ошибку
-    ;(apiClient.getEntityTypes as jest.Mock).mockResolvedValue({
+    ;(entitiesApi.getEntityTypes as jest.Mock).mockResolvedValue({
       error: errorMessage,
     })
 
@@ -74,7 +74,7 @@ describe('useEntityTypes', () => {
     )
     
     // Проверяем, что API был вызван
-    expect(apiClient.getEntityTypes).toHaveBeenCalled()
+    expect(entitiesApi.getEntityTypes).toHaveBeenCalled()
   }, 15000)
 
   it('кеширует результаты для одинаковых категорий', async () => {
@@ -84,7 +84,7 @@ describe('useEntityTypes', () => {
     clearEntityTypesCache()
     
     // Мокаем API - будет вызван только один раз благодаря кешу
-    ;(apiClient.getEntityTypes as jest.Mock).mockResolvedValue({
+    ;(entitiesApi.getEntityTypes as jest.Mock).mockResolvedValue({
       data: mockTypes,
     })
 
@@ -101,7 +101,7 @@ describe('useEntityTypes', () => {
     )
 
     // Проверяем, что API был вызван первый раз
-    expect(apiClient.getEntityTypes).toHaveBeenCalledWith('container')
+    expect(entitiesApi.getEntityTypes).toHaveBeenCalledWith('container')
 
     unmount1()
 
@@ -122,7 +122,7 @@ describe('useEntityTypes', () => {
 
     // API должен быть вызван только один раз (кеш использован)
     // Используем toHaveBeenCalledTimes с учетом того, что мок может быть вызван несколько раз
-    const callCount = (apiClient.getEntityTypes as jest.Mock).mock.calls.length
+    const callCount = (entitiesApi.getEntityTypes as jest.Mock).mock.calls.length
     expect(callCount).toBe(1)
   })
 })

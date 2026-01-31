@@ -1,20 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddRoomForm from '@/components/forms/add-room-form'
-import { apiClient } from '@/lib/api-client'
+import * as roomsApi from '@/lib/rooms/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/rooms/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -46,7 +46,7 @@ describe('AddRoomForm', () => {
   it('создает помещение при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreateRoom = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createRoom as jest.Mock) = mockCreateRoom
+    ;(roomsApi.createRoom as jest.Mock).mockImplementation(mockCreateRoom)
 
     render(
       <AddRoomForm
@@ -84,7 +84,7 @@ describe('AddRoomForm', () => {
     const mockCreateRoom = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка создания' })
-    ;(apiClient.createRoom as jest.Mock) = mockCreateRoom
+    ;(roomsApi.createRoom as jest.Mock).mockImplementation(mockCreateRoom)
 
     render(<AddRoomForm open={true} onOpenChange={mockOnOpenChange} />)
 

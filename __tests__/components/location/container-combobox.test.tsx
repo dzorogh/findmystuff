@@ -2,7 +2,7 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ContainerCombobox from '@/components/location/container-combobox'
 
-jest.mock('@/hooks/use-containers', () => ({
+jest.mock('@/lib/containers/hooks/use-containers', () => ({
   useContainers: jest.fn(() => ({
     containers: [
       {
@@ -195,7 +195,7 @@ describe('ContainerCombobox', () => {
   })
 
   it('disabled когда нет контейнеров', () => {
-    const { useContainers } = require('@/hooks/use-containers')
+    const { useContainers } = require('@/lib/containers/hooks/use-containers')
     useContainers.mockReturnValueOnce({
       containers: [],
       isLoading: false,
@@ -215,7 +215,7 @@ describe('ContainerCombobox', () => {
   })
 
   it('отображает сообщение когда нет контейнеров', () => {
-    const { useContainers } = require('@/hooks/use-containers')
+    const { useContainers } = require('@/lib/containers/hooks/use-containers')
     useContainers.mockReturnValueOnce({
       containers: [],
       isLoading: false,

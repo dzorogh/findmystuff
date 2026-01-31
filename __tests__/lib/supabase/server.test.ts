@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/shared/supabase/server'
 
 jest.mock('@supabase/ssr', () => ({
   createServerClient: jest.fn((url, key, options) => ({
@@ -62,7 +62,7 @@ describe('createClient (supabase/server)', () => {
     }))
     
     jest.resetModules()
-    const { createClient } = require('@/lib/supabase/server')
+    const { createClient } = require('@/lib/shared/supabase/server')
     await createClient()
     
     const { createServerClient } = require('@supabase/ssr')
@@ -89,7 +89,7 @@ describe('createClient (supabase/server)', () => {
     }))
     
     jest.resetModules()
-    const { createClient } = require('@/lib/supabase/server')
+    const { createClient } = require('@/lib/shared/supabase/server')
     await createClient()
     
     const { createServerClient } = require('@supabase/ssr')

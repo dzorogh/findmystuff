@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient } from "@/lib/api-client";
+import { createPlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
-import { useEntityTypes } from "@/hooks/use-entity-types";
+import { useUser } from "@/lib/users/context";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
 import RoomCombobox from "@/components/location/room-combobox";
 import ImageUpload from "@/components/common/image-upload";
@@ -58,7 +58,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         return;
       }
 
-      const response = await apiClient.createPlace({
+      const response = await createPlace({
         name: name.trim() || undefined,
         entity_type_id: parseInt(placeTypeId),
         photo_url: photoUrl || undefined,

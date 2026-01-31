@@ -11,7 +11,7 @@ const mockUseEntityTypes = jest.fn(() => ({
   error: null,
 }))
 
-jest.mock('@/hooks/use-entity-types', () => ({
+jest.mock('@/lib/entities/hooks/use-entity-types', () => ({
   useEntityTypes: () => mockUseEntityTypes(),
 }))
 

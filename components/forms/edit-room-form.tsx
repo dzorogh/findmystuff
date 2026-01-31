@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getRoom, updateRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -46,7 +46,7 @@ const EditRoomForm = ({
       setName(roomName || "");
       const loadPhoto = async () => {
         try {
-          const response = await apiClient.getRoom(roomId);
+          const response = await getRoom(roomId);
           if (response.data?.room?.photo_url) {
             setPhotoUrl(response.data.room.photo_url);
           } else {
@@ -70,7 +70,7 @@ const EditRoomForm = ({
     setIsSubmitting(true);
 
     try {
-      const response = await apiClient.updateRoom(roomId, {
+      const response = await updateRoom(roomId, {
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
       });

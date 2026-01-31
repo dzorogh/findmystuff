@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/shared/supabase/client'
 
 jest.mock('@supabase/ssr', () => ({
   createBrowserClient: jest.fn((url, key) => ({
@@ -32,7 +32,7 @@ describe('createClient (supabase/client)', () => {
   })
 
   it('создает клиент с правильными параметрами', () => {
-    const { createClient } = require('@/lib/supabase/client')
+    const { createClient } = require('@/lib/shared/supabase/client')
     
     const client = createClient()
     
@@ -47,7 +47,7 @@ describe('createClient (supabase/client)', () => {
     // @ts-expect-error - мок window для теста
     global.window = {}
     jest.resetModules()
-    const { createClient } = require('@/lib/supabase/client')
+    const { createClient } = require('@/lib/shared/supabase/client')
     
     const client = createClient()
     
@@ -62,7 +62,7 @@ describe('createClient (supabase/client)', () => {
     // @ts-expect-error - мок window для теста
     global.window = {}
     jest.resetModules()
-    const { createClient } = require('@/lib/supabase/client')
+    const { createClient } = require('@/lib/shared/supabase/client')
     
     const client1 = createClient()
     const client2 = createClient()

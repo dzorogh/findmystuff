@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
-import { apiClient } from "@/lib/api-client";
+import { getUsers, deleteUser } from "@/lib/users/api";
 
 interface UsersManagerProps {
   isLoading?: boolean;
@@ -48,17 +48,11 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.getUsers();
+      const response = await getUsers();
       if (response.error) {
         throw new Error(response.error);
       }
-      // API возвращает { users: User[] }
-      // request возвращает jsonData напрямую, поэтому response будет { users: User[] }
-      // Но ApiResponse<T> означает, что response.data будет T, то есть { users: User[] }
-      // Поэтому response.data.users будет User[]
-      // Но на самом деле request возвращает jsonData напрямую, поэтому response может быть { users: User[] }
-      // Проверяем оба варианта для совместимости
-      const users = (response.data as { users?: User[] })?.users || (response as unknown as { users?: User[] }).users || [];
+      const users = response.data?.users || [];
       setUsers(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -95,7 +89,7 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
 
     try {
       setIsDeleting(true);
-      const response = await apiClient.deleteUser(userToDelete.id);
+      const response = await deleteUser(userToDelete.id);
 
       if (response.error) {
         throw new Error(response.error);

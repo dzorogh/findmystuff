@@ -1,20 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddContainerForm from '@/components/forms/add-container-form'
-import { apiClient } from '@/lib/api-client'
+import * as containersApi from '@/lib/containers/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/containers/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/hooks/use-entity-types', () => ({
+jest.mock('@/lib/entities/hooks/use-entity-types', () => ({
   useEntityTypes: () => ({
     types: [
       { id: 1, name: 'Коробка', code: 'КОР', category: 'container' },
@@ -24,16 +24,16 @@ jest.mock('@/hooks/use-entity-types', () => ({
     error: null,
   }),
 }))
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: () => ({ rooms: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/hooks/use-places', () => ({
+jest.mock('@/lib/places/hooks/use-places', () => ({
   usePlaces: () => ({ places: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/hooks/use-containers', () => ({
+jest.mock('@/lib/containers/hooks/use-containers', () => ({
   useContainers: () => ({ containers: [], isLoading: false, error: null, refetch: jest.fn() }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -65,7 +65,7 @@ describe('AddContainerForm', () => {
   it('валидирует обязательные поля', async () => {
     const user = userEvent.setup()
     const mockCreateContainer = jest.fn()
-    ;(apiClient.createContainer as jest.Mock) = mockCreateContainer
+    ;(containersApi.createContainer as jest.Mock).mockImplementation(mockCreateContainer)
 
     render(<AddContainerForm open={true} onOpenChange={mockOnOpenChange} />)
 
@@ -87,7 +87,7 @@ describe('AddContainerForm', () => {
   it('создает контейнер при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreateContainer = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createContainer as jest.Mock) = mockCreateContainer
+    ;(containersApi.createContainer as jest.Mock).mockImplementation(mockCreateContainer)
 
     render(
       <AddContainerForm
@@ -125,7 +125,7 @@ describe('AddContainerForm', () => {
     const mockCreateContainer = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка создания' })
-    ;(apiClient.createContainer as jest.Mock) = mockCreateContainer
+    ;(containersApi.createContainer as jest.Mock).mockImplementation(mockCreateContainer)
 
     render(<AddContainerForm open={true} onOpenChange={mockOnOpenChange} />)
 

@@ -2,7 +2,7 @@ import {
   encodeEntityQrPayload,
   parseEntityQrPayload,
   type EntityQrPayload,
-} from "@/lib/entity-qr-code";
+} from "@/lib/entities/helpers/qr-code";
 
 describe("entity-qr-code", () => {
   describe("encodeEntityQrPayload", () => {

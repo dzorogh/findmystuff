@@ -1,4 +1,4 @@
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth/config/client'
 
 jest.mock('better-auth/react', () => ({
   createAuthClient: jest.fn((config) => ({
@@ -21,7 +21,7 @@ describe('authClient', () => {
   it('создает клиент с правильным baseURL', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
     jest.resetModules()
-    const { authClient: newAuthClient } = require('@/lib/auth-client')
+    const { authClient: newAuthClient } = require('@/lib/auth/config/client')
     expect(newAuthClient.baseURL).toBe('https://example.com')
   })
 
@@ -29,7 +29,7 @@ describe('authClient', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
     jest.resetModules()
     expect(() => {
-      require('@/lib/auth-client')
+      require('@/lib/auth/config/client')
     }).toThrow('NEXT_PUBLIC_APP_URL is not set')
   })
 })

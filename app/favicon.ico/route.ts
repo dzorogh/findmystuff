@@ -1,4 +1,4 @@
-import { createIconResponse, createIconErrorResponse } from "@/lib/icon-image";
+import { createIconResponse, createIconErrorResponse } from "@/lib/shared/og/icon-image";
 import { NextRequest } from "next/server";
 
 export const GET = async (request: NextRequest) => {

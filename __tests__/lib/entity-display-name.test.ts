@@ -1,4 +1,4 @@
-import { getEntityDisplayName, ENTITY_TYPE_LABELS } from "@/lib/entity-display-name";
+import { getEntityDisplayName, ENTITY_TYPE_LABELS } from "@/lib/entities/helpers/display-name";
 
 describe("entity-display-name", () => {
   it("возвращает name, если задано и не пустое", () => {

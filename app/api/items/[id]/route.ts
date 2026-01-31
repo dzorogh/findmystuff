@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/shared/supabase/server";
 import type { Transition, Location, ItemEntity } from "@/types/entity";
 
 type Item = ItemEntity;

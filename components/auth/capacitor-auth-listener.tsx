@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/shared/supabase/client";
 
 const CapacitorAuthListener = () => {
   const router = useRouter();

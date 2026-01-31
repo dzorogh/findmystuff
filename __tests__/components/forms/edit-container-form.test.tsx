@@ -1,20 +1,20 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditContainerForm from '@/components/forms/edit-container-form'
-import { apiClient } from '@/lib/api-client'
+import * as containersApi from '@/lib/containers/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/containers/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/hooks/use-entity-types', () => ({
+jest.mock('@/lib/entities/hooks/use-entity-types', () => ({
   useEntityTypes: () => ({
     types: [
       { id: 1, name: 'Коробка', entity_category: 'container' },
@@ -24,7 +24,7 @@ jest.mock('@/hooks/use-entity-types', () => ({
     error: null,
   }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -38,7 +38,7 @@ describe('EditContainerForm', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(apiClient.getContainer as jest.Mock).mockResolvedValue({
+    ;(containersApi.getContainer as jest.Mock).mockResolvedValue({
       data: {
         container: { id: 1, name: 'Старое название', photo_url: null, entity_type_id: 1 },
       },
@@ -75,7 +75,7 @@ describe('EditContainerForm', () => {
   it('обновляет контейнер при валидных данных', async () => {
     const user = userEvent.setup({ delay: null })
     const mockUpdateContainer = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.updateContainer as jest.Mock).mockImplementation(mockUpdateContainer)
+    ;(containersApi.updateContainer as jest.Mock).mockImplementation(mockUpdateContainer)
 
     render(
       <EditContainerForm
@@ -129,7 +129,7 @@ describe('EditContainerForm', () => {
     const mockUpdateContainer = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка обновления' })
-    ;(apiClient.updateContainer as jest.Mock) = mockUpdateContainer
+    ;(containersApi.updateContainer as jest.Mock).mockImplementation(mockUpdateContainer)
 
     render(
       <EditContainerForm

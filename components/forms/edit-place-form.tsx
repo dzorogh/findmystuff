@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { getPlace, updatePlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/use-user";
-import { useEntityTypes } from "@/hooks/use-entity-types";
+import { useUser } from "@/lib/users/context";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -53,7 +53,7 @@ const EditPlaceForm = ({
       // Загружаем текущее фото только при открытии формы
       const loadPhoto = async () => {
         try {
-          const response = await apiClient.getPlace(placeId);
+          const response = await getPlace(placeId);
           if (response.data?.place?.photo_url) {
             setPhotoUrl(response.data.place.photo_url);
           } else {
@@ -86,7 +86,7 @@ const EditPlaceForm = ({
       }
 
       // Обновляем только название и фото (тип места нельзя менять)
-      const response = await apiClient.updatePlace(placeId, {
+      const response = await updatePlace(placeId, {
         name: name.trim() || undefined,
         photo_url: photoUrl || undefined,
       });

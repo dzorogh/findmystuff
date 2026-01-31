@@ -1,5 +1,5 @@
-import { resolveQuickMove, ENTITY_LEVEL } from "@/lib/quick-move";
-import type { EntityQrPayload } from "@/lib/entity-qr-code";
+import { resolveQuickMove, ENTITY_LEVEL } from "@/lib/entities/helpers/quick-move";
+import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 
 describe("quick-move", () => {
   describe("ENTITY_LEVEL", () => {

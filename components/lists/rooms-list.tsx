@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { apiClient } from "@/lib/api-client";
+import { getRooms } from "@/lib/rooms/api";
+import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,8 @@ import {
 } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EditRoomForm from "@/components/forms/edit-room-form";
-import { useListState } from "@/hooks/use-list-state";
-import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { useListState } from "@/lib/app/hooks/use-list-state";
+import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/sheet";
 import { RoomsFiltersPanel, type RoomsFilters } from "@/components/filters/rooms-filters-panel";
 import { toast } from "sonner";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import type { Room } from "@/types/entity";
 
 interface RoomsListProps {
@@ -116,7 +117,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     startLoading(isInitialLoad);
 
     try {
-      const response = await apiClient.getRooms({
+      const response = await getRooms({
         query: query?.trim(),
         showDeleted,
       });
@@ -206,7 +207,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
 
     try {
-      const response = await apiClient.softDelete("rooms", roomId);
+      const response = await softDeleteApi.softDelete("rooms", roomId);
       if (response.error) {
         throw new Error(response.error);
       }
@@ -220,7 +221,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
 
   const handleRestoreRoom = async (roomId: number) => {
     try {
-      const response = await apiClient.restoreDeleted("rooms", roomId);
+      const response = await softDeleteApi.restoreDeleted("rooms", roomId);
       if (response.error) {
         throw new Error(response.error);
       }

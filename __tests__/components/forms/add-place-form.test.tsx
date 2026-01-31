@@ -1,20 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AddPlaceForm from '@/components/forms/add-place-form'
-import { apiClient } from '@/lib/api-client'
+import * as placesApi from '@/lib/places/api'
 import { toast } from 'sonner'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/places/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
   },
 }))
-jest.mock('@/hooks/use-user', () => ({
+jest.mock('@/lib/users/context', () => ({
   useUser: () => ({ user: { id: '1' }, isLoading: false }),
 }))
-jest.mock('@/hooks/use-entity-types', () => ({
+jest.mock('@/lib/entities/hooks/use-entity-types', () => ({
   useEntityTypes: () => ({
     types: [
       { id: 1, name: 'Полка', code: 'ПОЛ', category: 'place' },
@@ -24,7 +24,7 @@ jest.mock('@/hooks/use-entity-types', () => ({
     error: null,
   }),
 }))
-jest.mock('@/hooks/use-rooms', () => ({
+jest.mock('@/lib/rooms/hooks/use-rooms', () => ({
   useRooms: () => ({
     rooms: [{ id: 1, name: 'Комната 1' }],
     isLoading: false,
@@ -32,7 +32,7 @@ jest.mock('@/hooks/use-rooms', () => ({
     refetch: jest.fn(),
   }),
 }))
-jest.mock('@/contexts/settings-context', () => ({
+jest.mock('@/lib/settings/context', () => ({
   useSettings: () => ({
     isLoading: false,
     error: null,
@@ -64,7 +64,7 @@ describe('AddPlaceForm', () => {
   it('валидирует обязательные поля', async () => {
     const user = userEvent.setup()
     const mockCreatePlace = jest.fn()
-    ;(apiClient.createPlace as jest.Mock) = mockCreatePlace
+    ;(placesApi.createPlace as jest.Mock).mockImplementation(mockCreatePlace)
 
     render(<AddPlaceForm open={true} onOpenChange={mockOnOpenChange} />)
 
@@ -89,7 +89,7 @@ describe('AddPlaceForm', () => {
   it('создает место при валидных данных', async () => {
     const user = userEvent.setup()
     const mockCreatePlace = jest.fn().mockResolvedValue({ data: { id: 1 } })
-    ;(apiClient.createPlace as jest.Mock) = mockCreatePlace
+    ;(placesApi.createPlace as jest.Mock).mockImplementation(mockCreatePlace)
 
     render(
       <AddPlaceForm
@@ -131,7 +131,7 @@ describe('AddPlaceForm', () => {
     const mockCreatePlace = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка создания' })
-    ;(apiClient.createPlace as jest.Mock) = mockCreatePlace
+    ;(placesApi.createPlace as jest.Mock).mockImplementation(mockCreatePlace)
 
     render(<AddPlaceForm open={true} onOpenChange={mockOnOpenChange} />)
 

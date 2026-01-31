@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api-client";
+import { searchApi } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
 import Logo from "@/components/common/logo";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
 
     setIsSearching(true);
     try {
-      const response = await apiClient.search(queryToSearch.trim());
+      const response = await searchApi.search(queryToSearch.trim());
       // API возвращает { data: SearchResult[] }
       // request возвращает это напрямую, поэтому response будет { data: SearchResult[] }
       // И response.data будет SearchResult[]

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { apiClient } from "@/lib/api-client";
+import { getPlaces } from "@/lib/places/api";
+import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import EditPlaceForm from "@/components/forms/edit-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
-import { useListState } from "@/hooks/use-list-state";
-import { useDebouncedSearch } from "@/hooks/use-debounced-search";
+import { useListState } from "@/lib/app/hooks/use-list-state";
+import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { PlacesFiltersPanel, type PlacesFilters } from "@/components/filters/places-filters-panel";
 import { toast } from "sonner";
-import { usePrintEntityLabel } from "@/hooks/use-print-entity-label";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 
 interface Place {
   id: number;
@@ -135,7 +136,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     startLoading(isInitialLoad);
 
     try {
-      const response = await apiClient.getPlaces({
+      const response = await getPlaces({
         query: query?.trim(),
         showDeleted,
       });
@@ -211,7 +212,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     }
 
     try {
-      const response = await apiClient.softDelete("places", placeId);
+      const response = await softDeleteApi.softDelete("places", placeId);
       if (response.error) {
         throw new Error(response.error);
       }
@@ -225,7 +226,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
 
   const handleRestorePlace = async (placeId: number) => {
     try {
-      const response = await apiClient.restoreDeleted("places", placeId);
+      const response = await softDeleteApi.restoreDeleted("places", placeId);
       if (response.error) {
         throw new Error(response.error);
       }

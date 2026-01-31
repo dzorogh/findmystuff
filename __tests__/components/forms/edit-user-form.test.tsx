@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EditUserForm from '@/components/forms/edit-user-form'
-import { apiClient } from '@/lib/api-client'
+import * as usersApi from '@/lib/users/api'
 import { toast } from 'sonner'
 import type { User } from '@supabase/supabase-js'
 
-jest.mock('@/lib/api-client')
+jest.mock('@/lib/users/api')
 jest.mock('sonner', () => ({
   toast: {
     success: jest.fn(),
@@ -74,7 +74,7 @@ describe('EditUserForm', () => {
   it('обновляет пользователя при валидных данных', async () => {
     const user = userEvent.setup({ delay: null })
     const mockUpdateUser = jest.fn().mockResolvedValue({ data: { id: '1' } })
-    ;(apiClient.updateUser as jest.Mock).mockImplementation(mockUpdateUser)
+    ;(usersApi.updateUser as jest.Mock).mockImplementation(mockUpdateUser)
 
     render(
       <EditUserForm
@@ -123,7 +123,7 @@ describe('EditUserForm', () => {
     const mockUpdateUser = jest
       .fn()
       .mockResolvedValue({ error: 'Ошибка обновления' })
-    ;(apiClient.updateUser as jest.Mock) = mockUpdateUser
+    ;(usersApi.updateUser as jest.Mock) = mockUpdateUser
 
     render(
       <EditUserForm

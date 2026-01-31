@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { Toaster } from '@/components/ui/toaster'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/lib/app/hooks/use-toast'
 
-jest.mock('@/hooks/use-toast', () => ({
+jest.mock('@/lib/app/hooks/use-toast', () => ({
   useToast: jest.fn(),
 }))
 

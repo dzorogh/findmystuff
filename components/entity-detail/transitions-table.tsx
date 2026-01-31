@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getEntityDisplayName, type LabelEntityType } from "@/lib/entity-display-name";
+import { getEntityDisplayName, type LabelEntityType } from "@/lib/entities/helpers/display-name";
 import type { Transition } from "@/types/entity";
 
 interface TransitionsTableProps {

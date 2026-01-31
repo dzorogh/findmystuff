@@ -1,9 +1,15 @@
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import QuickMoveDialog from "@/components/quick-move/quick-move-dialog";
-import { apiClient } from "@/lib/api-client";
+import * as entitiesApi from "@/lib/entities/api";
+import * as containersApi from "@/lib/containers/api";
+import * as placesApi from "@/lib/places/api";
+import * as roomsApi from "@/lib/rooms/api";
 
-jest.mock("@/lib/api-client");
+jest.mock("@/lib/entities/api");
+jest.mock("@/lib/containers/api");
+jest.mock("@/lib/places/api");
+jest.mock("@/lib/rooms/api");
 jest.mock("sonner", () => ({
   toast: {
     success: jest.fn(),
@@ -38,11 +44,11 @@ describe("QuickMoveDialog", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (apiClient.getItem as jest.Mock).mockResolvedValue({ item: { name: "Item 1" } });
-    (apiClient.getContainer as jest.Mock).mockResolvedValue({ container: { name: "Container 2" } });
-    (apiClient.getPlace as jest.Mock).mockResolvedValue({ place: { name: "Place" } });
-    (apiClient.getRoom as jest.Mock).mockResolvedValue({ room: { name: "Room" } });
-    (apiClient.createTransition as jest.Mock).mockResolvedValue({ data: { id: 1 } });
+    (entitiesApi.getItem as jest.Mock).mockResolvedValue({ data: { item: { name: "Item 1" } } });
+    (containersApi.getContainer as jest.Mock).mockResolvedValue({ data: { container: { name: "Container 2" } } });
+    (placesApi.getPlace as jest.Mock).mockResolvedValue({ data: { place: { name: "Place" } } });
+    (roomsApi.getRoom as jest.Mock).mockResolvedValue({ data: { room: { name: "Room" } } });
+    (entitiesApi.createTransition as jest.Mock).mockResolvedValue({ data: { id: 1 } });
   });
 
   it("does not render dialog content when open is false", () => {
@@ -68,7 +74,7 @@ describe("QuickMoveDialog", () => {
 
   it("full flow: scan first → scan second (different type) → createTransition", async () => {
     const mockCreateTransition = jest.fn().mockResolvedValue({ data: { id: 1 } });
-    (apiClient.createTransition as jest.Mock) = mockCreateTransition;
+    (entitiesApi.createTransition as jest.Mock).mockImplementation(mockCreateTransition);
 
     render(
       <QuickMoveDialog open={true} onOpenChange={mockOnOpenChange} onSuccess={mockOnSuccess} />
