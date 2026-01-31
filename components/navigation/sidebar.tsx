@@ -60,7 +60,7 @@ const SidebarNavContent = ({
   return (
     <nav className="flex flex-col gap-1">
       <Button
-        variant="ghost"
+        variant="default"
         className="w-full justify-start gap-3 h-10 px-3"
         onClick={onQuickMoveOpen}
         aria-label="Быстрое перемещение"
@@ -129,7 +129,7 @@ const Sidebar = () => {
           <SidebarNavContent pathname={pathname} onQuickMoveOpen={() => setQuickMoveOpen(true)} />
         </div>
         <div className="border-t p-4 space-y-2">
-          <div className="px-3 py-2">
+          <div className="px-4 py-2">
             <div className="flex items-center gap-2 min-w-0">
               <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
@@ -138,7 +138,6 @@ const Sidebar = () => {
           </div>
           <Button
             variant="ghost"
-            size="sm"
             onClick={handleThemeToggle}
             className="w-full justify-start gap-2"
           >
@@ -151,7 +150,6 @@ const Sidebar = () => {
           </Button>
           <Button
             variant="ghost"
-            size="sm"
             onClick={handleSignOut}
             className="w-full justify-start gap-2"
           >
@@ -162,7 +160,7 @@ const Sidebar = () => {
       </aside>
 
       {/* Mobile Bottom Nav: 2 links | center Quick Move | 2 links */}
-      <nav className="md:hidden border-t bg-background">
+      <nav className="md:hidden bg-background">
         <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-between gap-1 px-1 pb-[var(--app-safe-bottom)]">
           <Link
             href="/rooms"
@@ -191,7 +189,7 @@ const Sidebar = () => {
           <Button
             type="button"
             size="icon"
-            className="h-12 w-12 shrink-0 rounded-full"
+            className="h-12 w-12 shrink-0 rounded-full mx-4"
             onClick={() => setQuickMoveOpen(true)}
             aria-label="Быстрое перемещение"
           >

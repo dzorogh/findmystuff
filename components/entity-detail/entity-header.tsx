@@ -10,7 +10,7 @@ interface EntityHeaderProps {
   isDeleted: boolean;
   defaultIcon: ReactNode;
   defaultName: string;
-  actions: ReactNode;
+  actions?: ReactNode;
   showId?: boolean;
   layout?: "default" | "compact";
 }
@@ -31,16 +31,16 @@ export const EntityHeader = ({
   if (layout === "compact") {
     return (
       <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex flex-wrap items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1 shrink-0 basis-full sm:basis-0">
             <EntityPhoto
               photoUrl={photoUrl}
               name={displayName}
               defaultIcon={defaultIcon}
               size="small"
             />
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-xl sm:text-2xl break-words">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <CardTitle className="text-xl sm:text-2xl truncate" title={displayName}>
                 {displayName}
               </CardTitle>
               <CardDescription className="mt-1">
@@ -53,7 +53,11 @@ export const EntityHeader = ({
               </CardDescription>
             </div>
           </div>
-          {actions}
+          {actions != null && (
+            <div className="flex flex-shrink-0 items-center">
+              {actions}
+            </div>
+          )}
         </div>
       </CardHeader>
     );
@@ -82,7 +86,7 @@ export const EntityHeader = ({
             </CardDescription>
           </div>
         </div>
-        {actions}
+        {actions != null && actions}
       </div>
     </CardHeader>
   );

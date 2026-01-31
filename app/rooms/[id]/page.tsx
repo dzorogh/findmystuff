@@ -43,7 +43,7 @@ export default function RoomDetailPage() {
   const router = useRouter();
   const roomId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
-  const { setEntityName, setIsLoading } = useCurrentPage();
+  const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [room, setRoom] = useState<Room | null>(null);
   const [roomItems, setRoomItems] = useState<Array<{
     id: number;
@@ -146,6 +146,26 @@ export default function RoomDetailPage() {
 
   const printLabel = usePrintEntityLabel("room");
 
+  useEffect(() => {
+    if (!room) {
+      setEntityActions(null);
+      return;
+    }
+    setEntityActions(
+      <EntityActions
+        isDeleted={!!room.deleted_at}
+        isDeleting={isDeleting}
+        isRestoring={isRestoring}
+        onEdit={() => setIsEditDialogOpen(true)}
+        onPrintLabel={() => printLabel(room.id, room.name)}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+        showMove={false}
+      />
+    );
+    return () => setEntityActions(null);
+  }, [room, isDeleting, isRestoring]);
+
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
   }
@@ -169,18 +189,6 @@ export default function RoomDetailPage() {
             isDeleted={!!room.deleted_at}
             defaultIcon={<Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />}
             defaultName="Помещение"
-            actions={
-              <EntityActions
-                isDeleted={!!room.deleted_at}
-                isDeleting={isDeleting}
-                isRestoring={isRestoring}
-                onEdit={() => setIsEditDialogOpen(true)}
-                onPrintLabel={room ? () => printLabel(room.id, room.name) : undefined}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-                showMove={false}
-              />
-            }
             layout="compact"
           />
           <CardContent className="space-y-4">

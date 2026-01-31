@@ -80,7 +80,14 @@ const TopBar = () => {
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { entityName, isLoading, setEntityName, setIsLoading } = useCurrentPage();
+  const {
+    entityName,
+    isLoading,
+    entityActions,
+    setEntityName,
+    setEntityActions,
+    setIsLoading,
+  } = useCurrentPage();
 
   const sectionTitle = useMemo(() => getSectionTitle(pathname), [pathname]);
   const detailPageInfo = useMemo(() => getDetailPageInfo(pathname), [pathname]);
@@ -93,13 +100,14 @@ const TopBar = () => {
     "/users": "Добавить пользователя",
   };
 
-  // Очищаем имя и состояние загрузки при переходе на страницы списков
+  // Очищаем имя, действия и состояние загрузки при переходе на страницы списков
   useEffect(() => {
     if (!detailPageInfo) {
       setEntityName(null);
+      setEntityActions(null);
       setIsLoading(false);
     }
-  }, [detailPageInfo, setEntityName, setIsLoading]);
+  }, [detailPageInfo, setEntityName, setEntityActions, setIsLoading]);
 
   if (!user) {
     return null;
@@ -164,11 +172,16 @@ const TopBar = () => {
               <span className="text-base font-semibold truncate">{sectionTitle}</span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2 min-w-0">
+            {detailPageInfo && entityActions && (
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {entityActions}
+              </div>
+            )}
             {canCreate && (
               <>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
                   onClick={handleCreateClick}
                   aria-label={createLabelMap[pathname] || "Добавить"}
@@ -177,7 +190,7 @@ const TopBar = () => {
                   <Plus className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={handleCreateClick}
                   className="hidden md:inline-flex gap-2"
                 >

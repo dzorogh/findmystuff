@@ -56,6 +56,8 @@ export interface Place extends BaseEntity {
   // Дополнительные поля из списков
   room_id?: number | null;
   room_name?: string | null;
+  items_count?: number;
+  containers_count?: number;
 }
 
 export interface Container extends BaseEntity {

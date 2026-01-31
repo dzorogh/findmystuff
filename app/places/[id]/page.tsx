@@ -48,7 +48,7 @@ export default function PlaceDetailPage() {
   const router = useRouter();
   const placeId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
-  const { setEntityName, setIsLoading } = useCurrentPage();
+  const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [place, setPlace] = useState<Place | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [placeItems, setPlaceItems] = useState<Array<{
@@ -140,6 +140,26 @@ export default function PlaceDetailPage() {
 
   const printLabel = usePrintEntityLabel("place");
 
+  useEffect(() => {
+    if (!place) {
+      setEntityActions(null);
+      return;
+    }
+    setEntityActions(
+      <EntityActions
+        isDeleted={!!place.deleted_at}
+        isDeleting={isDeleting}
+        isRestoring={isRestoring}
+        onEdit={() => setIsEditDialogOpen(true)}
+        onMove={() => setIsMoveDialogOpen(true)}
+        onPrintLabel={() => printLabel(place.id, place.name)}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+      />
+    );
+    return () => setEntityActions(null);
+  }, [place, isDeleting, isRestoring]);
+
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
   }
@@ -163,18 +183,6 @@ export default function PlaceDetailPage() {
             isDeleted={!!place.deleted_at}
             defaultIcon={<MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />}
             defaultName="Место"
-            actions={
-              <EntityActions
-                isDeleted={!!place.deleted_at}
-                isDeleting={isDeleting}
-                isRestoring={isRestoring}
-                onEdit={() => setIsEditDialogOpen(true)}
-                onMove={() => setIsMoveDialogOpen(true)}
-                onPrintLabel={place ? () => printLabel(place.id, place.name) : undefined}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-              />
-            }
             layout="compact"
           />
           <CardContent className="space-y-4">

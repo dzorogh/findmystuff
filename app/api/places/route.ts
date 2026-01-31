@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
       photo_url: string | null;
       room_id: number | null;
       room_name: string | null;
+      items_count: number;
+      containers_count: number;
     }) => ({
       id: place.id,
       name: place.name,
@@ -66,6 +68,8 @@ export async function GET(request: NextRequest) {
             room_name: place.room_name || null,
           }
         : null,
+      items_count: place.items_count ?? 0,
+      containers_count: place.containers_count ?? 0,
     }));
 
     return NextResponse.json({

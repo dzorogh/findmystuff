@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, MoreHorizontal, Printer, RotateCcw } from "lucide-react";
+import { MapPin, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -49,6 +49,8 @@ interface Place {
     room_id: number | null;
     room_name: string | null;
   } | null;
+  items_count?: number;
+  containers_count?: number;
 }
 
 interface PlacesListProps {
@@ -274,7 +276,8 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                   <TableRow>
                     <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
                     <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
-                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Тип</TableHead>
+                    <TableHead className="hidden md:table-cell w-[80px] whitespace-nowrap overflow-hidden text-ellipsis">Вещей</TableHead>
+                    <TableHead className="hidden md:table-cell w-[100px] whitespace-nowrap overflow-hidden text-ellipsis">Контейнеров</TableHead>
                     <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Создано</TableHead>
                     <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
@@ -319,26 +322,41 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                             >
                               {place.name || `Место #${place.id}`}
                             </Link>
-                            <div className="md:hidden mt-1 text-xs text-muted-foreground space-y-0.5">
-                              {place.entity_type?.name && (
-                                <span className="block truncate">{place.entity_type.name}</span>
-                              )}
+                            {place.entity_type?.name && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {place.entity_type.name}
+                              </p>
+                            )}
+                            <div className="md:hidden mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
+                              <span className="flex items-center gap-1">
+                                <Package className="h-3 w-3" />
+                                {place.items_count ?? 0} вещ.
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Container className="h-3 w-3" />
+                                {place.containers_count ?? 0} конт.
+                              </span>
                               {place.room?.room_name && place.room.room_id && (
-                                <div className="flex items-center gap-1">
+                                <span className="flex items-center gap-1">
                                   <Building2 className="h-3 w-3" />
                                   <span className="truncate">{place.room.room_name}</span>
-                                </div>
+                                </span>
                               )}
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {place.entity_type?.name ? (
-                          <span className="text-sm">{place.entity_type.name}</span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
+                        <div className="flex items-center gap-1 text-sm">
+                          <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span>{place.items_count ?? 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Container className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span>{place.containers_count ?? 0}</span>
+                        </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {place.room?.room_name && place.room.room_id ? (

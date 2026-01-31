@@ -52,7 +52,7 @@ export default function ContainerDetailPage() {
   const router = useRouter();
   const containerId = parseInt(params.id as string);
   const { user, isLoading: isUserLoading } = useUser();
-  const { setEntityName, setIsLoading } = useCurrentPage();
+  const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [container, setContainer] = useState<Container | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [containerItems, setContainerItems] = useState<Array<{
@@ -142,6 +142,26 @@ export default function ContainerDetailPage() {
     loadContainerData();
   };
 
+  useEffect(() => {
+    if (!container) {
+      setEntityActions(null);
+      return;
+    }
+    setEntityActions(
+      <EntityActions
+        isDeleted={!!container.deleted_at}
+        isDeleting={isDeleting}
+        isRestoring={isRestoring}
+        onEdit={() => setIsEditing(true)}
+        onMove={() => setIsMoving(true)}
+        onPrintLabel={() => printLabel(container.id, container.name)}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+      />
+    );
+    return () => setEntityActions(null);
+  }, [container, isDeleting, isRestoring]);
+
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
   }
@@ -165,18 +185,6 @@ export default function ContainerDetailPage() {
             isDeleted={!!container.deleted_at}
             defaultIcon={<Container className="h-12 w-12 text-muted-foreground" />}
             defaultName="Контейнер"
-            actions={
-              <EntityActions
-                isDeleted={!!container.deleted_at}
-                isDeleting={isDeleting}
-                isRestoring={isRestoring}
-                onEdit={() => setIsEditing(true)}
-                onMove={() => setIsMoving(true)}
-                onPrintLabel={container ? () => printLabel(container.id, container.name) : undefined}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-              />
-            }
           />
           <CardContent className="space-y-4">
             <EntityLocation location={container.last_location || null} />

@@ -113,7 +113,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </div>
                 <Button
-                  size="sm"
+                  variant="outline"
                   onClick={() => containerTypesManagerRef.current?.openAddDialog()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </div>
                 <Button
-                  size="sm"
+                  variant="outline"
                   onClick={() => placeTypesManagerRef.current?.openAddDialog()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
