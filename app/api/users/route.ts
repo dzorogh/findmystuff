@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabaseAdmin: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase environment variables");
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+const getSupabaseAdmin = (): SupabaseClient => {
+  if (supabaseAdmin) return supabaseAdmin;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+  return supabaseAdmin;
+};
 
 export async function GET(_request: NextRequest) {
   try {
-    const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users }, error } = await getSupabaseAdmin().auth.admin.listUsers();
 
     if (error) {
       console.error("Error fetching users:", error);
@@ -59,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     const password = generatePassword(12);
 
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
       email,
       password,
       email_confirm: email_confirm !== undefined ? email_confirm : true,
@@ -105,7 +109,7 @@ export async function PUT(request: NextRequest) {
 
     const password = generatePassword(12);
 
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(id, {
+    const { data, error } = await getSupabaseAdmin().auth.admin.updateUserById(id, {
       email,
       password,
     });
@@ -141,7 +145,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
 
     if (error) {
       console.error("Error deleting user:", error);
