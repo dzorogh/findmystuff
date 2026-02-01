@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom'
 
+// Подавляем console.error в тестах, чтобы не засорять вывод ожидаемыми ошибками
+console.error = jest.fn()
+console.warn = jest.fn()
+console.log = jest.fn()
+
 // Полифиллы для fetch API в Node.js окружении (для MSW и тестов)
 if (typeof global.fetch === 'undefined') {
   global.fetch = jest.fn()
