@@ -26,6 +26,7 @@ const sectionTitleConfig = [
   { prefix: "/places/", title: "Место", listTitle: "Места", listPath: "/places" },
   { prefix: "/rooms/", title: "Помещение", listTitle: "Помещения", listPath: "/rooms" },
   { prefix: "/users", title: "Пользователи", listTitle: "Пользователи", listPath: "/users" },
+  { prefix: "/account", title: "Аккаунт", listTitle: "Аккаунт", listPath: "/account" },
   { prefix: "/settings", title: "Настройки", listTitle: "Настройки", listPath: "/settings" },
   { prefix: "/containers", title: "Контейнеры", listTitle: "Контейнеры", listPath: "/containers" },
   { prefix: "/items", title: "Вещи", listTitle: "Вещи", listPath: "/items" },
@@ -215,10 +216,15 @@ const TopBar = () => {
                 <SheetTitle>Аккаунт</SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                  <UserIcon className="h-4 w-4" />
+                <Link
+                  href="/account"
+                  onClick={() => handleMenuOpenChange(false)}
+                  className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Перейти в аккаунт"
+                >
+                  <UserIcon className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="truncate">{user.email}</span>
-                </div>
+                </Link>
                 <Link
                   href="/settings"
                   onClick={handleSettingsClick}

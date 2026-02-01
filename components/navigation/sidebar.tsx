@@ -128,13 +128,17 @@ const Sidebar = () => {
           <SidebarNavContent pathname={pathname} onQuickMoveOpen={() => setQuickMoveOpen(true)} />
         </div>
         <div className="border-t p-4 space-y-2">
-          <div className="px-4 py-2">
+          <Link
+            href="/account"
+            className="block px-4 py-2 rounded-md hover:bg-accent transition-colors focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Перейти в аккаунт"
+          >
             <div className="flex items-center gap-2 min-w-0">
-              <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <UserIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               <span className="text-sm font-medium text-muted-foreground truncate">Аккаунт</span>
             </div>
             <p className="text-xs text-muted-foreground truncate mt-1 ml-6">{user.email}</p>
-          </div>
+          </Link>
           <Button
             variant="ghost"
             onClick={handleThemeToggle}

@@ -11,15 +11,18 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
+const AUTH_STANDALONE_PATHS = ["/auth/forgot-password", "/auth/update-password"];
+
 export const AuthLayout = ({ children }: AuthLayoutProps) => {
   const pathname = usePathname();
   const { user, isLoading } = useUser();
+  const isAuthStandalone = AUTH_STANDALONE_PATHS.some((p) => pathname.startsWith(p));
   const isHomePage = pathname === "/";
-  const showTopBar = !isLoading && user;
-  const showSidebar = !isLoading && user;
+  const showTopBar = !isLoading && user && !isAuthStandalone;
+  const showSidebar = !isLoading && user && !isAuthStandalone;
 
-  // Для неавторизованных пользователей - layout без sidebar и отступов
-  if (!isLoading && !user) {
+  // Страницы сброса/установки пароля и неавторизованные — только контент, без шапки и сайдбара
+  if (isAuthStandalone || (!isLoading && !user)) {
     return (
       <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background">
         <main className="h-full overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]">

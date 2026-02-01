@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/shared/supabase/client";
@@ -21,12 +21,15 @@ const UpdatePasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
+  // Сохраняем наличие recovery в hash при первом рендере — Supabase потом может очистить hash
+  const hadRecoveryHashRef = useRef<boolean>(false);
+  if (typeof window !== "undefined" && !hadRecoveryHashRef.current) {
+    hadRecoveryHashRef.current = window.location.hash.includes("type=recovery");
+  }
 
   useEffect(() => {
     const supabase = createClient();
-    const hasRecoveryHash =
-      typeof window !== "undefined" &&
-      window.location.hash.includes("type=recovery");
+    const hasRecoveryHash = hadRecoveryHashRef.current;
 
     const applyReady = (session: unknown) => {
       setIsReady(Boolean(session && hasRecoveryHash));
@@ -53,7 +56,7 @@ const UpdatePasswordPage = () => {
       subscription = sub;
       timeoutId = setTimeout(() => {
         supabase.auth.getSession().then(({ data: { session } }) => applyReady(session));
-      }, 800);
+      }, 1200);
     });
 
     return () => {

@@ -10,6 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Logo from "@/components/common/logo";
 
+const RATE_LIMIT_MESSAGE =
+  "Слишком много запросов на отправку писем. Подождите несколько минут и попробуйте снова.";
+
+const getErrorMessage = (raw: string): string => {
+  const lower = raw.toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("too many")) {
+    return RATE_LIMIT_MESSAGE;
+  }
+  return raw;
+};
+
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,12 +49,13 @@ const ForgotPasswordPage = () => {
         redirectTo: redirectTo ?? undefined,
       });
       if (resetError) {
-        setError(resetError.message);
+        setError(getErrorMessage(resetError.message));
         return;
       }
       setIsSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Произошла ошибка");
+      const msg = err instanceof Error ? err.message : "Произошла ошибка";
+      setError(getErrorMessage(msg));
     } finally {
       setIsLoading(false);
     }
