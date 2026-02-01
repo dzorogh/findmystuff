@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+echo "=== ENV (все переменные) ==="
+printenv | sort
+echo "=== /ENV ==="
+
 if [ -z "$INFISICAL_PROJECT_ID" ]; then
   echo "ERROR: INFISICAL_PROJECT_ID не задан. Добавьте переменную в Dokploy Environment." >&2
   exit 1
