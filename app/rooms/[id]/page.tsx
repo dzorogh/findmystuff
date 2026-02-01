@@ -256,6 +256,7 @@ export default function RoomDetailPage() {
         <EditRoomForm
           roomId={room.id}
           roomName={room.name}
+          roomTypeId={room.room_type_id ?? null}
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSuccess={() => {

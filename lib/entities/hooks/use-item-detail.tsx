@@ -24,8 +24,6 @@ export interface UseItemDetailReturn {
   error: string | null;
   isUserLoading: boolean;
   user: ReturnType<typeof useUser>["user"];
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
   isMoveDialogOpen: boolean;
   setIsMoveDialogOpen: (open: boolean) => void;
   handleEditSuccess: () => void;
@@ -46,7 +44,6 @@ export const useItemDetail = (): UseItemDetailReturn => {
   const [isLoading, setIsPageLoading] = useState(true);
   const [isLoadingTransitions, setIsLoadingTransitions] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -109,7 +106,8 @@ export const useItemDetail = (): UseItemDetailReturn => {
         isDeleted={!!item.deleted_at}
         isDeleting={isDeleting}
         isRestoring={isRestoring}
-        onEdit={() => setIsEditDialogOpen(true)}
+        showEdit={false}
+        onEdit={() => {}}
         onMove={() => setIsMoveDialogOpen(true)}
         onPrintLabel={() => printLabel(item.id, item.name)}
         onDelete={handleDelete}
@@ -121,7 +119,6 @@ export const useItemDetail = (): UseItemDetailReturn => {
   }, [item, isDeleting, isRestoring]);
 
   const handleEditSuccess = useCallback(() => {
-    setIsEditDialogOpen(false);
     loadItemData();
   }, [loadItemData]);
 
@@ -139,8 +136,6 @@ export const useItemDetail = (): UseItemDetailReturn => {
     error,
     isUserLoading,
     user,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
     isMoveDialogOpen,
     setIsMoveDialogOpen,
     handleEditSuccess,

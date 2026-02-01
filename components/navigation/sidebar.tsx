@@ -7,7 +7,7 @@ import { signOut } from "@/lib/auth/sign-out";
 import { useUser } from "@/lib/users/context";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 import { Button } from "@/components/ui/button";
-import { Search, Box, MapPin, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun, ArrowRightLeft } from "lucide-react";
+import { Search, Box, Warehouse, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun, ArrowRightLeft } from "lucide-react";
 import Logo from "@/components/common/logo";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/shared/utils";
@@ -32,7 +32,7 @@ const SidebarNavContent = ({
   const searchItem: NavItemConfig = { href: "/", label: "Поиск", icon: Search };
   const storageItems: NavItemConfig[] = [
     { href: "/rooms", label: "Помещения", icon: Building2 },
-    { href: "/places", label: "Места", icon: MapPin },
+    { href: "/places", label: "Места", icon: Warehouse },
     { href: "/containers", label: "Контейнеры", icon: Container },
     { href: "/items", label: "Вещи", icon: Box },
   ];
@@ -182,7 +182,7 @@ const Sidebar = () => {
               pathname.startsWith("/places") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <MapPin className="h-5 w-5" />
+            <Warehouse className="h-5 w-5" />
             <span className="sr-only">Места</span>
           </Link>
           <Button

@@ -5,8 +5,10 @@ import { getItem, updateItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
+import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -21,6 +23,7 @@ import {
 interface EditItemFormProps {
   itemId: number;
   itemName: string | null;
+  itemTypeId?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -29,34 +32,38 @@ interface EditItemFormProps {
 const EditItemForm = ({
   itemId,
   itemName,
+  itemTypeId: initialItemTypeId,
   open,
   onOpenChange,
   onSuccess,
 }: EditItemFormProps) => {
   const { isLoading } = useUser();
+  const { types: itemTypes } = useEntityTypes("item");
   const [name, setName] = useState(itemName || "");
+  const [itemTypeId, setItemTypeId] = useState<string>(initialItemTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Загружаем текущее фото при открытии формы
   useEffect(() => {
     if (open && itemId) {
-      const loadPhoto = async () => {
+      setName(itemName || "");
+      setItemTypeId(initialItemTypeId?.toString() || "");
+      const loadItem = async () => {
         try {
           const response = await getItem(itemId);
-          if (response.data?.item?.photo_url) {
-            setPhotoUrl(response.data.item.photo_url);
-          } else {
-            setPhotoUrl(null);
+          const item = response.data?.item;
+          if (item) {
+            setPhotoUrl(item.photo_url || null);
+            if (item.item_type_id != null) setItemTypeId(item.item_type_id.toString());
           }
         } catch {
           setPhotoUrl(null);
         }
       };
-      loadPhoto();
+      loadItem();
     }
-  }, [open, itemId]);
+  }, [open, itemId, itemName, initialItemTypeId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,9 +71,9 @@ const EditItemForm = ({
     setIsSubmitting(true);
 
     try {
-      // Обновляем только название вещи и фото
       const response = await updateItem(itemId, {
         name: name.trim() || undefined,
+        item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
         photo_url: photoUrl || undefined,
       });
 
@@ -107,6 +114,27 @@ const EditItemForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FormGroup>
+            <FormField
+              label="Тип вещи (необязательно)"
+              htmlFor={`item-type-${itemId}`}
+            >
+              <Combobox
+                options={[
+                  { value: "", label: "Не указан" },
+                  ...itemTypes.map((type) => ({
+                    value: type.id.toString(),
+                    label: type.name,
+                  })),
+                ]}
+                value={itemTypeId}
+                onValueChange={setItemTypeId}
+                placeholder="Выберите тип вещи..."
+                searchPlaceholder="Поиск типа..."
+                emptyText="Типы вещей не найдены"
+                disabled={isSubmitting}
+              />
+            </FormField>
+
             <FormField
               label="Название вещи"
               htmlFor={`item-name-${itemId}`}

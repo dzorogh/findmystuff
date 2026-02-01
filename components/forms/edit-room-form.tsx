@@ -5,8 +5,10 @@ import { getRoom, updateRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
+import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/common/form-footer";
@@ -21,6 +23,7 @@ import {
 interface EditRoomFormProps {
   roomId: number;
   roomName: string | null;
+  roomTypeId?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -29,40 +32,43 @@ interface EditRoomFormProps {
 const EditRoomForm = ({
   roomId,
   roomName,
+  roomTypeId: initialRoomTypeId,
   open,
   onOpenChange,
   onSuccess,
 }: EditRoomFormProps) => {
   const { isLoading } = useUser();
+  const { types: roomTypes } = useEntityTypes("room");
   const [name, setName] = useState(roomName || "");
+  const [roomTypeId, setRoomTypeId] = useState<string>(initialRoomTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-
-  // Загружаем текущие данные при открытии формы
   useEffect(() => {
     if (open && roomId) {
       setName(roomName || "");
-      const loadPhoto = async () => {
+      setRoomTypeId(initialRoomTypeId?.toString() || "");
+      const loadRoom = async () => {
         try {
           const response = await getRoom(roomId);
-          if (response.data?.room?.photo_url) {
-            setPhotoUrl(response.data.room.photo_url);
-          } else {
-            setPhotoUrl(null);
+          const room = response.data?.room;
+          if (room) {
+            if (room.photo_url) setPhotoUrl(room.photo_url);
+            else setPhotoUrl(null);
+            if (room.room_type_id != null) setRoomTypeId(room.room_type_id.toString());
           }
         } catch {
           setPhotoUrl(null);
         }
       };
-      loadPhoto();
+      loadRoom();
     } else {
-      // Сбрасываем форму при закрытии
       setName("");
+      setRoomTypeId("");
       setPhotoUrl(null);
     }
-  }, [open, roomId, roomName]);
+  }, [open, roomId, roomName, initialRoomTypeId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,6 +78,7 @@ const EditRoomForm = ({
     try {
       const response = await updateRoom(roomId, {
         name: name.trim() || undefined,
+        room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
         photo_url: photoUrl || undefined,
       });
 
@@ -111,6 +118,27 @@ const EditRoomForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FormGroup>
+            <FormField
+              label="Тип помещения (необязательно)"
+              htmlFor={`room-type-${roomId}`}
+            >
+              <Combobox
+                options={[
+                  { value: "", label: "Не указан" },
+                  ...roomTypes.map((type) => ({
+                    value: type.id.toString(),
+                    label: type.name,
+                  })),
+                ]}
+                value={roomTypeId}
+                onValueChange={setRoomTypeId}
+                placeholder="Выберите тип помещения..."
+                searchPlaceholder="Поиск типа..."
+                emptyText="Типы помещений не найдены"
+                disabled={isSubmitting}
+              />
+            </FormField>
+
             <FormField
               label="Название помещения"
               htmlFor={`room-name-${roomId}`}

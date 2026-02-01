@@ -38,7 +38,7 @@ export async function GET(
     // Загружаем вещь
     const { data: itemData, error: itemError } = await supabase
       .from("items")
-      .select("id, name, created_at, deleted_at, photo_url")
+      .select("id, name, created_at, deleted_at, photo_url, item_type_id, entity_types(name)")
       .eq("id", itemId)
       .single();
 
@@ -195,8 +195,17 @@ export async function GET(
         }
       }
 
+      const itemTypes = itemData.entity_types;
+      const itemEntityType = Array.isArray(itemTypes) && itemTypes.length > 0
+        ? itemTypes[0]
+        : itemTypes && !Array.isArray(itemTypes)
+          ? itemTypes
+          : null;
+      const { entity_types: _et, ...restItemData } = itemData;
       const item: Item = {
-        ...itemData,
+        ...restItemData,
+        item_type_id: itemData.item_type_id ?? null,
+        item_type: itemEntityType?.name ? { name: itemEntityType.name } : null,
         last_location: lastLocation,
       };
 
@@ -375,8 +384,17 @@ export async function GET(
         }
       : null;
 
+    const itemTypes = itemData.entity_types;
+    const itemEntityType = Array.isArray(itemTypes) && itemTypes.length > 0
+      ? itemTypes[0]
+      : itemTypes && !Array.isArray(itemTypes)
+        ? itemTypes
+        : null;
+    const { entity_types: _et2, ...restItemData } = itemData;
     const item: Item = {
-      ...itemData,
+      ...restItemData,
+      item_type_id: itemData.item_type_id ?? null,
+      item_type: itemEntityType?.name ? { name: itemEntityType.name } : null,
       last_location: lastLocation,
     };
 
@@ -422,11 +440,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, photo_url } = body;
+    const { name, photo_url, item_type_id } = body;
 
-    const updateData: { name?: string | null; photo_url?: string | null } = {};
+    const updateData: { name?: string | null; photo_url?: string | null; item_type_id?: number | null } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
+    if (item_type_id !== undefined) updateData.item_type_id = item_type_id != null ? (Number(item_type_id) || null) : null;
 
     const { data, error } = await supabase
       .from("items")

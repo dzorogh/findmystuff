@@ -49,6 +49,7 @@ class EntitiesApiClient extends HttpClient {
   async createItem(data: {
     name?: string;
     photo_url?: string;
+    item_type_id?: number | null;
     destination_type?: string;
     destination_id?: number;
   }) {
@@ -58,7 +59,7 @@ class EntitiesApiClient extends HttpClient {
     });
   }
 
-  async updateItem(id: number, data: { name?: string; photo_url?: string }) {
+  async updateItem(id: number, data: { name?: string; photo_url?: string; item_type_id?: number | null }) {
     return this.request<Item>(`/items/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -70,7 +71,7 @@ class EntitiesApiClient extends HttpClient {
     return this.request<EntityType[]>(url);
   }
 
-  async createEntityType(data: { entity_category: "place" | "container"; name: string }) {
+  async createEntityType(data: { entity_category: "place" | "container" | "room" | "item"; name: string }) {
     return this.request<CreateEntityTypeResponse>("/entity-types", {
       method: "POST",
       body: JSON.stringify(data),

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Container, MapPin } from "lucide-react";
+import { Package, Container, Warehouse } from "lucide-react";
 
 interface EntityItem {
   id: number;
@@ -20,7 +20,7 @@ interface EntityContentGridProps {
 const entityIcons = {
   items: Package,
   containers: Container,
-  places: MapPin,
+  places: Warehouse,
 };
 
 export const EntityContentGrid = ({

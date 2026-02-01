@@ -7,7 +7,7 @@ import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, Container, Package, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2 } from "lucide-react";
+import { Building2, Warehouse, Container, Package, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -311,13 +311,18 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                             >
                               {room.name || `Помещение #${room.id}`}
                             </Link>
+                            {room.room_type?.name && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {room.room_type.name}
+                              </p>
+                            )}
                             <div className="md:hidden mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                               <span className="flex items-center gap-1">
                                 <Package className="h-3 w-3" />
                                 {room.items_count || 0} вещ.
                               </span>
                               <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
+                                <Warehouse className="h-3 w-3" />
                                 {room.places_count || 0} мест
                               </span>
                               <span className="flex items-center gap-1">
@@ -336,7 +341,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <div className="flex items-center gap-1 text-sm">
-                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <Warehouse className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <span>{room.places_count ?? 0}</span>
                         </div>
                       </TableCell>
@@ -482,6 +487,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         <EditRoomForm
           roomId={editingRoomId}
           roomName={rooms.find((r) => r.id === editingRoomId)?.name || null}
+          roomTypeId={rooms.find((r) => r.id === editingRoomId)?.room_type_id ?? null}
           open={!!editingRoomId}
           onOpenChange={(open) => !open && setEditingRoomId(null)}
           onSuccess={() => {

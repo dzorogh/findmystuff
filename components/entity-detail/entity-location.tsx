@@ -1,4 +1,4 @@
-import { Building2, MapPin, Container } from "lucide-react";
+import { Building2, Warehouse, Container } from "lucide-react";
 import { getEntityDisplayName, type LabelEntityType } from "@/lib/entities/helpers/display-name";
 import type { Location } from "@/types/entity";
 
@@ -22,7 +22,7 @@ export const EntityLocation = ({ location, variant = "default" }: EntityLocation
       case "room":
         return <Building2 className="h-4 w-4 text-primary flex-shrink-0" />;
       case "place":
-        return <MapPin className="h-4 w-4 text-primary flex-shrink-0" />;
+        return <Warehouse className="h-4 w-4 text-primary flex-shrink-0" />;
       case "container":
         return <Container className="h-4 w-4 text-primary flex-shrink-0" />;
       default:
@@ -78,7 +78,7 @@ export const EntityLocation = ({ location, variant = "default" }: EntityLocation
                   </div>
                   {location.place_name && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6 border-l-2 border-border pl-3">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <Warehouse className="h-3 w-3 flex-shrink-0" />
                       <span>Место: {location.place_name}</span>
                     </div>
                   )}

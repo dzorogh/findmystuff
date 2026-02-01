@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getEntityTypes } from "@/lib/entities/api";
 import type { EntityType } from "@/types/entity";
 
@@ -12,11 +12,18 @@ export const clearEntityTypesCache = () => {
   requestResults.clear();
 };
 
-export const useEntityTypes = (category?: "place" | "container") => {
+export const useEntityTypes = (category?: "place" | "container" | "room" | "item") => {
   const [types, setTypes] = useState<EntityType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const requestKey = category || "all";
+
+  const refetch = useCallback(() => {
+    requestResults.delete(requestKey);
+    loadingRequests.delete(requestKey);
+    setRefreshTrigger((t) => t + 1);
+  }, [requestKey]);
 
   useEffect(() => {
     const loadTypes = async () => {
@@ -77,7 +84,7 @@ export const useEntityTypes = (category?: "place" | "container") => {
     };
 
     loadTypes();
-  }, [category, requestKey]);
+  }, [category, requestKey, refreshTrigger]);
 
-  return { types, isLoading, error };
+  return { types, isLoading, error, refetch };
 };

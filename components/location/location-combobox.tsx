@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, MapPin, Container as ContainerIcon, Building2 } from "lucide-react";
+import { Check, ChevronsUpDown, Warehouse, Container as ContainerIcon, Building2 } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,11 +81,11 @@ const LocationCombobox = ({
   const buttonOrder = showRoomFirst
     ? [
         { type: "room" as const, label: "Помещение", icon: Building2 },
-        { type: "place" as const, label: "Место", icon: MapPin },
+        { type: "place" as const, label: "Место", icon: Warehouse },
         { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
       ]
     : [
-        { type: "place" as const, label: "Место", icon: MapPin },
+        { type: "place" as const, label: "Место", icon: Warehouse },
         { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
         { type: "room" as const, label: "Помещение", icon: Building2 },
       ];

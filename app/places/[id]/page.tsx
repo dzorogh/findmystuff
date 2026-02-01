@@ -14,7 +14,7 @@ import { getPlace } from "@/lib/places/api";
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin } from "lucide-react";
+import { Warehouse } from "lucide-react";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
@@ -191,7 +191,7 @@ export default function PlaceDetailPage() {
           <EntityPhoto
             photoUrl={place.photo_url}
             name={displayName}
-            defaultIcon={<MapPin className="h-12 w-12 mx-auto text-muted-foreground" />}
+            defaultIcon={<Warehouse className="h-12 w-12 mx-auto text-muted-foreground" />}
             size="large"
             aspectRatio="video"
           />

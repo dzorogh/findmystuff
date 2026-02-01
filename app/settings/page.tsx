@@ -16,6 +16,8 @@ export default function SettingsPage() {
   const { isLoading, error } = useSettings();
   const containerTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const placeTypesManagerRef = useRef<EntityTypesManagerRef>(null);
+  const roomTypesManagerRef = useRef<EntityTypesManagerRef>(null);
+  const itemTypesManagerRef = useRef<EntityTypesManagerRef>(null);
 
 
   useEffect(() => {
@@ -164,6 +166,78 @@ export default function SettingsPage() {
                 category="place"
                 title="Типы мест"
                 description="Управление типами мест"
+              />
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Раздел: Помещения */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Помещения</h2>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Типы помещений</CardTitle>
+                  <CardDescription>
+                    Управление типами (категориями) помещений
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => roomTypesManagerRef.current?.openAddDialog()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить тип
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <EntityTypesManager
+                ref={roomTypesManagerRef}
+                category="room"
+                title="Типы помещений"
+                description="Управление типами помещений"
+              />
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Раздел: Вещи */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Вещи</h2>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle>Типы вещей</CardTitle>
+                  <CardDescription>
+                    Управление типами (категориями) вещей
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => itemTypesManagerRef.current?.openAddDialog()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить тип
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <EntityTypesManager
+                ref={itemTypesManagerRef}
+                category="item"
+                title="Типы вещей"
+                description="Управление типами вещей"
               />
             </CardContent>
           </Card>

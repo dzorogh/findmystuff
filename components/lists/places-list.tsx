@@ -7,7 +7,7 @@ import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
+import { Warehouse, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -265,7 +265,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
         </div>
       ) : places.length === 0 ? (
         <EmptyState
-          icon={MapPin}
+          icon={Warehouse}
           title={searchQuery ? "По вашему запросу ничего не найдено" : "Местоположения не найдены"}
         />
       ) : (
@@ -313,7 +313,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                             </div>
                           ) : (
                             <div className="h-10 w-10 flex-shrink-0 rounded border border-border bg-muted flex items-center justify-center">
-                              <MapPin className="h-5 w-5 text-muted-foreground" />
+                              <Warehouse className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1">

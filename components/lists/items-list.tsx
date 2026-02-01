@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Package, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -18,7 +19,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import MoveItemForm from "@/components/forms/move-item-form";
-import EditItemForm from "@/components/forms/edit-item-form";
 import { useListState } from "@/lib/app/hooks/use-list-state";
 import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
@@ -51,6 +51,8 @@ interface Item {
   created_at: string;
   deleted_at: string | null;
   photo_url: string | null;
+  item_type_id?: number | null;
+  item_type?: { name: string } | null;
   last_location?: {
     destination_type: string | null;
     destination_id: number | null;
@@ -120,8 +122,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   });
 
   const [items, setItems] = useState<Item[]>([]);
-  const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [movingItemId, setMovingItemId] = useState<number | null>(null);
+  const router = useRouter();
   const [mobileActionsItemId, setMobileActionsItemId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -366,6 +368,11 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                           >
                             {item.name || `Вещь #${item.id}`}
                           </Link>
+                          {item.item_type?.name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {item.item_type.name}
+                            </p>
+                          )}
                           <div className="md:hidden mt-1 text-xs text-muted-foreground space-y-0.5">
                             {item.last_location ? (
                               getRoomLabel(item.last_location) ? (
@@ -381,8 +388,8 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                             )}
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
+                        </div>
+                      </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {item.last_location ? (
                         getRoomLabel(item.last_location) ? (
@@ -414,7 +421,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                       <div className="hidden md:flex">
                         <ListActions
                           isDeleted={!!item.deleted_at}
-                          onEdit={() => setEditingItemId(item.id)}
+                          onEdit={() => router.push(`/items/${item.id}`)}
                           onMove={() => setMovingItemId(item.id)}
                           onPrintLabel={() => printLabel(item.id, item.name)}
                           onDelete={() => handleDeleteItem(item.id)}
@@ -465,7 +472,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                   size="sm"
                                   className="w-full justify-start gap-2"
                                   onClick={() => {
-                                    setEditingItemId(item.id);
+                                    router.push(`/items/${item.id}`);
                                     setMobileActionsItemId(null);
                                   }}
                                 >
@@ -509,19 +516,6 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {editingItemId && (
-        <EditItemForm
-          itemId={editingItemId}
-          itemName={items.find((i) => i.id === editingItemId)?.name || null}
-          open={!!editingItemId}
-          onOpenChange={(open) => !open && setEditingItemId(null)}
-          onSuccess={() => {
-            setEditingItemId(null);
-            loadItems(searchQuery, false, currentPage);
-          }}
-        />
       )}
 
       {movingItemId && (

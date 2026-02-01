@@ -1,17 +1,25 @@
 "use client";
 
-import { Package } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
+import { Combobox } from "@/components/ui/combobox";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityLocation } from "@/components/entity-detail/entity-location";
-import { EntityPhoto } from "@/components/entity-detail/entity-photo";
-import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
-import EditItemForm from "@/components/forms/edit-item-form";
 import MoveItemForm from "@/components/forms/move-item-form";
+import ImageUpload from "@/components/common/image-upload";
+import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
+import { updateItem } from "@/lib/entities/api";
 
 export default function ItemDetailPage() {
   const {
@@ -22,14 +30,55 @@ export default function ItemDetailPage() {
     error,
     isUserLoading,
     user,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
     isMoveDialogOpen,
     setIsMoveDialogOpen,
     handleEditSuccess,
     handleMoveSuccess,
     entityLabel,
   } = useItemDetail();
+
+  const { types: itemTypes } = useEntityTypes("item");
+  const [name, setName] = useState("");
+  const [itemTypeId, setItemTypeId] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (item) {
+      setName(item.name ?? "");
+      setItemTypeId(item.item_type_id?.toString() ?? "");
+      setPhotoUrl(item.photo_url ?? null);
+    }
+  }, [item]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!item) return;
+    setFormError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await updateItem(item.id, {
+        name: name.trim() || undefined,
+        item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
+        photo_url: photoUrl || undefined,
+      });
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      toast.success("Вещь успешно обновлена");
+      handleEditSuccess();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Произошла ошибка при сохранении"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
@@ -43,25 +92,71 @@ export default function ItemDetailPage() {
     return <EntityDetailError error={error} entityName={entityLabel} />;
   }
 
-  const displayName = item.name ?? `Вещь #${item.id}`;
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>{displayName}</CardTitle>
+          <CardTitle>Редактирование вещи</CardTitle>
           <CardDescription>ID: #{item.id}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <EntityPhoto
-            photoUrl={item.photo_url}
-            name={displayName}
-            defaultIcon={<Package className="h-12 w-12 mx-auto text-muted-foreground" />}
-            size="large"
-            aspectRatio="video"
-          />
-          <EntityLocation location={item.last_location ?? null} variant="detailed" />
-          <EntityCreatedDate createdAt={item.created_at} label="Создано" />
+        <CardContent className="pt-4">
+          <form onSubmit={handleSubmit}>
+            <FormGroup>
+              <FormField label="Название вещи" htmlFor={`item-name-${item.id}`}>
+                <Input
+                  id={`item-name-${item.id}`}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название вещи"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
+              <FormField
+                label="Тип вещи (необязательно)"
+                htmlFor={`item-type-${item.id}`}
+              >
+                <Combobox
+                  options={[
+                    { value: "", label: "Не указан" },
+                    ...itemTypes.map((type) => ({
+                      value: type.id.toString(),
+                      label: type.name,
+                    })),
+                  ]}
+                  value={itemTypeId}
+                  onValueChange={setItemTypeId}
+                  placeholder="Выберите тип вещи..."
+                  searchPlaceholder="Поиск типа..."
+                  emptyText="Типы вещей не найдены"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография вещи (необязательно)"
+              />
+
+              <ErrorMessage message={formError ?? ""} />
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Сохранение...
+                    </>
+                  ) : (
+                    "Сохранить"
+                  )}
+                </Button>
+              </div>
+            </FormGroup>
+          </form>
         </CardContent>
       </Card>
 
@@ -82,16 +177,6 @@ export default function ItemDetailPage() {
           </CardContent>
         </Card>
       </div>
-
-      {isEditDialogOpen && (
-        <EditItemForm
-          itemId={item.id}
-          itemName={item.name}
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onSuccess={handleEditSuccess}
-        />
-      )}
 
       {isMoveDialogOpen && (
         <MoveItemForm

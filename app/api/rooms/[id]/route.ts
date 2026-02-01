@@ -27,7 +27,7 @@ export async function GET(
     const [roomResult, itemIdsResult, transitionsResult] = await Promise.all([
       supabase
         .from("rooms")
-        .select("id, name, photo_url, created_at, deleted_at")
+        .select("id, name, photo_url, created_at, deleted_at, room_type_id, entity_types(name)")
         .eq("id", roomId)
         .single(),
       supabase.rpc("get_item_ids_in_room", { p_room_id: roomId }),
@@ -50,12 +50,20 @@ export async function GET(
       return NextResponse.json({ error: "Помещение не найдено" }, { status: 404 });
     }
 
+    const roomTypes = roomData.entity_types;
+    const entityType = Array.isArray(roomTypes) && roomTypes.length > 0
+      ? roomTypes[0]
+      : roomTypes && !Array.isArray(roomTypes)
+        ? roomTypes
+        : null;
     const room = {
       id: roomData.id,
       name: roomData.name,
       photo_url: roomData.photo_url,
       created_at: roomData.created_at,
       deleted_at: roomData.deleted_at,
+      room_type_id: roomData.room_type_id ?? null,
+      room_type: entityType?.name ? { name: entityType.name } : null,
     };
 
     const itemIds: number[] = Array.isArray(itemIdsResult.data)
@@ -201,14 +209,16 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, photo_url } = body;
+    const { name, photo_url, room_type_id } = body;
 
     const updateData: {
       name?: string | null;
       photo_url?: string | null;
+      room_type_id?: number | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
+    if (room_type_id !== undefined) updateData.room_type_id = room_type_id != null ? (Number(room_type_id) || null) : null;
 
     const { data, error } = await supabase
       .from("rooms")

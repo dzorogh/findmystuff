@@ -15,6 +15,7 @@ interface EntityActionsProps {
   onDelete: () => void;
   onRestore: () => void;
   showMove?: boolean;
+  showEdit?: boolean;
 }
 
 const closeAfter = (fn: () => void, close: () => void) => () => {
@@ -32,6 +33,7 @@ export const EntityActions = ({
   onDelete,
   onRestore,
   showMove = true,
+  showEdit = true,
 }: EntityActionsProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isDisabled = isDeleting || isRestoring;
@@ -42,17 +44,19 @@ export const EntityActions = ({
 
   const desktopActions = (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className={btnClass}
-        onClick={onEdit}
-        disabled={isDisabled}
-        aria-label="Редактировать"
-      >
-        <Edit className={iconClass} />
-        <span className={textClass}>Редактировать</span>
-      </Button>
+      {showEdit && (
+        <Button
+          variant="outline"
+          size="sm"
+          className={btnClass}
+          onClick={onEdit}
+          disabled={isDisabled}
+          aria-label="Редактировать"
+        >
+          <Edit className={iconClass} />
+          <span className={textClass}>Редактировать</span>
+        </Button>
+      )}
       {!isDeleted && showMove && onMove && (
         <Button
           variant="outline"
@@ -124,16 +128,18 @@ export const EntityActions = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={closeAfter(onEdit, () => setMobileMenuOpen(false))}
-              disabled={isDisabled}
-            >
-              <Edit className="h-4 w-4" />
-              Редактировать
-            </Button>
+            {showEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={closeAfter(onEdit, () => setMobileMenuOpen(false))}
+                disabled={isDisabled}
+              >
+                <Edit className="h-4 w-4" />
+                Редактировать
+              </Button>
+            )}
             {!isDeleted && showMove && onMove && (
               <Button
                 variant="ghost"

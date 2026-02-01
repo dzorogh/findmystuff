@@ -53,6 +53,8 @@ export async function GET(request: NextRequest) {
     const items: Item[] = itemsData.map((item: {
       id: number;
       name: string | null;
+      item_type_id: number | null;
+      item_type_name: string | null;
       created_at: string;
       deleted_at: string | null;
       photo_url: string | null;
@@ -67,6 +69,8 @@ export async function GET(request: NextRequest) {
       return {
         id: item.id,
         name: item.name,
+        item_type_id: item.item_type_id ?? null,
+        item_type: item.item_type_name ? { name: item.item_type_name } : null,
         created_at: item.created_at,
         deleted_at: item.deleted_at,
         photo_url: item.photo_url,
@@ -113,15 +117,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, photo_url, destination_type, destination_id } = body;
+    const { name, photo_url, destination_type, destination_id, item_type_id } = body;
 
-    // Добавляем вещь
+    const insertItemData: {
+      name: string | null;
+      photo_url: string | null;
+      item_type_id: number | null;
+    } = {
+      name: name?.trim() || null,
+      photo_url: photo_url || null,
+      item_type_id: item_type_id != null ? (Number(item_type_id) || null) : null,
+    };
+
     const { data: newItem, error: insertError } = await supabase
       .from("items")
-      .insert({
-        name: name?.trim() || null,
-        photo_url: photo_url || null,
-      })
+      .insert(insertItemData)
       .select()
       .single();
 

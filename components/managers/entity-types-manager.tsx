@@ -30,7 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface EntityTypesManagerProps {
-  category: "place" | "container";
+  category: "place" | "container" | "room" | "item";
   title: string;
   description: string;
 }
@@ -44,7 +44,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
   title: _title,
   description: _description,
 }, ref) => {
-  const { types, isLoading, error } = useEntityTypes(category);
+  const { types, isLoading, error, refetch } = useEntityTypes(category);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [newName, setName] = useState("");
@@ -70,7 +70,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       toast.success("Тип успешно добавлен");
       setName("");
       setDialogOpen(false);
-      window.location.reload();
+      refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка добавления типа");
     } finally {
@@ -104,7 +104,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       setName("");
       setIsEditing(null);
       setDialogOpen(false);
-      window.location.reload();
+      refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка обновления типа");
     } finally {
@@ -125,7 +125,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       }
 
       toast.success("Тип успешно удален");
-      window.location.reload();
+      refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка удаления типа");
     }

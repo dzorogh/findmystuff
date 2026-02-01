@@ -25,9 +25,11 @@ export interface Location {
   room_name?: string | null;
 }
 
+export type EntityCategory = "place" | "container" | "room" | "item";
+
 export interface EntityType {
   id: number;
-  entity_category: "place" | "container";
+  entity_category: EntityCategory;
   name: string;
   created_at: string;
   deleted_at: string | null;
@@ -43,7 +45,8 @@ export interface BaseEntity {
 }
 
 export interface Item extends BaseEntity {
-  // Дополнительные поля из списков
+  item_type_id?: number | null;
+  item_type?: { name: string } | null;
   room_id?: number | null;
   room_name?: string | null;
 }
@@ -73,7 +76,8 @@ export interface Container extends BaseEntity {
 }
 
 export interface Room extends BaseEntity {
-  // Дополнительные поля из списков
+  room_type_id?: number | null;
+  room_type?: { name: string } | null;
   items_count?: number;
   places_count?: number;
   containers_count?: number;
@@ -106,6 +110,7 @@ export interface User {
 export interface CreateItemResponse {
   id: number;
   name: string | null;
+  item_type_id: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
@@ -132,6 +137,7 @@ export interface CreateContainerResponse {
 export interface CreateRoomResponse {
   id: number;
   name: string | null;
+  room_type_id: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
@@ -149,7 +155,7 @@ export interface CreateTransitionResponse {
 
 export interface CreateEntityTypeResponse {
   id: number;
-  entity_category: "place" | "container";
+  entity_category: EntityCategory;
   name: string;
   created_at: string;
   deleted_at: string | null;
@@ -157,7 +163,7 @@ export interface CreateEntityTypeResponse {
 
 export interface UpdateEntityTypeResponse {
   id: number;
-  entity_category: "place" | "container";
+  entity_category: EntityCategory;
   name: string;
   created_at: string;
   deleted_at: string | null;

@@ -7,7 +7,7 @@ import type { Container } from "@/types/entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, MapPin, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
+import { Container as ContainerIcon, Warehouse, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -327,7 +327,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                   )}
                                   {container.last_location.destination_type === "place" && (
                                     <>
-                                      <MapPin className="h-3 w-3" />
+                                      <Warehouse className="h-3 w-3" />
                                       <span className="truncate">
                                         {getEntityDisplayName("place", container.last_location.destination_id!, container.last_location.destination_name)}
                                       </span>
@@ -362,7 +362,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             )}
                             {container.last_location.destination_type === "place" && (
                               <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                                <Warehouse className="h-4 w-4 text-primary flex-shrink-0" />
                                 <span>
                                   {getEntityDisplayName("place", container.last_location.destination_id!, container.last_location.destination_name)}
                                 </span>

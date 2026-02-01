@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
     const rooms: Room[] = roomsData.map((room: {
       id: number;
       name: string | null;
+      room_type_id: number | null;
+      room_type_name: string | null;
       created_at: string;
       deleted_at: string | null;
       photo_url: string | null;
@@ -52,6 +54,8 @@ export async function GET(request: NextRequest) {
     }) => ({
       id: room.id,
       name: room.name,
+      room_type_id: room.room_type_id ?? null,
+      room_type: room.room_type_name ? { name: room.room_type_name } : null,
       created_at: room.created_at,
       deleted_at: room.deleted_at,
       photo_url: room.photo_url,
@@ -89,14 +93,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, photo_url } = body;
+    const { name, photo_url, room_type_id } = body;
 
     const insertData: {
       name: string | null;
       photo_url: string | null;
+      room_type_id: number | null;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
+      room_type_id: room_type_id != null ? (Number(room_type_id) || null) : null,
     };
 
     const { data: newRoom, error: insertError } = await supabase

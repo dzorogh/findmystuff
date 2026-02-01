@@ -33,14 +33,14 @@ class RoomsApiClient extends HttpClient {
     return this.request<Room[]>(`/rooms?showDeleted=${includeDeleted}`);
   }
 
-  async createRoom(data: { name?: string; photo_url?: string }) {
+  async createRoom(data: { name?: string; photo_url?: string; room_type_id?: number | null }) {
     return this.request<CreateRoomResponse>("/rooms", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateRoom(id: number, data: { name?: string; photo_url?: string }) {
+  async updateRoom(id: number, data: { name?: string; photo_url?: string; room_type_id?: number | null }) {
     return this.request<Room>(`/rooms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

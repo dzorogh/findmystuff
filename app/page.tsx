@@ -6,7 +6,7 @@ import { searchApi } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, MapPin, Container, Building2, ArrowRight } from "lucide-react";
+import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
 import Logo from "@/components/common/logo";
 import { useUser } from "@/lib/users/context";
@@ -91,7 +91,7 @@ export default function Home() {
       case "item":
         return <Package className="h-4 w-4" />;
       case "place":
-        return <MapPin className="h-4 w-4" />;
+        return <Warehouse className="h-4 w-4" />;
       case "container":
         return <Container className="h-4 w-4" />;
       case "room":
@@ -195,7 +195,7 @@ export default function Home() {
                       {result.location && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       {result.locationType === "place" ? (
-                        <MapPin className="h-3 w-3" />
+                        <Warehouse className="h-3 w-3" />
                       ) : result.locationType === "container" ? (
                         <Container className="h-3 w-3" />
                       ) : (
@@ -244,7 +244,7 @@ export default function Home() {
               <CardHeader className="">
                 <div className="flex items-center justify-between mb-2">
                   <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <MapPin className="h-5 w-5 text-primary" />
+                    <Warehouse className="h-5 w-5 text-primary" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>

@@ -5,9 +5,11 @@ import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
+import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import LocationCombobox from "@/components/location/location-combobox";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -29,7 +31,9 @@ interface AddItemFormProps {
 
 const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const { isLoading } = useUser();
+  const { types: itemTypes, isLoading: isLoadingTypes } = useEntityTypes("item");
   const [name, setName] = useState("");
+  const [itemTypeId, setItemTypeId] = useState<string>("");
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -52,6 +56,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       // Добавляем вещь
       const response = await createItem({
         name: name.trim() || undefined,
+        item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
         photo_url: photoUrl || undefined,
         destination_type: destinationType || undefined,
         destination_id: selectedDestinationId ? parseInt(selectedDestinationId) : undefined,
@@ -62,6 +67,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       }
 
       setName("");
+      setItemTypeId("");
       setDestinationType(null);
       setSelectedDestinationId("");
       setPhotoUrl(null);
@@ -101,7 +107,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          {isLoading ? (
+          {isLoading || isLoadingTypes ? (
             <div className="space-y-6 py-4">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />
@@ -114,6 +120,27 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
             </div>
           ) : (
             <FormGroup>
+              <FormField
+                label="Тип вещи (необязательно)"
+                htmlFor="item-type"
+              >
+                <Combobox
+                  options={[
+                    { value: "", label: "Не указан" },
+                    ...itemTypes.map((type) => ({
+                      value: type.id.toString(),
+                      label: type.name,
+                    })),
+                  ]}
+                  value={itemTypeId}
+                  onValueChange={setItemTypeId}
+                  placeholder="Выберите тип вещи..."
+                  searchPlaceholder="Поиск типа..."
+                  emptyText="Типы вещей не найдены"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
               <FormField
                 label="Название вещи"
                 htmlFor="item-name"
