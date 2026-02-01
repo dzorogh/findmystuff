@@ -28,6 +28,7 @@ const customJestConfig = {
     '/node_modules/',
     '/.next/',
     '/e2e/',
+    '/tests/', // Playwright e2e tests (run with npm run test:e2e)
   ],
   coverageThreshold: {
     global: {
