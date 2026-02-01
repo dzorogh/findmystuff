@@ -35,4 +35,4 @@ if [ -n "$INFISICAL_API_URL" ]; then
   esac
 fi
 
-exec infisical run --projectId "$INFISICAL_PROJECT_ID" -- node server.js
+exec infisical run --projectId "$INFISICAL_PROJECT_ID" -- npm run start
