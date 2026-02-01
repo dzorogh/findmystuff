@@ -25,11 +25,10 @@ describe('authClient', () => {
     expect(newAuthClient.baseURL).toBe('https://example.com')
   })
 
-  it('выбрасывает ошибку если NEXT_PUBLIC_APP_URL не установлен', () => {
+  it('использует window.location.origin если NEXT_PUBLIC_APP_URL не установлен', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
     jest.resetModules()
-    expect(() => {
-      require('@/lib/auth/config/client')
-    }).toThrow('NEXT_PUBLIC_APP_URL is not set')
+    const { authClient: newAuthClient } = require('@/lib/auth/config/client')
+    expect(newAuthClient.baseURL).toBe(window.location.origin)
   })
 })

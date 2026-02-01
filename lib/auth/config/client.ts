@@ -2,11 +2,16 @@
 
 import { createAuthClient } from "better-auth/react";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-if (!appUrl) {
-  throw new Error("NEXT_PUBLIC_APP_URL is not set");
-}
+const resolveBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return "";
+};
 
 export const authClient = createAuthClient({
-  baseURL: appUrl,
+  baseURL: resolveBaseUrl(),
 });
