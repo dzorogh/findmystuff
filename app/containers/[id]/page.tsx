@@ -1,43 +1,34 @@
 "use client";
 
-// React и Next.js
 import { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-// Контексты
 import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
 import { useUser } from "@/lib/users/context";
-
-// API Client
-import { getContainer } from "@/lib/containers/api";
-
-// UI компоненты
+import { getContainer, updateContainer } from "@/lib/containers/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Container } from "lucide-react";
-
-// Компоненты entity-detail
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityLocation } from "@/components/entity-detail/entity-location";
-import { EntityPhoto } from "@/components/entity-detail/entity-photo";
-import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-
-// Формы
-import EditContainerForm from "@/components/forms/edit-container-form";
 import MoveContainerForm from "@/components/forms/move-container-form";
-
-// Утилиты
+import ImageUpload from "@/components/common/image-upload";
+import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-
-// Типы
 import type { Transition, ContainerEntity } from "@/types/entity";
 
 interface Container extends ContainerEntity {
@@ -62,8 +53,13 @@ export default function ContainerDetailPage() {
   }>>([]);
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
+
+  const { types: containerTypes } = useEntityTypes("container");
+  const [name, setName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -136,10 +132,12 @@ export default function ContainerDetailPage() {
 
   const printLabel = usePrintEntityLabel("container");
 
-  const handleEditSuccess = () => {
-    setIsEditing(false);
-    loadContainerData();
-  };
+  useEffect(() => {
+    if (container) {
+      setName(container.name ?? "");
+      setPhotoUrl(container.photo_url ?? null);
+    }
+  }, [container]);
 
   useEffect(() => {
     if (!container) {
@@ -151,7 +149,8 @@ export default function ContainerDetailPage() {
         isDeleted={!!container.deleted_at}
         isDeleting={isDeleting}
         isRestoring={isRestoring}
-        onEdit={() => setIsEditing(true)}
+        showEdit={false}
+        onEdit={() => {}}
         onMove={() => setIsMoving(true)}
         onPrintLabel={() => printLabel(container.id, container.name)}
         onDelete={handleDelete}
@@ -174,14 +173,36 @@ export default function ContainerDetailPage() {
     return <EntityDetailError error={error} entityName="Контейнер" />;
   }
 
-  const displayName = getEntityDisplayName("container", container.id, container.name);
+  const selectedContainerType = containerTypes.find((t) => t.id === container.entity_type_id);
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!container) return;
+    setFormError(null);
+    setIsSubmitting(true);
+    try {
+      const response = await updateContainer(container.id, {
+        name: name.trim() || undefined,
+        photo_url: photoUrl || undefined,
+      });
+      if (response.error) throw new Error(response.error);
+      toast.success("Контейнер успешно обновлен");
+      loadContainerData();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Произошла ошибка при сохранении"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div>
         <Card>
           <CardHeader>
-            <CardTitle>{displayName}</CardTitle>
+            <CardTitle>Редактирование контейнера</CardTitle>
             <CardDescription className="flex items-center gap-2 flex-wrap">
               ID: #{container.id}
               {container.deleted_at && (
@@ -192,19 +213,62 @@ export default function ContainerDetailPage() {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <EntityPhoto
-              photoUrl={container.photo_url}
-              name={displayName}
-              defaultIcon={<Container className="h-12 w-12 mx-auto text-muted-foreground" />}
-              size="large"
-              aspectRatio="video"
-            />
-            <EntityLocation
-              location={container.last_location ?? null}
-              variant="detailed"
-            />
-            <EntityCreatedDate createdAt={container.created_at} label="Создано" />
+          <CardContent className="pt-4">
+            <form onSubmit={handleEditSubmit}>
+              <FormGroup>
+                <FormField
+                  label="Название контейнера"
+                  htmlFor={`container-name-${container.id}`}
+                >
+                  <Input
+                    id={`container-name-${container.id}`}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Введите название контейнера"
+                    disabled={isSubmitting}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Тип контейнера"
+                  description="Тип контейнера нельзя изменить после создания"
+                >
+                  <div className="rounded-md border bg-muted px-3 py-2">
+                    <p className="text-sm font-medium">
+                      {selectedContainerType ? selectedContainerType.name : "Тип не выбран"}
+                    </p>
+                  </div>
+                </FormField>
+
+                <ImageUpload
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  disabled={isSubmitting}
+                  label="Фотография контейнера (необязательно)"
+                />
+
+                <EntityLocation
+                  location={container.last_location ?? null}
+                  variant="detailed"
+                />
+
+                <ErrorMessage message={formError ?? ""} />
+
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      "Сохранить"
+                    )}
+                  </Button>
+                </div>
+              </FormGroup>
+            </form>
           </CardContent>
         </Card>
       </div>
@@ -213,9 +277,6 @@ export default function ContainerDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle>История перемещений</CardTitle>
-            <CardDescription>
-              Все перемещения этого контейнера в хронологическом порядке
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <TransitionsTable
@@ -241,17 +302,6 @@ export default function ContainerDetailPage() {
           </CardContent>
         </Card>
       </div>
-
-      {isEditing && container && (
-        <EditContainerForm
-          containerId={container.id}
-          containerName={container.name}
-          containerTypeId={container.entity_type_id}
-          open={isEditing}
-          onOpenChange={setIsEditing}
-          onSuccess={handleEditSuccess}
-        />
-      )}
 
       {isMoving && container && (
         <MoveContainerForm

@@ -99,7 +99,7 @@ export default function ItemDetailPage() {
           <CardTitle>Редактирование вещи</CardTitle>
           <CardDescription>ID: #{item.id}</CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent>
           <form onSubmit={handleSubmit}>
             <FormGroup>
               <FormField label="Название вещи" htmlFor={`item-name-${item.id}`}>
@@ -164,9 +164,6 @@ export default function ItemDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle>История перемещений</CardTitle>
-            <CardDescription>
-              Все перемещения этой вещи в хронологическом порядке
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <TransitionsTable

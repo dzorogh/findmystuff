@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getPlaces } from "@/lib/places/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +19,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import EditPlaceForm from "@/components/forms/edit-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { useListState } from "@/lib/app/hooks/use-list-state";
 import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
@@ -112,9 +112,9 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
   });
 
   const [places, setPlaces] = useState<Place[]>([]);
-  const [editingPlaceId, setEditingPlaceId] = useState<number | null>(null);
   const [movingPlaceId, setMovingPlaceId] = useState<number | null>(null);
   const [mobileActionsPlaceId, setMobileActionsPlaceId] = useState<number | null>(null);
+  const router = useRouter();
 
   const isLoadingRef = useRef(false);
   const requestKeyRef = useRef<string>("");
@@ -385,7 +385,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                         <div className="hidden md:flex">
                           <ListActions
                             isDeleted={!!place.deleted_at}
-                            onEdit={() => setEditingPlaceId(place.id)}
+                            onEdit={() => router.push(`/places/${place.id}`)}
                             onMove={() => setMovingPlaceId(place.id)}
                             onPrintLabel={() => printLabel(place.id, place.name)}
                             onDelete={() => handleDeletePlace(place.id)}
@@ -426,7 +426,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                   size="sm"
                                   className="w-full justify-start gap-2"
                                   onClick={() => {
-                                    setEditingPlaceId(place.id);
+                                    router.push(`/places/${place.id}`);
                                     setMobileActionsPlaceId(null);
                                   }}
                                 >
@@ -481,20 +481,6 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {editingPlaceId && (
-        <EditPlaceForm
-          placeId={editingPlaceId}
-          placeName={places.find((p) => p.id === editingPlaceId)?.name || null}
-          placeTypeId={places.find((p) => p.id === editingPlaceId)?.entity_type_id || null}
-          open={!!editingPlaceId}
-          onOpenChange={(open) => !open && setEditingPlaceId(null)}
-          onSuccess={() => {
-            setEditingPlaceId(null);
-            loadPlaces(searchQuery, false);
-          }}
-        />
       )}
 
       <Sheet 

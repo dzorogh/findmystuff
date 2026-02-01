@@ -1,38 +1,31 @@
 "use client";
 
-// React и Next.js
 import { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-// Контексты
 import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
 import { useUser } from "@/lib/users/context";
-import { getRoom } from "@/lib/rooms/api";
-
-
-// UI компоненты
+import { getRoom, updateRoom } from "@/lib/rooms/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2 } from "lucide-react";
-
-// Компоненты entity-detail
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/ui/form-field";
+import { FormGroup } from "@/components/ui/form-group";
+import { Combobox } from "@/components/ui/combobox";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
+import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { EntityPhoto } from "@/components/entity-detail/entity-photo";
-import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-
-// Формы
-import EditRoomForm from "@/components/forms/edit-room-form";
-
-// Утилиты
+import ImageUpload from "@/components/common/image-upload";
+import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
-
-// Типы
 import type { RoomEntity } from "@/types/entity";
 
 type Room = RoomEntity;
@@ -64,7 +57,13 @@ export default function RoomDetailPage() {
   }>>([]);
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const { types: roomTypes } = useEntityTypes("room");
+  const [name, setName] = useState("");
+  const [roomTypeId, setRoomTypeId] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -114,6 +113,7 @@ export default function RoomDetailPage() {
         photo_url: roomData.photo_url,
         created_at: roomData.created_at,
         deleted_at: roomData.deleted_at,
+        room_type_id: roomData.room_type_id ?? null,
       });
 
       setRoomItems(items || []);
@@ -146,6 +146,14 @@ export default function RoomDetailPage() {
   const printLabel = usePrintEntityLabel("room");
 
   useEffect(() => {
+    if (room) {
+      setName(room.name ?? "");
+      setRoomTypeId(room.room_type_id?.toString() ?? "");
+      setPhotoUrl(room.photo_url ?? null);
+    }
+  }, [room]);
+
+  useEffect(() => {
     if (!room) {
       setEntityActions(null);
       return;
@@ -155,7 +163,8 @@ export default function RoomDetailPage() {
         isDeleted={!!room.deleted_at}
         isDeleting={isDeleting}
         isRestoring={isRestoring}
-        onEdit={() => setIsEditDialogOpen(true)}
+        showEdit={false}
+        onEdit={() => {}}
         onPrintLabel={() => printLabel(room.id, room.name)}
         onDelete={handleDelete}
         onRestore={handleRestore}
@@ -178,13 +187,34 @@ export default function RoomDetailPage() {
     return <EntityDetailError error={error} entityName="Помещение" />;
   }
 
-  const displayName = room.name ?? `Помещение #${room.id}`;
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!room) return;
+    setFormError(null);
+    setIsSubmitting(true);
+    try {
+      const response = await updateRoom(room.id, {
+        name: name.trim() || undefined,
+        room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
+        photo_url: photoUrl || undefined,
+      });
+      if (response.error) throw new Error(response.error);
+      toast.success("Помещение успешно обновлено");
+      loadRoomData();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Произошла ошибка при сохранении"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>{displayName}</CardTitle>
+          <CardTitle>Редактирование помещения</CardTitle>
           <CardDescription className="flex items-center gap-2 flex-wrap">
             ID: #{room.id}
             {room.deleted_at && (
@@ -195,15 +225,64 @@ export default function RoomDetailPage() {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <EntityPhoto
-            photoUrl={room.photo_url}
-            name={displayName}
-            defaultIcon={<Building2 className="h-12 w-12 mx-auto text-muted-foreground" />}
-            size="large"
-            aspectRatio="video"
-          />
-          <EntityCreatedDate createdAt={room.created_at} label="Создано" />
+        <CardContent className="pt-4">
+          <form onSubmit={handleEditSubmit}>
+            <FormGroup>
+              <FormField
+                label="Тип помещения (необязательно)"
+                htmlFor={`room-type-${room.id}`}
+              >
+                <Combobox
+                  options={[
+                    { value: "", label: "Не указан" },
+                    ...roomTypes.map((type) => ({
+                      value: type.id.toString(),
+                      label: type.name,
+                    })),
+                  ]}
+                  value={roomTypeId}
+                  onValueChange={setRoomTypeId}
+                  placeholder="Выберите тип помещения..."
+                  searchPlaceholder="Поиск типа..."
+                  emptyText="Типы помещений не найдены"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
+              <FormField label="Название помещения" htmlFor={`room-name-${room.id}`}>
+                <Input
+                  id={`room-name-${room.id}`}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название помещения"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография помещения (необязательно)"
+              />
+
+              <ErrorMessage message={formError ?? ""} />
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Сохранение...
+                    </>
+                  ) : (
+                    "Сохранить"
+                  )}
+                </Button>
+              </div>
+            </FormGroup>
+          </form>
         </CardContent>
       </Card>
 
@@ -252,19 +331,6 @@ export default function RoomDetailPage() {
         </Card>
       </div>
 
-      {isEditDialogOpen && room && (
-        <EditRoomForm
-          roomId={room.id}
-          roomName={room.name}
-          roomTypeId={room.room_type_id ?? null}
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onSuccess={() => {
-            setIsEditDialogOpen(false);
-            loadRoomData();
-          }}
-        />
-      )}
     </div>
   );
 }

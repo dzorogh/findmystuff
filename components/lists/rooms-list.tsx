@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getRooms } from "@/lib/rooms/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +19,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import EditRoomForm from "@/components/forms/edit-room-form";
 import { useListState } from "@/lib/app/hooks/use-list-state";
 import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
 import { ListSkeleton } from "@/components/common/list-skeleton";
@@ -88,8 +88,8 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   });
 
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
   const [mobileActionsRoomId, setMobileActionsRoomId] = useState<number | null>(null);
+  const router = useRouter();
   const [filters, setFilters] = useState<RoomsFilters>({
     showDeleted: internalShowDeleted,
     hasItems: null,
@@ -364,7 +364,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                         <div className="hidden md:flex">
                           <ListActions
                             isDeleted={!!room.deleted_at}
-                            onEdit={() => setEditingRoomId(room.id)}
+                            onEdit={() => router.push(`/rooms/${room.id}`)}
                             onPrintLabel={() => printLabel(room.id, room.name)}
                             onDelete={() => handleDeleteRoom(room.id)}
                             onRestore={() => handleRestoreRoom(room.id)}
@@ -404,7 +404,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                   size="sm"
                                   className="w-full justify-start gap-2"
                                   onClick={() => {
-                                    setEditingRoomId(room.id);
+                                    router.push(`/rooms/${room.id}`);
                                     setMobileActionsRoomId(null);
                                   }}
                                 >
@@ -483,19 +483,6 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
         </SheetContent>
       </Sheet>
 
-      {editingRoomId && (
-        <EditRoomForm
-          roomId={editingRoomId}
-          roomName={rooms.find((r) => r.id === editingRoomId)?.name || null}
-          roomTypeId={rooms.find((r) => r.id === editingRoomId)?.room_type_id ?? null}
-          open={!!editingRoomId}
-          onOpenChange={(open) => !open && setEditingRoomId(null)}
-          onSuccess={() => {
-            setEditingRoomId(null);
-            loadRooms(searchQuery, false);
-          }}
-        />
-      )}
     </div>
   );
 };

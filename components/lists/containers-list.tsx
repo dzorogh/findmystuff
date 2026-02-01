@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Container as ContainerIcon, Warehouse, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import EditContainerForm from "@/components/forms/edit-container-form";
+import { useRouter } from "next/navigation";
 import MoveContainerForm from "@/components/forms/move-container-form";
 import {
   Table,
@@ -97,9 +97,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
   });
 
   const [containers, setContainers] = useState<Container[]>([]);
-  const [editingContainerId, setEditingContainerId] = useState<number | null>(null);
   const [movingContainerId, setMovingContainerId] = useState<number | null>(null);
   const [mobileActionsContainerId, setMobileActionsContainerId] = useState<number | null>(null);
+  const router = useRouter();
 
   const isLoadingRef = useRef(false);
   const requestKeyRef = useRef<string>("");
@@ -410,7 +410,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                       <div className="hidden md:flex">
                         <ListActions
                           isDeleted={!!container.deleted_at}
-                          onEdit={() => setEditingContainerId(container.id)}
+                          onEdit={() => router.push(`/containers/${container.id}`)}
                           onMove={() => setMovingContainerId(container.id)}
                           onPrintLabel={() => printLabel(container.id, container.name)}
                           onDelete={() => handleDeleteContainer(container.id)}
@@ -461,7 +461,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                   size="sm"
                                   className="w-full justify-start gap-2"
                                   onClick={() => {
-                                    setEditingContainerId(container.id);
+                                    router.push(`/containers/${container.id}`);
                                     setMobileActionsContainerId(null);
                                   }}
                                 >
@@ -505,20 +505,6 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {editingContainerId && (
-        <EditContainerForm
-          containerId={editingContainerId}
-          containerName={containers.find((c) => c.id === editingContainerId)?.name || null}
-          containerTypeId={containers.find((c) => c.id === editingContainerId)?.entity_type_id || null}
-          open={!!editingContainerId}
-          onOpenChange={(open) => !open && setEditingContainerId(null)}
-          onSuccess={() => {
-            setEditingContainerId(null);
-            loadContainers(searchQuery, false);
-          }}
-        />
       )}
 
       <Sheet 

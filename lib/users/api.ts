@@ -22,7 +22,13 @@ const settingsRequestResult = new Map<string, { data: Setting[]; error: string |
 
 class UsersApiClient extends HttpClient {
   async getUsers() {
-    return this.request<{ users: User[] }>("/users");
+    const raw = await this.request<{ users: User[] }>("/users");
+    if (raw.error) return { error: raw.error };
+    const users =
+      (raw as { users?: User[] }).users ??
+      (raw as { data?: { users?: User[] } }).data?.users ??
+      [];
+    return { data: { users } };
   }
 
   async createUser(data: { email: string; email_confirm?: boolean }) {

@@ -81,26 +81,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
       <TableBody>
         {transitions.map((transition, index) => (
           <TableRow key={transition.id}>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">
-                  {new Date(transition.created_at).toLocaleString("ru-RU", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                {index === 0 && (
-                  <Badge variant="default" className="ml-2">
-                    Текущее
-                  </Badge>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
+            <TableCell className="flex items-start gap-2">
               <div className="space-y-1">
                 {transition.destination_type === "room" && (
                   <div className="flex items-center gap-2 text-sm">
@@ -142,6 +123,25 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
                     )}
                   </div>
                 )}
+              </div>
+              {index === 0 && (
+                <Badge variant="default">
+                  Текущее
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  {new Date(transition.created_at).toLocaleString("ru-RU", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
             </TableCell>
           </TableRow>
