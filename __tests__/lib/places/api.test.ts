@@ -17,6 +17,28 @@ describe("places/api", () => {
     global.fetch = originalFetch;
   });
 
+  it("getPlaces с query добавляет query в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getPlaces({ query: "shelf" });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("query=shelf");
+  });
+
+  it("getPlaces с showDeleted добавляет showDeleted=true", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getPlaces({ showDeleted: true });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("showDeleted=true");
+  });
+
   it("getPlaces вызывает /places", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,

@@ -33,6 +33,43 @@ describe("entities/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/api/items");
   });
 
+  it("getItems с params добавляет query string", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getItems({
+      query: "box",
+      showDeleted: true,
+      page: 1,
+      limit: 10,
+      locationType: "room",
+      roomId: 2,
+      hasPhoto: true,
+    });
+
+    const url = (global.fetch as jest.Mock).mock.calls[0][0];
+    expect(url).toContain("query=box");
+    expect(url).toContain("showDeleted=true");
+    expect(url).toContain("page=1");
+    expect(url).toContain("limit=10");
+    expect(url).toContain("locationType=room");
+    expect(url).toContain("roomId=2");
+    expect(url).toContain("hasPhoto=true");
+  });
+
+  it("getItems с hasPhoto false добавляет hasPhoto=false", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getItems({ hasPhoto: false });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("hasPhoto=false");
+  });
+
   it("getItem вызывает /items/:id", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,

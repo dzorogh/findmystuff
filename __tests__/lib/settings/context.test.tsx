@@ -19,13 +19,22 @@ jest.mock("@/components/theme/theme-sync", () => ({
 }));
 
 const Consumer = () => {
-  const { settings, isLoading, error, getSetting } = useSettings();
+  const { settings, isLoading, error, getSetting, getUserSetting, updateSetting, updateUserSetting } = useSettings();
   return (
     <div>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="error">{error ?? "null"}</span>
       <span data-testid="settings-count">{settings.length}</span>
       <span data-testid="theme">{getSetting("theme") ?? "null"}</span>
+      <span data-testid="user-theme">{getUserSetting("theme") ?? "null"}</span>
+      <button
+        data-testid="update-setting"
+        onClick={() => updateSetting("theme", "light")}
+      />
+      <button
+        data-testid="update-user-setting"
+        onClick={() => updateUserSetting("theme", "light")}
+      />
     </div>
   );
 };
@@ -64,5 +73,52 @@ describe("SettingsContext", () => {
     }).toThrow("useSettings must be used within a SettingsProvider");
 
     consoleSpy.mockRestore();
+  });
+
+  it("getUserSetting возвращает значение пользовательской настройки", async () => {
+    const { getSettings } = require("@/lib/users/api");
+    getSettings.mockResolvedValue({
+      data: [
+        { id: 1, key: "theme", value: "dark", category: "ui", user_id: null },
+        { id: 2, key: "theme", value: "light", category: "ui", user_id: "1" },
+      ],
+      error: null,
+    });
+
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("user-theme")).toHaveTextContent("light");
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it("updateUserSetting при успехе возвращает success", async () => {
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("settings-count")).toHaveTextContent("1");
+    });
+
+    const { updateSetting } = require("@/lib/users/api");
+    updateSetting.mockResolvedValue({ data: {}, error: null });
+
+    await act(async () => {
+      screen.getByTestId("update-user-setting").click();
+    });
+
+    await waitFor(() => {
+      expect(updateSetting).toHaveBeenCalledWith("theme", "light", true);
+    });
   });
 });

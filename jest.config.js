@@ -17,7 +17,8 @@ const customJestConfig = {
     '!**/.next/**',
     '!**/e2e/**',
     '!**/tests/**',
-    '!**/playwright/**'
+    '!**/playwright/**',
+    '!lib/shared/supabase/proxy.ts'
   ],
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',

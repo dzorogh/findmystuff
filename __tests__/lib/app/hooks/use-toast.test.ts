@@ -25,6 +25,54 @@ describe("useToast", () => {
     expect(toastReturn!).toHaveProperty("dismiss");
     expect(typeof toastReturn!.dismiss).toBe("function");
   });
+
+  it("dismiss с id закрывает один тост", () => {
+    const { result } = renderHook(() => useToast());
+
+    let id: string;
+    act(() => {
+      const ret = result.current.toast({ title: "A" });
+      id = ret.id;
+    });
+
+    expect(result.current.toasts.length).toBe(1);
+
+    act(() => {
+      result.current.dismiss(id);
+    });
+
+    expect(result.current.toasts.length).toBe(1);
+    expect(result.current.toasts[0].open).toBe(false);
+  });
+
+  it("dismiss без id закрывает все тосты", () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.toast({ title: "A" });
+    });
+
+    act(() => {
+      result.current.dismiss();
+    });
+
+    expect(result.current.toasts.every((t) => !t.open)).toBe(true);
+  });
+
+  it("toast.update обновляет тост", () => {
+    const { result } = renderHook(() => useToast());
+
+    let toastReturn: { id: string; update: (p: { title: string }) => void };
+    act(() => {
+      toastReturn = result.current.toast({ title: "Original" });
+    });
+
+    act(() => {
+      toastReturn!.update({ title: "Updated" });
+    });
+
+    expect(result.current.toasts[0].title).toBe("Updated");
+  });
 });
 
 describe("toast", () => {

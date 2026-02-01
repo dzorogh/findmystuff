@@ -28,6 +28,28 @@ describe("rooms/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/api/rooms");
   });
 
+  it("getRooms с query добавляет query в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getRooms({ query: "room" });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("query=room");
+  });
+
+  it("getRooms с showDeleted добавляет showDeleted=true", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getRooms({ showDeleted: true });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("showDeleted=true");
+  });
+
   it("getRoom вызывает /rooms/:id", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
