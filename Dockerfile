@@ -11,7 +11,7 @@ RUN npm install -g @infisical/cli
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN infisical run -- npm run build
+RUN infisical run --projectId "$INFISICAL_PROJECT_ID" -- npm run build
 
 # Runtime stage (standalone output = smaller image)
 FROM node:22-alpine
@@ -22,4 +22,4 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["infisical", "run", "--", "node", "server.js"]
+CMD ["/bin/sh", "-c", "infisical run --projectId \"$INFISICAL_PROJECT_ID\" -- node server.js"]

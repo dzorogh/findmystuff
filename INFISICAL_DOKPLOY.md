@@ -6,7 +6,7 @@
 2. Путь к Dockerfile — корень репозитория (`./Dockerfile`).
 3. **Environment** (или Build arguments, если разделены): добавьте переменные — они нужны **и при сборке**, и при запуске:
    - **INFISICAL_TOKEN** (обязательно) — access token Machine Identity или Service Token.
-   - **INFISICAL_PROJECT_ID** — ID проекта в Infisical (нужен, т.к. `.infisical.json` не попадает в образ).
+   - **INFISICAL_PROJECT_ID** — ID проекта в Infisical (обязателен при сборке и при запуске: передаётся в `infisical run --projectId`).
    - **INFISICAL_ENV** — имя окружения (например, `prod`), если не default.
    - **INFISICAL_API_URL** — только для self-hosted Infisical.
    - **PORT** — при необходимости (Next.js читает порт из env).
