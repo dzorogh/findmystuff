@@ -46,7 +46,7 @@ class ContainersApiClient extends HttpClient {
 
   async updateContainer(
     id: number,
-    data: { name?: string; entity_type_id?: number; photo_url?: string }
+    data: { name?: string; entity_type_id?: number | null; photo_url?: string }
   ) {
     return this.request<Container>(`/containers/${id}`, {
       method: "PUT",

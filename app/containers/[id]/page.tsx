@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
@@ -57,6 +58,7 @@ export default function ContainerDetailPage() {
 
   const { types: containerTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
+  const [containerTypeId, setContainerTypeId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -135,6 +137,7 @@ export default function ContainerDetailPage() {
   useEffect(() => {
     if (container) {
       setName(container.name ?? "");
+      setContainerTypeId(container.entity_type_id?.toString() ?? "");
       setPhotoUrl(container.photo_url ?? null);
     }
   }, [container]);
@@ -173,8 +176,6 @@ export default function ContainerDetailPage() {
     return <EntityDetailError error={error} entityName="Контейнер" />;
   }
 
-  const selectedContainerType = containerTypes.find((t) => t.id === container.entity_type_id);
-
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!container) return;
@@ -183,6 +184,7 @@ export default function ContainerDetailPage() {
     try {
       const response = await updateContainer(container.id, {
         name: name.trim() || undefined,
+        entity_type_id: containerTypeId ? parseInt(containerTypeId, 10) : null,
         photo_url: photoUrl || undefined,
       });
       if (response.error) throw new Error(response.error);
@@ -232,13 +234,23 @@ export default function ContainerDetailPage() {
 
                 <FormField
                   label="Тип контейнера"
-                  description="Тип контейнера нельзя изменить после создания"
+                  htmlFor={`container-type-${container.id}`}
                 >
-                  <div className="rounded-md border bg-muted px-3 py-2">
-                    <p className="text-sm font-medium">
-                      {selectedContainerType ? selectedContainerType.name : "Тип не выбран"}
-                    </p>
-                  </div>
+                  <Combobox
+                    options={[
+                      { value: "", label: "Не указан" },
+                      ...containerTypes.map((type) => ({
+                        value: type.id.toString(),
+                        label: type.name,
+                      })),
+                    ]}
+                    value={containerTypeId}
+                    onValueChange={setContainerTypeId}
+                    placeholder="Выберите тип контейнера..."
+                    searchPlaceholder="Поиск типа контейнера..."
+                    emptyText="Типы контейнеров не найдены"
+                    disabled={isSubmitting}
+                  />
                 </FormField>
 
                 <ImageUpload
