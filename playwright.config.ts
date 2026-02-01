@@ -30,5 +30,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',
+    env: {
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+    },
   },
 })

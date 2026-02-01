@@ -70,7 +70,9 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
