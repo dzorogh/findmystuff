@@ -13,6 +13,8 @@ WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/scripts/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["/bin/sh", "-c", "infisical run --projectId \"$INFISICAL_PROJECT_ID\" -- node server.js"]
+CMD ["/app/entrypoint.sh"]
