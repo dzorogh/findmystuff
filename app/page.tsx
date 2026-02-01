@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
 import GoogleSignIn from "@/components/auth/google-signin";
+import EmailPasswordForm from "@/components/auth/email-password-form";
 import Logo from "@/components/common/logo";
 import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
@@ -76,6 +77,15 @@ export default function Home() {
               <p className="text-sm text-muted-foreground text-center">
                 Приложение для быстрого поиска и учета вещей в домашнем складе
               </p>
+              <EmailPasswordForm />
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase text-muted-foreground">
+                  <span className="bg-card px-2">или</span>
+                </div>
+              </div>
               <div className="flex justify-center pt-2">
                 <GoogleSignIn />
               </div>
