@@ -1,0 +1,45 @@
+# Dependencies and build output
+node_modules
+.next
+out
+build
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.github
+
+# Tests and docs
+__tests__
+tests
+*.md
+!README.md
+coverage
+playwright-report
+playwright/.cache
+test-results
+
+# Env and secrets
+.env*
+.infisical.json
+
+# Android (not needed for web app image)
+android
+
+# Misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.pnp
+.pnp.*
+.yarn
+.pnpm-store
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
