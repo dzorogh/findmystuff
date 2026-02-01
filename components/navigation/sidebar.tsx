@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/shared/supabase/client";
+import { signOut } from "@/lib/auth/sign-out";
 import { useUser } from "@/lib/users/context";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 import { Button } from "@/components/ui/button";
@@ -82,11 +82,10 @@ const Sidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
   const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
   const pathname = usePathname();
-  const supabase = createClient();
   const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
   };
 
   const handleThemeToggle = () => {
