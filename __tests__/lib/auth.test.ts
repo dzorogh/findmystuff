@@ -1,5 +1,3 @@
-import { auth } from '@/lib/auth/config'
-
 jest.mock('better-auth', () => ({
   betterAuth: jest.fn((config) => ({
     baseURL: config.baseURL,
@@ -35,8 +33,8 @@ describe('auth', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth/config')
-    
+    const { getAuth } = require('@/lib/auth/config')
+    getAuth()
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         baseURL: 'https://example.com',
@@ -47,17 +45,16 @@ describe('auth', () => {
   it('выбрасывает ошибку если NEXT_PUBLIC_APP_URL не установлен', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
     jest.resetModules()
-    expect(() => {
-      require('@/lib/auth/config')
-    }).toThrow('NEXT_PUBLIC_APP_URL is not set')
+    const { getAuth } = require('@/lib/auth/config')
+    expect(() => getAuth()).toThrow('NEXT_PUBLIC_APP_URL is not set')
   })
 
   it('настраивает emailAndPassword', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth/config')
-    
+    const { getAuth } = require('@/lib/auth/config')
+    getAuth()
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         emailAndPassword: {
@@ -73,8 +70,8 @@ describe('auth', () => {
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
     jest.resetModules()
     const { betterAuth } = require('better-auth')
-    require('@/lib/auth/config')
-    
+    const { getAuth } = require('@/lib/auth/config')
+    getAuth()
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         socialProviders: {

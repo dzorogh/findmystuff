@@ -4,14 +4,14 @@
 
 1. **General → Build Type:** выберите **Dockerfile** (вместо Railpack).
 2. Путь к Dockerfile — корень репозитория (`./Dockerfile`).
-3. **Environment** (или Build arguments, если разделены): добавьте переменные — они нужны **и при сборке**, и при запуске:
-   - **INFISICAL_TOKEN** (обязательно) — access token Machine Identity или Service Token.
-   - **INFISICAL_PROJECT_ID** — ID проекта в Infisical (обязателен при сборке и при запуске: передаётся в `infisical run --projectId`).
-   - **INFISICAL_ENV** — имя окружения (например, `prod`), если не default.
+3. **Environment:** добавьте переменные (нужны **только при запуске** контейнера; сборка образа не использует Infisical):
+   - **INFISICAL_PROJECT_ID** (обязательно для запуска) — передаётся в `infisical run --projectId`.
+   - **INFISICAL_TOKEN** — access token; либо его, либо **INFISICAL_CLIENT_ID** + **INFISICAL_CLIENT_SECRET** (Machine Identity).
+   - **INFISICAL_SITE_URL**, **INFISICAL_ENVIRONMENT** — если используете в Dokploy.
    - **INFISICAL_API_URL** — только для self-hosted Infisical.
    - **PORT** — при необходимости (Next.js читает порт из env).
 
-В Dockerfile этап сборки запускает `infisical run -- npm run build`, поэтому `next build` получает переменные из Infisical (NEXT_PUBLIC_APP_URL, DATABASE_URL, Google OAuth и т.д.). Убедитесь, что в Dokploy переменные окружения передаются в контекст сборки (часто те же, что и для runtime).
+Сборка образа выполняется без Infisical (`npm run build`). Секреты подставляются только при старте контейнера через `infisical run -- node server.js`.
 
 ## Получение INFISICAL_TOKEN
 

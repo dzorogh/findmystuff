@@ -1,17 +1,10 @@
-# Build stage (Infisical needed so next build has env vars from Infisical)
+# Build stage (no Infisical — Dokploy does not pass env to build; auth/env are lazy, so build succeeds)
 FROM node:22-alpine AS builder
 WORKDIR /app
-ARG INFISICAL_TOKEN
-ARG INFISICAL_PROJECT_ID
-ARG INFISICAL_ENV
-ENV INFISICAL_TOKEN=${INFISICAL_TOKEN}
-ENV INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}
-ENV INFISICAL_ENV=${INFISICAL_ENV}
-RUN npm install -g @infisical/cli
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN infisical run --projectId "$INFISICAL_PROJECT_ID" -- npm run build
+RUN npm run build
 
 # Runtime stage (standalone output = smaller image)
 FROM node:22-alpine

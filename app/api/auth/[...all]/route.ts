@@ -1,11 +1,10 @@
-import { auth } from "@/lib/auth/config";
+import { getAuth } from "@/lib/auth/config";
 import { toNextJsHandler } from "better-auth/next-js";
 import { NextResponse } from "next/server";
 
-const handler = toNextJsHandler(auth);
-
 export async function GET(request: Request) {
   try {
+    const handler = toNextJsHandler(getAuth());
     return await handler.GET(request);
   } catch (error: unknown) {
     console.error("Better Auth GET Error:", error);
@@ -24,6 +23,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const handler = toNextJsHandler(getAuth());
     return await handler.POST(request);
   } catch (error: unknown) {
     console.error("Better Auth POST Error:", error);
