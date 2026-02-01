@@ -14,21 +14,19 @@ import { getContainer } from "@/lib/containers/api";
 
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Container } from "lucide-react";
-
-// Layouts
-import { PageContainer } from "@/components/layouts/page-container";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
-import { EntityHeader } from "@/components/entity-detail/entity-header";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityLocation } from "@/components/entity-detail/entity-location";
+import { EntityPhoto } from "@/components/entity-detail/entity-photo";
+import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-import { EntityCreatedDate } from "@/components/entity-detail/entity-created-date";
 
 // Формы
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -161,7 +159,7 @@ export default function ContainerDetailPage() {
       />
     );
     return () => setEntityActions(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [container, isDeleting, isRestoring]);
 
   if (isUserLoading || isLoading) {
@@ -176,24 +174,42 @@ export default function ContainerDetailPage() {
     return <EntityDetailError error={error} entityName="Контейнер" />;
   }
 
+  const displayName = getEntityDisplayName("container", container.id, container.name);
+
   return (
-    <PageContainer>
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
         <Card>
-          <EntityHeader
-            id={container.id}
-            name={getEntityDisplayName("container", container.id, container.name)}
-            photoUrl={container.photo_url}
-            isDeleted={!!container.deleted_at}
-            defaultIcon={<Container className="h-12 w-12 text-muted-foreground" />}
-            defaultName="Контейнер"
-          />
-          <CardContent className="space-y-4">
-            <EntityLocation location={container.last_location || null} />
-            <EntityCreatedDate createdAt={container.created_at} />
+          <CardHeader>
+            <CardTitle>{displayName}</CardTitle>
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              ID: #{container.id}
+              {container.deleted_at && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <Badge variant="destructive">Удалено</Badge>
+                </>
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <EntityPhoto
+              photoUrl={container.photo_url}
+              name={displayName}
+              defaultIcon={<Container className="h-12 w-12 mx-auto text-muted-foreground" />}
+              size="large"
+              aspectRatio="video"
+            />
+            <EntityLocation
+              location={container.last_location ?? null}
+              variant="detailed"
+            />
+            <EntityCreatedDate createdAt={container.created_at} label="Создано" />
           </CardContent>
         </Card>
+      </div>
 
+      <div className="flex flex-col gap-6">
         <Card>
           <CardHeader>
             <CardTitle>История перемещений</CardTitle>
@@ -224,31 +240,31 @@ export default function ContainerDetailPage() {
             />
           </CardContent>
         </Card>
-
-        {isEditing && container && (
-          <EditContainerForm
-            containerId={container.id}
-            containerName={container.name}
-            containerTypeId={container.entity_type_id}
-            open={isEditing}
-            onOpenChange={setIsEditing}
-            onSuccess={handleEditSuccess}
-          />
-        )}
-
-        {isMoving && container && (
-          <MoveContainerForm
-            containerId={container.id}
-            containerName={container.name}
-            open={isMoving}
-            onOpenChange={setIsMoving}
-            onSuccess={() => {
-              setIsMoving(false);
-              loadContainerData();
-            }}
-          />
-        )}
       </div>
-    </PageContainer>
+
+      {isEditing && container && (
+        <EditContainerForm
+          containerId={container.id}
+          containerName={container.name}
+          containerTypeId={container.entity_type_id}
+          open={isEditing}
+          onOpenChange={setIsEditing}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {isMoving && container && (
+        <MoveContainerForm
+          containerId={container.id}
+          containerName={container.name}
+          open={isMoving}
+          onOpenChange={setIsMoving}
+          onSuccess={() => {
+            setIsMoving(false);
+            loadContainerData();
+          }}
+        />
+      )}
+    </div>
   );
 }

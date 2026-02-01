@@ -65,21 +65,23 @@ export default function ItemDetailPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>История перемещений</CardTitle>
-          <CardDescription>
-            Все перемещения этой вещи в хронологическом порядке
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TransitionsTable
-            transitions={transitions}
-            emptyMessage="История перемещений пуста"
-            isLoading={isLoadingTransitions}
-          />
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>История перемещений</CardTitle>
+            <CardDescription>
+              Все перемещения этой вещи в хронологическом порядке
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransitionsTable
+              transitions={transitions}
+              emptyMessage="История перемещений пуста"
+              isLoading={isLoadingTransitions}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {isEditDialogOpen && (
         <EditItemForm

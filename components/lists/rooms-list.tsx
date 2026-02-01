@@ -7,7 +7,7 @@ import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, Container, Package, MoreHorizontal, Printer, RotateCcw } from "lucide-react";
+import { Building2, MapPin, Container, Package, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -403,6 +403,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                     setMobileActionsRoomId(null);
                                   }}
                                 >
+                                  <Pencil className="h-4 w-4 shrink-0" />
                                   <span>Редактировать</span>
                                 </Button>
                                 <Button
@@ -414,7 +415,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                     setMobileActionsRoomId(null);
                                   }}
                                 >
-                                  <Printer className="h-4 w-4" />
+                                  <Printer className="h-4 w-4 shrink-0" />
                                   <span>Печать этикетки</span>
                                 </Button>
                                 <Button
@@ -426,6 +427,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                     setMobileActionsRoomId(null);
                                   }}
                                 >
+                                  <Trash2 className="h-4 w-4 shrink-0" />
                                   <span>Удалить</span>
                                 </Button>
                               </PopoverContent>

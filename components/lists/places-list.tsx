@@ -7,7 +7,7 @@ import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw } from "lucide-react";
+import { MapPin, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -430,6 +430,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                     setMobileActionsPlaceId(null);
                                   }}
                                 >
+                                  <Pencil className="h-4 w-4 shrink-0" />
                                   <span>Редактировать</span>
                                 </Button>
                                 <Button
@@ -441,6 +442,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                     setMobileActionsPlaceId(null);
                                   }}
                                 >
+                                  <ArrowRightLeft className="h-4 w-4 shrink-0" />
                                   <span>Переместить</span>
                                 </Button>
                                 <Button
@@ -452,7 +454,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                     setMobileActionsPlaceId(null);
                                   }}
                                 >
-                                  <Printer className="h-4 w-4" />
+                                  <Printer className="h-4 w-4 shrink-0" />
                                   <span>Печать этикетки</span>
                                 </Button>
                                 <Button
@@ -464,6 +466,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                     setMobileActionsPlaceId(null);
                                   }}
                                 >
+                                  <Trash2 className="h-4 w-4 shrink-0" />
                                   <span>Удалить</span>
                                 </Button>
                               </PopoverContent>

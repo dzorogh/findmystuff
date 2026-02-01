@@ -13,16 +13,13 @@ import { getPlace } from "@/lib/places/api";
 
 // UI компоненты
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
-
-// Layouts
-import { PageContainer } from "@/components/layouts/page-container";
 
 // Компоненты entity-detail
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
-import { EntityHeader } from "@/components/entity-detail/entity-header";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityLocation } from "@/components/entity-detail/entity-location";
 import { EntityPhoto } from "@/components/entity-detail/entity-photo";
@@ -173,47 +170,55 @@ export default function PlaceDetailPage() {
     return <EntityDetailError error={error} entityName="Место" />;
   }
 
+  const displayName = place.name ?? `Место #${place.id}`;
+
   return (
-    <PageContainer>
-      <div className="mx-auto max-w-4xl space-y-6">
-        <Card>
-          <EntityHeader
-            id={place.id}
-            name={place.name}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>{displayName}</CardTitle>
+          <CardDescription className="flex items-center gap-2 flex-wrap">
+            ID: #{place.id}
+            {place.deleted_at && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <Badge variant="destructive">Удалено</Badge>
+              </>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <EntityPhoto
             photoUrl={place.photo_url}
-            isDeleted={!!place.deleted_at}
-            defaultIcon={<MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />}
-            defaultName="Место"
-            layout="compact"
+            name={displayName}
+            defaultIcon={<MapPin className="h-12 w-12 mx-auto text-muted-foreground" />}
+            size="large"
+            aspectRatio="video"
           />
-          <CardContent className="space-y-4">
-            <EntityPhoto
-              photoUrl={place.photo_url}
-              name={place.name || `Место #${place.id}`}
-              defaultIcon={<MapPin className="h-12 w-12 mx-auto text-muted-foreground" />}
-              size="large"
-              aspectRatio="video"
-            />
-            <EntityLocation location={place.last_location || null} />
-            <EntityCreatedDate createdAt={place.created_at} label="Создано" />
-          </CardContent>
-        </Card>
+          <EntityLocation
+            location={place.last_location ?? null}
+            variant="detailed"
+          />
+          <EntityCreatedDate createdAt={place.created_at} label="Создано" />
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>История перемещений</CardTitle>
-            <CardDescription>
-              Все перемещения этого места в хронологическом порядке
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TransitionsTable
-              transitions={transitions}
-              emptyMessage="История перемещений пуста"
-            />
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>История перемещений</CardTitle>
+          <CardDescription>
+            Все перемещения этого места в хронологическом порядке
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TransitionsTable
+            transitions={transitions}
+            emptyMessage="История перемещений пуста"
+          />
+        </CardContent>
+      </Card>
 
+      <div className="lg:col-span-2">
         <Card>
           <CardHeader>
             <CardTitle>Содержимое места</CardTitle>
@@ -248,34 +253,34 @@ export default function PlaceDetailPage() {
             )}
           </CardContent>
         </Card>
-
-        {isEditDialogOpen && place && (
-          <EditPlaceForm
-            placeId={place.id}
-            placeName={place.name}
-            placeTypeId={place.entity_type_id}
-            open={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
-            onSuccess={() => {
-              setIsEditDialogOpen(false);
-              loadPlaceData();
-            }}
-          />
-        )}
-
-        {isMoveDialogOpen && place && (
-          <MovePlaceForm
-            placeId={place.id}
-            placeName={place.name}
-            open={isMoveDialogOpen}
-            onOpenChange={setIsMoveDialogOpen}
-            onSuccess={() => {
-              setIsMoveDialogOpen(false);
-              loadPlaceData();
-            }}
-          />
-        )}
       </div>
-    </PageContainer>
+
+      {isEditDialogOpen && place && (
+        <EditPlaceForm
+          placeId={place.id}
+          placeName={place.name}
+          placeTypeId={place.entity_type_id}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={() => {
+            setIsEditDialogOpen(false);
+            loadPlaceData();
+          }}
+        />
+      )}
+
+      {isMoveDialogOpen && place && (
+        <MovePlaceForm
+          placeId={place.id}
+          placeName={place.name}
+          open={isMoveDialogOpen}
+          onOpenChange={setIsMoveDialogOpen}
+          onSuccess={() => {
+            setIsMoveDialogOpen(false);
+            loadPlaceData();
+          }}
+        />
+      )}
+    </div>
   );
 }

@@ -7,7 +7,7 @@ import type { Container } from "@/types/entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, MapPin, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer } from "lucide-react";
+import { Container as ContainerIcon, MapPin, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import EditContainerForm from "@/components/forms/edit-container-form";
@@ -465,6 +465,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     setMobileActionsContainerId(null);
                                   }}
                                 >
+                                  <Pencil className="h-4 w-4 shrink-0" />
                                   <span>Редактировать</span>
                                 </Button>
                                 <Button
@@ -476,7 +477,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     setMobileActionsContainerId(null);
                                   }}
                                 >
-                                  <Printer className="h-4 w-4" />
+                                  <Printer className="h-4 w-4 shrink-0" />
                                   <span>Печать этикетки</span>
                                 </Button>
                                 <Button
@@ -488,6 +489,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                     setMobileActionsContainerId(null);
                                   }}
                                 >
+                                  <Trash2 className="h-4 w-4 shrink-0" />
                                   <span>Удалить</span>
                                 </Button>
                               </PopoverContent>
