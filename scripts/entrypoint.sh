@@ -11,4 +11,14 @@ if [ -z "$INFISICAL_TOKEN" ] && { [ -z "$INFISICAL_CLIENT_ID" ] || [ -z "$INFISI
   exit 1
 fi
 
+if [ -n "$INFISICAL_SITE_URL" ] && ! echo "$INFISICAL_SITE_URL" | rg -q "^https?://"; then
+  echo "ERROR: INFISICAL_SITE_URL должен быть полным URL (http/https). Сейчас: '$INFISICAL_SITE_URL'." >&2
+  exit 1
+fi
+
+if [ -n "$INFISICAL_API_URL" ] && ! echo "$INFISICAL_API_URL" | rg -q "^https?://"; then
+  echo "ERROR: INFISICAL_API_URL должен быть полным URL (http/https). Сейчас: '$INFISICAL_API_URL'." >&2
+  exit 1
+fi
+
 exec infisical run --projectId "$INFISICAL_PROJECT_ID" -- node server.js
