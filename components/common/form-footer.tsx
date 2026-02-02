@@ -23,7 +23,7 @@ export const FormFooter = ({
 }: FormFooterProps) => {
   return (
     <SheetFooter className="mt-6">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting || disabled}>
+      <Button type="button" variant="outline" onClick={onCancel}>
         {cancelLabel}
       </Button>
       <Button type="submit" disabled={isSubmitting || disabled}>
