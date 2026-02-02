@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "@/lib/settings/context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
@@ -124,7 +124,6 @@ export default function SettingsPage() {
               <EntityTypesManager
                 ref={containerTypesManagerRef}
                 category="container"
-                title="Типы контейнеров"
               />
             </CardContent>
           </Card>

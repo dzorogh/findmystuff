@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/shared/supabase/client";
+import { useUser } from "@/lib/users/context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +16,11 @@ const MIN_PASSWORD_LENGTH = 6;
 
 const UpdatePasswordPage = () => {
   const router = useRouter();
+  const { user, isLoading: isUserLoading } = useUser();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isReady, setIsReady] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
   // Сохраняем наличие recovery в hash при первом рендере — Supabase потом может очистить hash
   const hadRecoveryHashRef = useRef<boolean>(false);
@@ -28,42 +29,25 @@ const UpdatePasswordPage = () => {
   }
 
   useEffect(() => {
-    const supabase = createClient();
     const hasRecoveryHash = hadRecoveryHashRef.current;
-
-    const applyReady = (session: unknown) => {
-      setIsReady(Boolean(session && hasRecoveryHash));
+    if (!hasRecoveryHash) {
       setCheckDone(true);
-    };
+      return;
+    }
+    if (user) {
+      setCheckDone(true);
+      return;
+    }
+    if (isUserLoading) {
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      setCheckDone(true);
+    }, 1200);
+    return () => clearTimeout(timeoutId);
+  }, [user, isUserLoading]);
 
-    let timeoutId: ReturnType<typeof setTimeout>;
-    let subscription: { unsubscribe: () => void } | null = null;
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        applyReady(session);
-        return;
-      }
-      if (!hasRecoveryHash) {
-        setCheckDone(true);
-        return;
-      }
-      const {
-        data: { subscription: sub },
-      } = supabase.auth.onAuthStateChange((_event, s) => {
-        if (s) applyReady(s);
-      });
-      subscription = sub;
-      timeoutId = setTimeout(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => applyReady(session));
-      }, 1200);
-    });
-
-    return () => {
-      clearTimeout(timeoutId);
-      subscription?.unsubscribe();
-    };
-  }, []);
+  const isReady = Boolean(user && hadRecoveryHashRef.current);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,7 +80,7 @@ const UpdatePasswordPage = () => {
     }
   };
 
-  if (!checkDone) {
+  if (!checkDone || isUserLoading) {
     return (
       <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">

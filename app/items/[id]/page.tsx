@@ -12,7 +12,6 @@ import { FormGroup } from "@/components/ui/form-group";
 import { Combobox } from "@/components/ui/combobox";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
-import { EntityLocation } from "@/components/entity-detail/entity-location";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import MoveItemForm from "@/components/forms/move-item-form";
 import ImageUpload from "@/components/common/image-upload";

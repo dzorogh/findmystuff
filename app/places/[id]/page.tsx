@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Warehouse } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
