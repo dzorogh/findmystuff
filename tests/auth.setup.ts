@@ -1,15 +1,7 @@
 import { test as setup, expect } from '@playwright/test';
 import path from 'path';
-import dotenv from 'dotenv';
 
 const authFile = path.join(__dirname, '../playwright/.auth/user.json');
-
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-dotenv.config({ path: path.resolve(__dirname, '.env.local') });
-
-if (!process.env.USER_EMAIL || !process.env.USER_PASSWORD) {
-  throw new Error('USER_EMAIL and USER_PASSWORD must be set');
-}
 
 setup('authenticate', async ({ page }) => {
   // Perform authentication steps. Replace these actions with your own.
