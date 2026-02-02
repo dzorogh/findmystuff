@@ -17,7 +17,7 @@ export const getAuth = (): ReturnType<typeof betterAuth> => {
     database: new Pool({
       connectionString: databaseUrl,
       ssl: databaseUrl.includes("supabase.co") || databaseUrl.includes("pooler.supabase.com")
-        ? { rejectUnauthorized: false }
+        ? { rejectUnauthorized: true }
         : undefined,
     }),
     baseURL: appUrl,
