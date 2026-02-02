@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "infisical run -- next dev",
-    "build": "infisical run -- next build",
+    "build": "next build",
+    "build:infisical": "infisical run -- next build",
     "start": "infisical run -- next start",
     "lint": "eslint",
     "test": "jest",
