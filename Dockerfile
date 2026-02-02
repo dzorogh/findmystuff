@@ -46,6 +46,7 @@ ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+RUN npm install -g @infisical/cli
 
 COPY --from=builder /app/public ./public
 
