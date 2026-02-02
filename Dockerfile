@@ -21,8 +21,14 @@ RUN \
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+ARG INFISICAL_MACHINE_CLIENT_ID
+ARG INFISICAL_MACHINE_CLIENT_SECRET
+ARG INFISICAL_PROJECT_ID
+ARG INFISICAL_SECRET_ENV
+ARG INFISICAL_API_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npm install -g @infisical/cli
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
@@ -30,9 +36,9 @@ COPY . .
 # ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+  if [ -f yarn.lock ]; then /bin/sh /app/scripts/build-with-infisical.sh; \
+  elif [ -f package-lock.json ]; then /bin/sh /app/scripts/build-with-infisical.sh; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && /bin/sh /app/scripts/build-with-infisical.sh; \
   else echo "Lockfile not found." && exit 1; \
   fi
 

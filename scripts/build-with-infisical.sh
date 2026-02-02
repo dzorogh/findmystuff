@@ -27,5 +27,4 @@ if [ -n "$INFISICAL_API_URL" ]; then
   set -- "$@" --domain "$INFISICAL_API_URL"
 fi
 
-set -- "$@" -- npm run start
-exec "$@"
+exec "$@" -- npm run build
