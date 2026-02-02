@@ -108,7 +108,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           {isLoading || isLoadingTypes ? (
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-10 w-full" />

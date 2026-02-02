@@ -31,8 +31,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface EntityTypesManagerProps {
   category: "place" | "container" | "room" | "item";
-  title: string;
-  description: string;
 }
 
 export interface EntityTypesManagerRef {
@@ -41,8 +39,6 @@ export interface EntityTypesManagerRef {
 
 export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesManagerProps>(({
   category,
-  title: _title,
-  description: _description,
 }, ref) => {
   const { types, isLoading, error, refetch } = useEntityTypes(category);
   const [isAdding, setIsAdding] = useState(false);

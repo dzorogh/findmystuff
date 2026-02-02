@@ -7,7 +7,7 @@ interface EntityDetailErrorProps {
 
 export const EntityDetailError = ({ error, entityName }: EntityDetailErrorProps) => {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-4">
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-destructive">{error || `${entityName} не найден`}</p>

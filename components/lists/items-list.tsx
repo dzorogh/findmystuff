@@ -299,7 +299,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (
@@ -326,7 +326,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                     <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
                     <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
                     <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
-                    <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
+                    <TableHead className="w-0 text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
@@ -344,7 +344,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-start gap-2 min-w-0">
                         {item.photo_url ? (
                           <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
                             <Image
@@ -417,7 +417,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="align-top">
                       <div className="hidden md:flex">
                         <ListActions
                           isDeleted={!!item.deleted_at}

@@ -114,13 +114,13 @@ export default function Home() {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case "item":
-        return "Вещь";
+        return "Вещи";
       case "place":
-        return "Место";
+        return "Места";
       case "container":
-        return "Контейнер";
+        return "Контейнеры";
       case "room":
-        return "Помещение";
+        return "Помещения";
       default:
         return type;
     }

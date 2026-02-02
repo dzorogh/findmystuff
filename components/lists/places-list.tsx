@@ -252,7 +252,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (

@@ -93,7 +93,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Редактирование вещи</CardTitle>
@@ -160,7 +160,7 @@ export default function ItemDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>История перемещений</CardTitle>

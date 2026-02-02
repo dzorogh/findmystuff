@@ -42,7 +42,7 @@ export const EntityContentGrid = ({
   const hrefPrefix = `/${entityType}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {title && (
         <h4 className="text-sm font-medium mb-3">
           {title} ({items.length})

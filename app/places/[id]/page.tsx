@@ -199,7 +199,7 @@ export default function PlaceDetailPage() {
   const selectedPlaceType = placeTypes.find((t) => t.id === place.entity_type_id);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Редактирование места</CardTitle>
@@ -264,7 +264,7 @@ export default function PlaceDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
       <Card>
           <CardHeader>
             <CardTitle>Содержимое места</CardTitle>
@@ -278,7 +278,7 @@ export default function PlaceDetailPage() {
                 Место пусто
               </p>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {placeItems.length > 0 && (
                   <EntityContentGrid
                     items={placeItems}

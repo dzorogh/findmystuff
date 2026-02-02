@@ -63,7 +63,7 @@ export default function AccountPage() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-48 w-full" />
@@ -72,7 +72,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       <Card>
         <CardHeader>

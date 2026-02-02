@@ -28,7 +28,7 @@ export default function SettingsPage() {
 
   if (isLoading || isUserLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
           {/* Раздел: Контейнеры */}
           <div className="space-y-4">
             <Skeleton className="h-7 w-32" />
@@ -89,7 +89,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
         {error && (
           <Card className="border-destructive">
             <CardContent className="pt-6">
@@ -110,9 +110,6 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle>Типы контейнеров</CardTitle>
-                  <CardDescription>
-                    Управление типами контейнеров
-                  </CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -128,7 +125,6 @@ export default function SettingsPage() {
                 ref={containerTypesManagerRef}
                 category="container"
                 title="Типы контейнеров"
-                description="Управление типами контейнеров"
               />
             </CardContent>
           </Card>
@@ -147,9 +143,6 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle>Типы мест</CardTitle>
-                  <CardDescription>
-                    Управление типами мест
-                  </CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -164,8 +157,6 @@ export default function SettingsPage() {
               <EntityTypesManager
                 ref={placeTypesManagerRef}
                 category="place"
-                title="Типы мест"
-                description="Управление типами мест"
               />
             </CardContent>
           </Card>
@@ -183,9 +174,6 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle>Типы помещений</CardTitle>
-                  <CardDescription>
-                    Управление типами (категориями) помещений
-                  </CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -200,8 +188,6 @@ export default function SettingsPage() {
               <EntityTypesManager
                 ref={roomTypesManagerRef}
                 category="room"
-                title="Типы помещений"
-                description="Управление типами помещений"
               />
             </CardContent>
           </Card>
@@ -219,9 +205,6 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle>Типы вещей</CardTitle>
-                  <CardDescription>
-                    Управление типами (категориями) вещей
-                  </CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -236,8 +219,6 @@ export default function SettingsPage() {
               <EntityTypesManager
                 ref={itemTypesManagerRef}
                 category="item"
-                title="Типы вещей"
-                description="Управление типами вещей"
               />
             </CardContent>
           </Card>

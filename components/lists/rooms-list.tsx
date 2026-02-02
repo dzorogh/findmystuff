@@ -240,7 +240,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (

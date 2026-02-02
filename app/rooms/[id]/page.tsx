@@ -211,7 +211,7 @@ export default function RoomDetailPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Редактирование помещения</CardTitle>
@@ -300,7 +300,7 @@ export default function RoomDetailPage() {
                 Помещение пусто
               </p>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {roomItems.length > 0 && (
                   <EntityContentGrid
                     items={roomItems}

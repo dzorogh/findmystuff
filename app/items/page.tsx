@@ -47,7 +47,7 @@ const ItemsPageContent = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
         <CompactSearchBar
           placeholder="Введите название вещи..."
           searchQuery={searchQuery}

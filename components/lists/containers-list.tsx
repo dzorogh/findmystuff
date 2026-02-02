@@ -51,7 +51,7 @@ interface ContainersListProps {
 const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: ContainersListProps = {}) => {
   const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
-  
+
   const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
   const setIsFiltersOpen = useCallback((open: boolean) => {
     if (externalFiltersOpen === undefined) {
@@ -59,7 +59,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
     onFiltersOpenChange?.(open);
   }, [externalFiltersOpen, onFiltersOpenChange]);
-  
+
   useEffect(() => {
     if (externalShowDeleted !== undefined) {
       setInternalShowDeleted(externalShowDeleted);
@@ -243,7 +243,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ErrorCard message={error || ""} />
 
       {isLoading || isUserLoading ? (
@@ -264,10 +264,9 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                   <TableRow>
                     <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
                     <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Маркировка / Название</TableHead>
-                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
+                    <TableHead className="hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
                     <TableHead className="w-[100px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis text-center">Содержимое</TableHead>
-                    <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
-                    <TableHead className="w-[150px] text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
+                    <TableHead className="w-0 text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -276,8 +275,8 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                       key={container.id}
                       className={container.deleted_at ? "opacity-60" : ""}
                     >
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="flex items-center gap-2">
+                      <TableCell className="hidden sm:table-cell align-top">
+                        <div className="flex items-center gap-2 h-10">
                           {container.deleted_at && (
                             <Badge variant="destructive" className="text-xs">Удалено</Badge>
                           )}
@@ -285,7 +284,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-start gap-2 min-w-0">
                           {container.photo_url ? (
                             <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden border border-border bg-muted">
                               <Image
@@ -314,7 +313,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                 {container.entity_type.name}
                               </p>
                             )}
-                            <div className="md:hidden mt-1 text-xs text-muted-foreground">
+                            <div className="lg:hidden mt-1 text-xs text-muted-foreground">
                               {container.last_location ? (
                                 <div className="flex items-center gap-1">
                                   {container.last_location.destination_type === "room" && (
@@ -349,7 +348,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
+                      <TableCell className="hidden lg:table-cell">
                         {container.last_location ? (
                           <div className="space-y-1">
                             {container.last_location.destination_type === "room" && (
@@ -393,111 +392,98 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {container.last_location ? (
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(container.last_location.moved_at).toLocaleDateString("ru-RU", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="hidden md:flex">
-                        <ListActions
-                          isDeleted={!!container.deleted_at}
-                          onEdit={() => router.push(`/containers/${container.id}`)}
-                          onMove={() => setMovingContainerId(container.id)}
-                          onPrintLabel={() => printLabel(container.id, container.name)}
-                          onDelete={() => handleDeleteContainer(container.id)}
-                          onRestore={() => handleRestoreContainer(container.id)}
-                        />
-                      </div>
-                      <div className="flex md:hidden items-center justify-end gap-1">
-                        {container.deleted_at ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRestoreContainer(container.id)}
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                            aria-label="Восстановить"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <>
+                      <TableCell className="text-right">
+                        <div className="hidden lg:flex">
+                          <ListActions
+                            isDeleted={!!container.deleted_at}
+                            onEdit={() => router.push(`/containers/${container.id}`)}
+                            onMove={() => setMovingContainerId(container.id)}
+                            onPrintLabel={() => printLabel(container.id, container.name)}
+                            onDelete={() => handleDeleteContainer(container.id)}
+                            onRestore={() => handleRestoreContainer(container.id)}
+                          />
+                        </div>
+                        <div className="flex lg:hidden items-center justify-end gap-1">
+                          {container.deleted_at ? (
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => setMovingContainerId(container.id)}
-                              className="h-8 w-8"
-                              aria-label="Переместить"
+                              onClick={() => handleRestoreContainer(container.id)}
+                              className="h-8 w-8 text-green-600 hover:text-green-700"
+                              aria-label="Восстановить"
                             >
-                              <ArrowRightLeft className="h-4 w-4" />
+                              <RotateCcw className="h-4 w-4" />
                             </Button>
-                            <Popover
-                              open={mobileActionsContainerId === container.id}
-                              onOpenChange={(open) => {
-                                setMobileActionsContainerId(open ? container.id : null);
-                              }}
-                            >
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  aria-label="Открыть меню действий"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent align="end" className="w-40 p-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start gap-2"
-                                  onClick={() => {
-                                    router.push(`/containers/${container.id}`);
-                                    setMobileActionsContainerId(null);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4 shrink-0" />
-                                  <span>Редактировать</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start gap-2"
-                                  onClick={() => {
-                                    printLabel(container.id, container.name);
-                                    setMobileActionsContainerId(null);
-                                  }}
-                                >
-                                  <Printer className="h-4 w-4 shrink-0" />
-                                  <span>Печать этикетки</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                                  onClick={() => {
-                                    handleDeleteContainer(container.id);
-                                    setMobileActionsContainerId(null);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 shrink-0" />
-                                  <span>Удалить</span>
-                                </Button>
-                              </PopoverContent>
-                            </Popover>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setMovingContainerId(container.id)}
+                                className="h-8 w-8"
+                                aria-label="Переместить"
+                              >
+                                <ArrowRightLeft className="h-4 w-4" />
+                              </Button>
+                              <Popover
+                                open={mobileActionsContainerId === container.id}
+                                onOpenChange={(open) => {
+                                  setMobileActionsContainerId(open ? container.id : null);
+                                }}
+                              >
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label="Открыть меню действий"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent align="end" className="w-40 p-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start gap-2"
+                                    onClick={() => {
+                                      router.push(`/containers/${container.id}`);
+                                      setMobileActionsContainerId(null);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4 shrink-0" />
+                                    <span>Редактировать</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start gap-2"
+                                    onClick={() => {
+                                      printLabel(container.id, container.name);
+                                      setMobileActionsContainerId(null);
+                                    }}
+                                  >
+                                    <Printer className="h-4 w-4 shrink-0" />
+                                    <span>Печать этикетки</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      handleDeleteContainer(container.id);
+                                      setMobileActionsContainerId(null);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 shrink-0" />
+                                    <span>Удалить</span>
+                                  </Button>
+                                </PopoverContent>
+                              </Popover>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -507,11 +493,11 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
         </Card>
       )}
 
-      <Sheet 
-        open={isFiltersOpen} 
+      <Sheet
+        open={isFiltersOpen}
         onOpenChange={setIsFiltersOpen}
       >
-        <SheetContent 
+        <SheetContent
           side="right"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
