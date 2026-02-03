@@ -14,7 +14,7 @@ test.describe('containers list', () => {
 
     await expect(page.getByRole('columnheader')).toHaveText([
       'ID',
-      'Маркировка / Название',
+      'Название',
       'Местоположение',
       'Содержимое',
       'Действия',
@@ -30,7 +30,6 @@ test.describe('containers list', () => {
     await expect(row.getByRole('link')).toHaveText(/\S/);
     await expect(cells.nth(2)).toHaveText(/\S/);
     await expect(cells.nth(3)).toHaveText(/\S/);
-    await expect(cells.nth(4)).toHaveText(/\S/);
 
     await expect(row.getByTitle('Редактировать')).toBeVisible();
     await expect(row.getByTitle('Переместить')).toBeVisible();
