@@ -1,13 +1,13 @@
 /**
  * Печать этикетки для сущности с QR-кодом (тип сущности + id).
- * Печать выполняется через отдельную страницу API, открываемую в новом окне.
+ * Печать выполняется через отдельную страницу приложения, открываемую в новом окне.
  */
 
 import type { EntityTypeName } from "@/types/entity";
 
 const PRINT_POPUP_BLOCKED_ERROR_MESSAGE =
   "Браузер заблокировал окно печати. Разрешите всплывающие окна и попробуйте снова.";
-const LABEL_PRINT_ENDPOINT = "/api/print/label";
+const LABEL_PRINT_ENDPOINT = "/print/label";
 
 const buildPrintUrl = (
   entityType: EntityTypeName,
@@ -28,7 +28,7 @@ const buildPrintUrl = (
   return `${LABEL_PRINT_ENDPOINT}?${params.toString()}`;
 };
 
-/** Печатает этикетку в отдельном окне через `/api/print/label`. */
+/** Печатает этикетку в отдельном окне через `/print/label`. */
 export const printEntityLabel = async (
   entityType: EntityTypeName,
   entityId: number,

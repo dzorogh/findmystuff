@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import NativeAppMarker from "@/components/common/native-app-marker";
 import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
@@ -14,13 +14,6 @@ const geistSans = Geist({
   subsets: ["latin"],
   display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-geist-mono",
-  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
 });
 
 export const metadata: Metadata = {
@@ -54,7 +47,7 @@ export default function RootLayout({
     <html
       lang="ru"
       suppressHydrationWarning
-      className={`${geistSans.className} ${geistMono.variable} overscroll-y-none h-[100svh] h-[100dvh] bg-background`}
+      className={`${geistSans.className} overscroll-y-none h-[100svh] h-[100dvh] bg-background`}
     >
       <body
         data-native="false"

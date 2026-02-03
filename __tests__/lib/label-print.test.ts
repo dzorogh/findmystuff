@@ -12,7 +12,7 @@ describe("label-print", () => {
     jest.useRealTimers();
   });
 
-  it("printEntityLabel открывает страницу печати через API endpoint", async () => {
+  it("printEntityLabel открывает страницу печати приложения", async () => {
     const focus = jest.fn();
     openMock.mockReturnValue({ focus } as unknown as Window);
 
@@ -23,7 +23,7 @@ describe("label-print", () => {
     expect(target).toBe("_blank");
 
     const parsed = new URL(String(url), "http://localhost");
-    expect(parsed.pathname).toBe("/api/print/label");
+    expect(parsed.pathname).toBe("/print/label");
     expect(parsed.searchParams.get("entityType")).toBe("place");
     expect(parsed.searchParams.get("entityId")).toBe("10");
     expect(parsed.searchParams.get("name")).toBe("Склад A");

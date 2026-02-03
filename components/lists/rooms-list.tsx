@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getRooms } from "@/lib/rooms/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Warehouse, Container, Package, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2 } from "lucide-react";
+import { Building2, Warehouse, Container, Package, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, Copy } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -233,6 +234,20 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
+  const handleDuplicateRoom = async (roomId: number) => {
+    try {
+      const response = await duplicateEntityApi.duplicate("rooms", roomId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      toast.success("Помещение успешно дублировано");
+      loadRooms(searchQuery, false);
+    } catch (err) {
+      console.error("Ошибка при дублировании помещения:", err);
+      toast.error("Произошла ошибка при дублировании помещения");
+    }
+  };
+
   const printLabel = usePrintEntityLabel("room");
 
   if (!user) {
@@ -366,6 +381,7 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                             isDeleted={!!room.deleted_at}
                             onEdit={() => router.push(`/rooms/${room.id}`)}
                             onPrintLabel={() => printLabel(room.id, room.name)}
+                            onDuplicate={() => handleDuplicateRoom(room.id)}
                             onDelete={() => handleDeleteRoom(room.id)}
                             onRestore={() => handleRestoreRoom(room.id)}
                           />
@@ -410,6 +426,18 @@ const RoomsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                 >
                                   <Pencil className="h-4 w-4 shrink-0" />
                                   <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    handleDuplicateRoom(room.id);
+                                    setMobileActionsRoomId(null);
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4 shrink-0" />
+                                  <span>Дублировать</span>
                                 </Button>
                                 <Button
                                   variant="ghost"

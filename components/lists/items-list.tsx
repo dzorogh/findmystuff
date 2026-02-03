@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getItems } from "@/lib/entities/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
+import { Package, Building2, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2, Copy } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -285,6 +286,20 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
     }
   };
 
+  const handleDuplicateItem = async (itemId: number) => {
+    try {
+      const response = await duplicateEntityApi.duplicate("items", itemId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      toast.success("Вещь успешно дублирована");
+      loadItems(searchQuery, false, currentPage);
+    } catch (err) {
+      console.error("Ошибка при дублировании вещи:", err);
+      toast.error("Произошла ошибка при дублировании вещи");
+    }
+  };
+
   const printLabel = usePrintEntityLabel("item");
 
   const hasActiveFilters = filters.locationType !== null || filters.hasPhoto !== null || filters.roomId !== null || filters.showDeleted;
@@ -424,6 +439,7 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                           onEdit={() => router.push(`/items/${item.id}`)}
                           onMove={() => setMovingItemId(item.id)}
                           onPrintLabel={() => printLabel(item.id, item.name)}
+                          onDuplicate={() => handleDuplicateItem(item.id)}
                           onDelete={() => handleDeleteItem(item.id)}
                           onRestore={() => handleRestoreItem(item.id)}
                         />
@@ -478,6 +494,18 @@ const ItemsList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDelet
                                 >
                                   <Pencil className="h-4 w-4 shrink-0" />
                                   <span>Редактировать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    handleDuplicateItem(item.id);
+                                    setMobileActionsItemId(null);
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4 shrink-0" />
+                                  <span>Дублировать</span>
                                 </Button>
                                 <Button
                                   variant="ghost"

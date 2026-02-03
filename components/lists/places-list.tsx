@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPlaces } from "@/lib/places/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Warehouse, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, ArrowRightLeft } from "lucide-react";
+import { Warehouse, Building2, Package, Container, MoreHorizontal, Printer, RotateCcw, Pencil, Trash2, ArrowRightLeft, Copy } from "lucide-react";
 import Image from "next/image";
 import {
   Table,
@@ -238,6 +239,20 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
     }
   };
 
+  const handleDuplicatePlace = async (placeId: number) => {
+    try {
+      const response = await duplicateEntityApi.duplicate("places", placeId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      toast.success("Место успешно дублировано");
+      loadPlaces(searchQuery, false);
+    } catch (err) {
+      console.error("Ошибка при дублировании места:", err);
+      toast.error("Произошла ошибка при дублировании места");
+    }
+  };
+
   const printLabel = usePrintEntityLabel("place");
 
   const hasActiveFilters = filters.entityTypeId !== null || filters.roomId !== null || filters.showDeleted;
@@ -388,6 +403,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                             onEdit={() => router.push(`/places/${place.id}`)}
                             onMove={() => setMovingPlaceId(place.id)}
                             onPrintLabel={() => printLabel(place.id, place.name)}
+                            onDuplicate={() => handleDuplicatePlace(place.id)}
                             onDelete={() => handleDeletePlace(place.id)}
                             onRestore={() => handleRestorePlace(place.id)}
                           />
@@ -444,6 +460,18 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
                                 >
                                   <ArrowRightLeft className="h-4 w-4 shrink-0" />
                                   <span>Переместить</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full justify-start gap-2"
+                                  onClick={() => {
+                                    handleDuplicatePlace(place.id);
+                                    setMobileActionsPlaceId(null);
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4 shrink-0" />
+                                  <span>Дублировать</span>
                                 </Button>
                                 <Button
                                   variant="ghost"

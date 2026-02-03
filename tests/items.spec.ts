@@ -34,6 +34,7 @@ test.describe('items list', () => {
     await expect(row.getByTitle('Редактировать')).toBeVisible();
     await expect(row.getByTitle('Переместить')).toBeVisible();
     await expect(row.getByTitle('Печать этикетки')).toBeVisible();
+    await expect(row.getByTitle('Дублировать')).toBeVisible();
     await expect(row.getByTitle('Удалить')).toBeVisible();
   });
 

@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getContainers } from "@/lib/containers/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import type { Container } from "@/types/entity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Container as ContainerIcon, Warehouse, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2 } from "lucide-react";
+import { Container as ContainerIcon, Warehouse, Building2, Package, ArrowRightLeft, MoreHorizontal, RotateCcw, Printer, Pencil, Trash2, Copy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -229,6 +230,20 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
     }
   };
 
+  const handleDuplicateContainer = async (containerId: number) => {
+    try {
+      const response = await duplicateEntityApi.duplicate("containers", containerId);
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      toast.success("Контейнер успешно дублирован");
+      loadContainers(searchQuery, false);
+    } catch (err) {
+      console.error("Ошибка при дублировании контейнера:", err);
+      toast.error("Произошла ошибка при дублировании контейнера");
+    }
+  };
+
   const printLabel = usePrintEntityLabel("container");
 
   const hasActiveFilters = filters.entityTypeId !== null || filters.hasItems !== null || filters.locationType !== null || filters.showDeleted;
@@ -399,6 +414,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                             onEdit={() => router.push(`/containers/${container.id}`)}
                             onMove={() => setMovingContainerId(container.id)}
                             onPrintLabel={() => printLabel(container.id, container.name)}
+                            onDuplicate={() => handleDuplicateContainer(container.id)}
                             onDelete={() => handleDeleteContainer(container.id)}
                             onRestore={() => handleRestoreContainer(container.id)}
                           />
@@ -453,6 +469,18 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                                   >
                                     <Pencil className="h-4 w-4 shrink-0" />
                                     <span>Редактировать</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start gap-2"
+                                    onClick={() => {
+                                      handleDuplicateContainer(container.id);
+                                      setMobileActionsContainerId(null);
+                                    }}
+                                  >
+                                    <Copy className="h-4 w-4 shrink-0" />
+                                    <span>Дублировать</span>
                                   </Button>
                                   <Button
                                     variant="ghost"

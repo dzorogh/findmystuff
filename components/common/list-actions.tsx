@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Pencil, ArrowRightLeft, Trash2, RotateCcw, Printer } from "lucide-react";
+import { Pencil, ArrowRightLeft, Trash2, RotateCcw, Printer, Copy } from "lucide-react";
 import { cn } from "@/lib/shared/utils";
 
 interface ListActionsProps {
@@ -9,6 +9,7 @@ interface ListActionsProps {
   onEdit?: () => void;
   onMove?: () => void;
   onPrintLabel?: () => void;
+  onDuplicate?: () => void;
   onDelete?: () => void;
   onRestore?: () => void;
   disabled?: boolean;
@@ -20,6 +21,7 @@ export const ListActions = ({
   onEdit,
   onMove,
   onPrintLabel,
+  onDuplicate,
   onDelete,
   onRestore,
   disabled = false,
@@ -64,6 +66,19 @@ export const ListActions = ({
               aria-label="Печать этикетки"
             >
               <Printer className="h-4 w-4" />
+            </Button>
+          )}
+          {onDuplicate && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onDuplicate}
+              disabled={disabled}
+              className="h-8 w-8"
+              title="Дублировать"
+              aria-label="Дублировать"
+            >
+              <Copy className="h-4 w-4" />
             </Button>
           )}
           {onDelete && (
