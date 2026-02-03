@@ -74,15 +74,15 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
       setPlaceTypeId(placeTypes[0]?.id.toString() || "");
       setSelectedRoomId("");
       setPhotoUrl(null);
-      
+
       toast.success("Место успешно добавлено и размещено в помещении", {
         description: "Место добавлено",
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
+
       setTimeout(() => {
         onOpenChange(false);
       }, 100);
@@ -123,6 +123,21 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
           ) : (
             <FormGroup>
               <FormField
+                label="Название места (необязательно)"
+                htmlFor="place-name"
+                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
+              >
+                <Input
+                  id="place-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название места"
+                  disabled={isSubmitting}
+                />
+              </FormField>
+
+              <FormField
                 label="Тип места"
                 htmlFor="place-type"
                 description="Маркировка будет сгенерирована автоматически (например, Ш1)"
@@ -141,31 +156,14 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 />
               </FormField>
 
-              <FormField
-                label="Название места (необязательно)"
-                htmlFor="place-name"
-                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
-              >
-                <Input
-                  id="place-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Введите название места"
-                  disabled={isSubmitting}
-                />
-              </FormField>
-
-              <FormGroup separator>
-                <RoomCombobox
-                  selectedRoomId={selectedRoomId}
-                  onRoomIdChange={setSelectedRoomId}
-                  disabled={isSubmitting}
-                  label="Выберите помещение"
-                  id="place-room-select"
-                  required
-                />
-              </FormGroup>
+              <RoomCombobox
+                selectedRoomId={selectedRoomId}
+                onRoomIdChange={setSelectedRoomId}
+                disabled={isSubmitting}
+                label="Выберите помещение"
+                id="place-room-select"
+                required
+              />
 
               <ImageUpload
                 value={photoUrl}

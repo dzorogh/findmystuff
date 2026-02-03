@@ -25,7 +25,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
   if (isAuthStandalone || (!isLoading && !user)) {
     return (
       <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background">
-        <main className="h-full overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]">
+        <main className="h-full overflow-y-auto pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]">
           {children}
         </main>
       </div>
@@ -56,7 +56,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
           )}
 
           {/* Content area - scrollable */}
-          <div className="flex-1 overflow-y-auto overscroll-y-auto [-webkit-overflow-scrolling:touch] md:pb-0">
+          <div className="flex-1 overflow-y-auto md:pb-0 overscroll-y-auto">
             <PageContainer>{children}</PageContainer>
           </div>
         </main>

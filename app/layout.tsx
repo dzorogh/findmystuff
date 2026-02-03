@@ -54,11 +54,11 @@ export default function RootLayout({
     <html
       lang="ru"
       suppressHydrationWarning
-      className={`${geistSans.className} ${geistMono.variable} h-[100svh] h-[100dvh] overflow-hidden bg-background`}
+      className={`${geistSans.className} ${geistMono.variable} overscroll-y-none h-[100svh] h-[100dvh] bg-background`}
     >
       <body
         data-native="false"
-        className="antialiased h-[100svh] h-[100dvh] overflow-hidden bg-background [--app-safe-top:env(safe-area-inset-top)] [--app-safe-bottom:env(safe-area-inset-bottom)] [--app-bottom-nav-height:56px] [--app-header-height:56px] md:[--app-header-height:64px] data-[native=true]:[--app-safe-top:max(env(safe-area-inset-top),3svh)] data-[native=true]:[--app-safe-bottom:max(env(safe-area-inset-bottom),48px,5svh)]"
+        className="antialiased overscroll-y-none h-[100svh] h-[100dvh] bg-background [--app-safe-top:env(safe-area-inset-top)] [--app-safe-bottom:env(safe-area-inset-bottom)] [--app-bottom-nav-height:56px] [--app-header-height:56px] md:[--app-header-height:64px] data-[native=true]:[--app-safe-top:max(env(safe-area-inset-top),3svh)] data-[native=true]:[--app-safe-bottom:max(env(safe-area-inset-bottom),48px,5svh)]"
       >
         <NativeAppMarker />
         <ThemeProvider
