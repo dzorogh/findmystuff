@@ -74,8 +74,9 @@ test.describe('containers list', () => {
     const row = getFirstActiveContainerRow(page);
     await expect(row).toBeVisible();
 
+    const popupPromise = page.waitForEvent('popup');
     await row.getByTitle('Печать этикетки').click();
-    const printFrame = page.locator('iframe[title="Печать этикетки"]');
-    await expect(printFrame).toBeAttached();
+    const popup = await popupPromise;
+    expect(popup).toBeTruthy();
   });
 });
