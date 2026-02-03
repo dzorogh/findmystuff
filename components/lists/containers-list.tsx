@@ -263,7 +263,7 @@ const ContainersList = ({ refreshTrigger, searchQuery: externalSearchQuery, show
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
-                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Маркировка / Название</TableHead>
+                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
                     <TableHead className="hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Местоположение</TableHead>
                     <TableHead className="w-[100px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis text-center">Содержимое</TableHead>
                     <TableHead className="w-0 text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>

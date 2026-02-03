@@ -23,7 +23,7 @@ test.describe('containers list', () => {
     const row = getFirstActiveContainerRow(page);
     await expect(row).toBeVisible();
     const cells = row.getByRole('cell');
-    await expect(cells).toHaveCount(6);
+    await expect(cells).toHaveCount(5);
 
     await expect(cells.nth(0)).toHaveText(/#\d+/);
     await expect(row.getByRole('link')).toBeVisible();
