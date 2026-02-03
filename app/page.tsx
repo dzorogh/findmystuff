@@ -62,7 +62,7 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="container mx-auto flex h-full items-center justify-center px-4">
+      <div className="mx-auto flex h-full items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">

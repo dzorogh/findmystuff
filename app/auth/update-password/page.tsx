@@ -82,7 +82,7 @@ const UpdatePasswordPage = () => {
 
   if (!checkDone || isUserLoading) {
     return (
-      <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
           <p>Загрузка...</p>
@@ -93,7 +93,7 @@ const UpdatePasswordPage = () => {
 
   if (!isReady) {
     return (
-      <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
@@ -116,7 +116,7 @@ const UpdatePasswordPage = () => {
   }
 
   return (
-    <div className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
