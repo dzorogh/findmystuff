@@ -4,6 +4,7 @@ import NativeAppMarker from "@/components/common/native-app-marker";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UserProvider } from "@/lib/users/context";
 import { SettingsProvider } from "@/lib/settings/context";
+import type { Metadata } from "next";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -17,6 +18,11 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
 });
+
+export const metadata: Metadata = {
+  title: "FindMyStuff - Быстрый поиск вещей",
+  description: "Приложение для учета домашнего склада и быстрого поиска вещей",
+};
 
 export default function AuthRootLayout({
   children,
