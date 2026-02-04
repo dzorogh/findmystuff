@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { Menu, Settings, LogOut, Moon, Sun, User as UserIcon, Plus, ChevronRight } from "lucide-react";
 import { useUser } from "@/lib/users/context";
 import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
-import { authClient } from "@/lib/auth/config/client";
+import { signOut } from "@/lib/auth/sign-out";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Logo from "@/components/common/logo";
@@ -125,7 +125,7 @@ const TopBar = () => {
   };
 
   const handleSignOut = async () => {
-    await authClient.signOut();
+    await signOut();
     setIsMenuOpen(false);
   };
 

@@ -77,12 +77,12 @@ const ForgotPasswordPage = () => {
           <CardContent className="space-y-4">
             <Button asChild variant="outline" className="w-full">
               <Link
-                href="/"
+                href="/auth/login"
                 className="inline-flex items-center gap-2"
                 aria-label="Вернуться на главную"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden />
-                На главную
+                Ко входу
               </Link>
             </Button>
           </CardContent>
@@ -137,7 +137,7 @@ const ForgotPasswordPage = () => {
             </Button>
             <div className="text-center">
               <Link
-                href="/"
+                href="/auth/login"
                 className="inline-flex items-center gap-1 text-sm text-primary underline underline-offset-2 hover:no-underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring rounded"
                 tabIndex={0}
                 aria-label="Вернуться к входу"

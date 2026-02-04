@@ -7,9 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
-import GoogleSignIn from "@/components/auth/google-signin";
-import EmailPasswordForm from "@/components/auth/email-password-form";
-import Logo from "@/components/common/logo";
 import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
 
@@ -61,39 +58,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return (
-      <div className="mx-auto flex h-full items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center space-y-4">
-            <div className="flex justify-center">
-              <Logo size="lg" showText={true} />
-            </div>
-            <CardDescription>
-              Войдите, чтобы начать вести учет ваших вещей
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">
-                Приложение для быстрого поиска и учета вещей в домашнем складе
-              </p>
-              <EmailPasswordForm />
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase text-muted-foreground">
-                  <span className="bg-card px-2">или</span>
-                </div>
-              </div>
-              <div className="flex justify-center pt-2">
-                <GoogleSignIn />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
   const getIcon = (type: string) => {

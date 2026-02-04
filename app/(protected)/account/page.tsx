@@ -24,7 +24,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push("/");
+      router.push("/auth/login");
     }
   }, [isUserLoading, user, router]);
 
