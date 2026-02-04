@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/shared/supabase/client";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,20 @@ const getErrorMessage = (raw: string): string => {
   return raw;
 };
 
+const createRecoveryClient = () =>
+  createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      auth: {
+        flowType: "implicit",
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +52,7 @@ const ForgotPasswordPage = () => {
     }
 
     setIsLoading(true);
-    const supabase = createClient();
+    const supabase = createRecoveryClient();
     const redirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}/auth/update-password`

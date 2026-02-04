@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/shared/supabase/client";
 import { useUser } from "@/lib/users/context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,24 +13,131 @@ import { Loader2 } from "lucide-react";
 import Logo from "@/components/common/logo";
 
 const MIN_PASSWORD_LENGTH = 6;
+const PKCE_VERIFIER_MISSING_ERROR = "pkce code verifier not found in storage";
+
+const getRecoveryErrorMessage = (message: string) => {
+  if (message.toLowerCase().includes(PKCE_VERIFIER_MISSING_ERROR)) {
+    return "Ссылка открыта в другом браузере или устройстве. Запросите новую ссылку для сброса пароля.";
+  }
+  return message;
+};
 
 const UpdatePasswordPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading: isUserLoading } = useUser();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkDone, setCheckDone] = useState(false);
-  // Сохраняем наличие recovery в hash при первом рендере — Supabase потом может очистить hash
+  const [hasRecoveryContext, setHasRecoveryContext] = useState(false);
+  const [isExchangingCode, setIsExchangingCode] = useState(false);
+  const [isApplyingRecoverySession, setIsApplyingRecoverySession] = useState(false);
+
+  const recoveryType = searchParams.get("type");
+  const recoveryCode = searchParams.get("code");
+
+  // Сохраняем наличие recovery в hash при первом рендере, т.к. Supabase может очистить hash
   const hadRecoveryHashRef = useRef<boolean>(false);
+  const recoverySessionRef = useRef<{ accessToken: string; refreshToken: string } | null>(null);
   if (typeof window !== "undefined" && !hadRecoveryHashRef.current) {
-    hadRecoveryHashRef.current = window.location.hash.includes("type=recovery");
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+
+    hadRecoveryHashRef.current = hashParams.get("type") === "recovery";
+    if (accessToken && refreshToken) {
+      recoverySessionRef.current = { accessToken, refreshToken };
+    }
   }
+  const exchangedCodeRef = useRef<string | null>(null);
+  const appliedRecoverySessionRef = useRef(false);
 
   useEffect(() => {
-    const hasRecoveryHash = hadRecoveryHashRef.current;
-    if (!hasRecoveryHash) {
+    if (
+      hadRecoveryHashRef.current ||
+      recoveryType === "recovery" ||
+      !!recoveryCode ||
+      !!recoverySessionRef.current
+    ) {
+      setHasRecoveryContext(true);
+    }
+  }, [recoveryType, recoveryCode]);
+
+  useEffect(() => {
+    const recoverySession = recoverySessionRef.current;
+    if (!recoverySession || appliedRecoverySessionRef.current) return;
+
+    appliedRecoverySessionRef.current = true;
+    setHasRecoveryContext(true);
+    setIsApplyingRecoverySession(true);
+
+    const supabase = createClient();
+
+    const applyRecoverySession = async () => {
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: recoverySession.accessToken,
+        refresh_token: recoverySession.refreshToken,
+      });
+      if (setSessionError) {
+        setError(getRecoveryErrorMessage(setSessionError.message));
+      }
+
+      if (window.location.hash) {
+        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+      }
+    };
+
+    applyRecoverySession()
+      .catch((err) => {
+        const message =
+          err instanceof Error ? err.message : "Не удалось подтвердить ссылку восстановления";
+        setError(getRecoveryErrorMessage(message));
+      })
+      .finally(() => {
+        setIsApplyingRecoverySession(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!recoveryCode || exchangedCodeRef.current === recoveryCode) return;
+
+    exchangedCodeRef.current = recoveryCode;
+    setHasRecoveryContext(true);
+    setIsExchangingCode(true);
+
+    const supabase = createClient();
+
+    const exchange = async () => {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+      if (exchangeError) {
+        setError(getRecoveryErrorMessage(exchangeError.message));
+      }
+
+      // Чистим URL от одноразового code, чтобы не вызывать повторный обмен.
+      const params = new URLSearchParams(window.location.search);
+      params.delete("code");
+      params.delete("type");
+      const nextPath = params.toString()
+        ? `/auth/update-password?${params.toString()}`
+        : "/auth/update-password";
+      router.replace(nextPath);
+    };
+
+    exchange()
+      .catch((err) => {
+        const message =
+          err instanceof Error ? err.message : "Не удалось подтвердить ссылку восстановления";
+        setError(getRecoveryErrorMessage(message));
+      })
+      .finally(() => {
+        setIsExchangingCode(false);
+      });
+  }, [recoveryCode, router]);
+
+  useEffect(() => {
+    if (!hasRecoveryContext) {
       setCheckDone(true);
       return;
     }
@@ -38,16 +145,16 @@ const UpdatePasswordPage = () => {
       setCheckDone(true);
       return;
     }
-    if (isUserLoading) {
+    if (isUserLoading || isExchangingCode || isApplyingRecoverySession) {
       return;
     }
     const timeoutId = setTimeout(() => {
       setCheckDone(true);
     }, 1200);
     return () => clearTimeout(timeoutId);
-  }, [user, isUserLoading]);
+  }, [user, isUserLoading, hasRecoveryContext, isExchangingCode, isApplyingRecoverySession]);
 
-  const isReady = Boolean(user && hadRecoveryHashRef.current);
+  const isReady = Boolean(user && hasRecoveryContext);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -80,7 +187,7 @@ const UpdatePasswordPage = () => {
     }
   };
 
-  if (!checkDone || isUserLoading) {
+  if (!checkDone || isUserLoading || isExchangingCode || isApplyingRecoverySession) {
     return (
       <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
         <div className="flex flex-col items-center gap-4 text-muted-foreground">

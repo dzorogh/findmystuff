@@ -7,6 +7,7 @@ import GoogleSignIn from "@/components/auth/google-signin";
 import EmailPasswordForm from "@/components/auth/email-password-form";
 import Logo from "@/components/common/logo";
 import { useUser } from "@/lib/users/context";
+import { Divider } from "@/components/ui/divider";
 
 const LoginPage = () => {
   const { user, isLoading } = useUser();
@@ -39,15 +40,8 @@ const LoginPage = () => {
               Приложение для быстрого поиска и учета вещей в домашнем складе
             </p>
             <EmailPasswordForm />
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center bg-card text-xs uppercase text-muted-foreground">
-                <span className="px-2">или</span>
-              </div>
-            </div>
-            <div className="flex justify-center pt-2">
+            <Divider />
+            <div className="flex justify-center">
               <GoogleSignIn />
             </div>
           </div>
