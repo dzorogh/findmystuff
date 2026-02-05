@@ -120,6 +120,8 @@ left join rooms r on r.id = ct.destination_id and r.deleted_at is null and ct.de
 left join places pl on pl.id = ct.destination_id and pl.deleted_at is null and ct.destination_type = 'place'
 left join containers c2 on c2.id = ct.destination_id and c2.deleted_at is null and ct.destination_type = 'container'
 left join items_count ic on ic.container_id = p.id
+-- Re-apply ORDER BY from paged_containers (p.name_sort, p.created_at, sort_by, sort_direction):
+-- JOINs do not preserve row order, so ordering must be repeated here for stable results.
 order by
   case when sort_by = 'name' and sort_direction = 'asc' then p.name_sort end asc nulls last,
   case when sort_by = 'name' and sort_direction = 'desc' then p.name_sort end desc nulls last,

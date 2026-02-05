@@ -37,6 +37,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local MCP overrides (do not commit project-specific Supabase URL)
+.cursor/mcp.local.json
+
 # vercel
 .vercel
 

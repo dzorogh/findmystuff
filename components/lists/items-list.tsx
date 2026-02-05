@@ -164,15 +164,14 @@ const ItemsList = ({
     if (!user) return;
     if (!isMountedRef.current) return;
 
-    // Уникальный ключ запроса: стабильная JSON-сериализация параметров (без конкатенации через разделитель, чтобы избежать коллизий)
+    // Уникальный ключ запроса: стабильная JSON-сериализация параметров (trim совпадает с API query?.trim())
     const requestKey = JSON.stringify({
-      query: query ?? "",
+      query: (query?.trim() ?? ""),
       showDeleted,
       page,
       locationType: filters.locationType,
       hasPhoto: filters.hasPhoto,
       roomId: filters.roomId,
-      filtersShowDeleted: filters.showDeleted,
       sortBy,
       sortDirection,
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export const useListFiltersState = <T extends { showDeleted: boolean }>(
   initialFilters: T,
@@ -8,11 +8,10 @@ export const useListFiltersState = <T extends { showDeleted: boolean }>(
 ) => {
   const [filters, setFilters] = useState<T>(initialFilters);
 
-  useEffect(() => {
-    if (externalShowDeleted !== undefined) {
-      setFilters((prev) => ({ ...prev, showDeleted: externalShowDeleted }));
-    }
-  }, [externalShowDeleted]);
+  const effectiveFilters: T =
+    externalShowDeleted !== undefined
+      ? { ...filters, showDeleted: externalShowDeleted }
+      : filters;
 
-  return { filters, setFilters };
+  return { filters: effectiveFilters, setFilters };
 };
