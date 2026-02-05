@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
+const ROW_VISIBILITY_TIMEOUT = 10000;
+
 const getFirstActiveItemRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
@@ -23,7 +25,7 @@ test.describe('items list', () => {
     await expect(page.getByRole('button', { name: /Добавить вещь/i })).toBeVisible();
 
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
 
     await expect(page.getByRole('columnheader')).toHaveText([
       'ID',
@@ -50,7 +52,7 @@ test.describe('items list', () => {
 
   test('opens item page from name and edit button', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
     const link = row.getByRole('link').first();
     await expect(link).toHaveAttribute('href', /\/items\/\d+$/);
 
@@ -63,7 +65,7 @@ test.describe('items list', () => {
     await page.goBack();
     await expect(page).toHaveURL(/\/items$/);
     const rowAfterBack = getFirstActiveItemRow(page);
-    await expect(rowAfterBack).toBeVisible();
+    await expect(rowAfterBack).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
     await rowAfterBack.getByTitle('Редактировать').click();
     await expect(page).toHaveURL(/\/items\/\d+$/);
     await expect(page.getByRole('heading', { name: 'Редактирование вещи' })).toBeVisible();
@@ -71,7 +73,7 @@ test.describe('items list', () => {
 
   test('opens move sheet and cancels', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
     const dialog = page.getByRole('dialog', { name: 'Переместить вещь' });
 
     await row.getByTitle('Переместить').click();
@@ -82,7 +84,7 @@ test.describe('items list', () => {
 
   test('triggers print from list', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await expect(row).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
 
     const popupPromise = page.waitForEvent('popup');
     await row.getByTitle('Печать этикетки').click();

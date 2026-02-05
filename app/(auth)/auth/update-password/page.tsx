@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/shared/supabase/client";
@@ -288,4 +288,21 @@ const UpdatePasswordPage = () => {
   );
 };
 
-export default UpdatePasswordPage;
+function UpdatePasswordFallback() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
+      <div className="flex flex-col items-center gap-4 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
+        <p>Загрузка...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<UpdatePasswordFallback />}>
+      <UpdatePasswordPage />
+    </Suspense>
+  );
+}

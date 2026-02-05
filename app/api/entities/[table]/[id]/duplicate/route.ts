@@ -82,7 +82,7 @@ export async function POST(
       return NextResponse.json({ error: "Сущность не найдена" }, { status: 404 });
     }
 
-    const source = sourceEntity as SourceRow;
+    const source = sourceEntity as unknown as SourceRow;
     if (source.deleted_at) {
       return NextResponse.json(
         { error: "Нельзя дублировать удаленную сущность" },
