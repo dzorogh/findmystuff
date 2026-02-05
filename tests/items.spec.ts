@@ -3,14 +3,27 @@ import { test, expect, type Page } from '@playwright/test';
 const getFirstActiveItemRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
+/** Дождаться окончания загрузки списка: либо таблица с данными, либо пустое состояние. */
+async function waitForItemsListReady(page: Page) {
+  await expect(
+    page.getByRole('columnheader', { name: 'Название' }).or(
+      page.getByRole('heading', { name: /вещи не найдены|ничего не найдено/i })
+    )
+  ).toBeVisible({ timeout: 15000 });
+}
+
 test.describe('items list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/items');
+    await waitForItemsListReady(page);
   });
 
   test('shows list, headers, filters and action buttons', async ({ page }) => {
     await expect(page.getByRole('button', { name: /Фильтры/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Добавить вещь/i })).toBeVisible();
+
+    const row = getFirstActiveItemRow(page);
+    await expect(row).toBeVisible({ timeout: 10000 });
 
     await expect(page.getByRole('columnheader')).toHaveText([
       'ID',
@@ -19,9 +32,6 @@ test.describe('items list', () => {
       'Дата перемещения',
       'Действия',
     ]);
-
-    const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible();
     const cells = row.getByRole('cell');
     await expect(cells).toHaveCount(5);
 
@@ -40,7 +50,7 @@ test.describe('items list', () => {
 
   test('opens item page from name and edit button', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 10000 });
     const link = row.getByRole('link').first();
     await expect(link).toHaveAttribute('href', /\/items\/\d+$/);
 
@@ -61,6 +71,7 @@ test.describe('items list', () => {
 
   test('opens move sheet and cancels', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
+    await expect(row).toBeVisible({ timeout: 10000 });
     const dialog = page.getByRole('dialog', { name: 'Переместить вещь' });
 
     await row.getByTitle('Переместить').click();
@@ -71,7 +82,7 @@ test.describe('items list', () => {
 
   test('triggers print from list', async ({ page }) => {
     const row = getFirstActiveItemRow(page);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 10000 });
 
     const popupPromise = page.waitForEvent('popup');
     await row.getByTitle('Печать этикетки').click();

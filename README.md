@@ -43,6 +43,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 Подробная инструкция: [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md)
 
+## Cursor MCP (Supabase)
+
+В `.cursor/mcp.json` не хранится проект-специфичный Supabase URL. Чтобы подключить Supabase MCP: скопируйте `.cursor/mcp.example` в `.cursor/mcp.local.json`, подставьте свой Project Reference (Supabase Dashboard → Settings → General). Либо настройте MCP в Cursor Settings / `~/.cursor/mcp.json`. Подробнее: [.cursor/README.md](.cursor/README.md) и [SUPABASE_MCP_SETUP.md](SUPABASE_MCP_SETUP.md).
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

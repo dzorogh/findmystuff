@@ -522,7 +522,6 @@ const PlacesList = ({
               filters={filters}
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
-                setInternalShowDeleted(newFilters.showDeleted);
               }}
               onReset={() => {
                 const resetFilters: PlacesFilters = {
@@ -531,7 +530,6 @@ const PlacesList = ({
                   roomId: null,
                 };
                 setFilters(resetFilters);
-                setInternalShowDeleted(false);
               }}
               hasActiveFilters={hasActiveFilters}
             />

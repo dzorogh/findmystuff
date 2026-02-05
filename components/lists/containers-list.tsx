@@ -532,7 +532,6 @@ const ContainersList = ({
               filters={filters}
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
-                setInternalShowDeleted(newFilters.showDeleted);
               }}
               onReset={() => {
                 const resetFilters: ContainersFilters = {
@@ -542,7 +541,6 @@ const ContainersList = ({
                   locationType: null,
                 };
                 setFilters(resetFilters);
-                setInternalShowDeleted(false);
               }}
               hasActiveFilters={hasActiveFilters}
             />

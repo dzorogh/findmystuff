@@ -488,7 +488,6 @@ const RoomsList = ({
               filters={filters}
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
-                setInternalShowDeleted(newFilters.showDeleted);
               }}
               onReset={() => {
                 const resetFilters: RoomsFilters = {
@@ -498,7 +497,6 @@ const RoomsList = ({
                   hasPlaces: null,
                 };
                 setFilters(resetFilters);
-                setInternalShowDeleted(false);
               }}
               hasActiveFilters={hasActiveFilters}
             />
