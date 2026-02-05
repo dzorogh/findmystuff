@@ -3,6 +3,13 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import type { Container } from "@/types/entity";
 
+/**
+ * Retrieve a list of containers with optional search, deleted filtering, sorting, and last-location data.
+ *
+ * Requires an authenticated user; responds with a 401 JSON error if the request is unauthenticated.
+ *
+ * @returns `{ data: Container[] }` on success, or `{ error: string }` with an appropriate HTTP status on failure.
+ */
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();

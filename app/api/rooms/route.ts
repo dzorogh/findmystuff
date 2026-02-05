@@ -3,6 +3,12 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import type { Room } from "@/types/entity";
 
+/**
+ * Handle GET requests to list rooms with counts, supporting search, deleted visibility, and sorting.
+ *
+ * @param request - Incoming NextRequest whose query parameters may include `query`, `showDeleted`, `sortBy`, and `sortDirection`
+ * @returns A JSON response with either `{ data: Room[] }` on success or `{ error: string }` on failure
+ */
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();

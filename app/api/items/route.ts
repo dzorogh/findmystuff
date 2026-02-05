@@ -3,6 +3,16 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import type { Item } from "@/types/entity";
 
+/**
+ * Retrieve a paginated, optionally filtered and sorted list of items including each item's last known location and the total matching count.
+ *
+ * Expects query parameters: `query`, `showDeleted`, `page`, `limit`, `locationType`, `roomId`, `hasPhoto`, `sortBy`, and `sortDirection`. Requires an authenticated user; responds with 401 if not authenticated.
+ *
+ * @param request - Incoming NextRequest containing the query parameters described above
+ * @returns An object with `data` and `totalCount`:
+ *  - `data`: an array of items where each item includes `id`, `name`, `item_type_id`, optional `item_type` (with `name`), `created_at`, `deleted_at`, `photo_url`, `room_id`, `room_name`, and `last_location` (object with `destination_type`, `destination_id`, `moved_at`, `room_name` or `null` if no location).
+ *  - `totalCount`: the total number of items matching the query
+ */
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
