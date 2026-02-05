@@ -5,7 +5,7 @@
       "args": ["shadcn@latest", "mcp"]
     },
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=YOUR_PROJECT_REF"
+      "url": "https://mcp.supabase.com/mcp?project_ref=ahrcamkpmbqoxbgamddp"
     }
   }
 }
