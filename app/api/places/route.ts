@@ -187,6 +187,18 @@ const fetchPlacesFallback = async (
   return { data: places, error: null };
 };
 
+/**
+ * List places, optionally filtered by text, including deleted items, and sorted.
+ *
+ * Calls a Supabase RPC to retrieve places with their room data; falls back to a client-side query when the RPC fails due to a missing column. Requires an authenticated user and returns HTTP responses describing the result.
+ *
+ * @param request - Incoming request whose URL may include query parameters:
+ *   - `query`: text to search in place name or entity type name
+ *   - `showDeleted`: `"true"` to include deleted places
+ *   - `sortBy`: field to sort by (e.g., `name` or `created_at`)
+ *   - `sortDirection`: `asc` or `desc`
+ * @returns On success, a JSON object with `data` containing an array of `Place` objects. If the user is not authenticated, returns a 401 response with an `error` message. On server or database errors, returns a 500 response with an `error` message.
+ */
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
