@@ -110,8 +110,10 @@ const ContainersList = ({
   const loadContainers = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
-    // Создаем уникальный ключ для запроса на основе параметров
-    const requestKey = `${query || ""}-${showDeleted}-${filters.entityTypeId}-${filters.hasItems}-${filters.locationType}-${filters.showDeleted}-${sortBy}-${sortDirection}`;
+    const normalizedQuery = query?.trim() ?? "";
+
+    // Создаем уникальный ключ для запроса на основе параметров (нормализованное значение как в API)
+    const requestKey = `${normalizedQuery}-${showDeleted}-${filters.entityTypeId}-${filters.hasItems}-${filters.locationType}-${filters.showDeleted}-${sortBy}-${sortDirection}`;
 
     // Проверяем, не выполняется ли уже такой же запрос
     if (!shouldStart(requestKey)) return;
@@ -120,7 +122,7 @@ const ContainersList = ({
 
     try {
       const response = await getContainers({
-        query: query?.trim(),
+        query: normalizedQuery || undefined,
         showDeleted,
         sortBy,
         sortDirection,

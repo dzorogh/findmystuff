@@ -3,9 +3,15 @@ import { test, expect, type Page } from '@playwright/test';
 const getFirstActiveContainerRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
+/** Ждём загрузки списка контейнеров (таблица с данными, не скелетон). */
+async function waitForContainersList(page: Page) {
+  await page.getByRole('table').getByTitle('Редактировать').first().waitFor({ state: 'visible' });
+}
+
 test.describe('containers list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/containers');
+    await waitForContainersList(page);
   });
 
   test('shows list, headers, filters and action buttons', async ({ page }) => {

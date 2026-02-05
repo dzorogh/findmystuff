@@ -49,6 +49,7 @@ interface RoomsListProps {
   refreshTrigger?: number;
   searchQuery?: string;
   showDeleted?: boolean;
+  onShowDeletedChange?: (show: boolean) => void;
   sort?: EntitySortOption;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
   onFiltersOpenChange?: (open: boolean) => void;
@@ -60,6 +61,7 @@ const RoomsList = ({
   refreshTrigger,
   searchQuery: externalSearchQuery,
   showDeleted: externalShowDeleted,
+  onShowDeletedChange,
   sort = DEFAULT_ENTITY_SORT,
   onSearchStateChange,
   onFiltersOpenChange,
@@ -67,6 +69,8 @@ const RoomsList = ({
   onActiveFiltersCountChange,
 }: RoomsListProps = {}) => {
   const { sortBy, sortDirection } = getEntitySortParams(sort);
+
+  const isShowDeletedControlled = externalShowDeleted !== undefined && onShowDeletedChange !== undefined;
 
   const { isOpen: isFiltersOpen, setIsOpen: setIsFiltersOpen } = useListPanelState(
     externalFiltersOpen,
@@ -78,7 +82,9 @@ const RoomsList = ({
     hasItems: null,
     hasContainers: null,
     hasPlaces: null,
-  }, externalShowDeleted);
+  }, isShowDeletedControlled ? undefined : externalShowDeleted);
+
+  const effectiveShowDeleted = isShowDeletedControlled ? externalShowDeleted : filters.showDeleted;
 
   const {
     user,
@@ -93,7 +99,7 @@ const RoomsList = ({
     handleError,
   } = useListState({
     externalSearchQuery,
-    externalShowDeleted: filters.showDeleted,
+    externalShowDeleted: effectiveShowDeleted,
     refreshTrigger,
     onSearchStateChange,
   });
@@ -190,8 +196,8 @@ const RoomsList = ({
     },
   });
 
-  const hasActiveFilters = filters.hasItems !== null || filters.hasContainers !== null || filters.hasPlaces !== null || filters.showDeleted;
-  const activeFiltersCount = [filters.hasItems !== null, filters.hasContainers !== null, filters.hasPlaces !== null, filters.showDeleted].filter(Boolean).length;
+  const hasActiveFilters = filters.hasItems !== null || filters.hasContainers !== null || filters.hasPlaces !== null || effectiveShowDeleted;
+  const activeFiltersCount = [filters.hasItems !== null, filters.hasContainers !== null, filters.hasPlaces !== null, effectiveShowDeleted].filter(Boolean).length;
 
   useEffect(() => {
     onActiveFiltersCountChange?.(activeFiltersCount);
@@ -485,11 +491,18 @@ const RoomsList = ({
           </SheetHeader>
           <div className="mt-6">
             <RoomsFiltersPanel
-              filters={filters}
+              filters={{ ...filters, showDeleted: effectiveShowDeleted }}
               onFiltersChange={(newFilters) => {
-                setFilters(newFilters);
+                if (isShowDeletedControlled) {
+                  setFilters({ ...newFilters, showDeleted: filters.showDeleted });
+                } else {
+                  setFilters(newFilters);
+                }
               }}
               onReset={() => {
+                if (isShowDeletedControlled) {
+                  onShowDeletedChange?.(false);
+                }
                 const resetFilters: RoomsFilters = {
                   showDeleted: false,
                   hasItems: null,
@@ -499,6 +512,7 @@ const RoomsList = ({
                 setFilters(resetFilters);
               }}
               hasActiveFilters={hasActiveFilters}
+              onShowDeletedChange={isShowDeletedControlled ? onShowDeletedChange : undefined}
             />
           </div>
         </SheetContent>

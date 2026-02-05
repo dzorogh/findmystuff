@@ -17,6 +17,8 @@ interface RoomsFiltersPanelProps {
   onFiltersChange: (filters: RoomsFilters) => void;
   onReset: () => void;
   hasActiveFilters: boolean;
+  /** В режиме controlled вызывается при переключении «Показывать удалённые» вместо обновления внутреннего состояния */
+  onShowDeletedChange?: (show: boolean) => void;
 }
 
 export const RoomsFiltersPanel = ({
@@ -24,8 +26,12 @@ export const RoomsFiltersPanel = ({
   onFiltersChange,
   onReset,
   hasActiveFilters,
+  onShowDeletedChange,
 }: RoomsFiltersPanelProps) => {
   const handleShowDeletedChange = (checked: boolean) => {
+    if (onShowDeletedChange) {
+      onShowDeletedChange(checked);
+    }
     onFiltersChange({ ...filters, showDeleted: checked });
   };
 
