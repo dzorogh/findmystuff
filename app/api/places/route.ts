@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type { Place } from "@/types/entity";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -71,12 +72,14 @@ const buildCountMap = (rows: Array<{ destination_id: number | null }>) => {
 const fetchPlacesFallback = async (
   supabase: SupabaseClient,
   query: string | null,
-  showDeleted: boolean
+  showDeleted: boolean,
+  sortBy: SortBy,
+  sortDirection: SortDirection
 ) => {
   let fallbackQuery = supabase
     .from("places")
     .select("id, name, entity_type_id, created_at, deleted_at, photo_url, entity_type:entity_types(name)")
-    .order("created_at", { ascending: false })
+    .order(sortBy === "name" ? "name" : "created_at", { ascending: sortDirection === "asc" })
     .limit(2000);
 
   fallbackQuery = showDeleted
@@ -198,6 +201,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
+    const { sortBy, sortDirection } = normalizeSortParams(
+      searchParams.get("sortBy"),
+      searchParams.get("sortDirection")
+    );
 
     const { data: placesData, error: fetchError } = await supabase.rpc(
       "get_places_with_room",
@@ -206,13 +213,15 @@ export async function GET(request: NextRequest) {
         show_deleted: showDeleted,
         page_limit: 2000,
         page_offset: 0,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
       }
     );
 
     if (fetchError) {
       if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
         const { data: fallbackPlaces, error: fallbackError } =
-          await fetchPlacesFallback(supabase, query, showDeleted);
+          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection);
 
         if (fallbackError) {
           return NextResponse.json(

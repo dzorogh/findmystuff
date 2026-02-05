@@ -3,6 +3,7 @@
  */
 
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
   Item,
   Transition,
@@ -22,6 +23,8 @@ class EntitiesApiClient extends HttpClient {
     locationType?: string | null;
     roomId?: number | null;
     hasPhoto?: boolean | null;
+    sortBy?: SortBy;
+    sortDirection?: SortDirection;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -33,6 +36,7 @@ class EntitiesApiClient extends HttpClient {
     if (params?.hasPhoto !== undefined && params.hasPhoto !== null) {
       searchParams.set("hasPhoto", params.hasPhoto ? "true" : "false");
     }
+    appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Item[]>(`/items${queryString ? `?${queryString}` : ""}`);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPlaces } from "@/lib/places/api";
@@ -23,6 +23,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { useListState } from "@/lib/app/hooks/use-list-state";
 import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
+import { useListFiltersState } from "@/lib/app/hooks/use-list-filters";
+import { useListPanelState } from "@/lib/app/hooks/use-list-panel-state";
+import { useRequestKey } from "@/lib/app/hooks/use-request-key";
 import { ListSkeleton } from "@/components/common/list-skeleton";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorCard } from "@/components/common/error-card";
@@ -36,6 +39,11 @@ import {
 import { PlacesFiltersPanel, type PlacesFilters } from "@/components/filters/places-filters-panel";
 import { toast } from "sonner";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
+import {
+  DEFAULT_ENTITY_SORT,
+  getEntitySortParams,
+  type EntitySortOption,
+} from "@/lib/entities/helpers/sort";
 
 interface Place {
   id: number;
@@ -59,40 +67,35 @@ interface PlacesListProps {
   refreshTrigger?: number;
   searchQuery?: string;
   showDeleted?: boolean;
+  sort?: EntitySortOption;
   onSearchStateChange?: (state: { isSearching: boolean; resultsCount: number }) => void;
   onFiltersOpenChange?: (open: boolean) => void;
   filtersOpen?: boolean;
   onActiveFiltersCountChange?: (count: number) => void;
 }
 
-const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDeleted: externalShowDeleted, onSearchStateChange, onFiltersOpenChange, filtersOpen: externalFiltersOpen, onActiveFiltersCountChange }: PlacesListProps = {}) => {
-  const [internalShowDeleted, setInternalShowDeleted] = useState(externalShowDeleted || false);
-  const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
-  
-  const isFiltersOpen = externalFiltersOpen !== undefined ? externalFiltersOpen : internalFiltersOpen;
-  const setIsFiltersOpen = useCallback((open: boolean) => {
-    if (externalFiltersOpen === undefined) {
-      setInternalFiltersOpen(open);
-    }
-    onFiltersOpenChange?.(open);
-  }, [externalFiltersOpen, onFiltersOpenChange]);
-  
-  useEffect(() => {
-    if (externalShowDeleted !== undefined) {
-      setInternalShowDeleted(externalShowDeleted);
-      setFilters((prev) => ({ ...prev, showDeleted: externalShowDeleted }));
-    }
-  }, [externalShowDeleted]);
+const PlacesList = ({
+  refreshTrigger,
+  searchQuery: externalSearchQuery,
+  showDeleted: externalShowDeleted,
+  sort = DEFAULT_ENTITY_SORT,
+  onSearchStateChange,
+  onFiltersOpenChange,
+  filtersOpen: externalFiltersOpen,
+  onActiveFiltersCountChange,
+}: PlacesListProps = {}) => {
+  const { sortBy, sortDirection } = getEntitySortParams(sort);
 
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, showDeleted: internalShowDeleted }));
-  }, [internalShowDeleted]);
+  const { isOpen: isFiltersOpen, setIsOpen: setIsFiltersOpen } = useListPanelState(
+    externalFiltersOpen,
+    onFiltersOpenChange
+  );
 
-  const [filters, setFilters] = useState<PlacesFilters>({
-    showDeleted: internalShowDeleted,
+  const { filters, setFilters } = useListFiltersState<PlacesFilters>({
+    showDeleted: externalShowDeleted ?? false,
     entityTypeId: null,
     roomId: null,
-  });
+  }, externalShowDeleted);
 
   const {
     user,
@@ -117,22 +120,16 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
   const [mobileActionsPlaceId, setMobileActionsPlaceId] = useState<number | null>(null);
   const router = useRouter();
 
-  const isLoadingRef = useRef(false);
-  const requestKeyRef = useRef<string>("");
+  const { shouldStart, isLatest, finish } = useRequestKey();
 
   const loadPlaces = async (query?: string, isInitialLoad = false) => {
     if (!user) return;
 
     // Создаем уникальный ключ для запроса на основе параметров
-    const requestKey = `${query || ""}-${showDeleted}-${filters.entityTypeId}-${filters.roomId}-${filters.showDeleted}`;
+    const requestKey = `${query || ""}-${showDeleted}-${filters.entityTypeId}-${filters.roomId}-${filters.showDeleted}-${sortBy}-${sortDirection}`;
 
     // Проверяем, не выполняется ли уже такой же запрос
-    if (isLoadingRef.current && requestKeyRef.current === requestKey) {
-      return;
-    }
-
-    isLoadingRef.current = true;
-    requestKeyRef.current = requestKey;
+    if (!shouldStart(requestKey)) return;
 
     startLoading(isInitialLoad);
 
@@ -140,6 +137,8 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       const response = await getPlaces({
         query: query?.trim(),
         showDeleted,
+        sortBy,
+        sortDirection,
       });
 
       // API возвращает { data: Place[] }
@@ -169,7 +168,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       }
 
       // Проверяем еще раз перед обновлением состояния
-      if (requestKeyRef.current !== requestKey) {
+      if (!isLatest(requestKey)) {
         return;
       }
 
@@ -177,17 +176,13 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       finishLoading(isInitialLoad, filteredPlaces.length);
     } catch (err) {
       // Проверяем, не изменились ли параметры запроса во время выполнения
-      if (requestKeyRef.current !== requestKey) {
+      if (!isLatest(requestKey)) {
         return;
       }
       handleError(err, isInitialLoad);
       setPlaces([]);
     } finally {
-      // Сбрасываем флаг только если это был последний запрос
-      if (requestKeyRef.current === requestKey) {
-        isLoadingRef.current = false;
-        requestKeyRef.current = "";
-      }
+      finish(requestKey);
     }
   };
 
@@ -196,7 +191,7 @@ const PlacesList = ({ refreshTrigger, searchQuery: externalSearchQuery, showDele
       loadPlaces(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.roomId, filters.showDeleted]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.roomId, filters.showDeleted, sortBy, sortDirection, sort]);
 
   useDebouncedSearch({
     searchQuery,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import type { Container } from "@/types/entity";
 
 export async function GET(request: NextRequest) {
@@ -16,6 +17,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
+    const { sortBy, sortDirection } = normalizeSortParams(
+      searchParams.get("sortBy"),
+      searchParams.get("sortDirection")
+    );
 
     const { data: containersData, error: fetchError } = await supabase.rpc(
       "get_containers_with_location",
@@ -24,6 +29,8 @@ export async function GET(request: NextRequest) {
         show_deleted: showDeleted,
         page_limit: 2000,
         page_offset: 0,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
       }
     );
 

@@ -3,6 +3,7 @@
  */
 
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
   Container,
   Transition,
@@ -11,10 +12,16 @@ import type {
 } from "@/types/entity";
 
 class ContainersApiClient extends HttpClient {
-  async getContainers(params?: { query?: string; showDeleted?: boolean }) {
+  async getContainers(params?: {
+    query?: string;
+    showDeleted?: boolean;
+    sortBy?: SortBy;
+    sortDirection?: SortDirection;
+  }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
+    appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`);
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import type { Item } from "@/types/entity";
 
 export async function GET(request: NextRequest) {
@@ -21,6 +22,10 @@ export async function GET(request: NextRequest) {
     const locationType = searchParams.get("locationType") || null;
     const roomId = searchParams.get("roomId") ? parseInt(searchParams.get("roomId")!, 10) : null;
     const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
+    const { sortBy, sortDirection } = normalizeSortParams(
+      searchParams.get("sortBy"),
+      searchParams.get("sortDirection")
+    );
 
     const from = (page - 1) * limit;
 
@@ -32,6 +37,8 @@ export async function GET(request: NextRequest) {
       location_type: locationType,
       room_id: roomId,
       has_photo: hasPhoto,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
     });
 
     if (itemsError) {
