@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       page_limit: limit,
       page_offset: from,
       location_type: locationType,
-      p_room_id: roomId,
+      room_id: roomId,
       has_photo: hasPhoto,
       sort_by: sortBy,
       sort_direction: sortDirection,

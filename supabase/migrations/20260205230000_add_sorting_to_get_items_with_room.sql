@@ -9,7 +9,7 @@ create or replace function public.get_items_with_room(
   page_limit integer default 20,
   page_offset integer default 0,
   location_type text default null,
-  p_room_id bigint default null,
+  room_id bigint default null,
   has_photo boolean default null,
   sort_by text default 'created_at',
   sort_direction text default 'desc'
@@ -171,7 +171,7 @@ filtered_with_location as (
   left join rooms r on r.id = rr.room_id and r.deleted_at is null
   where
     (location_type is null or rr.destination_type = location_type)
-    and (p_room_id is null or rr.room_id = p_room_id)
+    and (get_items_with_room.room_id is null or rr.room_id = get_items_with_room.room_id)
 ),
 paged_items as (
   select *
