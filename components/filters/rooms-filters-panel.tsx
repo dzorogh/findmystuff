@@ -1,9 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { FormGroup } from "@/components/ui/form-group";
+import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
-import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
+import { mergeShowDeleted } from "./constants";
 
 export interface RoomsFilters {
   showDeleted: boolean;
@@ -29,10 +28,7 @@ export const RoomsFiltersPanel = ({
   onShowDeletedChange,
 }: RoomsFiltersPanelProps) => {
   const handleShowDeletedChange = (checked: boolean) => {
-    if (onShowDeletedChange) {
-      onShowDeletedChange(checked);
-    }
-    onFiltersChange({ ...filters, showDeleted: checked });
+    onFiltersChange(mergeShowDeleted(filters, checked));
   };
 
   const handleHasItemsChange = (value: boolean | null) => {
@@ -48,36 +44,29 @@ export const RoomsFiltersPanel = ({
   };
 
   return (
-    <FormGroup>
-      <ShowDeletedCheckbox
-        label="Показывать удаленные помещения"
-        checked={filters.showDeleted}
-        onChange={handleShowDeletedChange}
-      />
-
+    <EntityFiltersShell
+      showDeletedLabel="Показывать удаленные помещения"
+      showDeleted={filters.showDeleted}
+      onShowDeletedChange={handleShowDeletedChange}
+      onShowDeletedExternalChange={onShowDeletedChange}
+      onReset={onReset}
+      hasActiveFilters={hasActiveFilters}
+    >
       <YesNoAllFilter
         label="Есть вещи"
         value={filters.hasItems}
         onChange={handleHasItemsChange}
       />
-
       <YesNoAllFilter
         label="Есть контейнеры"
         value={filters.hasContainers}
         onChange={handleHasContainersChange}
       />
-
       <YesNoAllFilter
         label="Есть места"
         value={filters.hasPlaces}
         onChange={handleHasPlacesChange}
       />
-
-      {hasActiveFilters && (
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Сбросить фильтры
-        </Button>
-      )}
-    </FormGroup>
+    </EntityFiltersShell>
   );
 };

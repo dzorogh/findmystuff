@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { FormGroup } from "@/components/ui/form-group";
-import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import { useRooms } from "@/lib/rooms/hooks/use-rooms";
+import { EntityFiltersShell } from "./entity-filters-shell";
+import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
+import { useRoomFilterOptions } from "@/lib/rooms/hooks/use-room-filter-options";
+import {
+  FILTER_COMBOBOX_TYPE,
+  FILTER_COMBOBOX_ROOM,
+  FILTER_FIELD_SKELETON_CLASS,
+  mergeShowDeleted,
+} from "./constants";
 
 export interface PlacesFilters {
   showDeleted: boolean;
@@ -29,41 +32,13 @@ export const PlacesFiltersPanel = ({
   onReset,
   hasActiveFilters,
 }: PlacesFiltersPanelProps) => {
-  const { types: entityTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
-  const { rooms, isLoading: isLoadingRooms } = useRooms();
-  const placeTypeOptions = useMemo(() => {
-    if (isLoadingTypes) {
-      return [{ value: "all", label: "Все типы" }];
-    }
-    if (entityTypes && entityTypes.length > 0) {
-      return [
-        { value: "all", label: "Все типы" },
-        ...entityTypes.map((type) => ({
-          value: type.id.toString(),
-          label: type.name,
-        })),
-      ];
-    }
-    return [{ value: "all", label: "Все типы" }];
-  }, [entityTypes, isLoadingTypes]);
-  const roomOptions = useMemo(() => {
-    if (isLoadingRooms) {
-      return [{ value: "all", label: "Все помещения" }];
-    }
-    if (rooms && rooms.length > 0) {
-      return [
-        { value: "all", label: "Все помещения" },
-        ...rooms.map((room) => ({
-          value: room.id.toString(),
-          label: room.name || `Помещение #${room.id}`,
-        })),
-      ];
-    }
-    return [{ value: "all", label: "Все помещения" }];
-  }, [rooms, isLoadingRooms]);
+  const { options: placeTypeOptions, isLoading: isLoadingTypes } =
+    useEntityTypeFilterOptions("place");
+  const { options: roomOptions, isLoading: isLoadingRooms } =
+    useRoomFilterOptions();
 
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange({ ...filters, showDeleted: checked });
+    onFiltersChange(mergeShowDeleted(filters, checked));
   };
 
   const handleEntityTypeChange = (value: string) => {
@@ -81,48 +56,38 @@ export const PlacesFiltersPanel = ({
   };
 
   return (
-    <FormGroup>
-      <ShowDeletedCheckbox
-        label="Показывать удаленные места"
-        checked={filters.showDeleted}
-        onChange={handleShowDeletedChange}
-      />
-
+    <EntityFiltersShell
+      showDeletedLabel="Показывать удаленные места"
+      showDeleted={filters.showDeleted}
+      onShowDeletedChange={handleShowDeletedChange}
+      onReset={onReset}
+      hasActiveFilters={hasActiveFilters}
+    >
       <FormField label="Тип места">
         {isLoadingTypes ? (
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
         ) : (
           <Combobox
             options={placeTypeOptions}
             value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
             onValueChange={handleEntityTypeChange}
-            placeholder="Выберите тип..."
-            searchPlaceholder="Поиск типа..."
-            emptyText="Типы не найдены"
+            {...FILTER_COMBOBOX_TYPE}
           />
         )}
       </FormField>
 
       <FormField label="Помещение">
         {isLoadingRooms ? (
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
         ) : (
           <Combobox
             options={roomOptions}
             value={filters.roomId ? filters.roomId.toString() : "all"}
             onValueChange={handleRoomChange}
-            placeholder="Выберите помещение..."
-            searchPlaceholder="Поиск помещения..."
-            emptyText="Помещения не найдены"
+            {...FILTER_COMBOBOX_ROOM}
           />
         )}
       </FormField>
-
-      {hasActiveFilters && (
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Сбросить фильтры
-        </Button>
-      )}
-    </FormGroup>
+    </EntityFiltersShell>
   );
 };

@@ -1,14 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { FormGroup } from "@/components/ui/form-group";
-import { YesNoAllFilter } from "./yes-no-all-filter";
-import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
+import { EntityFiltersShell } from "./entity-filters-shell";
+import { YesNoAllFilter } from "./yes-no-all-filter";
+import {
+  LOCATION_TYPE_OPTIONS,
+  FILTER_COMBOBOX_TYPE,
+  FILTER_COMBOBOX_DEFAULT,
+  FILTER_FIELD_SKELETON_CLASS,
+  mergeShowDeleted,
+} from "./constants";
+import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
 export interface ContainersFilters {
   showDeleted: boolean;
@@ -24,38 +29,17 @@ interface ContainersFiltersPanelProps {
   hasActiveFilters: boolean;
 }
 
-const LOCATION_TYPE_OPTIONS = [
-  { value: "all", label: "Все" },
-  { value: "room", label: "Помещение" },
-  { value: "place", label: "Место" },
-  { value: "container", label: "Контейнер" },
-] as const;
-
 export const ContainersFiltersPanel = ({
   filters,
   onFiltersChange,
   onReset,
   hasActiveFilters,
 }: ContainersFiltersPanelProps) => {
-  const { types: entityTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
-  const containerTypeOptions = useMemo(() => {
-    if (isLoadingTypes) {
-      return [{ value: "all", label: "Все типы" }];
-    }
-    if (entityTypes && entityTypes.length > 0) {
-      return [
-        { value: "all", label: "Все типы" },
-        ...entityTypes.map((type) => ({
-          value: type.id.toString(),
-          label: type.name,
-        })),
-      ];
-    }
-    return [{ value: "all", label: "Все типы" }];
-  }, [entityTypes, isLoadingTypes]);
+  const { options: containerTypeOptions, isLoading: isLoadingTypes } =
+    useEntityTypeFilterOptions("container");
 
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange({ ...filters, showDeleted: checked });
+    onFiltersChange(mergeShowDeleted(filters, checked));
   };
 
   const handleEntityTypeChange = (value: string) => {
@@ -77,24 +61,22 @@ export const ContainersFiltersPanel = ({
   };
 
   return (
-    <FormGroup>
-      <ShowDeletedCheckbox
-        label="Показывать удаленные контейнеры"
-        checked={filters.showDeleted}
-        onChange={handleShowDeletedChange}
-      />
-
+    <EntityFiltersShell
+      showDeletedLabel="Показывать удаленные контейнеры"
+      showDeleted={filters.showDeleted}
+      onShowDeletedChange={handleShowDeletedChange}
+      onReset={onReset}
+      hasActiveFilters={hasActiveFilters}
+    >
       <FormField label="Тип контейнера">
         {isLoadingTypes ? (
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
         ) : (
           <Combobox
             options={containerTypeOptions}
             value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
             onValueChange={handleEntityTypeChange}
-            placeholder="Выберите тип..."
-            searchPlaceholder="Поиск типа..."
-            emptyText="Типы не найдены"
+            {...FILTER_COMBOBOX_TYPE}
           />
         )}
       </FormField>
@@ -110,17 +92,9 @@ export const ContainersFiltersPanel = ({
           options={LOCATION_TYPE_OPTIONS}
           value={filters.locationType || "all"}
           onValueChange={handleLocationTypeChange}
-          placeholder="Выберите..."
-          searchPlaceholder="Поиск..."
-          emptyText="Не найдено"
+          {...FILTER_COMBOBOX_DEFAULT}
         />
       </FormField>
-
-      {hasActiveFilters && (
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Сбросить фильтры
-        </Button>
-      )}
-    </FormGroup>
+    </EntityFiltersShell>
   );
 };

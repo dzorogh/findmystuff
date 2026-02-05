@@ -2,6 +2,7 @@
 
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
+import { FILTER_COMBOBOX_DEFAULT } from "./constants";
 
 interface YesNoAllFilterProps {
   label: string;
@@ -28,9 +29,7 @@ export const YesNoAllFilter = ({ label, value, onChange }: YesNoAllFilterProps) 
         options={YES_NO_ALL_OPTIONS}
         value={stringValue}
         onValueChange={handleValueChange}
-        placeholder="Выберите..."
-        searchPlaceholder="Поиск..."
-        emptyText="Не найдено"
+        {...FILTER_COMBOBOX_DEFAULT}
       />
     </FormField>
   );
