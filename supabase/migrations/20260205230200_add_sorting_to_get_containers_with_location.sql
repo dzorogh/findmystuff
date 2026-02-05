@@ -25,12 +25,21 @@ returns table (
   items_count bigint,
   total_count bigint
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public, pg_temp
 as $$
-with filtered_containers as (
+begin
+  if sort_by is null or sort_by not in ('name', 'created_at') then
+    raise exception 'invalid sort_by: %. Allowed: name, created_at', coalesce(sort_by, 'NULL');
+  end if;
+  if sort_direction is null or sort_direction not in ('asc', 'desc') then
+    raise exception 'invalid sort_direction: %. Allowed: asc, desc', coalesce(sort_direction, 'NULL');
+  end if;
+
+  return query
+  with filtered_containers as (
   select
     c.id,
     c.name,
@@ -79,11 +88,12 @@ container_transition as (
 ),
 items_count as (
   select
-    destination_id as container_id,
+    t.destination_id as container_id,
     count(*)::bigint as items_count
-  from public.mv_item_last_transition
-  where destination_type = 'container'
-  group by destination_id
+  from public.mv_item_last_transition t
+  inner join paged_containers pc on pc.id = t.destination_id
+  where t.destination_type = 'container'
+  group by t.destination_id
 )
 select
   p.id,
@@ -116,6 +126,7 @@ order by
   case when sort_by = 'created_at' and sort_direction = 'asc' then p.created_at end asc,
   case when sort_by = 'created_at' and sort_direction = 'desc' then p.created_at end desc,
   p.created_at desc;
+end;
 $$;
 
 grant execute on function public.get_containers_with_location(text, boolean, integer, integer, text, text) to anon, authenticated;

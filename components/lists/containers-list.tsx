@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getContainers } from "@/lib/containers/api";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
@@ -182,7 +182,7 @@ const ContainersList = ({
       loadContainers(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.hasItems, filters.locationType, filters.showDeleted, sortBy, sortDirection, sort]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.hasItems, filters.locationType, filters.showDeleted, sort]);
 
   useDebouncedSearch({
     searchQuery,

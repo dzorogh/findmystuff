@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getRooms } from "@/lib/rooms/api";
@@ -179,7 +179,7 @@ const RoomsList = ({
       loadRooms(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger, filters.hasItems, filters.hasContainers, filters.hasPlaces, filters.showDeleted, sortBy, sortDirection, sort]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.hasItems, filters.hasContainers, filters.hasPlaces, filters.showDeleted, sort]);
 
   useDebouncedSearch({
     searchQuery,

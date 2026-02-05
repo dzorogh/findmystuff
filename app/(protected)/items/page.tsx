@@ -27,32 +27,32 @@ const ItemsPageContent = () => {
 
   return (
     <div className="space-y-4">
-        <EntityListToolbar
-          placeholder="Введите название вещи..."
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          isSearching={isSearching}
-          resultsCount={resultsCount}
-          resultsLabel={{ singular: "вещь", plural: "вещей" }}
-          activeFiltersCount={activeFiltersCount}
-          onOpenFilters={() => setIsFiltersOpen(true)}
-          sort={sort}
-          onSortChange={setSort}
-        />
-        <ItemsList 
-          refreshTrigger={refreshTrigger}
-          searchQuery={searchQuery}
-          sort={sort}
-          onSearchStateChange={handleSearchStateChange}
-          filtersOpen={isFiltersOpen}
-          onFiltersOpenChange={setIsFiltersOpen}
-          onActiveFiltersCountChange={setActiveFiltersCount}
-        />
-        <AddItemForm
-          open={isAddDialogOpen}
-          onOpenChange={handleAddDialogOpenChange}
-          onSuccess={handleEntityAdded}
-        />
+      <EntityListToolbar
+        placeholder="Введите название вещи..."
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        isSearching={isSearching}
+        resultsCount={resultsCount}
+        resultsLabel={{ singular: "вещь", plural: "вещей" }}
+        activeFiltersCount={activeFiltersCount}
+        onOpenFilters={() => setIsFiltersOpen(true)}
+        sort={sort}
+        onSortChange={setSort}
+      />
+      <ItemsList
+        refreshTrigger={refreshTrigger}
+        searchQuery={searchQuery}
+        sort={sort}
+        onSearchStateChange={handleSearchStateChange}
+        filtersOpen={isFiltersOpen}
+        onFiltersOpenChange={setIsFiltersOpen}
+        onActiveFiltersCountChange={setActiveFiltersCount}
+      />
+      <AddItemForm
+        open={isAddDialogOpen}
+        onOpenChange={handleAddDialogOpenChange}
+        onSuccess={handleEntityAdded}
+      />
     </div>
   );
 };

@@ -9,7 +9,7 @@ create or replace function public.get_items_with_room(
   page_limit integer default 20,
   page_offset integer default 0,
   location_type text default null,
-  room_id bigint default null,
+  p_room_id bigint default null,
   has_photo boolean default null,
   sort_by text default 'created_at',
   sort_direction text default 'desc'
@@ -171,7 +171,7 @@ filtered_with_location as (
   left join rooms r on r.id = rr.room_id and r.deleted_at is null
   where
     (location_type is null or rr.destination_type = location_type)
-    and (room_id is null or rr.room_id = room_id)
+    and (p_room_id is null or rr.room_id = p_room_id)
 ),
 paged_items as (
   select *
@@ -199,13 +199,7 @@ select
   p.room_id,
   p.room_name,
   (select count(*) from filtered_with_location) as total_count
-from paged_items p
-order by
-  case when sort_by = 'name' and sort_direction = 'asc' then p.name_sort end asc nulls last,
-  case when sort_by = 'name' and sort_direction = 'desc' then p.name_sort end desc nulls last,
-  case when sort_by = 'created_at' and sort_direction = 'asc' then p.created_at end asc,
-  case when sort_by = 'created_at' and sort_direction = 'desc' then p.created_at end desc,
-  p.created_at desc;
+from paged_items p;
 $$;
 
 grant execute on function public.get_items_with_room(text, boolean, integer, integer, text, bigint, boolean, text, text) to anon, authenticated;

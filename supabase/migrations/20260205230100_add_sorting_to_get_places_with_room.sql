@@ -2,10 +2,11 @@
 
 drop function if exists public.get_places_with_room(text, boolean, integer, integer);
 
+-- page_limit: default 100, effectively capped at 500 to avoid excessive result sets
 create or replace function public.get_places_with_room(
   search_query text default null,
   show_deleted boolean default false,
-  page_limit integer default 2000,
+  page_limit integer default 100,
   page_offset integer default 0,
   sort_by text default 'created_at',
   sort_direction text default 'desc'
@@ -65,7 +66,7 @@ paged_places as (
     case when sort_by = 'created_at' and sort_direction = 'desc' then created_at end desc,
     created_at desc
   offset page_offset
-  limit page_limit
+  limit least(greatest(coalesce(nullif(page_limit, 0), 100), 1), 500)
 ),
 items_count as (
   select

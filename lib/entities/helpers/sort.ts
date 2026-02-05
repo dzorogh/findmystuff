@@ -59,6 +59,6 @@ export const sortEntities = <T extends { name?: string | null; created_at?: stri
     }
 
     const name = compareName(a, b);
-    return name !== 0 ? name : 0;
+    return name;
   });
 };

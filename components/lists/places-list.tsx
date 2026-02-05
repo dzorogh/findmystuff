@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPlaces } from "@/lib/places/api";
@@ -191,7 +191,7 @@ const PlacesList = ({
       loadPlaces(searchQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.roomId, filters.showDeleted, sortBy, sortDirection, sort]);
+  }, [user?.id, showDeleted, refreshTrigger, filters.entityTypeId, filters.roomId, filters.showDeleted, sort]);
 
   useDebouncedSearch({
     searchQuery,

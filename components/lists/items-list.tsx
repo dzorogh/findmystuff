@@ -164,8 +164,18 @@ const ItemsList = ({
     if (!user) return;
     if (!isMountedRef.current) return;
 
-    // Создаем уникальный ключ для запроса на основе параметров
-    const requestKey = `${query || ""}-${showDeleted}-${page}-${filters.locationType}-${filters.hasPhoto}-${filters.roomId}-${filters.showDeleted}-${sortBy}-${sortDirection}`;
+    // Уникальный ключ запроса: стабильная JSON-сериализация параметров (без конкатенации через разделитель, чтобы избежать коллизий)
+    const requestKey = JSON.stringify({
+      query: query ?? "",
+      showDeleted,
+      page,
+      locationType: filters.locationType,
+      hasPhoto: filters.hasPhoto,
+      roomId: filters.roomId,
+      filtersShowDeleted: filters.showDeleted,
+      sortBy,
+      sortDirection,
+    });
 
     // Проверяем, не выполняется ли уже такой же запрос
     if (!shouldStart(requestKey)) return;
