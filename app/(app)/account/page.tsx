@@ -10,6 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import Link from "next/link";
+import { HomeIcon } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -21,12 +32,6 @@ export default function AccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/auth/login");
-    }
-  }, [isUserLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,18 +66,9 @@ export default function AccountPage() {
     }
   };
 
-  if (isUserLoading || !user) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
+      <PageHeader title="Аккаунт" />
 
       <Card>
         <CardHeader>
@@ -81,7 +77,11 @@ export default function AccountPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Input type="email" value={user.email ?? ""} disabled />
+          {isUserLoading ? (
+            <Skeleton className="h-9 w-full" />
+          ) : (
+            <Input type="email" value={user?.email ?? ""} disabled />
+          )}
           <p className="text-sm text-muted-foreground mt-2">Почту нельзя изменить</p>
         </CardContent>
       </Card>

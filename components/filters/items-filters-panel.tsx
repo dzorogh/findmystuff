@@ -1,18 +1,9 @@
 "use client";
 
-import { FormField } from "@/components/ui/form-field";
-import { Combobox } from "@/components/ui/combobox";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
-import {
-  LOCATION_TYPE_OPTIONS,
-  FILTER_COMBOBOX_DEFAULT,
-  FILTER_COMBOBOX_ROOM,
-  FILTER_FIELD_SKELETON_CLASS,
-  mergeShowDeleted,
-} from "./constants";
-import { useRoomFilterOptions } from "@/lib/rooms/hooks/use-room-filter-options";
+import { LocationTypeSelect } from "../fields/location-type-select";
+import { RoomsSelect } from "../fields/rooms-select";
 
 export interface ItemsFilters {
   showDeleted: boolean;
@@ -24,21 +15,16 @@ export interface ItemsFilters {
 interface ItemsFiltersPanelProps {
   filters: ItemsFilters;
   onFiltersChange: (filters: ItemsFilters) => void;
-  onReset: () => void;
   hasActiveFilters: boolean;
 }
 
 export const ItemsFiltersPanel = ({
   filters,
   onFiltersChange,
-  onReset,
   hasActiveFilters,
 }: ItemsFiltersPanelProps) => {
-  const { options: roomOptions, isLoading: isLoadingRooms } =
-    useRoomFilterOptions();
-
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange(mergeShowDeleted(filters, checked));
+    onFiltersChange({ ...filters, showDeleted: checked });
   };
 
   const handleLocationTypeChange = (value: string) => {
@@ -52,10 +38,10 @@ export const ItemsFiltersPanel = ({
     onFiltersChange({ ...filters, hasPhoto: value });
   };
 
-  const handleRoomChange = (value: string) => {
+  const handleRoomChange = (value: string | null) => {
     onFiltersChange({
       ...filters,
-      roomId: value === "all" ? null : parseInt(value, 10),
+      roomId: value === "all" || value == null ? null : parseInt(value, 10),
     });
   };
 
@@ -64,17 +50,11 @@ export const ItemsFiltersPanel = ({
       showDeletedLabel="Показывать удаленные вещи"
       showDeleted={filters.showDeleted}
       onShowDeletedChange={handleShowDeletedChange}
-      onReset={onReset}
-      hasActiveFilters={hasActiveFilters}
     >
-      <FormField label="Тип местоположения">
-        <Combobox
-          options={LOCATION_TYPE_OPTIONS}
-          value={filters.locationType || "all"}
-          onValueChange={handleLocationTypeChange}
-          {...FILTER_COMBOBOX_DEFAULT}
-        />
-      </FormField>
+      <LocationTypeSelect
+        value={filters.locationType}
+        onValueChange={handleLocationTypeChange}
+      />
 
       <YesNoAllFilter
         label="Есть фото"
@@ -82,18 +62,10 @@ export const ItemsFiltersPanel = ({
         onChange={handleHasPhotoChange}
       />
 
-      <FormField label="Помещение">
-        {isLoadingRooms ? (
-          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
-        ) : (
-          <Combobox
-            options={roomOptions}
-            value={filters.roomId ? filters.roomId.toString() : "all"}
-            onValueChange={handleRoomChange}
-            {...FILTER_COMBOBOX_ROOM}
-          />
-        )}
-      </FormField>
+      <RoomsSelect
+        value={filters.roomId}
+        onValueChange={handleRoomChange}
+      />
     </EntityFiltersShell>
   );
 };

@@ -22,14 +22,18 @@ const eslintConfig = defineConfig([
       "app/**/*.{ts,tsx}",
       "components/**/*.{ts,tsx}",
       "hooks/**/*.{ts,tsx}",
-    ],
-    ignores: [
-      "app/api/**",           // API routes разрешены
-      "components/auth/**",   // Auth компоненты разрешены
-      "components/navigation/sidebar.tsx", // Использует только для auth.signOut()
-      "components/navigation/top-bar.tsx", // Использует только для auth.signOut()
+      "lib/**/*.{ts,tsx}",
     ],
     rules: {
+      // JSX: если тег многострочный, то каждый проп на отдельной строке
+      // Пример:
+      // <Component
+      //   foo="bar"
+      //   baz="qux"
+      // />
+      "react/jsx-first-prop-new-line": ["error", "multiline-multiprop"],
+      "react/jsx-max-props-per-line": ["error", { maximum: 1, when: "multiline" }],
+
       // Запрещаем импорт createClient из @/lib/supabase/client
       "no-restricted-imports": [
         "error",

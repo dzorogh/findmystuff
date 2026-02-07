@@ -1,18 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
-import {
-  LOCATION_TYPE_OPTIONS,
-  FILTER_COMBOBOX_TYPE,
-  FILTER_COMBOBOX_DEFAULT,
-  FILTER_FIELD_SKELETON_CLASS,
-  mergeShowDeleted,
-} from "./constants";
+import { LocationTypeSelect } from "../fields/location-type-select";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
 export interface ContainersFilters {
@@ -39,13 +32,13 @@ export const ContainersFiltersPanel = ({
     useEntityTypeFilterOptions("container");
 
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange(mergeShowDeleted(filters, checked));
+    onFiltersChange({ ...filters, showDeleted: checked });
   };
 
-  const handleEntityTypeChange = (value: string) => {
+  const handleEntityTypeChange = (value: string | null) => {
     onFiltersChange({
       ...filters,
-      entityTypeId: value === "all" ? null : parseInt(value, 10),
+      entityTypeId: value === "all" || value == null ? null : parseInt(value, 10),
     });
   };
 
@@ -65,19 +58,16 @@ export const ContainersFiltersPanel = ({
       showDeletedLabel="Показывать удаленные контейнеры"
       showDeleted={filters.showDeleted}
       onShowDeletedChange={handleShowDeletedChange}
-      onReset={onReset}
-      hasActiveFilters={hasActiveFilters}
     >
       <FormField label="Тип контейнера">
         {isLoadingTypes ? (
-          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
+          <Skeleton className="h-9 w-full" />
         ) : (
           <Combobox
-            options={containerTypeOptions}
+            items={containerTypeOptions}
             value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
             onValueChange={handleEntityTypeChange}
-            {...FILTER_COMBOBOX_TYPE}
-          />
+          />  
         )}
       </FormField>
 
@@ -87,14 +77,10 @@ export const ContainersFiltersPanel = ({
         onChange={handleHasItemsChange}
       />
 
-      <FormField label="Тип местоположения">
-        <Combobox
-          options={LOCATION_TYPE_OPTIONS}
-          value={filters.locationType || "all"}
-          onValueChange={handleLocationTypeChange}
-          {...FILTER_COMBOBOX_DEFAULT}
-        />
-      </FormField>
+      <LocationTypeSelect
+        value={filters.locationType}
+        onValueChange={handleLocationTypeChange}
+      />
     </EntityFiltersShell>
   );
 };

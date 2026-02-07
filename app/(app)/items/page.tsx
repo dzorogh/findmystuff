@@ -5,13 +5,13 @@ import ItemsList from "@/components/lists/items-list";
 import AddItemForm from "@/components/forms/add-item-form";
 import { EntityListToolbar } from "@/components/common/entity-list-toolbar";
 import { useEntityListPageState } from "@/lib/app/hooks/use-entity-list-page";
+import { PageHeader } from "@/components/layout/page-header";
 
 const ItemsPageContent = () => {
   const {
     refreshTrigger,
     searchQuery,
     isSearching,
-    resultsCount,
     isFiltersOpen,
     setIsFiltersOpen,
     activeFiltersCount,
@@ -27,13 +27,11 @@ const ItemsPageContent = () => {
 
   return (
     <div className="space-y-4">
+      <PageHeader title="Вещи" />
       <EntityListToolbar
-        placeholder="Введите название вещи..."
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         isSearching={isSearching}
-        resultsCount={resultsCount}
-        resultsLabel={{ singular: "вещь", plural: "вещей" }}
         activeFiltersCount={activeFiltersCount}
         onOpenFilters={() => setIsFiltersOpen(true)}
         sort={sort}

@@ -1,7 +1,7 @@
 "use client";
 
-import { CompactSearchBar } from "@/components/common/compact-search-bar";
-import { Select } from "@/components/ui/select";
+import { SearchBar } from "@/components/common/search-bar";
+import { Select, SelectItem, SelectGroup, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
@@ -11,15 +11,9 @@ import {
 } from "@/lib/entities/helpers/sort";
 
 interface EntityListToolbarProps {
-  placeholder: string;
   searchQuery: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isSearching?: boolean;
-  resultsCount?: number;
-  resultsLabel?: {
-    singular: string;
-    plural: string;
-  };
   activeFiltersCount?: number;
   onOpenFilters: () => void;
   sort: EntitySortOption;
@@ -27,39 +21,35 @@ interface EntityListToolbarProps {
 }
 
 export const EntityListToolbar = ({
-  placeholder,
   searchQuery,
   onSearchChange,
   isSearching,
-  resultsCount,
-  resultsLabel,
   activeFiltersCount = 0,
   onOpenFilters,
   sort,
   onSortChange,
 }: EntityListToolbarProps) => {
   return (
-    <CompactSearchBar
-      placeholder={placeholder}
+    <SearchBar
+      placeholder="Поиск..."
       searchQuery={searchQuery}
       onSearchChange={onSearchChange}
       isSearching={isSearching}
-      resultsCount={resultsCount}
-      resultsLabel={resultsLabel}
       actions={
         <div className="flex items-center gap-2">
-          <Select
-            size="default"
-            value={sort}
-            onChange={(event) => onSortChange(event.target.value as EntitySortOption)}
-            className="min-w-[170px]"
-            aria-label="Сортировка"
-          >
-            {ENTITY_SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+          <Select value={sort} onValueChange={(value) => onSortChange(value as EntitySortOption)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Сортировка" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {ENTITY_SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
           </Select>
           <Button
             variant="outline"

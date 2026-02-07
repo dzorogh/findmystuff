@@ -9,9 +9,8 @@ import { UserProvider } from "@/lib/users/context";
 import { SettingsProvider } from "@/lib/settings/context";
 import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
 import Sidebar from "@/components/navigation/sidebar";
-import TopBar from "@/components/navigation/top-bar";
 import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
-import { PageContainer } from "@/components/layouts/page-container";
+import { PageContainer } from "@/components/layout/page-container";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/users/server";
 
@@ -58,11 +57,10 @@ export default async function RootLayout({
     <html
       lang="ru"
       suppressHydrationWarning
-      className={`${geistSans.className} overscroll-y-none h-[100svh] h-[100dvh] bg-background`}
+      className={`${geistSans.className} h-full`}
     >
       <body
-        data-native="false"
-        className="antialiased overscroll-y-none h-[100svh] h-[100dvh] bg-background [--app-safe-top:env(safe-area-inset-top)] [--app-safe-bottom:env(safe-area-inset-bottom)] [--app-bottom-nav-height:56px] [--app-header-height:56px] md:[--app-header-height:64px] data-[native=true]:[--app-safe-top:max(env(safe-area-inset-top),3svh)] data-[native=true]:[--app-safe-bottom:max(env(safe-area-inset-bottom),48px,5svh)]"
+        className="antialiased h-full"
       >
         <NativeAppMarker />
         <ThemeProvider
@@ -76,24 +74,13 @@ export default async function RootLayout({
               <CurrentPageProvider>
                 <CapacitorAuthListener />
                 <QuickMoveProvider>
-                  <div className="h-[100svh] h-[100dvh] overflow-hidden bg-background grid md:grid-cols-[256px_1fr] grid-rows-[1fr_auto] md:grid-rows-1">
-                    <div className="hidden md:block row-start-1 row-end-2 col-start-1 col-end-2 overflow-y-auto">
-                      <Sidebar />
-                    </div>
+                  <Sidebar className="h-full md:w-64 fixed left-0 top-0 border-r" />
 
-                    <main className="row-start-1 row-end-2 md:row-start-1 md:row-end-2 col-start-1 col-end-2 md:col-start-2 md:col-end-3 flex flex-col overflow-hidden bg-background">
-                      <div className="shrink-0 relative z-40">
-                        <TopBar />
-                      </div>
-                      <div className="flex-1 overflow-y-auto md:pb-0 overscroll-y-auto">
-                        <PageContainer>{children}</PageContainer>
-                      </div>
-                    </main>
-
-                    <div className="md:hidden row-start-2 row-end-3 col-start-1 col-end-2 shrink-0 border-t bg-background">
-                      <Sidebar />
+                  <main className="flex flex-col flex-1 md:ml-64">
+                    <div className="flex-1 overflow-y-auto">
+                      <PageContainer>{children}</PageContainer>
                     </div>
-                  </div>
+                  </main>
                 </QuickMoveProvider>
                 <Toaster />
               </CurrentPageProvider>

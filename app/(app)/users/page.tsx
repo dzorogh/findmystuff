@@ -26,12 +26,9 @@ import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
 import { getUsers, deleteUser } from "@/lib/users/api";
+import { PageHeader } from "@/components/layout/page-header";
 
-interface UsersManagerProps {
-  isLoading?: boolean;
-}
-
-const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
+export default function PageUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -124,67 +121,81 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
     }
   };
 
-
-  if (isLoading || externalLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
   return (
-    <>
-      {users.length === 0 ? (
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Пользователи" />
+
+      {users.length === 0 && !isLoading ? (
         <div className="text-center py-8 text-muted-foreground">
           <p>Пользователи не найдены</p>
         </div>
       ) : (
         <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Создан</TableHead>
-              <TableHead>Последний вход</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">
-                  {user.email || user.phone || "—"}
-                </TableCell>
-                <TableCell>{formatDate(user.created_at)}</TableCell>
-                <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(user)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Редактировать пользователя</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(user)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Удалить пользователя</span>
-                    </Button>
-                  </div>
-                </TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-1/2">Email</TableHead>
+                <TableHead className="w-1/4">Создан</TableHead>
+                <TableHead className="w-1/4">Последний вход</TableHead>
+                <TableHead className="w-1/4 text-right">Действия</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            {!isLoading && (
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.email || user.phone || "—"}
+                    </TableCell>
+                    <TableCell>{formatDate(user.created_at)}</TableCell>
+                    <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Редактировать пользователя</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(user)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Удалить пользователя</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
+            {isLoading && (
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-64" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
+          </Table>
+        </div>
       )}
 
       <AddUserForm
@@ -253,8 +264,6 @@ const UsersManager = ({ isLoading: externalLoading }: UsersManagerProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
-
-export default UsersManager;

@@ -1,163 +1,28 @@
-"use client";
-
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "@/lib/auth/sign-out";
-import { useUser } from "@/lib/users/context";
-import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
-import { Button } from "@/components/ui/button";
-import { Search, Box, Warehouse, Container, Building2, LogOut, User as UserIcon, Settings, Users, Moon, Sun, ArrowRightLeft } from "lucide-react";
 import Logo from "@/components/common/logo";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils";
+import { SecondaryMenu } from "./secondary-menu";
+import { PrimaryMenu } from "./primary-menu";
 
-const emptySubscribe = () => () => {};
-const getClientSnapshot = () => true;
-const getServerSnapshot = () => false;
-
-interface NavItemConfig {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-const SidebarNavContent = ({
-  pathname,
-  onQuickMoveOpen,
-}: {
-  pathname: string;
-  onQuickMoveOpen: () => void;
-}) => {
-  const searchItem: NavItemConfig = { href: "/", label: "Поиск", icon: Search };
-  const storageItems: NavItemConfig[] = [
-    { href: "/rooms", label: "Помещения", icon: Building2 },
-    { href: "/places", label: "Места", icon: Warehouse },
-    { href: "/containers", label: "Контейнеры", icon: Container },
-    { href: "/items", label: "Вещи", icon: Box },
-  ];
-  const managementItems: NavItemConfig[] = [
-    { href: "/users", label: "Пользователи", icon: Users },
-    { href: "/settings", label: "Настройки", icon: Settings },
-  ];
-
-  const renderNavItem = (item: NavItemConfig) => {
-    const Icon = item.icon;
-    const isActive = pathname === item.href;
-    return (
-      <Link key={item.href} href={item.href}>
-        <Button
-          variant={isActive ? "secondary" : "ghost"}
-          className="w-full justify-start gap-3 h-10 px-3"
-        >
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-medium">{item.label}</span>
-        </Button>
-      </Link>
-    );
-  };
-
-  return (
-    <nav className="flex flex-col gap-1">
-      <Button
-        variant="default"
-        className="w-full justify-start gap-3 h-10 px-3"
-        onClick={onQuickMoveOpen}
-        aria-label="Быстрое перемещение"
-      >
-        <ArrowRightLeft className="h-4 w-4 shrink-0" />
-        <span className="text-sm font-medium">Быстрое перемещение</span>
-      </Button>
-      {renderNavItem(searchItem)}
-      <div className="h-[1px] bg-border my-1" />
-      {storageItems.map(renderNavItem)}
-      <div className="h-[1px] bg-border my-1" />
-      {managementItems.map(renderNavItem)}
-    </nav>
-  );
-};
-
-const Sidebar = () => {
-  const { user, isLoading } = useUser();
-  const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
-  const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
-  const handleThemeToggle = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  if (isLoading) {
-    return (
-      <aside className="hidden md:flex h-full w-64 border-r bg-background flex-col">
-        <div className="h-16 flex items-center px-4 border-b">
-          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-        </div>
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 w-full animate-pulse rounded bg-muted" />
-            ))}
-          </div>
-        </div>
-      </aside>
-    );
-  }
-
-  // Sidebar рендерится только для авторизованных пользователей.
-  // Для неавторизованных используются отдельные route-group layout'ы.
-  if (!user) {
-    return null;
-  }
-
+const Sidebar = ({ className }: { className?: string }) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex h-full w-64 border-r bg-background flex-col z-40">
-        <div className="h-16 flex items-center px-4 border-b">
+      <aside className={cn("hidden md:flex h-full flex-col z-40", className)}>
+        <div className="h-16 flex items-center px-6 border-b shrink-0">
           <Link href="/" className="flex items-center">
             <Logo size="md" showText={true} />
           </Link>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto">
-          <SidebarNavContent pathname={pathname} onQuickMoveOpen={() => setQuickMoveOpen(true)} />
+        <div className="p-4 flex-grow">
+          <PrimaryMenu />
         </div>
-        <div className="border-t p-4 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-2 " asChild>
-            <Link href="/account" className="flex items-center gap-2">
-              <UserIcon className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="text-sm font-medium truncate">{user.email}</span>
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleThemeToggle}
-            className="w-full justify-start gap-2"
-          >
-            {mounted && theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-            <span>Смена темы</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleSignOut}
-            className="w-full justify-start gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Выйти
-          </Button>
+        <div className="border-t p-4">
+          <SecondaryMenu />
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav: 2 links | center Quick Move | 2 links */}
+      {/* Mobile Bottom Nav: 2 links | center Quick Move | 2 links
       <nav className="md:hidden bg-background">
         <div className="flex h-[calc(var(--app-bottom-nav-height)+var(--app-safe-bottom))] items-center justify-between gap-1 px-1 pb-[var(--app-safe-bottom)]">
           <Link
@@ -218,7 +83,7 @@ const Sidebar = () => {
             <span className="sr-only">Вещи</span>
           </Link>
         </div>
-      </nav>
+      </nav> */}
     </>
   );
 };

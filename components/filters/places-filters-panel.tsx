@@ -6,12 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EntityFiltersShell } from "./entity-filters-shell";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 import { useRoomFilterOptions } from "@/lib/rooms/hooks/use-room-filter-options";
-import {
-  FILTER_COMBOBOX_TYPE,
-  FILTER_COMBOBOX_ROOM,
-  FILTER_FIELD_SKELETON_CLASS,
-  mergeShowDeleted,
-} from "./constants";
+import { LocationTypeSelect } from "../fields/location-type-select";
+import { RoomsSelect } from "../fields/rooms-select";
 
 export interface PlacesFilters {
   showDeleted: boolean;
@@ -38,7 +34,7 @@ export const PlacesFiltersPanel = ({
     useRoomFilterOptions();
 
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange(mergeShowDeleted(filters, checked));
+    onFiltersChange({ ...filters, showDeleted: checked });
   };
 
   const handleEntityTypeChange = (value: string) => {
@@ -60,34 +56,16 @@ export const PlacesFiltersPanel = ({
       showDeletedLabel="Показывать удаленные места"
       showDeleted={filters.showDeleted}
       onShowDeletedChange={handleShowDeletedChange}
-      onReset={onReset}
-      hasActiveFilters={hasActiveFilters}
     >
-      <FormField label="Тип места">
-        {isLoadingTypes ? (
-          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
-        ) : (
-          <Combobox
-            options={placeTypeOptions}
-            value={filters.entityTypeId ? filters.entityTypeId.toString() : "all"}
-            onValueChange={handleEntityTypeChange}
-            {...FILTER_COMBOBOX_TYPE}
-          />
-        )}
-      </FormField>
+      <LocationTypeSelect
+        value={filters.locationType}
+        onValueChange={handleLocationTypeChange}
+      />
 
-      <FormField label="Помещение">
-        {isLoadingRooms ? (
-          <Skeleton className={FILTER_FIELD_SKELETON_CLASS} />
-        ) : (
-          <Combobox
-            options={roomOptions}
-            value={filters.roomId ? filters.roomId.toString() : "all"}
-            onValueChange={handleRoomChange}
-            {...FILTER_COMBOBOX_ROOM}
-          />
-        )}
-      </FormField>
+      <RoomsSelect
+        value={filters.roomId}
+        onValueChange={handleRoomChange}
+      />
     </EntityFiltersShell>
   );
 };

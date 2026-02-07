@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Pencil, ArrowRightLeft, Trash2, RotateCcw, Printer, Copy } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils";
 
 interface ListActionsProps {
   isDeleted: boolean;

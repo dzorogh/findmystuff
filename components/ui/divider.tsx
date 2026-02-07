@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils";
 
 interface DividerProps {
   text?: string;

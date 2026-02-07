@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useId } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils";
 import { parseEntityQrPayload, type EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 import { Capacitor } from "@capacitor/core";
 import { BarcodeFormat, BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";

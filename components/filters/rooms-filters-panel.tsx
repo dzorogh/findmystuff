@@ -2,7 +2,6 @@
 
 import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
-import { mergeShowDeleted } from "./constants";
 
 export interface RoomsFilters {
   showDeleted: boolean;
@@ -23,12 +22,10 @@ interface RoomsFiltersPanelProps {
 export const RoomsFiltersPanel = ({
   filters,
   onFiltersChange,
-  onReset,
   hasActiveFilters,
-  onShowDeletedChange,
 }: RoomsFiltersPanelProps) => {
   const handleShowDeletedChange = (checked: boolean) => {
-    onFiltersChange(mergeShowDeleted(filters, checked));
+    onFiltersChange({ ...filters, showDeleted: checked });
   };
 
   const handleHasItemsChange = (value: boolean | null) => {
@@ -48,9 +45,6 @@ export const RoomsFiltersPanel = ({
       showDeletedLabel="Показывать удаленные помещения"
       showDeleted={filters.showDeleted}
       onShowDeletedChange={handleShowDeletedChange}
-      onShowDeletedExternalChange={onShowDeletedChange}
-      onReset={onReset}
-      hasActiveFilters={hasActiveFilters}
     >
       <YesNoAllFilter
         label="Есть вещи"

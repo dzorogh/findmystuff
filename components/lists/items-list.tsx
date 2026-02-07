@@ -35,6 +35,10 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetFooter,
+  SheetDescription,
+  SheetClose,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { ItemsFiltersPanel, type ItemsFilters } from "@/components/filters/items-filters-panel";
 import { toast } from "sonner";
@@ -53,6 +57,8 @@ import {
   getEntitySortParams,
   type EntitySortOption,
 } from "@/lib/entities/helpers/sort";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { RoomFilter } from "@/components/fields/rooms-select";
 
 interface Item {
   id: number;
@@ -234,7 +240,7 @@ const ItemsList = ({
       // Сбрасываем флаг только если это был последний запрос
       finish(requestKey);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- user checked inside callback, stable deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- user checked inside callback, stable deps
   }, [user?.id, showDeleted, filters.roomId, filters.locationType, filters.hasPhoto, filters.showDeleted, sortBy, sortDirection]);
 
   useEffect(() => {
@@ -320,35 +326,19 @@ const ItemsList = ({
 
   return (
     <div className="space-y-4">
-      <ErrorCard message={error || ""} />
-
-      {isLoading || isUserLoading ? (
-        <div className="overflow-x-hidden">
-          <ListSkeleton variant="table" rows={6} columns={5} />
-        </div>
-      ) : isSearching && items.length === 0 ? (
-        <div className="overflow-x-hidden">
-          <ListSkeleton variant="table" rows={6} columns={5} />
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title={searchQuery ? "По вашему запросу ничего не найдено" : "Вещи не найдены"}
-        />
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-hidden md:overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
-                    <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
-                    <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
-                    <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
-                    <TableHead className="w-0 text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
-                  </TableRow>
-                </TableHeader>
+      <Card className="py-0">
+        <CardContent className="p-0">
+          <div className="overflow-x-hidden md:overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px] hidden sm:table-cell whitespace-nowrap overflow-hidden text-ellipsis">ID</TableHead>
+                  <TableHead className="whitespace-nowrap overflow-hidden text-ellipsis">Название</TableHead>
+                  <TableHead className="hidden md:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Помещение</TableHead>
+                  <TableHead className="w-[120px] hidden lg:table-cell whitespace-nowrap overflow-hidden text-ellipsis">Дата перемещения</TableHead>
+                  <TableHead className="w-0 text-right whitespace-nowrap overflow-hidden text-ellipsis">Действия</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {items.map((item) => (
                   <TableRow
@@ -408,8 +398,8 @@ const ItemsList = ({
                             )}
                           </div>
                         </div>
-                        </div>
-                      </TableCell>
+                      </div>
+                    </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {item.last_location ? (
                         getRoomLabel(item.last_location) ? (
@@ -546,23 +536,9 @@ const ItemsList = ({
                 ))}
               </TableBody>
             </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {movingItemId && (
-        <MoveItemForm
-          itemId={movingItemId}
-          itemName={items.find((i) => i.id === movingItemId)?.name || null}
-          open={!!movingItemId}
-          onOpenChange={(open) => !open && setMovingItemId(null)}
-          onSuccess={() => {
-            setMovingItemId(null);
-            loadItems(searchQuery, false, currentPage);
-          }}
-        />
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {totalCount > itemsPerPage && (
         <Pagination>
@@ -582,7 +558,7 @@ const ItemsList = ({
             {(() => {
               const totalPages = Math.ceil(totalCount / itemsPerPage);
               const pages: (number | "ellipsis")[] = [];
-              
+
               if (totalPages <= 7) {
                 // Показываем все страницы
                 for (let i = 1; i <= totalPages; i++) {
@@ -591,7 +567,7 @@ const ItemsList = ({
               } else {
                 // Показываем первую страницу
                 pages.push(1);
-                
+
                 if (currentPage <= 3) {
                   // Текущая страница в начале
                   for (let i = 2; i <= 4; i++) {
@@ -657,24 +633,44 @@ const ItemsList = ({
         </Pagination>
       )}
 
-      <Sheet 
-        open={isFiltersOpen} 
+      {movingItemId && (
+        <MoveItemForm
+          itemId={movingItemId}
+          itemName={items.find((i) => i.id === movingItemId)?.name || null}
+          open={!!movingItemId}
+          onOpenChange={(open) => !open && setMovingItemId(null)}
+          onSuccess={() => {
+            setMovingItemId(null);
+            loadItems(searchQuery, false, currentPage);
+          }}
+        />
+      )}
+
+      <Sheet
+        open={isFiltersOpen}
         onOpenChange={setIsFiltersOpen}
       >
-        <SheetContent 
+        <SheetContent
           side="right"
-          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <SheetHeader>
             <SheetTitle>Фильтры</SheetTitle>
           </SheetHeader>
-          <div className="mt-6">
+
+          <div className="no-scrollbar p-4 h-full overflow-y-auto">
             <ItemsFiltersPanel
               filters={filters}
               onFiltersChange={(newFilters) => {
                 setFilters(newFilters);
               }}
-              onReset={() => {
+              hasActiveFilters={hasActiveFilters}
+            />
+          </div>
+
+          <SheetFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
                 const resetFilters: ItemsFilters = {
                   showDeleted: false,
                   locationType: null,
@@ -683,9 +679,10 @@ const ItemsList = ({
                 };
                 setFilters(resetFilters);
               }}
-              hasActiveFilters={hasActiveFilters}
-            />
-          </div>
+            >
+              Сбросить фильтры
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>

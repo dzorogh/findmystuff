@@ -1,19 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { FormGroup } from "@/components/ui/form-group";
-import { ShowDeletedCheckbox } from "./show-deleted-checkbox";
-import { FILTER_RESET_LABEL } from "./constants";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { FieldSet } from "../ui/field";
 
 export interface EntityFiltersShellProps {
   /** Подпись чекбокса «Показывать удалённые» (зависит от сущности). */
   showDeletedLabel: string;
   showDeleted: boolean;
   onShowDeletedChange: (checked: boolean) => void;
-  /** В режиме controlled вызывается при переключении, не обновляя только внутреннее состояние родителя. */
-  onShowDeletedExternalChange?: (show: boolean) => void;
-  onReset: () => void;
-  hasActiveFilters: boolean;
   children: React.ReactNode;
 }
 
@@ -21,29 +16,19 @@ export function EntityFiltersShell({
   showDeletedLabel,
   showDeleted,
   onShowDeletedChange,
-  onShowDeletedExternalChange,
-  onReset,
-  hasActiveFilters,
   children,
 }: EntityFiltersShellProps) {
   const handleShowDeletedChange = (checked: boolean) => {
-    onShowDeletedExternalChange?.(checked);
     onShowDeletedChange(checked);
   };
 
   return (
-    <FormGroup>
-      <ShowDeletedCheckbox
-        label={showDeletedLabel}
-        checked={showDeleted}
-        onChange={handleShowDeletedChange}
-      />
+    <FieldSet>
+      <div className="flex items-center space-x-2">
+        <Switch id="show-deleted" checked={showDeleted} onCheckedChange={handleShowDeletedChange} />
+        <Label htmlFor="show-deleted">{showDeletedLabel}</Label>
+      </div>
       {children}
-      {hasActiveFilters && (
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          {FILTER_RESET_LABEL}
-        </Button>
-      )}
-    </FormGroup>
+    </FieldSet>
   );
 }

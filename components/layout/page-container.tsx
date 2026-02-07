@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils";
 
 interface PageContainerProps {
   children: React.ReactNode;
@@ -9,10 +9,8 @@ interface PageContainerProps {
 
 export const PageContainer = ({ children, className }: PageContainerProps) => {
   return (
-    <div className="mx-auto pb-10 p-4">
-      <div className={cn("mx-auto", className)}>
-        {children}
-      </div>
+    <div className={cn("mx-auto p-4", className)}>
+      {children}
     </div>
   );
 };
