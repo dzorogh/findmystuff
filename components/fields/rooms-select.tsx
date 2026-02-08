@@ -7,7 +7,7 @@ import { useRoomFilterOptions } from "@/lib/rooms/hooks/use-room-filter-options"
 
 interface RoomsSelectProps {
   value: number | null;
-  onValueChange?: (value: string) => void;
+  onValueChange?: (value: string | null) => void;
 }
 
 type RoomOption = {
@@ -20,8 +20,7 @@ export function RoomsSelect({ value, onValueChange }: RoomsSelectProps) {
     useRoomFilterOptions();
 
   const handleValueChange = (value: RoomOption | null) => {
-    if (!value) return;
-    onValueChange?.(value.value);
+    onValueChange?.(value === null ? null : value.value);
   };
 
   const selectedRoom = roomOptions.find(option => option.value === value?.toString());

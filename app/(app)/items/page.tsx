@@ -48,15 +48,16 @@ function ItemsPageContent() {
         getListDisplayName={listPage.getListDisplayName}
         getRowActions={getRowActions}
       />
-      {"totalCount" in listPage &&
-        listPage.totalCount != null &&
-        "itemsPerPage" in listPage &&
+      {listPage.totalCount != null &&
         listPage.itemsPerPage != null &&
+        listPage.totalPages != null &&
+        listPage.currentPage != null &&
+        listPage.goToPage != null &&
         listPage.totalCount > listPage.itemsPerPage && (
           <ListPagination
-            currentPage={listPage.currentPage!}
-            totalPages={listPage.totalPages!}
-            onPageChange={listPage.goToPage!}
+            currentPage={listPage.currentPage}
+            totalPages={listPage.totalPages}
+            onPageChange={listPage.goToPage}
           />
         )}
       <AddItemForm

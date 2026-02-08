@@ -57,7 +57,7 @@ export interface ListConfig<
   columnsConfig: Array<ListColumnConfig & { key: TColumnKey }>;
   actionsConfig: ListActionsConfig;
   moveFormConfig: ListMoveFormConfig;
-  resultsLabel: { singular: string; plural: string };
+  resultsLabel: { one: string; few: string; many: string };
   initialFilters: TFilters;
   /** Иконка для строк списка (колонка «Название»). */
   listIcon?: LucideIcon;

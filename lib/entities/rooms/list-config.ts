@@ -18,7 +18,7 @@ export const DEFAULT_ROOMS_FILTERS: RoomsFilters = {
 export const ROOMS_LIST_CONFIG: ListConfig<RoomsFilters, "id" | "name" | "counts" | "actions"> = {
   listIcon: Building2,
   getListDisplayName: (e) => (e.name != null && e.name.trim() !== "" ? e.name : `Помещение #${e.id}`),
-  resultsLabel: { singular: "помещение", plural: "помещений" },
+  resultsLabel: { one: "помещение", few: "помещения", many: "помещений" },
   initialFilters: DEFAULT_ROOMS_FILTERS,
   filterConfig: [
     { type: "showDeleted", label: "Показывать удаленные помещения" },

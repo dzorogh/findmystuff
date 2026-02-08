@@ -22,7 +22,7 @@ export const CONTAINERS_LIST_CONFIG: ListConfig<
 > = {
   listIcon: ContainerIcon,
   getListDisplayName: (e) => getEntityDisplayName("container", e.id, e.name),
-  resultsLabel: { singular: "контейнер", plural: "контейнеров" },
+  resultsLabel: { one: "контейнер", few: "контейнера", many: "контейнеров" },
   initialFilters: DEFAULT_CONTAINERS_FILTERS,
   filterConfig: [
     { type: "showDeleted", label: "Показывать удаленные контейнеры" },

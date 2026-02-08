@@ -33,7 +33,7 @@ export interface EntityListProps<T extends { showDeleted: boolean }> {
   onFiltersOpenChange: (open: boolean) => void;
   activeFiltersCount: number;
   resultsCount: number;
-  resultsLabel: { singular: string; plural: string };
+  resultsLabel: { one: string; few: string; many: string };
   filterConfig: FilterFieldConfig[];
   columnsConfig: ListColumnConfig[];
   actionsConfig: ListActionsConfig;
@@ -78,7 +78,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
   const emptyTitle =
     resultsCount === 0
       ? `По вашему запросу ничего не найдено`
-      : `${resultsLabel.plural} не найдены`;
+      : `${resultsLabel.many} не найдены`;
 
   return (
     <div className="space-y-4">

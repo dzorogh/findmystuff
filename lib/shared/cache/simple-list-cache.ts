@@ -22,6 +22,8 @@ function createSimpleListCache<T>(): SimpleListCache<T> {
   const cache = new Map<string, CacheEntry<T>>();
   const inFlight = new Map<string, Promise<void>>();
   const subscribers = new Map<string, Set<(data: T[], error: Error | null) => void>>();
+  /** Версия ключа: инкрементируется при invalidate(key), чтобы отклонить устаревшие результаты in-flight. */
+  const keyVersions = new Map<string, number>();
 
   return {
     get(key: string) {
@@ -47,14 +49,18 @@ function createSimpleListCache<T>(): SimpleListCache<T> {
       const existing = inFlight.get(key);
       if (existing) return existing;
 
+      const loadVersion = keyVersions.get(key) ?? 0;
+
       const promise = (async () => {
         try {
           const response = await fetchFn();
+          if ((keyVersions.get(key) ?? 0) !== loadVersion) return;
           if (response.error) throw new Error(response.error);
           const data = response.data ?? [];
           cache.set(key, { data, error: null });
           subscribers.get(key)?.forEach((fn) => fn(data, null));
         } catch (err) {
+          if ((keyVersions.get(key) ?? 0) !== loadVersion) return;
           const error = err instanceof Error ? err : new Error("Ошибка загрузки");
           cache.set(key, { data: [], error });
           subscribers.get(key)?.forEach((fn) => fn([], error));
@@ -68,6 +74,7 @@ function createSimpleListCache<T>(): SimpleListCache<T> {
     },
 
     invalidate(key: string) {
+      keyVersions.set(key, (keyVersions.get(key) ?? 0) + 1);
       cache.delete(key);
       inFlight.delete(key);
     },

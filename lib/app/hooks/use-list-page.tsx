@@ -75,7 +75,7 @@ export interface EntityListState<T, TFilters extends { showDeleted: boolean }> {
   sort: EntitySortOption;
   filters: TFilters;
   isFiltersOpen: boolean;
-  resultsLabel: { singular: string; plural: string };
+  resultsLabel: { one: string; few: string; many: string };
 }
 
 export function useListPage<TFilters extends { showDeleted: boolean }>(
@@ -175,9 +175,9 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
       } catch (err) {
         if (isMountedRef.current && isLatest(requestKey)) {
           handleError(err, isInitialLoad);
+          setData([]);
+          if (hasPagination) setTotalCount(0);
         }
-        setData([]);
-        if (hasPagination) setTotalCount(0);
       } finally {
         finish(requestKey);
       }

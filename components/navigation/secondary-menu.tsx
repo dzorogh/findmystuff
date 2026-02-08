@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/lib/users/context";
 import { signOut } from "@/lib/auth/sign-out";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 
@@ -26,7 +27,12 @@ export const SecondaryMenu = () => {
     }, []);
 
     const handleSignOut = async () => {
-        await signOut();
+        try {
+            await signOut();
+        } catch (err) {
+            console.error("Sign out failed:", err);
+            toast.error(err instanceof Error ? err.message : "Не удалось выйти из аккаунта");
+        }
     };
 
     const handleThemeToggle = () => {

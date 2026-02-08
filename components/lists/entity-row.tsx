@@ -160,50 +160,40 @@ function renderCellContent(
             {"last_location" in entity && (entity as Container).last_location?.destination_type != null && (
               <div className="lg:hidden mt-1 text-xs text-muted-foreground">
                 {(entity as Container).last_location ? (
-                  <div className="flex items-center gap-1">
-                    {(entity as Container).last_location!.destination_type ===
-                      "room" && (
-                        <>
-                          <Building2 className="h-3 w-3" />
-                          <span className="truncate">
-                            {getEntityDisplayName(
-                              "room",
-                              (entity as Container).last_location!.destination_id!,
-                              (entity as Container).last_location!
-                                .destination_name
-                            )}
-                          </span>
-                        </>
-                      )}
-                    {(entity as Container).last_location!.destination_type ===
-                      "place" && (
-                        <>
-                          <Warehouse className="h-3 w-3" />
-                          <span className="truncate">
-                            {getEntityDisplayName(
-                              "place",
-                              (entity as Container).last_location!.destination_id!,
-                              (entity as Container).last_location!
-                                .destination_name
-                            )}
-                          </span>
-                        </>
-                      )}
-                    {(entity as Container).last_location!.destination_type ===
-                      "container" && (
-                        <>
-                          <ContainerIcon className="h-3 w-3" />
-                          <span className="truncate">
-                            {getEntityDisplayName(
-                              "container",
-                              (entity as Container).last_location!.destination_id!,
-                              (entity as Container).last_location!
-                                .destination_name
-                            )}
-                          </span>
-                        </>
-                      )}
-                  </div>
+                  (() => {
+                    const loc = (entity as Container).last_location!;
+                    const destId = loc.destination_id;
+                    const destName = loc.destination_name ?? null;
+                    const locationFallback = destName != null && destName.trim() !== "" ? destName : "Не указано";
+                    return (
+                      <div className="flex items-center gap-1">
+                        {loc.destination_type === "room" && (
+                          <>
+                            <Building2 className="h-3 w-3" />
+                            <span className="truncate">
+                              {destId != null ? getEntityDisplayName("room", destId, destName) : locationFallback}
+                            </span>
+                          </>
+                        )}
+                        {loc.destination_type === "place" && (
+                          <>
+                            <Warehouse className="h-3 w-3" />
+                            <span className="truncate">
+                              {destId != null ? getEntityDisplayName("place", destId, destName) : locationFallback}
+                            </span>
+                          </>
+                        )}
+                        {loc.destination_type === "container" && (
+                          <>
+                            <ContainerIcon className="h-3 w-3" />
+                            <span className="truncate">
+                              {destId != null ? getEntityDisplayName("container", destId, destName) : locationFallback}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()
                 ) : (
                   <span>Местоположение не указано</span>
                 )}
@@ -295,16 +285,17 @@ function renderCellContent(
           return (
             <span className="text-sm text-muted-foreground">Не указано</span>
           );
+        const destId = loc.destination_id;
+        const destName = loc.destination_name ?? null;
+        const locationFallback = destName != null && destName.trim() !== "" ? destName : "Не указано";
         if (loc.destination_type === "room")
           return (
             <div className="flex items-center gap-2 text-sm">
               <Building2 className="h-4 w-4 text-primary flex-shrink-0" />
               <span>
-                {getEntityDisplayName(
-                  "room",
-                  loc.destination_id!,
-                  loc.destination_name
-                )}
+                {destId != null
+                  ? getEntityDisplayName("room", destId, destName)
+                  : locationFallback}
               </span>
             </div>
           );
@@ -313,11 +304,9 @@ function renderCellContent(
             <div className="flex items-center gap-2 text-sm">
               <Warehouse className="h-4 w-4 text-primary flex-shrink-0" />
               <span>
-                {getEntityDisplayName(
-                  "place",
-                  loc.destination_id!,
-                  loc.destination_name
-                )}
+                {destId != null
+                  ? getEntityDisplayName("place", destId, destName)
+                  : locationFallback}
               </span>
             </div>
           );
@@ -326,11 +315,9 @@ function renderCellContent(
             <div className="flex items-center gap-2 text-sm">
               <ContainerIcon className="h-4 w-4 text-primary flex-shrink-0" />
               <span>
-                {getEntityDisplayName(
-                  "container",
-                  loc.destination_id!,
-                  loc.destination_name
-                )}
+                {destId != null
+                  ? getEntityDisplayName("container", destId, destName)
+                  : locationFallback}
               </span>
             </div>
           );

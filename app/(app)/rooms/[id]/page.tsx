@@ -34,7 +34,11 @@ type Room = RoomEntity;
 export default function RoomDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const roomId = parseInt(params.id as string);
+  const roomId = parseInt(params.id as string, 10);
+
+  if (Number.isNaN(roomId)) {
+    return <EntityDetailError error="Некорректный ID помещения" entityName="Помещение" />;
+  }
   const { user, isLoading: isUserLoading } = useUser();
   const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [room, setRoom] = useState<Room | null>(null);
@@ -201,7 +205,7 @@ export default function RoomDetailPage() {
       });
       if (response.error) throw new Error(response.error);
       toast.success("Помещение успешно обновлено");
-      loadRoomData();
+      await loadRoomData();
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Произошла ошибка при сохранении"

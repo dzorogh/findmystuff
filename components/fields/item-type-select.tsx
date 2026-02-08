@@ -28,7 +28,7 @@ export function ItemTypeSelect({ value, onValueChange }: ItemTypeSelectProps) {
 
   return (
     <Field>
-      <FieldLabel htmlFor="room">Помещения</FieldLabel>
+      <FieldLabel htmlFor="item-type">Тип вещи</FieldLabel>
 
       <Combobox
         value={selectedItemType ?? null}

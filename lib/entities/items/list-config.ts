@@ -18,7 +18,7 @@ export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
 export const ITEMS_LIST_CONFIG: ListConfig<ItemsFilters, "id" | "name" | "room" | "movedAt" | "actions"> = {
   listIcon: Package,
   getListDisplayName: (e) => (e.name != null && e.name.trim() !== "" ? e.name : `Вещь #${e.id}`),
-  resultsLabel: { singular: "вещь", plural: "вещей" },
+  resultsLabel: { one: "вещь", few: "вещи", many: "вещей" },
   initialFilters: DEFAULT_ITEMS_FILTERS,
   filterConfig: [
     { type: "showDeleted", label: "Показывать удаленные вещи" },
@@ -30,7 +30,7 @@ export const ITEMS_LIST_CONFIG: ListConfig<ItemsFilters, "id" | "name" | "room" 
     { key: "id", label: "ID", width: "w-16", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
     { key: "room", label: "Помещение", width: "w-40", hideOnMobile: true },
-    { key: "movedAt", label: "Дата перемещения", width: "w-42", hideOnMobile: true },
+    { key: "movedAt", label: "Дата перемещения", width: "w-40", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
   actionsConfig: {

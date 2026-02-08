@@ -39,10 +39,18 @@ interface Container extends ContainerEntity {
   } | null;
 }
 
+function parseContainerId(id: unknown): number | null {
+  if (id == null || typeof id !== "string" || id.trim() === "") return null;
+  const parsed = parseInt(id.trim(), 10);
+  if (Number.isNaN(parsed) || !Number.isInteger(parsed)) return null;
+  return parsed;
+}
+
 export default function ContainerDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const containerId = parseInt(params.id as string);
+  const containerId = parseContainerId(params?.id) ?? NaN;
+  const isInvalidId = Number.isNaN(containerId);
   const { user, isLoading: isUserLoading } = useUser();
   const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [container, setContainer] = useState<Container | null>(null);
@@ -71,7 +79,7 @@ export default function ContainerDetailPage() {
   }, [isUserLoading, user, router]);
 
   const loadContainerData = useCallback(async () => {
-    if (!user) return;
+    if (!user || Number.isNaN(containerId)) return;
 
     setIsPageLoading(true);
     setIsLoading(true); // Устанавливаем загрузку в контекст для TopBar
@@ -164,6 +172,10 @@ export default function ContainerDetailPage() {
     return () => setEntityActions(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [container, isDeleting, isRestoring]);
+
+  if (isInvalidId) {
+    return <EntityDetailError error="Некорректный ID контейнера" entityName="Контейнер" />;
+  }
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;

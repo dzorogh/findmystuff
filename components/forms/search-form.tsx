@@ -14,8 +14,9 @@ interface SearchFormProps {
   isSearching: boolean;
   resultsCount: number;
   resultsLabel: {
-    singular: string;
-    plural: string;
+    one: string;
+    few: string;
+    many: string;
   };
   showDeleted: boolean;
   onToggleDeleted: () => void;
@@ -34,10 +35,13 @@ export const SearchForm = ({
   onToggleDeleted,
 }: SearchFormProps) => {
   const getResultsText = () => {
-    if (resultsCount === 1) {
-      return resultsLabel.singular;
-    }
-    return resultsLabel.plural;
+    const n = Math.abs(resultsCount);
+    const mod100 = n % 100;
+    const mod10 = n % 10;
+    if (mod100 >= 11 && mod100 <= 14) return resultsLabel.many;
+    if (mod10 === 1) return resultsLabel.one;
+    if (mod10 >= 2 && mod10 <= 4) return resultsLabel.few;
+    return resultsLabel.many;
   };
 
   return (

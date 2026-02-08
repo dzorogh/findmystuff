@@ -9,7 +9,7 @@ import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/man
 import { PageHeader } from "@/components/layout/page-header";
 
 export default function SettingsPage() {
-  const { isLoading, error } = useSettings();
+  const { error } = useSettings();
   const containerTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const placeTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const roomTypesManagerRef = useRef<EntityTypesManagerRef>(null);
