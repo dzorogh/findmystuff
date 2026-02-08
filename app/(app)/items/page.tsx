@@ -44,6 +44,8 @@ function ItemsPageContent() {
         filterConfig={listPage.filterConfig}
         columnsConfig={listPage.columnsConfig}
         actionsConfig={listPage.actionsConfig}
+        listIcon={listPage.listIcon}
+        getListDisplayName={listPage.getListDisplayName}
         getRowActions={getRowActions}
       />
       {"totalCount" in listPage &&

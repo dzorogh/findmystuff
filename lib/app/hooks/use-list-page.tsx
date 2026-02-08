@@ -88,6 +88,8 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     moveFormConfig,
     resultsLabel,
     initialFilters,
+    listIcon,
+    getListDisplayName,
     fetchList,
     pagination,
     addDialog: addDialogConfig,
@@ -283,6 +285,8 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     columnsConfig,
     actionsConfig,
     moveFormConfig,
+    listIcon,
+    getListDisplayName,
     refreshList,
   };
 

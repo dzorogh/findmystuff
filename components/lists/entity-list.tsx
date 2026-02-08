@@ -37,6 +37,8 @@ export interface EntityListProps<T extends { showDeleted: boolean }> {
   filterConfig: FilterFieldConfig[];
   columnsConfig: ListColumnConfig[];
   actionsConfig: ListActionsConfig;
+  listIcon?: React.ComponentType<{ className?: string }>;
+  getListDisplayName?: (entity: { id: number; name: string | null }) => string;
   getRowActions: (
     entity: Item | Room | Place | Container
   ) => EntityActionsCallbacks;
@@ -67,6 +69,8 @@ export function EntityList<T extends { showDeleted: boolean }>({
   filterConfig,
   columnsConfig,
   actionsConfig,
+  listIcon,
+  getListDisplayName,
   getRowActions,
 }: EntityListProps<T>) {
   const list = Array.isArray(data) ? data : [];
@@ -123,6 +127,8 @@ export function EntityList<T extends { showDeleted: boolean }>({
                         entity={row}
                         columnsConfig={columnsConfig}
                         actionsConfig={actionsConfig}
+                        listIcon={listIcon}
+                        getListDisplayName={getListDisplayName}
                         actionCallbacks={rowActions}
                         roomLabel={roomLabel}
                       />

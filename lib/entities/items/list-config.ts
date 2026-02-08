@@ -1,3 +1,4 @@
+import { Package } from "lucide-react";
 import type { ListConfig } from "@/lib/app/types/list-config";
 
 export interface ItemsFilters {
@@ -15,6 +16,8 @@ export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
 };
 
 export const ITEMS_LIST_CONFIG: ListConfig<ItemsFilters, "id" | "name" | "room" | "movedAt" | "actions"> = {
+  listIcon: Package,
+  getListDisplayName: (e) => (e.name != null && e.name.trim() !== "" ? e.name : `Вещь #${e.id}`),
   resultsLabel: { singular: "вещь", plural: "вещей" },
   initialFilters: DEFAULT_ITEMS_FILTERS,
   filterConfig: [

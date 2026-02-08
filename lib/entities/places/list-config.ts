@@ -1,3 +1,4 @@
+import { Warehouse } from "lucide-react";
 import type { ListConfig } from "@/lib/app/types/list-config";
 
 export interface PlacesFilters {
@@ -13,6 +14,8 @@ export const DEFAULT_PLACES_FILTERS: PlacesFilters = {
 };
 
 export const PLACES_LIST_CONFIG: ListConfig<PlacesFilters, "id" | "name" | "room" | "actions"> = {
+  listIcon: Warehouse,
+  getListDisplayName: (e) => (e.name != null && e.name.trim() !== "" ? e.name : `Место #${e.id}`),
   resultsLabel: { singular: "место", plural: "мест" },
   initialFilters: DEFAULT_PLACES_FILTERS,
   filterConfig: [

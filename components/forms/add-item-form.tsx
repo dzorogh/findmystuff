@@ -5,7 +5,7 @@ import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { toast } from "sonner";
-import LocationCombobox from "@/components/location/location-combobox";
+import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { Button } from "@/components/ui/button";

@@ -47,6 +47,8 @@ function ContainersPageContent() {
         filterConfig={listPage.filterConfig}
         columnsConfig={listPage.columnsConfig}
         actionsConfig={listPage.actionsConfig}
+        listIcon={listPage.listIcon}
+        getListDisplayName={listPage.getListDisplayName}
         getRowActions={getRowActions as (entity: Item | Room | Place | Container) => EntityActionsCallbacks}
       />
       <AddContainerForm

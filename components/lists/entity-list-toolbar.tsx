@@ -1,6 +1,5 @@
 "use client";
 
-import { ListSearchBar } from "@/components/lists/list-search-bar";
 import {
   Select,
   SelectItem,
@@ -12,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
+import { SearchField } from "@/components/fields/search";
 import {
   ENTITY_SORT_OPTIONS,
   type EntitySortOption,
@@ -37,46 +37,48 @@ export function EntityListToolbar({
   onOpenFilters,
 }: EntityListToolbarProps) {
   return (
-    <ListSearchBar
-      placeholder={placeholder}
-      searchQuery={searchQuery}
-      onSearchChange={onSearchChange}
-      actions={
-        <div className="flex items-center gap-2">
-          <Select value={sort} onValueChange={(v) => onSortChange(v as EntitySortOption)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Сортировка" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {ENTITY_SORT_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+    <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <SearchField
+          placeholder={placeholder}
+          value={searchQuery}
+          onChange={onSearchChange}
+        />
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Select items={ENTITY_SORT_OPTIONS} value={sort} onValueChange={(v) => onSortChange(v as EntitySortOption)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {ENTITY_SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-          <Button
-            variant="outline"
-            size="default"
-            onClick={onOpenFilters}
-            className={activeFiltersCount > 0 ? "border-primary" : ""}
-          >
-            <Filter className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Фильтры</span>
-            {activeFiltersCount > 0 && (
-              <Badge
-                variant="secondary"
-                className="ml-2 h-5 min-w-5 px-1.5 text-xs"
-              >
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </Button>
-        </div>
-      }
-    />
+        <Button
+          variant="outline"
+          size="default"
+          onClick={onOpenFilters}
+          className={activeFiltersCount > 0 ? "border-primary" : ""}
+        >
+          <Filter className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Фильтры</span>
+          {activeFiltersCount > 0 && (
+            <Badge
+              variant="secondary"
+              className="ml-2 h-5 min-w-5 px-1.5 text-xs"
+            >
+              {activeFiltersCount}
+            </Badge>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 }

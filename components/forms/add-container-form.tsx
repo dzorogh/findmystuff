@@ -8,7 +8,7 @@ import { FormGroup } from "@/components/ui/form-group";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
-import LocationCombobox from "@/components/location/location-combobox";
+import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";

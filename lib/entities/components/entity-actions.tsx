@@ -146,11 +146,10 @@ export function EntityActions({
                 className={iconClass(item)}
                 title={item.label}
                 disabled={disabled}
-                asChild
+                render={<Link href={item.href} />}
+                nativeButton={false}
               >
-                <Link href={item.href}>
-                  <Icon className="h-4 w-4" />
-                </Link>
+                <Icon className="h-4 w-4" />
               </Button>
             );
           }
@@ -219,9 +218,10 @@ export function EntityActions({
                       "w-full justify-start gap-2",
                       item.restore && "text-green-600 hover:text-green-700"
                     )}
-                    asChild
+                    render={<Link href={item.href} />}
+                    nativeButton={false}
                   >
-                    <Link href={item.href}>{renderLabel(item)}</Link>
+                    {renderLabel(item)}
                   </Button>
                 ) : (
                   <Button
@@ -235,7 +235,7 @@ export function EntityActions({
                     className={cn(
                       "w-full justify-start gap-2",
                       item.destructive &&
-                        "text-destructive hover:text-destructive",
+                      "text-destructive hover:text-destructive",
                       item.restore && "text-green-600 hover:text-green-700"
                     )}
                   >

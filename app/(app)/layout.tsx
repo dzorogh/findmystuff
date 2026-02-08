@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { GeistSans } from 'geist/font/sans';
 import "@/app/globals.css";
 import NativeAppMarker from "@/components/common/native-app-marker";
 import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
@@ -13,12 +13,6 @@ import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
 import { PageContainer } from "@/components/layout/page-container";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/users/server";
-
-const geistSans = Geist({
-  subsets: ["latin"],
-  display: "swap",
-  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-});
 
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
@@ -57,7 +51,7 @@ export default async function RootLayout({
     <html
       lang="ru"
       suppressHydrationWarning
-      className={`${geistSans.className} h-full`}
+      className={`${GeistSans.variable} h-full`}
     >
       <body
         className="antialiased h-full"

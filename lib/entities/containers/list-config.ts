@@ -1,4 +1,6 @@
+import { Container as ContainerIcon } from "lucide-react";
 import type { ListConfig } from "@/lib/app/types/list-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 export interface ContainersFilters {
   showDeleted: boolean;
@@ -18,6 +20,8 @@ export const CONTAINERS_LIST_CONFIG: ListConfig<
   ContainersFilters,
   "id" | "name" | "location" | "actions"
 > = {
+  listIcon: ContainerIcon,
+  getListDisplayName: (e) => getEntityDisplayName("container", e.id, e.name),
   resultsLabel: { singular: "контейнер", plural: "контейнеров" },
   initialFilters: DEFAULT_CONTAINERS_FILTERS,
   filterConfig: [

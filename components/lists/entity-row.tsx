@@ -3,12 +3,7 @@
 import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Building2,
-  Package,
-  Warehouse,
-  Container as ContainerIcon,
-} from "lucide-react";
+import { Building2, Package, Warehouse, Container as ContainerIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { EntityActions } from "@/lib/entities/components/entity-actions";
@@ -40,36 +35,28 @@ interface EntityRowProps {
   entity: ListEntity;
   columnsConfig: ListColumnConfig[];
   actionsConfig: ListActionsConfig;
+  /** Иконка из конфига списка (колонка «Название»). */
+  listIcon?: React.ComponentType<{ className?: string }>;
+  /** Форматирование имени из конфига списка. */
+  getListDisplayName?: (entity: { id: number; name: string | null }) => string;
   actionCallbacks: EntityActionsCallbacks;
   /** Подпись помещения (для колонки room и под имени). */
   roomLabel?: string;
 }
 
-/** Иконка по форме сущности: room — counts, place — room, container — last_location.destination_type, иначе item. */
-function getDefaultIcon(entity: ListEntity) {
-  if ("places_count" in entity && "containers_count" in entity) return Building2;
-  if ("room" in entity && "entity_type_id" in entity) return Warehouse;
-  if ("last_location" in entity && (entity as Container).last_location?.destination_type) return ContainerIcon;
-  return Package;
-}
-
-/** Отображаемое имя по форме сущности. */
-function getDisplayName(entity: ListEntity): string {
-  const id = entity.id;
-  const name = entity.name;
-  if ("last_location" in entity && (entity as Container).last_location?.destination_type != null)
-    return getEntityDisplayName("container", id, name);
-  if (name != null && name.trim() !== "") return name;
-  if ("places_count" in entity && "containers_count" in entity) return `Помещение #${id}`;
-  if ("room" in entity && "entity_type_id" in entity) return `Место #${id}`;
-  return `Вещь #${id}`;
+/** Нейтральный fallback имени, если getListDisplayName не передан из конфига. */
+function getDisplayNameFallback(entity: { id: number; name: string | null }): string {
+  const name = entity.name?.trim();
+  return name !== undefined && name !== "" ? name : `#${entity.id}`;
 }
 
 function renderCellContent(
   columnKey: string,
   entity: ListEntity,
   roomLabel: string | undefined,
-  editHref: string | undefined
+  editHref: string | undefined,
+  listIcon: React.ComponentType<{ className?: string }> | undefined,
+  getListDisplayName: ((entity: { id: number; name: string | null }) => string) | undefined
 ): React.ReactNode {
   const id = entity.id;
   const deletedAt = entity.deleted_at;
@@ -85,13 +72,13 @@ function renderCellContent(
               Удалено
             </Badge>
           )}
-          <span className="text-muted-foreground">#{id}</span>
+          <span className="text-muted-foreground"><span className="select-none">#</span>{id}</span>
         </div>
       );
 
     case "name": {
-      const Icon = getDefaultIcon(entity);
-      const displayName = getDisplayName(entity);
+      const Icon = listIcon ?? Package;
+      const displayName = getListDisplayName?.(entity) ?? getDisplayNameFallback(entity);
       const subline =
         "item_type" in entity && entity.item_type?.name
           ? entity.item_type.name
@@ -111,7 +98,6 @@ function renderCellContent(
                 fill
                 className="object-cover"
                 sizes="40px"
-                unoptimized={photoUrl.includes("storage.supabase.co")}
               />
             </div>
           ) : (
@@ -361,6 +347,8 @@ export const EntityRow = memo(function EntityRow({
   entity,
   columnsConfig,
   actionsConfig,
+  listIcon,
+  getListDisplayName,
   actionCallbacks,
   roomLabel,
 }: EntityRowProps) {
@@ -381,7 +369,9 @@ export const EntityRow = memo(function EntityRow({
               col.key,
               entity,
               roomLabel,
-              actionCallbacks.editHref
+              actionCallbacks.editHref,
+              listIcon,
+              getListDisplayName
             )
           );
 

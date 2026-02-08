@@ -3,6 +3,8 @@
  * Used by useListPage and list-config per entity.
  */
 
+import type { LucideIcon } from "lucide-react";
+
 /** Normalized params for list fetch (used by useListPage when calling config.fetchList) */
 export interface FetchListParams<TFilters = Record<string, unknown>> {
   query?: string;
@@ -57,6 +59,10 @@ export interface ListConfig<
   moveFormConfig: ListMoveFormConfig;
   resultsLabel: { singular: string; plural: string };
   initialFilters: TFilters;
+  /** Иконка для строк списка (колонка «Название»). */
+  listIcon?: LucideIcon;
+  /** Форматирование отображаемого имени строки (колонка «Название»). */
+  getListDisplayName?: (entity: { id: number; name: string | null }) => string;
 }
 
 /** Optional pagination: when present, useListPage manages currentPage and passes page to fetchList */

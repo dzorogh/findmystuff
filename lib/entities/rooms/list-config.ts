@@ -1,3 +1,4 @@
+import { Building2 } from "lucide-react";
 import type { ListConfig } from "@/lib/app/types/list-config";
 
 export interface RoomsFilters {
@@ -15,6 +16,8 @@ export const DEFAULT_ROOMS_FILTERS: RoomsFilters = {
 };
 
 export const ROOMS_LIST_CONFIG: ListConfig<RoomsFilters, "id" | "name" | "counts" | "actions"> = {
+  listIcon: Building2,
+  getListDisplayName: (e) => (e.name != null && e.name.trim() !== "" ? e.name : `Помещение #${e.id}`),
   resultsLabel: { singular: "помещение", plural: "помещений" },
   initialFilters: DEFAULT_ROOMS_FILTERS,
   filterConfig: [
