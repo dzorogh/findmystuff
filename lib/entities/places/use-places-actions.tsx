@@ -1,16 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowRightLeft } from "lucide-react";
 import type { Place } from "@/types/entity";
-import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
+import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { toast } from "sonner";
 import type { EntityLabels, MoveConfig, TableName } from "@/lib/app/types/entity-config";
-import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 interface UsePlacesActionsParams {
@@ -62,27 +59,19 @@ export function usePlacesActions({
   const getRowActions = useCallback(
     (place: Place): EntityActionsCallbacks => ({
       editHref: `${basePath}/${place.id}`,
-      moveAction: moveEnabled ? (
-        <MoveEntityForm
-          title={labels.moveTitle}
-          entityDisplayName={getEntityDisplayName("place", place.id, place.name)}
-          destinationTypes={destinationTypes}
-          buildPayload={(destinationType, destinationId) => ({
-            place_id: place.id,
-            destination_type: destinationType,
-            destination_id: destinationId,
-          })}
-          getSuccessMessage={labels.moveSuccess}
-          getErrorMessage={() => labels.moveError}
-          onSuccess={refreshList}
-          trigger={
-            <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-              <ArrowRightLeft className="h-4 w-4" />
-              Переместить
-            </Button>
-          }
-        />
-      ) : undefined,
+      moveForm: moveEnabled ? {
+        title: labels.moveTitle,
+        entityDisplayName: getEntityDisplayName("place", place.id, place.name),
+        destinationTypes,
+        buildPayload: (destinationType, destinationId) => ({
+          place_id: place.id,
+          destination_type: destinationType,
+          destination_id: destinationId,
+        }),
+        getSuccessMessage: labels.moveSuccess,
+        getErrorMessage: () => labels.moveError,
+        onSuccess: refreshList,
+      } : undefined,
       onDelete: () =>
         runEntityAction(place.id, "delete", {
           confirm: labels.deleteConfirm ?? `Вы уверены, что хотите удалить ${singularLower}?`,

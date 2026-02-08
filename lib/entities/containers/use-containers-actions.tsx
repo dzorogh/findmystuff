@@ -1,16 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowRightLeft } from "lucide-react";
 import type { Container } from "@/types/entity";
-import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
+import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { toast } from "sonner";
 import type { EntityLabels, MoveConfig, TableName } from "@/lib/app/types/entity-config";
-import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 interface UseContainersActionsParams {
@@ -62,28 +59,20 @@ export function useContainersActions({
   const getRowActions = useCallback(
     (container: Container): EntityActionsCallbacks => ({
       editHref: `${basePath}/${container.id}`,
-      moveAction: moveEnabled ? (
-        <MoveEntityForm
-          title={labels.moveTitle}
-          entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
-          destinationTypes={destinationTypes}
-          buildPayload={(destinationType, destinationId) => ({
-            container_id: container.id,
-            destination_type: destinationType,
-            destination_id: destinationId,
-          })}
-          getSuccessMessage={labels.moveSuccess}
-          getErrorMessage={() => labels.moveError}
-          excludeContainerId={container.id}
-          onSuccess={refreshList}
-          trigger={
-            <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-              <ArrowRightLeft className="h-4 w-4" />
-              Переместить
-            </Button>
-          }
-        />
-      ) : undefined,
+      moveForm: moveEnabled ? {
+        title: labels.moveTitle,
+        entityDisplayName: getEntityDisplayName("container", container.id, container.name),
+        destinationTypes,
+        buildPayload: (destinationType, destinationId) => ({
+          container_id: container.id,
+          destination_type: destinationType,
+          destination_id: destinationId,
+        }),
+        getSuccessMessage: labels.moveSuccess,
+        getErrorMessage: () => labels.moveError,
+        excludeContainerId: container.id,
+        onSuccess: refreshList,
+      } : undefined,
       onDelete: () =>
         runEntityAction(container.id, "delete", {
           confirm: labels.deleteConfirm ?? `Вы уверены, что хотите удалить ${singularLower}?`,

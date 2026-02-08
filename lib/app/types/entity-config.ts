@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
-import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
+import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 
 export type TableName = "items" | "places" | "containers" | "rooms";
 export type EntityKind = "item" | "place" | "container" | "room";

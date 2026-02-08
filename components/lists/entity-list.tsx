@@ -22,7 +22,7 @@ import type {
   Results,
 } from "@/lib/app/types/entity-config";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
-import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
+import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { Card } from "@/components/ui/card";
 

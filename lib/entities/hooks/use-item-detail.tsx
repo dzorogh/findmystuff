@@ -103,15 +103,18 @@ export const useItemDetail = (): UseItemDetailReturn => {
     }
     setEntityActions(
       <EntityActions
+        actions={{
+          actions: ["move", "printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onMove: () => setIsMoveDialogOpen(true),
+          onPrintLabel: () => printLabel(item.id, item.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
         isDeleted={!!item.deleted_at}
-        isDeleting={isDeleting}
-        isRestoring={isRestoring}
-        showEdit={false}
-        onEdit={() => { }}
-        onMove={() => setIsMoveDialogOpen(true)}
-        onPrintLabel={() => printLabel(item.id, item.name)}
-        onDelete={handleDelete}
-        onRestore={handleRestore}
+        disabled={isDeleting || isRestoring}
       />
     );
     return () => setEntityActions(null);

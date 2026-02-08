@@ -1,16 +1,16 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { EntityActions } from "@/lib/entities/components/entity-actions";
+import { EntityActions } from "@/components/entity-detail/entity-actions";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/rooms/1",
 }));
 
 describe("EntityActions", () => {
-  it("рендерит null при пустом actionsConfig", () => {
+  it("рендерит null при пустом actions", () => {
     const { container } = render(
       <EntityActions
-        actionsConfig={{ actions: [] }}
+        actions={{ actions: [] }}
         callbacks={{}}
         isDeleted={false}
       />
@@ -18,10 +18,10 @@ describe("EntityActions", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("рендерит кнопки при actionsConfig с edit и callbacks.editHref", () => {
+  it("рендерит кнопки при actions с edit и callbacks.editHref", () => {
     render(
       <EntityActions
-        actionsConfig={{ actions: ["edit"] }}
+        actions={{ actions: ["edit"] }}
         callbacks={{ editHref: "/rooms/1" }}
         isDeleted={false}
       />

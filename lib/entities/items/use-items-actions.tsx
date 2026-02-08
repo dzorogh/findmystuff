@@ -2,9 +2,8 @@
 
 import { useCallback } from "react";
 import type { Item } from "@/types/entity";
-import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
+import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
-import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { EntityLabels, MoveConfig } from "@/lib/app/types/entity-config";
 
@@ -32,21 +31,19 @@ export function useItemsActions({
       onDuplicate: () => itemListActions.handleDuplicateItem(item.id),
       onPrintLabel: () => itemListActions.handlePrintLabel(item.id, item.name),
       onRestore: () => itemListActions.handleRestoreItem(item.id),
-      moveAction: moveEnabled ? (
-        <MoveEntityForm
-          title={labels.moveTitle}
-          entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
-          destinationTypes={destinationTypes}
-          buildPayload={(destinationType, destinationId) => ({
-            item_id: item.id,
-            destination_type: destinationType,
-            destination_id: destinationId,
-          })}
-          getSuccessMessage={labels.moveSuccess}
-          getErrorMessage={() => labels.moveError}
-          onSuccess={refreshList}
-        />
-      ) : undefined,
+      moveForm: moveEnabled ? {
+        title: labels.moveTitle,
+        entityDisplayName: getEntityDisplayName("item", item.id, item.name),
+        destinationTypes,
+        buildPayload: (destinationType, destinationId) => ({
+          item_id: item.id,
+          destination_type: destinationType,
+          destination_id: destinationId,
+        }),
+        getSuccessMessage: labels.moveSuccess,
+        getErrorMessage: () => labels.moveError,
+        onSuccess: refreshList,
+      } : undefined,
     }),
     [basePath, destinationTypes, itemListActions, labels.moveError, labels.moveSuccess, labels.moveTitle, moveEnabled, refreshList]
   );

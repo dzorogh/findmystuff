@@ -162,15 +162,17 @@ export default function RoomDetailPage() {
     }
     setEntityActions(
       <EntityActions
+        actions={{
+          actions: ["printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onPrintLabel: () => printLabel(room.id, room.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
         isDeleted={!!room.deleted_at}
-        isDeleting={isDeleting}
-        isRestoring={isRestoring}
-        showEdit={false}
-        onEdit={() => { }}
-        onPrintLabel={() => printLabel(room.id, room.name)}
-        onDelete={handleDelete}
-        onRestore={handleRestore}
-        showMove={false}
+        disabled={isDeleting || isRestoring}
       />
     );
     return () => setEntityActions(null);

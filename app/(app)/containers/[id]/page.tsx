@@ -157,15 +157,18 @@ export default function ContainerDetailPage() {
     }
     setEntityActions(
       <EntityActions
+        actions={{
+          actions: ["move", "printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onMove: () => setIsMoving(true),
+          onPrintLabel: () => printLabel(container.id, container.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
         isDeleted={!!container.deleted_at}
-        isDeleting={isDeleting}
-        isRestoring={isRestoring}
-        showEdit={false}
-        onEdit={() => { }}
-        onMove={() => setIsMoving(true)}
-        onPrintLabel={() => printLabel(container.id, container.name)}
-        onDelete={handleDelete}
-        onRestore={handleRestore}
+        disabled={isDeleting || isRestoring}
       />
     );
     return () => setEntityActions(null);

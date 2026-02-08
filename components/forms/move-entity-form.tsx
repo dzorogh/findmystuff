@@ -45,7 +45,7 @@ const DESTINATION_TYPE_LABELS_LOWER: Record<DestinationType, string> = {
   container: "контейнер",
 };
 
-interface MoveEntityFormProps {
+export interface MoveEntityFormProps {
   title: string;
   entityDisplayName: string;
   destinationTypes: DestinationType[];
