@@ -7,10 +7,10 @@ import { FormField } from "@/components/ui/form-field";
 import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -44,24 +44,24 @@ const EditContainerForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-      // Загружаем текущее фото при открытии формы
-      useEffect(() => {
-        if (open && containerId) {
-          const loadPhoto = async () => {
-            try {
-              const response = await getContainer(containerId);
-              if (response.data?.container?.photo_url) {
-                setPhotoUrl(response.data.container.photo_url);
-              } else {
-                setPhotoUrl(null);
-              }
-            } catch {
-              setPhotoUrl(null);
-            }
-          };
-          loadPhoto();
+  // Загружаем текущее фото при открытии формы
+  useEffect(() => {
+    if (open && containerId) {
+      const loadPhoto = async () => {
+        try {
+          const response = await getContainer(containerId);
+          if (response.data?.container?.photo_url) {
+            setPhotoUrl(response.data.container.photo_url);
+          } else {
+            setPhotoUrl(null);
+          }
+        } catch {
+          setPhotoUrl(null);
         }
-      }, [open, containerId]);
+      };
+      loadPhoto();
+    }
+  }, [open, containerId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -87,7 +87,7 @@ const EditContainerForm = ({
       if (onSuccess) {
         onSuccess();
       }
-      
+
       onOpenChange(false);
     } catch (err) {
       setError(

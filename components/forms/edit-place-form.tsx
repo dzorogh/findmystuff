@@ -8,9 +8,9 @@ import { FormGroup } from "@/components/ui/form-group";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -49,7 +49,7 @@ const EditPlaceForm = ({
     if (open) {
       setName(placeName || "");
       setPlaceTypeId(initialPlaceTypeId?.toString() || placeTypes[0]?.id.toString() || "");
-      
+
       // Загружаем текущее фото только при открытии формы
       const loadPhoto = async () => {
         try {
@@ -102,7 +102,7 @@ const EditPlaceForm = ({
       if (onSuccess) {
         onSuccess();
       }
-      
+
       setTimeout(() => {
         onOpenChange(false);
       }, 100);

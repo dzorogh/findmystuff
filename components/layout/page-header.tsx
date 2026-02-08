@@ -9,9 +9,10 @@ interface PageHeaderProps {
         label: string;
         href: string;
     }[];
+    actions?: React.ReactNode;
 }
 
-export const PageHeader = ({ isLoading, title, ancestors }: PageHeaderProps) => {
+export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderProps) => {
     const breadcrumb = ancestors ? [...ancestors, { label: title, href: "" }] : [{ label: title, href: "" }];
 
     if (isLoading) {
@@ -26,7 +27,10 @@ export const PageHeader = ({ isLoading, title, ancestors }: PageHeaderProps) => 
     return (
         <div className="flex flex-col gap-2">
             <PageBreadcrumb path={breadcrumb} />
-            <PageTitle title={title} />
+            <div className="flex justify-between items-center">
+                <PageTitle title={title} />
+                {actions}
+            </div>
         </div>
     );
 };

@@ -9,6 +9,8 @@ import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
 import { useItemsListPageBehavior } from "@/lib/entities/items/use-items-list-page-behavior";
 import { useItemsListRowActions } from "@/lib/entities/items/use-items-list-row-actions";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 function ItemsPageContent() {
   const listConfig = { ...ITEMS_LIST_CONFIG, ...useItemsListPageBehavior() };
@@ -17,9 +19,14 @@ function ItemsPageContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Вещи" />
+      <PageHeader
+        title="Вещи"
+        actions={
+          <Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
+            <Plus data-icon="inline-start" /> Добавить вещь
+          </Button>
+        } />
       <EntityList
-        entityType="items"
         data={listPage.data}
         isLoading={listPage.isLoading}
         error={listPage.error}
@@ -52,7 +59,7 @@ function ItemsPageContent() {
         )}
       <AddItemForm
         open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => {})}
+        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
         onSuccess={listPage.handleEntityAdded}
       />
     </div>

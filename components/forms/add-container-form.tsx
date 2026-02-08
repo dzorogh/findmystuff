@@ -9,11 +9,11 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import LocationCombobox from "@/components/location/location-combobox";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -76,7 +76,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
       setDestinationType(null);
       setSelectedDestinationId("");
       setPhotoUrl(null);
-      
+
       toast.success(
         destinationType && selectedDestinationId
           ? "Контейнер успешно добавлен и размещен"
@@ -85,11 +85,11 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
           description: "Контейнер добавлен",
         }
       );
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
+
       setTimeout(() => {
         onOpenChange(false);
       }, 100);

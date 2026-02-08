@@ -18,7 +18,6 @@ function RoomsPageContent() {
     <div className="flex flex-col gap-4">
       <PageHeader title="Помещения" />
       <EntityList
-        entityType="rooms"
         data={listPage.data}
         isLoading={listPage.isLoading}
         error={listPage.error}

@@ -12,7 +12,7 @@ import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import LocationCombobox, { type DestinationType } from "@/components/location/location-combobox";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 import { ArrowRightLeft, Scan } from "lucide-react";
 import {

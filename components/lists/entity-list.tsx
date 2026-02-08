@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -19,10 +18,8 @@ import type { FilterFieldConfig } from "@/lib/app/types/list-config";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
-import type { ListEntityType } from "@/components/lists/entity-row";
 
 export interface EntityListProps<T extends { showDeleted: boolean }> {
-  entityType: ListEntityType;
   data: unknown[];
   isLoading: boolean;
   error: string | null;
@@ -45,8 +42,14 @@ export interface EntityListProps<T extends { showDeleted: boolean }> {
   ) => EntityActionsCallbacks;
 }
 
+/** Подпись помещения для строки: только у сущностей с last_location (items). */
+function getRoomLabelForRow(entity: unknown): string | undefined {
+  const loc = (entity as Item).last_location;
+  if (!loc) return undefined;
+  return getRoomLabel(loc) ?? ROOM_EMPTY_LABEL;
+}
+
 export function EntityList<T extends { showDeleted: boolean }>({
-  entityType,
   data,
   isLoading,
   error,
@@ -113,15 +116,10 @@ export function EntityList<T extends { showDeleted: boolean }>({
                   {list.map((entity) => {
                     const row = entity as Item | Room | Place | Container;
                     const rowActions = getRowActions(row);
-                    const roomLabel =
-                      entityType === "items"
-                        ? getRoomLabel((row as Item).last_location) ??
-                        ROOM_EMPTY_LABEL
-                        : undefined;
+                    const roomLabel = getRoomLabelForRow(row);
                     return (
                       <EntityRow
                         key={row.id}
-                        entityType={entityType}
                         entity={row}
                         columnsConfig={columnsConfig}
                         actionsConfig={actionsConfig}

@@ -30,7 +30,6 @@ function PlacesPageContent() {
     <div className="flex flex-col gap-4">
       <PageHeader title="Места" />
       <EntityList
-        entityType="places"
         data={listPage.data}
         isLoading={listPage.isLoading}
         error={listPage.error}

@@ -16,7 +16,7 @@ import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";

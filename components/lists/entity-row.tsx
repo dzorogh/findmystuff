@@ -34,51 +34,47 @@ export function getRoomLabel(location: Item["last_location"]): string | null {
   );
 }
 
-export type ListEntityType = "items" | "rooms" | "places" | "containers";
-
 type ListEntity = Item | Room | Place | Container;
 
 interface EntityRowProps {
-  entityType: ListEntityType;
   entity: ListEntity;
   columnsConfig: ListColumnConfig[];
   actionsConfig: ListActionsConfig;
   actionCallbacks: EntityActionsCallbacks;
-  /** Для items: подпись помещения (из last_location). */
+  /** Подпись помещения (для колонки room и под имени). */
   roomLabel?: string;
 }
 
-function getDefaultIcon(entityType: ListEntityType) {
-  switch (entityType) {
-    case "items":
-      return Package;
-    case "rooms":
-      return Building2;
-    case "places":
-      return Warehouse;
-    case "containers":
-      return ContainerIcon;
-  }
+/** Иконка по форме сущности: room — counts, place — room, container — last_location.destination_type, иначе item. */
+function getDefaultIcon(entity: ListEntity) {
+  if ("places_count" in entity && "containers_count" in entity) return Building2;
+  if ("room" in entity && "entity_type_id" in entity) return Warehouse;
+  if ("last_location" in entity && (entity as Container).last_location?.destination_type) return ContainerIcon;
+  return Package;
+}
+
+/** Отображаемое имя по форме сущности. */
+function getDisplayName(entity: ListEntity): string {
+  const id = entity.id;
+  const name = entity.name;
+  if ("last_location" in entity && (entity as Container).last_location?.destination_type != null)
+    return getEntityDisplayName("container", id, name);
+  if (name != null && name.trim() !== "") return name;
+  if ("places_count" in entity && "containers_count" in entity) return `Помещение #${id}`;
+  if ("room" in entity && "entity_type_id" in entity) return `Место #${id}`;
+  return `Вещь #${id}`;
 }
 
 function renderCellContent(
-  entityType: ListEntityType,
   columnKey: string,
   entity: ListEntity,
-  roomLabel?: string
+  roomLabel: string | undefined,
+  editHref: string | undefined
 ): React.ReactNode {
   const id = entity.id;
-  const name = entity.name;
   const deletedAt = entity.deleted_at;
   const photoUrl = entity.photo_url;
-  const editHref =
-    entityType === "items"
-      ? `/items/${id}`
-      : entityType === "rooms"
-        ? `/rooms/${id}`
-        : entityType === "places"
-          ? `/places/${id}`
-          : `/containers/${id}`;
+  const href = editHref ?? "#";
 
   switch (columnKey) {
     case "id":
@@ -94,11 +90,8 @@ function renderCellContent(
       );
 
     case "name": {
-      const Icon = getDefaultIcon(entityType);
-      const displayName =
-        entityType === "containers"
-          ? getEntityDisplayName("container", id, name)
-          : name || (entityType === "items" ? `Вещь #${id}` : entityType === "rooms" ? `Помещение #${id}` : entityType === "places" ? `Место #${id}` : `Контейнер #${id}`);
+      const Icon = getDefaultIcon(entity);
+      const displayName = getDisplayName(entity);
       const subline =
         "item_type" in entity && entity.item_type?.name
           ? entity.item_type.name
@@ -128,7 +121,7 @@ function renderCellContent(
           )}
           <div className="min-w-0 flex-1">
             <Link
-              href={editHref}
+              href={href}
               className="font-medium hover:underline break-words leading-tight block"
             >
               {displayName}
@@ -136,13 +129,13 @@ function renderCellContent(
             {subline && (
               <p className="text-xs text-muted-foreground mt-0.5">{subline}</p>
             )}
-            {entityType === "items" && roomLabel !== undefined && (
+            {roomLabel !== undefined && "last_location" in entity && (entity as Item).last_location != null && (
               <div className="md:hidden mt-1 text-xs text-muted-foreground flex items-center gap-1">
                 <Building2 className="h-3 w-3 shrink-0" />
                 <span className="truncate">{roomLabel}</span>
               </div>
             )}
-            {entityType === "rooms" && "items_count" in entity && (
+            {"places_count" in entity && "containers_count" in entity && (
               <div className="md:hidden mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                 <span className="flex items-center gap-1">
                   <Package className="h-3 w-3" />
@@ -158,7 +151,7 @@ function renderCellContent(
                 </span>
               </div>
             )}
-            {entityType === "places" && "items_count" in entity && (
+            {"room" in entity && "items_count" in entity && !("places_count" in entity) && (
               <div className="md:hidden mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                 <span className="flex items-center gap-1">
                   <Package className="h-3 w-3" />
@@ -178,52 +171,52 @@ function renderCellContent(
                 )}
               </div>
             )}
-            {entityType === "containers" && "last_location" in entity && (
+            {"last_location" in entity && (entity as Container).last_location?.destination_type != null && (
               <div className="lg:hidden mt-1 text-xs text-muted-foreground">
                 {(entity as Container).last_location ? (
                   <div className="flex items-center gap-1">
                     {(entity as Container).last_location!.destination_type ===
                       "room" && (
-                      <>
-                        <Building2 className="h-3 w-3" />
-                        <span className="truncate">
-                          {getEntityDisplayName(
-                            "room",
-                            (entity as Container).last_location!.destination_id!,
-                            (entity as Container).last_location!
-                              .destination_name
-                          )}
-                        </span>
-                      </>
-                    )}
+                        <>
+                          <Building2 className="h-3 w-3" />
+                          <span className="truncate">
+                            {getEntityDisplayName(
+                              "room",
+                              (entity as Container).last_location!.destination_id!,
+                              (entity as Container).last_location!
+                                .destination_name
+                            )}
+                          </span>
+                        </>
+                      )}
                     {(entity as Container).last_location!.destination_type ===
                       "place" && (
-                      <>
-                        <Warehouse className="h-3 w-3" />
-                        <span className="truncate">
-                          {getEntityDisplayName(
-                            "place",
-                            (entity as Container).last_location!.destination_id!,
-                            (entity as Container).last_location!
-                              .destination_name
-                          )}
-                        </span>
-                      </>
-                    )}
+                        <>
+                          <Warehouse className="h-3 w-3" />
+                          <span className="truncate">
+                            {getEntityDisplayName(
+                              "place",
+                              (entity as Container).last_location!.destination_id!,
+                              (entity as Container).last_location!
+                                .destination_name
+                            )}
+                          </span>
+                        </>
+                      )}
                     {(entity as Container).last_location!.destination_type ===
                       "container" && (
-                      <>
-                        <ContainerIcon className="h-3 w-3" />
-                        <span className="truncate">
-                          {getEntityDisplayName(
-                            "container",
-                            (entity as Container).last_location!.destination_id!,
-                            (entity as Container).last_location!
-                              .destination_name
-                          )}
-                        </span>
-                      </>
-                    )}
+                        <>
+                          <ContainerIcon className="h-3 w-3" />
+                          <span className="truncate">
+                            {getEntityDisplayName(
+                              "container",
+                              (entity as Container).last_location!.destination_id!,
+                              (entity as Container).last_location!
+                                .destination_name
+                            )}
+                          </span>
+                        </>
+                      )}
                   </div>
                 ) : (
                   <span>Местоположение не указано</span>
@@ -236,7 +229,7 @@ function renderCellContent(
     }
 
     case "room":
-      if (entityType === "items") {
+      if (roomLabel !== undefined && "last_location" in entity) {
         const label = roomLabel ?? ROOM_EMPTY_LABEL;
         return (
           <div className="flex items-center gap-2 text-sm">
@@ -251,7 +244,7 @@ function renderCellContent(
           </div>
         );
       }
-      if (entityType === "places") {
+      if ("room" in entity && !("places_count" in entity)) {
         const place = entity as Place;
         const room = place.room;
         if (room?.room_name && room.room_id) {
@@ -270,16 +263,16 @@ function renderCellContent(
       return null;
 
     case "movedAt":
-      if (entityType === "items" && "last_location" in entity) {
+      if ("last_location" in entity && (entity as Item).last_location?.moved_at != null) {
         const movedAt = (entity as Item).last_location?.moved_at;
         return (
           <span className="text-xs text-muted-foreground">
             {movedAt
               ? new Date(movedAt).toLocaleDateString("ru-RU", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
               : "—"}
           </span>
         );
@@ -287,7 +280,7 @@ function renderCellContent(
       return null;
 
     case "counts":
-      if (entityType === "rooms") {
+      if ("places_count" in entity && "containers_count" in entity) {
         const room = entity as Room;
         return (
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
@@ -309,7 +302,7 @@ function renderCellContent(
       return null;
 
     case "location":
-      if (entityType === "containers") {
+      if ("last_location" in entity && (entity as Container).last_location?.destination_type != null) {
         const cont = entity as Container;
         const loc = cont.last_location;
         if (!loc)
@@ -365,7 +358,6 @@ function renderCellContent(
 }
 
 export const EntityRow = memo(function EntityRow({
-  entityType,
   entity,
   columnsConfig,
   actionsConfig,
@@ -386,10 +378,10 @@ export const EntityRow = memo(function EntityRow({
             />
           ) : (
             renderCellContent(
-              entityType,
               col.key,
               entity,
-              roomLabel
+              roomLabel,
+              actionCallbacks.editHref
             )
           );
 

@@ -30,7 +30,6 @@ function ContainersPageContent() {
     <div className="flex flex-col gap-4">
       <PageHeader title="Контейнеры" />
       <EntityList
-        entityType="containers"
         data={listPage.data}
         isLoading={listPage.isLoading}
         error={listPage.error}
