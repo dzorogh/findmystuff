@@ -22,30 +22,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const supabase = createClient();
+    let isActive = true;
 
-    const refreshUser = () => {
-      setIsLoading(true);
-      getClientUser()
-        .then(setUser)
-        .catch(() => setUser(null))
-        .finally(() => setIsLoading(false));
+    const refreshUser = async () => {
+      try {
+        const currentUser = await getClientUser();
+        if (!isActive) return;
+        setUser(currentUser);
+      } catch (err) {
+        if (!isActive) return;
+        console.error("Error getting client user:", err);
+        toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
+        setUser(null);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
     };
 
-    try {
-      refreshUser();
-    } catch (err) {
-      console.error("Error getting client user:", err);
-      toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
-      setIsLoading(false);
-    }
+    void refreshUser();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      refreshUser();
+      setIsLoading(true);
+      void refreshUser();
     });
 
     return () => {
+      isActive = false;
       subscription?.unsubscribe();
     };
   }, []);

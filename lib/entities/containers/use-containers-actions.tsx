@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Container } from "@/types/entity";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -28,7 +28,10 @@ export function useContainersActions({
   const printContainer = usePrintEntityLabel("container");
   const singularLower = labels.singular.toLowerCase();
   const moveEnabled = move?.enabled ?? false;
-  const destinationTypes = move?.destinationTypes ?? ["room", "place", "container"];
+  const destinationTypes = useMemo(
+    () => move?.destinationTypes ?? ["room", "place", "container"],
+    [move?.destinationTypes]
+  );
 
   const runEntityAction = useCallback(
     async (

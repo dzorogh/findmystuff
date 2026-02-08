@@ -5,9 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/shared/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { Field, FieldDescription, FieldLabel, FieldGroup } from "@/components/ui/field";
+import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 
 const EmailPasswordForm = () => {
   const [email, setEmail] = useState("");

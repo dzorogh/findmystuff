@@ -1,13 +1,8 @@
 "use client";
 
 import {
-  Table,
   TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EntityRowSkeleton } from "@/components/lists/entity-row-skeleton";
 import type { ListColumnConfig } from "@/lib/app/types/entity-config";
 

@@ -17,7 +17,6 @@ import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
-import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { updateItem } from "@/lib/entities/api";
 import { ItemTypeSelect } from "@/components/fields/item-type-select";
 import { PageHeader } from "@/components/layout/page-header";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Item } from "@/types/entity";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
@@ -22,7 +22,10 @@ export function useItemsActions({
 }: UseItemsActionsParams) {
   const itemListActions = useItemListActions({ refreshList });
   const moveEnabled = move?.enabled ?? false;
-  const destinationTypes = move?.destinationTypes ?? ["room", "place", "container"];
+  const destinationTypes = useMemo(
+    () => move?.destinationTypes ?? ["room", "place", "container"],
+    [move?.destinationTypes]
+  );
 
   const getRowActions = useCallback(
     (item: Item): EntityActionsCallbacks => ({

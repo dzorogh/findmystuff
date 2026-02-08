@@ -27,7 +27,7 @@ import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
 import { getUsers, deleteUser } from "@/lib/users/api";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PageUsers() {

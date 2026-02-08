@@ -87,7 +87,7 @@ export function useListPage(config: EntityConfig) {
     labels,
     icon,
     getName,
-    fetch,
+    fetch: fetchData,
     pagination,
     kind,
     basePath,
@@ -162,7 +162,7 @@ export function useListPage(config: EntityConfig) {
           sortDirection,
           ...(hasPagination ? { page } : {}),
         };
-        const result = await fetch(params);
+        const result = await fetchData(params);
         if (!isMountedRef.current || !isLatest(requestKey)) return;
         const list = Array.isArray(result?.data) ? result.data : [];
         setData(list);
@@ -185,7 +185,7 @@ export function useListPage(config: EntityConfig) {
       sortBy,
       sortDirection,
       hasPagination,
-      fetch,
+      fetchData,
       shouldStart,
       isLatest,
       finish,
