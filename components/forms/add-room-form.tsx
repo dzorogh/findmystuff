@@ -86,7 +86,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
             Введите название помещения
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit} className="px-6">
           {isLoading || isLoadingTypes ? (
             <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">

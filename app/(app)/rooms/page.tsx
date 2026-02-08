@@ -8,6 +8,8 @@ import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { ROOMS_LIST_CONFIG } from "@/lib/entities/rooms/list-config";
 import { useRoomsListPageBehavior } from "@/lib/entities/rooms/use-rooms-list-page-behavior";
 import { useRoomsListRowActions } from "@/lib/entities/rooms/use-rooms-list-row-actions";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function RoomsPageContent() {
   const listConfig = { ...ROOMS_LIST_CONFIG, ...useRoomsListPageBehavior() };
@@ -15,8 +17,13 @@ function RoomsPageContent() {
   const getRowActions = useRoomsListRowActions({ refreshList: listPage.refreshList });
 
   return (
-    <div className="flex flex-col gap-2">
-      <PageHeader title="Помещения" />
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Помещения"
+        actions={<Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
+          <Plus data-icon="inline-start" /> Добавить помещение
+        </Button>}
+      />
       <EntityList
         data={listPage.data}
         isLoading={listPage.isLoading}

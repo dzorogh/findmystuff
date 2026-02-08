@@ -86,20 +86,22 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     columnsConfig,
     actionsConfig,
     moveFormConfig,
+    addFormConfig,
     resultsLabel,
     initialFilters,
     listIcon,
     getListDisplayName,
     fetchList,
     pagination,
-    addDialog: addDialogConfig,
   } = config;
 
   const hasPagination = pagination != null;
-  const hasAddDialog = addDialogConfig != null;
+
   const hasMove =
     moveFormConfig.enabled &&
     actionsConfig.actions.includes("move");
+
+  const hasAddForm = addFormConfig != null;
 
   const pageSize = hasPagination ? pagination.pageSize : 20;
 
@@ -112,7 +114,7 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
   const [data, setData] = useState<unknown[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [movingId, setMovingId] = useState<number | null>(null);
 
   const isMountedRef = useRef(true);
@@ -243,15 +245,16 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     [loadData, searchQuery]
   );
 
-  const handleAddDialogOpenChange = useCallback((open: boolean) => {
-    setAddDialogOpen(open);
+  const isAddFormOpen = hasAddForm ? addFormOpen : false;
+
+  const handleAddFormOpenChange = useCallback((open: boolean) => {
+    setAddFormOpen(open);
   }, []);
 
   const handleEntityAdded = useCallback(() => {
     refreshList();
   }, [refreshList]);
 
-  const isAddDialogOpen = hasAddDialog ? addDialogOpen : false;
 
   const resultsCount = Array.isArray(data) ? data.length : 0;
 
@@ -285,6 +288,7 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     columnsConfig,
     actionsConfig,
     moveFormConfig,
+    addFormConfig,
     listIcon,
     getListDisplayName,
     refreshList,
@@ -299,9 +303,9 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
       goToPage,
       itemsPerPage: pageSize,
     }),
-    ...(hasAddDialog && {
-      isAddDialogOpen,
-      handleAddDialogOpenChange,
+    ...(hasAddForm && {
+      isAddFormOpen,
+      handleAddFormOpenChange,
       handleEntityAdded,
     }),
     ...(hasMove && {

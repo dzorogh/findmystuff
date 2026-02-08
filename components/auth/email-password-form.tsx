@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { Field, FieldDescription, FieldLabel, FieldGroup } from "@/components/ui/field";
 
 const EmailPasswordForm = () => {
   const [email, setEmail] = useState("");
@@ -52,47 +53,51 @@ const EmailPasswordForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <div className="space-y-2">
-        <Label htmlFor="email-signin">Email</Label>
-        <Input
-          id="email-signin"
-          type="email"
-          autoComplete="email"
-          placeholder="example@mail.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-          aria-label="Email"
-          aria-invalid={!!error}
-          className="w-full"
-        />
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password-signin">Пароль</Label>
-          <Link
-            href="/auth/forgot-password"
-            className="text-xs text-primary underline underline-offset-2 hover:no-underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring rounded"
-            tabIndex={0}
-            aria-label="Сбросить пароль"
-          >
-            Забыли пароль?
-          </Link>
-        </div>
-        <Input
-          id="password-signin"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          aria-label="Пароль"
-          aria-invalid={!!error}
-          className="w-full"
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <FieldGroup>
+        <Field className="space-y-2">
+          <FieldLabel htmlFor="email-signin">
+            Email
+          </FieldLabel>
+          <Input
+            id="email-signin"
+            type="email"
+            autoComplete="email"
+            placeholder="example@mail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            aria-label="Email"
+            aria-invalid={!!error}
+            className="w-full"
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="password-signin" className="flex items-center justify-between">
+            Пароль
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-primary underline underline-offset-2 hover:no-underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring rounded"
+              tabIndex={0}
+              aria-label="Сбросить пароль"
+            >
+              Забыли пароль?
+            </Link>
+          </FieldLabel>
+          <Input
+            id="password-signin"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            aria-label="Пароль"
+            aria-invalid={!!error}
+            className="w-full"
+          />
+        </Field>
+      </FieldGroup>
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}

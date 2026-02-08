@@ -15,6 +15,7 @@ import type {
 import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export const ROOM_EMPTY_LABEL = "Помещение не указано";
 
@@ -108,7 +109,7 @@ function renderCellContent(
           <div className="min-w-0 flex-1">
             <Link
               href={href}
-              className="font-medium hover:underline break-words leading-tight block"
+              className="font-medium break-words leading-tight block overflow-hidden text-ellipsis"
             >
               {displayName}
             </Link>
@@ -340,9 +341,19 @@ export const EntityRow = memo(function EntityRow({
   roomLabel,
 }: EntityRowProps) {
   const isDeleted = !!entity.deleted_at;
+  const router = useRouter();
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("a, button, [role='button']")) return;
+    if (actionCallbacks.editHref) router.push(actionCallbacks.editHref);
+  };
 
   return (
-    <TableRow className={entity.deleted_at ? "opacity-60" : ""}>
+    <TableRow
+      className={cn(entity.deleted_at ? "opacity-60" : "", "cursor-pointer")}
+      onClick={handleRowClick}
+    >
       {columnsConfig.map((col) => {
         const cellContent =
           col.key === "actions" ? (
@@ -377,7 +388,8 @@ export const EntityRow = memo(function EntityRow({
             className={cn(
               col.key === "actions" && "text-right",
               col.width,
-              responsiveHidden
+              responsiveHidden,
+              "overflow-hidden text-ellipsis max-w-0"
             )}
           >
             {cellContent}

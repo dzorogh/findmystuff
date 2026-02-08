@@ -7,7 +7,7 @@ import GoogleSignIn from "@/components/auth/google-signin";
 import EmailPasswordForm from "@/components/auth/email-password-form";
 import Logo from "@/components/common/logo";
 import { useUser } from "@/lib/users/context";
-import { Divider } from "@/components/ui/divider";
+import { FieldSeparator } from "@/components/ui/field";
 
 const LoginPage = () => {
   const { user, isLoading } = useUser();
@@ -27,20 +27,17 @@ const LoginPage = () => {
     <div className="mx-auto flex h-full items-center justify-center px-2">
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col gap-2 text-center">
-          <div className="flex justify-center">
-            <Logo size="lg" showText />
+          <div className="flex items-center justify-center w-full">
+            <Logo size="lg" />
           </div>
           <CardDescription>
-            Войдите, чтобы начать вести учет ваших вещей
+            Приложение для быстрого поиска и учета вещей в домашнем складе
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-2">
-            <p className="text-center text-sm text-muted-foreground">
-              Приложение для быстрого поиска и учета вещей в домашнем складе
-            </p>
+          <div className="flex flex-col gap-6">
             <EmailPasswordForm />
-            <Divider />
+            <FieldSeparator />
             <div className="flex justify-center">
               <GoogleSignIn />
             </div>

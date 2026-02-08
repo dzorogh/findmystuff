@@ -139,18 +139,24 @@ export function EntityActions({
           if (item.href) {
             const active = pathname.startsWith(item.href);
             return (
-              <Button
+              <span
                 key={index}
-                variant={active ? "secondary" : "ghost"}
-                size="icon"
-                className={iconClass(item)}
-                title={item.label}
-                disabled={disabled}
-                render={<Link href={item.href} />}
-                nativeButton={false}
+                className="inline-flex"
+                onClick={(e) => e.stopPropagation()}
+                role="presentation"
               >
-                <Icon className="h-4 w-4" />
-              </Button>
+                <Button
+                  variant={active ? "secondary" : "ghost"}
+                  size="icon"
+                  className={iconClass(item)}
+                  title={item.label}
+                  disabled={disabled}
+                  render={<Link href={item.href} />}
+                  nativeButton={false}
+                >
+                  <Icon className="h-4 w-4" />
+                </Button>
+              </span>
             );
           }
           return (

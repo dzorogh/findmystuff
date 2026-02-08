@@ -79,7 +79,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
             Создайте нового пользователя. Пароль будет сгенерирован автоматически.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit} className="px-6">
           <FormGroup>
             <FormField
               label="Email"

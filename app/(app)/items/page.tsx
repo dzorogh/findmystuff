@@ -1,78 +1,20 @@
 "use client";
 
 import { Suspense } from "react";
-import { ListPagination } from "@/components/lists/list-pagination";
-import AddItemForm from "@/components/forms/add-item-form";
-import { PageHeader } from "@/components/layout/page-header";
-import { EntityList } from "@/components/lists/entity-list";
-import { useListPage } from "@/lib/app/hooks/use-list-page";
-import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
+import { ListPageContent } from "@/components/lists/list-page-content";
 import { useItemsListPageBehavior } from "@/lib/entities/items/use-items-list-page-behavior";
+import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
+import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { useItemsListRowActions } from "@/lib/entities/items/use-items-list-row-actions";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
-function ItemsPageContent() {
+export default function ItemsPage() {
   const listConfig = { ...ITEMS_LIST_CONFIG, ...useItemsListPageBehavior() };
   const listPage = useListPage(listConfig);
   const getRowActions = useItemsListRowActions({ refreshList: listPage.refreshList });
 
   return (
-    <div className="flex flex-col gap-2">
-      <PageHeader
-        title="Вещи"
-        actions={
-          <Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
-            <Plus data-icon="inline-start" /> Добавить вещь
-          </Button>
-        } />
-      <EntityList
-        data={listPage.data}
-        isLoading={listPage.isLoading}
-        error={listPage.error}
-        searchQuery={listPage.searchQuery}
-        onSearchChange={listPage.handleSearchChange}
-        sort={listPage.sort}
-        onSortChange={listPage.setSort}
-        filters={listPage.filters}
-        onFiltersChange={listPage.setFilters}
-        isFiltersOpen={listPage.isFiltersOpen}
-        onFiltersOpenChange={listPage.setIsFiltersOpen}
-        activeFiltersCount={listPage.activeFiltersCount}
-        resultsCount={listPage.resultsCount}
-        resultsLabel={listPage.resultsLabel}
-        filterConfig={listPage.filterConfig}
-        columnsConfig={listPage.columnsConfig}
-        actionsConfig={listPage.actionsConfig}
-        listIcon={listPage.listIcon}
-        getListDisplayName={listPage.getListDisplayName}
-        getRowActions={getRowActions}
-      />
-      {listPage.totalCount != null &&
-        listPage.itemsPerPage != null &&
-        listPage.totalPages != null &&
-        listPage.currentPage != null &&
-        listPage.goToPage != null &&
-        listPage.totalCount > listPage.itemsPerPage && (
-          <ListPagination
-            currentPage={listPage.currentPage}
-            totalPages={listPage.totalPages}
-            onPageChange={listPage.goToPage}
-          />
-        )}
-      <AddItemForm
-        open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
-        onSuccess={listPage.handleEntityAdded}
-      />
-    </div>
+    <Suspense fallback={null}>
+      <ListPageContent listPage={listPage} getRowActions={getRowActions} />
+    </Suspense>
   );
 }
-
-const ItemsPage = () => (
-  <Suspense fallback={null}>
-    <ItemsPageContent />
-  </Suspense>
-);
-
-export default ItemsPage;

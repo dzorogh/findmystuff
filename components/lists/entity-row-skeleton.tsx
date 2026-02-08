@@ -16,7 +16,7 @@ export function EntityRowSkeleton({ columnsConfig }: EntityRowSkeletonProps) {
           key={col.key}
           className={`${col.width ?? ""} ${col.hideOnMobile ? "hidden sm:table-cell" : ""}`}
         >
-          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-6 w-full" />
         </TableCell>
       ))}
     </TableRow>

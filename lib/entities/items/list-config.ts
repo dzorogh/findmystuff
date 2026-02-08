@@ -1,5 +1,6 @@
 import { Package } from "lucide-react";
 import type { ListConfig } from "@/lib/app/types/list-config";
+import AddItemForm from "@/components/forms/add-item-form";
 
 export interface ItemsFilters {
   showDeleted: boolean;
@@ -40,5 +41,9 @@ export const ITEMS_LIST_CONFIG: ListConfig<ItemsFilters, "id" | "name" | "room" 
   moveFormConfig: {
     enabled: true,
     destinationTypes: ["room", "place", "container"],
+  },
+  addFormConfig: {
+    title: "Добавить вещь",
+    form: AddItemForm,
   },
 };

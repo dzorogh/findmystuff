@@ -4,6 +4,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
+import { ComponentType } from "react";
 
 /** Normalized params for list fetch (used by useListPage when calling config.fetchList) */
 export interface FetchListParams<TFilters = Record<string, unknown>> {
@@ -63,6 +64,7 @@ export interface ListConfig<
   listIcon?: LucideIcon;
   /** Форматирование отображаемого имени строки (колонка «Название»). */
   getListDisplayName?: (entity: { id: number; name: string | null }) => string;
+  addFormConfig?: ListAddFormConfig;
 }
 
 /** Optional pagination: when present, useListPage manages currentPage and passes page to fetchList */
@@ -70,8 +72,18 @@ export interface ListPaginationConfig {
   pageSize: number;
 }
 
-/** Optional add dialog: when present, useListPage manages isAddDialogOpen and handlers (no URL sync) */
-export type ListAddDialogConfig = boolean | object;
+/** Props passed to the add-form component by useListPage / list page content */
+export interface ListAddFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+/** Optional add dialog: when present, useListPage manages isAddFormOpen and handlers (no URL sync) */
+export type ListAddFormConfig = boolean | {
+  title: string;
+  form: ComponentType<ListAddFormProps>;
+};
 
 /**
  * Full config passed to useListPage. Extends ListConfig with fetchList and optional pagination/addDialog.
@@ -83,5 +95,4 @@ export interface ListPageConfig<
 > extends ListConfig<TFilters, TColumnKey> {
   fetchList: (params: FetchListParams<TFilters>) => Promise<FetchListResult>;
   pagination?: ListPaginationConfig;
-  addDialog?: ListAddDialogConfig;
 }

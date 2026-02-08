@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "./page-breadcrumb";
 import { PageTitle } from "./page-title";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface PageHeaderProps {
     isLoading?: boolean;
@@ -17,7 +18,7 @@ export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderP
 
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-0">
+            <div className="flex flex-col gap-2">
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-9 w-64" />
             </div>
@@ -25,8 +26,11 @@ export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderP
     }
 
     return (
-        <div className="flex flex-col gap-0">
-            <PageBreadcrumb path={breadcrumb} />
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+                <SidebarTrigger className="relative right-2" />
+                <PageBreadcrumb path={breadcrumb} />
+            </div>
             <div className="flex justify-between items-center">
                 <PageTitle title={title} />
                 {actions}

@@ -20,13 +20,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash2, Loader2, Pencil } from "lucide-react";
+import { Trash2, Loader2, Pencil, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
 import { getUsers, deleteUser } from "@/lib/users/api";
 import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PageUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -122,15 +124,19 @@ export default function PageUsers() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <PageHeader title="Пользователи" />
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Пользователи" actions={<Button variant="default" size="sm" onClick={() => setAddFormOpen(true)}>Добавить пользователя</Button>} />
 
       {users.length === 0 && !isLoading ? (
-        <div className="text-center py-4 text-muted-foreground">
-          <p>Пользователи не найдены</p>
-        </div>
+        <Alert>
+          <TriangleAlertIcon />
+          <AlertTitle>Пользователи не найдены</AlertTitle>
+          <AlertDescription>
+            Не найдено ни одного пользователя.
+          </AlertDescription>
+        </Alert>
       ) : (
-        <div className="rounded-md border">
+        <Card className="py-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -195,7 +201,7 @@ export default function PageUsers() {
               </TableBody>
             )}
           </Table>
-        </div>
+        </Card>
       )}
 
       <AddUserForm

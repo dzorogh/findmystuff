@@ -11,6 +11,8 @@ import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { PLACES_LIST_CONFIG } from "@/lib/entities/places/list-config";
 import { usePlacesListPageBehavior } from "@/lib/entities/places/use-places-list-page-behavior";
 import { usePlacesListRowActions } from "@/lib/entities/places/use-places-list-row-actions";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function PlacesPageContent() {
   const listConfig = { ...PLACES_LIST_CONFIG, ...usePlacesListPageBehavior() };
@@ -27,8 +29,12 @@ function PlacesPageContent() {
   ) as { name?: string | null } | undefined;
 
   return (
-    <div className="flex flex-col gap-2">
-      <PageHeader title="Места" />
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Места"
+        actions={<Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
+          <Plus data-icon="inline-start" /> Добавить место
+        </Button>} />
       <EntityList
         data={listPage.data}
         isLoading={listPage.isLoading}

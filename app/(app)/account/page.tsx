@@ -1,25 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/shared/supabase/client";
 import { useUser } from "@/lib/users/context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "next-themes";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
+import { Loader2, Moon, Sun } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { FieldGroup, FieldLabel, Field } from "@/components/ui/field";
 
 const MIN_PASSWORD_LENGTH = 6;
 
 export default function AccountPage() {
   const { user, isLoading: isUserLoading } = useUser();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleThemeToggle = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  const ThemeIcon = mounted ? (resolvedTheme === "dark" ? Moon : Sun) : null;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,7 +68,7 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <PageHeader title="Аккаунт" />
 
       <Card>
@@ -76,43 +89,70 @@ export default function AccountPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-lg">Тема</CardTitle>
+          <CardDescription>
+            Переключение светлой и тёмной темы оформления
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleThemeToggle}
+            className="gap-2"
+          >
+            {ThemeIcon ? <ThemeIcon className="h-4 w-4" /> : null}
+            Сменить тему
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-lg">Смена пароля</CardTitle>
           <CardDescription>
             Введите новый пароль (не менее {MIN_PASSWORD_LENGTH} символов)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="account-new-password">Новый пароль</Label>
-              <Input
-                id="account-new-password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={isLoading}
-                aria-label="Новый пароль"
-                aria-invalid={!!error}
-                className="w-full max-w-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="account-confirm-password">Повторите пароль</Label>
-              <Input
-                id="account-confirm-password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-                aria-label="Повторите пароль"
-                aria-invalid={!!error}
-                className="w-full max-w-sm"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="account-new-password">
+                  Новый пароль
+                </FieldLabel>
+                <Input
+                  id="account-new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={isLoading}
+                  aria-label="Новый пароль"
+                  aria-invalid={!!error}
+                  className="w-full max-w-sm"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="account-confirm-password">
+                  Повторите пароль
+                </FieldLabel>
+                <Input
+                  id="account-confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                  aria-label="Повторите пароль"
+                  aria-invalid={!!error}
+                  className="w-full max-w-sm"
+                />
+              </Field>
+            </FieldGroup>
             {error && (
               <p className="text-sm text-destructive" role="alert">
                 {error}
@@ -123,18 +163,21 @@ export default function AccountPage() {
                 {success}
               </p>
             )}
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  <span>Сохранение...</span>
-                </>
-              ) : (
-                <span>Сохранить пароль</span>
-              )}
-            </Button>
+
           </form>
         </CardContent>
+        <CardFooter>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <span>Сохранение...</span>
+              </>
+            ) : (
+              <span>Сохранить пароль</span>
+            )}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

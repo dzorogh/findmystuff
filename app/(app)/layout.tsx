@@ -8,11 +8,11 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UserProvider } from "@/lib/users/context";
 import { SettingsProvider } from "@/lib/settings/context";
 import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
-import Sidebar from "@/components/navigation/sidebar";
+import AppSidebar from "@/components/navigation/app-sidebar";
 import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
-import { PageContainer } from "@/components/layout/page-container";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/users/server";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
@@ -66,17 +66,23 @@ export default async function RootLayout({
           <UserProvider>
             <SettingsProvider>
               <CurrentPageProvider>
-                <CapacitorAuthListener />
-                <QuickMoveProvider>
-                  <Sidebar className="h-full md:w-48 fixed left-0 top-0 border-r" />
+                <SidebarProvider>
+                  <CapacitorAuthListener />
+                  <QuickMoveProvider>
+                    <AppSidebar />
 
-                  <main className="flex flex-col flex-1 md:ml-48">
-                    <div className="flex-1 overflow-y-auto">
-                      <PageContainer>{children}</PageContainer>
-                    </div>
-                  </main>
-                </QuickMoveProvider>
-                <Toaster />
+                    <SidebarInset>
+                      <main className="flex flex-col flex-1 overflow-hidden h-full">
+                        <div className="flex-1 overflow-y-auto">
+                          <div className="mx-auto p-6">
+                            {children}
+                          </div>
+                        </div>
+                      </main>
+                    </SidebarInset>
+                  </QuickMoveProvider>
+                  <Toaster />
+                </SidebarProvider>
               </CurrentPageProvider>
             </SettingsProvider>
           </UserProvider>

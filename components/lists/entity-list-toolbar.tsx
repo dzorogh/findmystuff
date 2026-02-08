@@ -46,8 +46,8 @@ export function EntityListToolbar({
         />
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Select value={sort} onValueChange={(v) => v != null && onSortChange(v)}>
-          <SelectTrigger className="w-40">
+        <Select items={ENTITY_SORT_OPTIONS} value={sort} onValueChange={(v) => v != null && onSortChange(v as EntitySortOption)}>
+          <SelectTrigger className="w-42">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

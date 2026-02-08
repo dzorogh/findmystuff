@@ -21,7 +21,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "text-muted-foreground gap-1.5 text-xs/relaxed flex flex-wrap items-center wrap-break-word",
+        "text-muted-foreground gap-1.5 text-sm sm:gap-2.5 flex flex-wrap items-center wrap-break-word",
         className
       )}
       {...props}
@@ -33,7 +33,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-item"
-      className={cn("gap-1 inline-flex items-center", className)}
+      className={cn("gap-1.5 inline-flex items-center", className)}
       {...props}
     />
   )
@@ -102,7 +102,7 @@ function BreadcrumbEllipsis({
       role="presentation"
       aria-hidden="true"
       className={cn(
-        "size-4 [&>svg]:size-3.5 flex items-center justify-center",
+        "size-5 [&>svg]:size-4 flex items-center justify-center",
         className
       )}
       {...props}

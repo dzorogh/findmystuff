@@ -2,9 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { Building2, Warehouse, Container, Box } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 export const PrimaryMenu = () => {
     const pathname = usePathname();
@@ -17,20 +16,17 @@ export const PrimaryMenu = () => {
     ];
 
     return (
-        <ScrollArea>
-            <div className="flex flex-col gap-1">
-                {menuItems.map((item) => (
-                    <Button
-                        className="w-full justify-start"
-                        key={item.href}
-                        variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
-                        nativeButton={false}
+        <SidebarMenu>
+            {menuItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                        isActive={pathname.startsWith(item.href)}
                         render={<Link href={item.href} />}
                     >
                         <item.icon data-icon="inline-start" /> {item.label}
-                    </Button>
-                ))}
-            </div>
-        </ScrollArea>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+        </SidebarMenu>
     );
 };

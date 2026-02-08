@@ -11,6 +11,8 @@ import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { CONTAINERS_LIST_CONFIG } from "@/lib/entities/containers/list-config";
 import { useContainersListPageBehavior } from "@/lib/entities/containers/use-containers-list-page-behavior";
 import { useContainersListRowActions } from "@/lib/entities/containers/use-containers-list-row-actions";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function ContainersPageContent() {
   const listConfig = { ...CONTAINERS_LIST_CONFIG, ...useContainersListPageBehavior() };
@@ -27,8 +29,13 @@ function ContainersPageContent() {
   ) as { name?: string | null } | undefined;
 
   return (
-    <div className="flex flex-col gap-2">
-      <PageHeader title="Контейнеры" />
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Контейнеры"
+        actions={<Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
+          <Plus data-icon="inline-start" /> Добавить контейнер
+        </Button>}
+      />
       <EntityList
         data={listPage.data}
         isLoading={listPage.isLoading}

@@ -18,6 +18,7 @@ import type { FilterFieldConfig } from "@/lib/app/types/list-config";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
+import { Card, CardContent } from "@/components/ui/card";
 
 export interface EntityListProps<T extends { showDeleted: boolean }> {
   data: unknown[];
@@ -81,7 +82,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
       : `${resultsLabel.many} не найдены`;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <EntityListToolbar
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
@@ -91,55 +92,54 @@ export function EntityList<T extends { showDeleted: boolean }>({
         onOpenFilters={() => onFiltersOpenChange(true)}
       />
 
-      {isLoading ? (
-        <EntityListSkeleton columnsConfig={columnsConfig} />
-      ) : (
-        <ListShell
-          error={error}
-          isEmpty={isEmpty}
-          emptyTitle={emptyTitle}
-        >
-          <div className="border rounded-md">
-            <div className="overflow-x-hidden md:overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {columnsConfig.map((col) => (
-                      <TableHead
-                        key={col.key}
-                        className={`${col.width ?? ""} ${col.hideOnMobile ? "hidden sm:table-cell" : ""
-                          } whitespace-nowrap overflow-hidden text-ellipsis ${col.key === "actions" ? "text-right" : ""
-                          }`}
-                      >
-                        {col.label}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {list.map((entity) => {
-                    const row = entity as Item | Room | Place | Container;
-                    const rowActions = getRowActions(row);
-                    const roomLabel = getRoomLabelForRow(row);
-                    return (
-                      <EntityRow
-                        key={row.id}
-                        entity={row}
-                        columnsConfig={columnsConfig}
-                        actionsConfig={actionsConfig}
-                        listIcon={listIcon}
-                        getListDisplayName={getListDisplayName}
-                        actionCallbacks={rowActions}
-                        roomLabel={roomLabel}
-                      />
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </ListShell>
-      )}
+      <ListShell
+        error={error}
+        isEmpty={isEmpty}
+        emptyTitle={emptyTitle}
+      >
+        <Card className="py-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columnsConfig.map((col) => (
+                  <TableHead
+                    key={col.key}
+                    className={`${col.width ?? ""} ${col.hideOnMobile ? "hidden sm:table-cell" : ""
+                      } whitespace-nowrap overflow-hidden text-ellipsis ${col.key === "actions" ? "text-right" : ""
+                      }`}
+                  >
+                    {col.label}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            {isLoading ? (
+              <EntityListSkeleton columnsConfig={columnsConfig} />
+            ) : (
+              <TableBody>
+                {list.map((entity) => {
+                  const row = entity as Item | Room | Place | Container;
+                  const rowActions = getRowActions(row);
+                  const roomLabel = getRoomLabelForRow(row);
+                  return (
+                    <EntityRow
+                      key={row.id}
+                      entity={row}
+                      columnsConfig={columnsConfig}
+                      actionsConfig={actionsConfig}
+                      listIcon={listIcon}
+                      getListDisplayName={getListDisplayName}
+                      actionCallbacks={rowActions}
+                      roomLabel={roomLabel}
+                    />
+                  );
+                })}
+              </TableBody>
+            )}
+
+          </Table>
+        </Card>
+      </ListShell>
 
       <ListFiltersSheet
         open={isFiltersOpen}
