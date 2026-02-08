@@ -153,7 +153,6 @@ const ForgotPasswordPage = () => {
               <Link
                 href="/auth/login"
                 className="inline-flex items-center gap-1 text-sm text-primary underline underline-offset-2 hover:no-underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring rounded"
-                tabIndex={0}
                 aria-label="Вернуться к входу"
               >
                 <ArrowLeft className="h-3 w-3" aria-hidden />

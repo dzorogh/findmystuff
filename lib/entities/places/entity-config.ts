@@ -31,24 +31,23 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
     showDeleted: filters.showDeleted,
     sortBy,
     sortDirection,
+    entityTypeId: filters.entityTypeId ?? undefined,
+    roomId: filters.roomId ?? undefined,
   });
-  let list = Array.isArray(response?.data) ? response.data : [];
-  if (filters.entityTypeId !== null) {
-    list = list.filter((p: Place) => p.entity_type_id === filters.entityTypeId);
-  }
-  if (filters.roomId !== null) {
-    list = list.filter((p: Place) => p.room?.room_id === filters.roomId);
-  }
+  const list = Array.isArray(response?.data) ? response.data : [];
   return { data: list };
 }
 
-function usePlacesConfigActions(params: { refreshList: () => void }) {
+function usePlacesConfigActions(
+  config: EntityConfig,
+  params: { refreshList: () => void }
+) {
   const getRowActions = usePlacesActions({
     refreshList: params.refreshList,
-    basePath: placesEntityConfig.basePath,
-    apiTable: placesEntityConfig.apiTable,
-    labels: placesEntityConfig.labels,
-    move: placesEntityConfig.actions.move,
+    basePath: config.basePath,
+    apiTable: config.apiTable,
+    labels: config.labels,
+    move: config.actions.move,
   });
   return (entity: EntityDisplay) => getRowActions(entity as Place);
 }
@@ -77,7 +76,7 @@ export const placesEntityConfig: EntityConfig = {
       destinationTypes: ["room", "container"],
     },
   },
-  useActions: usePlacesConfigActions,
+  useActions: (params) => usePlacesConfigActions(placesEntityConfig, params),
   addForm: {
     title: "Добавить место",
     form: AddPlaceForm,

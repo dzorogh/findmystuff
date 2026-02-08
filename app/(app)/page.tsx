@@ -10,6 +10,13 @@ import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lu
 import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
 
+const ENTITY_CONFIG = {
+  item: { Icon: Package, label: "Вещи" },
+  place: { Icon: Warehouse, label: "Места" },
+  container: { Icon: Container, label: "Контейнеры" },
+  room: { Icon: Building2, label: "Помещения" },
+} as const;
+
 export default function Home() {
   const { user, isLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,34 +69,13 @@ export default function Home() {
   }
 
   const getIcon = (type: string) => {
-    switch (type) {
-      case "item":
-        return <Package className="h-4 w-4" />;
-      case "place":
-        return <Warehouse className="h-4 w-4" />;
-      case "container":
-        return <Container className="h-4 w-4" />;
-      case "room":
-        return <Building2 className="h-4 w-4" />;
-      default:
-        return null;
-    }
+    const config = ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG];
+    if (!config) return null;
+    const Icon = config.Icon;
+    return <Icon className="h-4 w-4" />;
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "item":
-        return "Вещи";
-      case "place":
-        return "Места";
-      case "container":
-        return "Контейнеры";
-      case "room":
-        return "Помещения";
-      default:
-        return type;
-    }
-  };
+  const getTypeLabel = (type: string) => ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG]?.label ?? type;
 
   const handleResultClick = (result: SearchResult) => {
     if (result.type === "item") {

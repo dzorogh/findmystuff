@@ -1,6 +1,8 @@
 import React from "react";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
+import { fetchItemById } from "@/lib/entities/services/item-detail";
+import type { Item } from "@/types/entity";
 
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -27,15 +29,49 @@ jest.mock("@/lib/entities/hooks/use-print-entity-label", () => ({
   usePrintEntityLabel: () => jest.fn(),
 }));
 jest.mock("@/lib/entities/services/item-detail", () => ({
-  fetchItemById: jest.fn().mockResolvedValue({ id: 1, name: "Item" }),
+  fetchItemById: jest.fn(),
   fetchItemTransitions: jest.fn().mockResolvedValue([]),
 }));
 
 describe("useItemDetail", () => {
-  it("возвращает объект с itemId, item, isLoading, error и методами", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("обновляет loadItemData, item, isLoading и error при загрузке через fetchItemById", async () => {
+    const mockPayload: Item = {
+      id: 1,
+      name: "Item",
+      created_at: "2025-01-01",
+      deleted_at: null,
+      photo_url: null,
+    };
+    let resolveFetch: (value: Item) => void;
+    const fetchPromise = new Promise<Item>((resolve) => {
+      resolveFetch = resolve;
+    });
+    jest.mocked(fetchItemById).mockReturnValue(fetchPromise);
+
     const { result } = renderHook(() => useItemDetail());
+
     expect(result.current.itemId).toBe(1);
-    expect(typeof result.current.loadItemData).toBe("function");
     expect(result.current.entityLabel).toBe("Вещь");
+    expect(typeof result.current.loadItemData).toBe("function");
+
+    await act(async () => {
+      result.current.loadItemData();
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    act(() => {
+      resolveFetch(mockPayload);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.item).toEqual(mockPayload);
+      expect(result.current.error).toBeNull();
+    });
   });
 });

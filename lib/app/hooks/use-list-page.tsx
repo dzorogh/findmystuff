@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { deepEqual } from "@/lib/app/helpers/deep-equal";
 import { DEFAULT_ENTITY_SORT, getEntitySortParams, type EntitySortOption } from "@/lib/entities/helpers/sort";
-import type { EntityConfig, EntityDisplay, Filters, Results } from "@/lib/app/types/entity-config";
+import type {
+  EntityConfig,
+  EntityDisplay,
+  Filters,
+  ListPagePagination,
+  Results,
+} from "@/lib/app/types/entity-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -88,7 +95,7 @@ export function useListPage(config: EntityConfig) {
     icon,
     getName,
     fetch: fetchData,
-    pagination,
+    pagination: paginationConfig,
     kind,
     basePath,
     apiTable,
@@ -97,10 +104,10 @@ export function useListPage(config: EntityConfig) {
   const filterFields = filtersConfig.fields;
   const initialFilters = filtersConfig.initial;
   const results = labels.results;
-  const hasPagination = pagination != null;
+  const hasPagination = paginationConfig != null;
   const hasAddForm = addForm != null;
 
-  const pageSize = hasPagination ? pagination.pageSize : 20;
+  const pageSize = hasPagination ? paginationConfig.pageSize : 20;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<EntitySortOption>(DEFAULT_ENTITY_SORT);
@@ -203,6 +210,10 @@ export function useListPage(config: EntityConfig) {
     } else {
       loadData(searchQuery, true);
     }
+    // This useEffect is meant to re-run only on filtersKey, sortBy, and sortDirection changes.
+    // searchQuery is handled separately via a debounced handler to avoid duplicate requests.
+    // loadData is intentionally omitted from deps to prevent immediate duplicate calls.
+    // Inside the effect: hasPagination and setCurrentPage reset pagination; loadData fetches with current searchQuery.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey, sortBy, sortDirection]);
 
@@ -241,6 +252,16 @@ export function useListPage(config: EntityConfig) {
     [loadData, searchQuery]
   );
 
+  const pagination: ListPagePagination | undefined = hasPagination
+    ? {
+        totalCount,
+        pageSize,
+        totalPages,
+        currentPage,
+        goToPage,
+      }
+    : undefined;
+
   const isAddFormOpen = hasAddForm ? addFormOpen : false;
 
   const handleAddFormOpenChange = useCallback((open: boolean) => {
@@ -259,7 +280,7 @@ export function useListPage(config: EntityConfig) {
     const init = initialFilters as Record<string, unknown>;
     const current = filters as Record<string, unknown>;
     for (const key of Object.keys(current)) {
-      if (current[key] !== init[key]) count++;
+      if (!deepEqual(current[key], init[key])) count++;
     }
     return count;
   })();
@@ -295,13 +316,7 @@ export function useListPage(config: EntityConfig) {
 
   return {
     ...baseReturn,
-    ...(hasPagination && {
-      currentPage,
-      totalPages,
-      totalCount,
-      goToPage,
-      pageSize,
-    }),
+    pagination,
     ...(hasAddForm && {
       isAddFormOpen,
       handleAddFormOpenChange,

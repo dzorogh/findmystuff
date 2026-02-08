@@ -71,12 +71,20 @@ const buildCountMap = (rows: Array<{ destination_id: number | null }>) => {
   return counts;
 };
 
+const parseOptionalInt = (value: string | null): number | null => {
+  if (value == null || value === "") return null;
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? null : n;
+};
+
 const fetchPlacesFallback = async (
   supabase: SupabaseClient,
   query: string | null,
   showDeleted: boolean,
   sortBy: SortBy,
-  sortDirection: SortDirection
+  sortDirection: SortDirection,
+  entityTypeId: number | null,
+  roomId: number | null
 ) => {
   let fallbackQuery = supabase
     .from("places")
@@ -87,6 +95,22 @@ const fetchPlacesFallback = async (
   fallbackQuery = showDeleted
     ? fallbackQuery.not("deleted_at", "is", null)
     : fallbackQuery.is("deleted_at", null);
+
+  if (entityTypeId != null) {
+    fallbackQuery = fallbackQuery.eq("entity_type_id", entityTypeId);
+  }
+
+  if (roomId != null) {
+    const { data: placeIdsInRoom } = await supabase
+      .from("mv_place_last_room_transition")
+      .select("place_id")
+      .eq("room_id", roomId);
+    const ids = (placeIdsInRoom ?? []).map((r: { place_id: number }) => r.place_id);
+    if (ids.length === 0) {
+      return { data: [] as Place[], error: null };
+    }
+    fallbackQuery = fallbackQuery.in("id", ids);
+  }
 
   const { data: fallbackRows, error: fallbackError } = await fallbackQuery;
   if (fallbackError) {
@@ -211,6 +235,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
+    const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
+    const roomId = parseOptionalInt(searchParams.get("roomId"));
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -223,12 +249,14 @@ export async function GET(request: NextRequest) {
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      filter_entity_type_id: entityTypeId ?? undefined,
+      filter_room_id: roomId ?? undefined,
     });
 
     if (fetchError) {
       if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
         const { data: fallbackPlaces, error: fallbackError } =
-          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection);
+          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection, entityTypeId, roomId);
 
         if (fallbackError) {
           return NextResponse.json(

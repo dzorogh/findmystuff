@@ -80,21 +80,21 @@ export function useContainersActions({
         runEntityAction(container.id, "delete", {
           confirm: labels.deleteConfirm ?? `Вы уверены, что хотите удалить ${singularLower}?`,
           success: labels.deleteSuccess ?? `${labels.singular} успешно удалено`,
-          error: `Произошла ошибка при удалении ${singularLower}`,
+          error: labels.deleteError ?? `Произошла ошибка при удалении ${singularLower}`,
         }),
       onRestore: () =>
         runEntityAction(container.id, "restore", {
           success: labels.restoreSuccess ?? `${labels.singular} успешно восстановлено`,
-          error: `Произошла ошибка при восстановлении ${singularLower}`,
+          error: labels.restoreError ?? `Произошла ошибка при восстановлении ${singularLower}`,
         }),
       onDuplicate: () =>
         runEntityAction(container.id, "duplicate", {
           success: labels.duplicateSuccess ?? `${labels.singular} успешно дублировано`,
-          error: `Произошла ошибка при дублировании ${singularLower}`,
+          error: labels.duplicateError ?? `Произошла ошибка при дублировании ${singularLower}`,
         }),
       onPrintLabel: () => printContainer(container.id, container.name),
     }),
-    [basePath, destinationTypes, labels.deleteConfirm, labels.deleteSuccess, labels.duplicateSuccess, labels.moveError, labels.moveSuccess, labels.moveTitle, labels.restoreSuccess, labels.singular, moveEnabled, printContainer, refreshList, runEntityAction, singularLower]
+    [basePath, destinationTypes, labels.deleteConfirm, labels.deleteError, labels.deleteSuccess, labels.duplicateError, labels.duplicateSuccess, labels.moveError, labels.moveSuccess, labels.moveTitle, labels.restoreError, labels.restoreSuccess, labels.singular, moveEnabled, printContainer, refreshList, runEntityAction, singularLower]
   );
 
   return getRowActions;

@@ -28,7 +28,7 @@ export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderP
     return (
         <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-                <SidebarTrigger className="relative right-2" />
+                <SidebarTrigger className="-ml-2" />
                 <PageBreadcrumb path={breadcrumb} />
             </div>
             <div className="flex justify-between items-center">

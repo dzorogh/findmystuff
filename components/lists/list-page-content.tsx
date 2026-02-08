@@ -55,16 +55,12 @@ export function ListPageContent({
         getName={listPage.getName}
         getRowActions={getRowActions}
       />
-      {listPage.totalCount != null &&
-        listPage.pageSize != null &&
-        listPage.totalPages != null &&
-        listPage.currentPage != null &&
-        listPage.goToPage != null &&
-        listPage.totalCount > listPage.pageSize && (
+      {listPage.pagination &&
+        listPage.pagination.totalCount > listPage.pagination.pageSize && (
           <ListPagination
-            currentPage={listPage.currentPage}
-            totalPages={listPage.totalPages}
-            onPageChange={listPage.goToPage}
+            currentPage={listPage.pagination.currentPage}
+            totalPages={listPage.pagination.totalPages}
+            onPageChange={listPage.pagination.goToPage}
           />
         )}
       {AddForm && (

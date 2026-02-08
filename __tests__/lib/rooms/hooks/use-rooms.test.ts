@@ -52,7 +52,6 @@ describe('useRooms', () => {
       expect(result.current.error).not.toBeNull()
     })
 
-    expect(result.current.error).not.toBeNull()
     expect(result.current.rooms).toEqual([])
   })
 

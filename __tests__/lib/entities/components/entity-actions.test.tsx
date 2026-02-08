@@ -26,6 +26,6 @@ describe("EntityActions", () => {
         isDeleted={false}
       />
     );
-    expect(screen.getByTitle("Редактировать")).toBeInTheDocument();
+    expect(screen.getByLabelText("Редактировать")).toBeInTheDocument();
   });
 });

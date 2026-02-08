@@ -36,20 +36,30 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
     showDeleted: filters.showDeleted,
     sortBy,
     sortDirection,
+    entityTypeId: filters.entityTypeId ?? undefined,
+    hasItems: filters.hasItems ?? undefined,
+    locationType: filters.locationType ?? undefined,
   });
   let list = Array.isArray(response?.data) ? response.data : [];
-  if (filters.entityTypeId !== null) {
-    list = list.filter((c: Container) => c.entity_type_id === filters.entityTypeId);
-  }
-  if (filters.hasItems !== null) {
-    list = list.filter((c: Container) =>
-      filters.hasItems ? (c.itemsCount ?? 0) > 0 : (c.itemsCount ?? 0) === 0
-    );
-  }
-  if (filters.locationType !== null && filters.locationType !== "all") {
-    list = list.filter(
-      (c: Container) => c.last_location?.destination_type === filters.locationType
-    );
+  const hasClientFilters =
+    filters.entityTypeId !== null ||
+    filters.hasItems !== null ||
+    (filters.locationType !== null && filters.locationType !== "all");
+  if (hasClientFilters) {
+    list = list.filter((c: Container) => {
+      if (filters.entityTypeId !== null && c.entity_type_id !== filters.entityTypeId) return false;
+      if (filters.hasItems !== null) {
+        const count = c.itemsCount ?? 0;
+        if (filters.hasItems ? count === 0 : count > 0) return false;
+      }
+      if (
+        filters.locationType !== null &&
+        filters.locationType !== "all" &&
+        c.last_location?.destination_type !== filters.locationType
+      )
+        return false;
+      return true;
+    });
   }
   return { data: list };
 }

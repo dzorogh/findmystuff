@@ -23,9 +23,22 @@ export function getRoomsWithCountsRpc(
     page_offset: number;
     sort_by: SortBy;
     sort_direction: SortDirection;
+    has_items?: boolean | null;
+    has_containers?: boolean | null;
+    has_places?: boolean | null;
   }
 ) {
-  return supabase.rpc("get_rooms_with_counts", params);
+  return supabase.rpc("get_rooms_with_counts", {
+    search_query: params.search_query,
+    show_deleted: params.show_deleted,
+    page_limit: params.page_limit,
+    page_offset: params.page_offset,
+    sort_by: params.sort_by,
+    sort_direction: params.sort_direction,
+    has_items: params.has_items ?? null,
+    has_containers: params.has_containers ?? null,
+    has_places: params.has_places ?? null,
+  });
 }
 
 /** RPC get_item_ids_in_room (вызывать из app/api). */
@@ -39,10 +52,19 @@ class RoomsApiClient extends HttpClient {
     showDeleted?: boolean;
     sortBy?: SortBy;
     sortDirection?: SortDirection;
+    hasItems?: boolean | null;
+    hasContainers?: boolean | null;
+    hasPlaces?: boolean | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
+    if (params?.hasItems !== undefined && params?.hasItems !== null)
+      searchParams.set("hasItems", String(params.hasItems));
+    if (params?.hasContainers !== undefined && params?.hasContainers !== null)
+      searchParams.set("hasContainers", String(params.hasContainers));
+    if (params?.hasPlaces !== undefined && params?.hasPlaces !== null)
+      searchParams.set("hasPlaces", String(params.hasPlaces));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Room[]>(`/rooms${queryString ? `?${queryString}` : ""}`);

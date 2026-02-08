@@ -27,4 +27,36 @@ describe("createSimpleListCache", () => {
     cache.invalidate("k");
     expect(cache.get("k")).toBeUndefined();
   });
+
+  it("load с reject: get возвращает entry с error и пустыми data", async () => {
+    const cache = createSimpleListCache<number>();
+    const err = new Error("load failed");
+    await cache.load("k", () => Promise.reject(err));
+    const entry = cache.get("k");
+    expect(entry).toBeDefined();
+    expect(entry?.error).toBe(err);
+    expect(entry?.data).toEqual([]);
+  });
+
+  it("in-flight результат игнорируется после invalidate (keyVersions)", async () => {
+    const cache = createSimpleListCache<number>();
+    let resolveLoader!: (v: { data: number[] }) => void;
+    const loaderPromise = new Promise<{ data: number[] }>((r) => {
+      resolveLoader = r;
+    });
+    const loadPromise = cache.load("k", () => loaderPromise);
+    cache.invalidate("k");
+    resolveLoader({ data: [1] });
+    await loadPromise;
+    expect(cache.get("k")).toBeUndefined();
+  });
+
+  it("unsubscribe: отписанный callback не вызывается при load", async () => {
+    const cache = createSimpleListCache<number>();
+    const fn = jest.fn();
+    const unsubscribe = cache.subscribe("k", fn);
+    unsubscribe();
+    await cache.load("k", () => Promise.resolve({ data: [1] }));
+    expect(fn).not.toHaveBeenCalled();
+  });
 });

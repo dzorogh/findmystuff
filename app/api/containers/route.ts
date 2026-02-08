@@ -22,6 +22,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
+    const entityTypeIdParam = searchParams.get("entityTypeId");
+    const entityTypeId =
+      entityTypeIdParam !== null && entityTypeIdParam !== ""
+        ? parseInt(entityTypeIdParam, 10)
+        : null;
+    const hasItemsParam = searchParams.get("hasItems");
+    const hasItems =
+      hasItemsParam === null || hasItemsParam === ""
+        ? null
+        : hasItemsParam === "true";
+    const locationTypeParam = searchParams.get("locationType");
+    const locationType =
+      locationTypeParam !== null && locationTypeParam !== "" && locationTypeParam !== "all"
+        ? locationTypeParam
+        : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -34,6 +49,9 @@ export async function GET(request: NextRequest) {
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      p_entity_type_id: Number.isNaN(entityTypeId) ? null : entityTypeId,
+      p_has_items: hasItems,
+      p_destination_type: locationType,
     });
 
     if (fetchError) {

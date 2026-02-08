@@ -22,6 +22,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
+    const hasItemsParam = searchParams.get("hasItems");
+    const hasItems =
+      hasItemsParam === null || hasItemsParam === ""
+        ? null
+        : hasItemsParam === "true";
+    const hasContainersParam = searchParams.get("hasContainers");
+    const hasContainers =
+      hasContainersParam === null || hasContainersParam === ""
+        ? null
+        : hasContainersParam === "true";
+    const hasPlacesParam = searchParams.get("hasPlaces");
+    const hasPlaces =
+      hasPlacesParam === null || hasPlacesParam === ""
+        ? null
+        : hasPlacesParam === "true";
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -34,6 +49,9 @@ export async function GET(request: NextRequest) {
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      has_items: hasItems,
+      has_containers: hasContainers,
+      has_places: hasPlaces,
     });
 
     if (fetchError) {
@@ -43,13 +61,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!roomsData || roomsData.length === 0) {
-      return NextResponse.json({
-        data: [],
-      });
-    }
-
-    const rooms: Room[] = roomsData.map((room: {
+    type RoomRow = {
       id: number;
       name: string | null;
       room_type_id: number | null;
@@ -60,7 +72,21 @@ export async function GET(request: NextRequest) {
       items_count: number;
       places_count: number;
       containers_count: number;
-    }) => ({
+      total_count?: number;
+    };
+
+    if (!roomsData || roomsData.length === 0) {
+      return NextResponse.json({
+        data: [],
+        totalCount: 0,
+      });
+    }
+
+    const rows = roomsData as RoomRow[];
+    const totalCount =
+      rows[0]?.total_count != null ? Number(rows[0].total_count) : rows.length;
+
+    const rooms: Room[] = rows.map((room) => ({
       id: room.id,
       name: room.name,
       room_type_id: room.room_type_id ?? null,
@@ -75,6 +101,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: rooms,
+      totalCount,
     });
   } catch (error) {
     console.error("Ошибка загрузки списка помещений:", error);

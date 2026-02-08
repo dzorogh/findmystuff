@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { toast } from "sonner";
 import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
@@ -17,7 +17,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { FieldGroup } from "@/components/ui/field";
 import { ItemTypeSelect } from "../fields/item-type-select";
 
 interface AddItemFormProps {

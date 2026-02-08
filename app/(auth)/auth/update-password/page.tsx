@@ -41,18 +41,20 @@ const UpdatePasswordPage = () => {
   // Сохраняем наличие recovery в hash при первом рендере, т.к. Supabase может очистить hash
   const hadRecoveryHashRef = useRef<boolean>(false);
   const recoverySessionRef = useRef<{ accessToken: string; refreshToken: string } | null>(null);
-  if (typeof window !== "undefined" && !hadRecoveryHashRef.current) {
+  const exchangedCodeRef = useRef<string | null>(null);
+  const appliedRecoverySessionRef = useRef(false);
+
+  useEffect(() => {
+    if (hadRecoveryHashRef.current) return;
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const accessToken = hashParams.get("access_token");
     const refreshToken = hashParams.get("refresh_token");
-
-    hadRecoveryHashRef.current = hashParams.get("type") === "recovery";
+    if (hashParams.get("type") !== "recovery") return;
+    hadRecoveryHashRef.current = true;
     if (accessToken && refreshToken) {
       recoverySessionRef.current = { accessToken, refreshToken };
     }
-  }
-  const exchangedCodeRef = useRef<string | null>(null);
-  const appliedRecoverySessionRef = useRef(false);
+  }, []);
 
   useEffect(() => {
     if (

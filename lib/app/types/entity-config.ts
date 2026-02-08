@@ -33,8 +33,11 @@ export interface EntityLabels {
   moveError: string;
   deleteConfirm?: string;
   deleteSuccess?: string;
+  deleteError?: string;
   restoreSuccess?: string;
+  restoreError?: string;
   duplicateSuccess?: string;
+  duplicateError?: string;
 }
 
 export interface MoveConfig {
@@ -90,6 +93,15 @@ export interface FetchListResult {
 /** Optional pagination: when present, useListPage manages currentPage and passes page to fetch. */
 export interface PaginationConfig {
   pageSize: number;
+}
+
+/** Pagination state and handlers returned by useListPage when config.pagination is set. */
+export interface ListPagePagination {
+  totalCount: number;
+  pageSize: number;
+  totalPages: number;
+  currentPage: number;
+  goToPage: (page: number) => void;
 }
 
 /** Full config passed to useListPage. */

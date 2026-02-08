@@ -2,6 +2,7 @@
 
 import { Field, FieldDescription } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ShowDeletedCheckboxProps {
   label?: string;
@@ -19,12 +20,12 @@ export const ShowDeletedCheckbox = ({
   return (
     <Field>
       <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
+        <Checkbox
           id="showDeleted"
           checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+          onCheckedChange={(value) => onChange(value === true)}
+          className="cursor-pointer"
+          aria-label={label}
         />
         <Label htmlFor="showDeleted" className="text-sm font-normal cursor-pointer">
           {label}
