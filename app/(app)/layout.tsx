@@ -68,9 +68,9 @@ export default async function RootLayout({
               <CurrentPageProvider>
                 <CapacitorAuthListener />
                 <QuickMoveProvider>
-                  <Sidebar className="h-full md:w-64 fixed left-0 top-0 border-r" />
+                  <Sidebar className="h-full md:w-48 fixed left-0 top-0 border-r" />
 
-                  <main className="flex flex-col flex-1 md:ml-64">
+                  <main className="flex flex-col flex-1 md:ml-48">
                     <div className="flex-1 overflow-y-auto">
                       <PageContainer>{children}</PageContainer>
                     </div>

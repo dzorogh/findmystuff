@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getClientUser } from "@/lib/users/api";
+import { toast } from "sonner";
 
 interface UserContextType {
   user: User | null;
@@ -19,10 +20,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getClientUser()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false));
+    try {
+      getClientUser()
+        .then(setUser)
+        .catch(() => setUser(null))
+        .finally(() => setIsLoading(false));
+    } catch (err) {
+      console.error("Error getting client user:", err);
+      toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
+    }
   }, []);
 
   return (

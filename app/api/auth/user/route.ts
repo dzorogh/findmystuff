@@ -12,7 +12,7 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ data: { user } });
   } catch (error) {
     console.error("Ошибка получения пользователя:", error);
     return NextResponse.json(

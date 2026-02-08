@@ -191,15 +191,8 @@ export function EntityActions({
         })}
         {inPopover.length > 0 && (
           <Popover open={mobileOpen} onOpenChange={setMobileOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                aria-label="Открыть меню действий"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+            <PopoverTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Открыть меню действий" />}>
+              <MoreHorizontal className="h-4 w-4" />
             </PopoverTrigger>
             <PopoverContent align="end" className="w-40 p-1">
               {inPopover.map((item, index) =>
