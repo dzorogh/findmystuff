@@ -27,6 +27,7 @@ import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import type { RoomEntity } from "@/types/entity";
+import { PageHeader } from "@/components/layout/page-header";
 
 type Room = RoomEntity;
 
@@ -164,7 +165,7 @@ export default function RoomDetailPage() {
         isDeleting={isDeleting}
         isRestoring={isRestoring}
         showEdit={false}
-        onEdit={() => {}}
+        onEdit={() => { }}
         onPrintLabel={() => printLabel(room.id, room.name)}
         onDelete={handleDelete}
         onRestore={handleRestore}
@@ -211,126 +212,132 @@ export default function RoomDetailPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Редактирование помещения</CardTitle>
-          <CardDescription className="flex items-center gap-2 flex-wrap">
-            ID: #{room.id}
-            {room.deleted_at && (
-              <>
-                <span className="text-muted-foreground">•</span>
-                <Badge variant="destructive">Удалено</Badge>
-              </>
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <form onSubmit={handleEditSubmit}>
-            <FormGroup>
-              <FormField
-                label="Тип помещения (необязательно)"
-                htmlFor={`room-type-${room.id}`}
-              >
-                <Combobox
-                  options={[
-                    { value: "", label: "Не указан" },
-                    ...roomTypes.map((type) => ({
-                      value: type.id.toString(),
-                      label: type.name,
-                    })),
-                  ]}
-                  value={roomTypeId}
-                  onValueChange={setRoomTypeId}
-                  placeholder="Выберите тип помещения..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы помещений не найдены"
-                  disabled={isSubmitting}
-                />
-              </FormField>
-
-              <FormField label="Название помещения" htmlFor={`room-name-${room.id}`}>
-                <Input
-                  id={`room-name-${room.id}`}
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Введите название помещения"
-                  disabled={isSubmitting}
-                />
-              </FormField>
-
-              <ImageUpload
-                value={photoUrl}
-                onChange={setPhotoUrl}
-                disabled={isSubmitting}
-                label="Фотография помещения (необязательно)"
-              />
-
-              <ErrorMessage message={formError ?? ""} />
-
-              <div className="flex justify-end pt-2">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
-                    </>
-                  ) : (
-                    "Сохранить"
-                  )}
-                </Button>
-              </div>
-            </FormGroup>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div>
+    <div className="space-y-4">
+      <PageHeader
+        title={room.name ?? `Помещение #${room.id}`}
+        ancestors={[
+          { label: "Помещения", href: "/rooms" },
+          { label: room.name ?? `Помещение #${room.id}`, href: "" },
+        ]}
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Содержимое помещения</CardTitle>
-            <CardDescription>
-              Вещи, места и контейнеры, которые находятся в этом помещении
+            <CardTitle>Редактирование помещения</CardTitle>
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              ID: #{room.id}
+              {room.deleted_at && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <Badge variant="destructive">Удалено</Badge>
+                </>
+              )}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {roomItems.length === 0 && roomPlaces.length === 0 && roomContainers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Помещение пусто
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {roomItems.length > 0 && (
-                  <EntityContentGrid
-                    items={roomItems}
-                    emptyMessage=""
-                    entityType="items"
-                    title="Вещи"
+          <CardContent className="pt-4">
+            <form onSubmit={handleEditSubmit}>
+              <FormGroup>
+                <FormField
+                  label="Тип помещения (необязательно)"
+                  htmlFor={`room-type-${room.id}`}
+                >
+                  <Combobox
+                    items={[
+                      { value: "", label: "Не указан" },
+                      ...roomTypes.map((type) => ({
+                        value: type.id.toString(),
+                        label: type.name,
+                      })),
+                    ]}
+                    value={roomTypeId}
+                    onValueChange={(v) => setRoomTypeId(v ?? "")}
+                    disabled={isSubmitting}
                   />
-                )}
-                {roomPlaces.length > 0 && (
-                  <EntityContentGrid
-                    items={roomPlaces}
-                    emptyMessage=""
-                    entityType="places"
-                    title="Места"
+                </FormField>
+
+                <FormField label="Название помещения" htmlFor={`room-name-${room.id}`}>
+                  <Input
+                    id={`room-name-${room.id}`}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Введите название помещения"
+                    disabled={isSubmitting}
                   />
-                )}
-                {roomContainers.length > 0 && (
-                  <EntityContentGrid
-                    items={roomContainers}
-                    emptyMessage=""
-                    entityType="containers"
-                    title="Контейнеры"
-                  />
-                )}
-              </div>
-            )}
+                </FormField>
+
+                <ImageUpload
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  disabled={isSubmitting}
+                  label="Фотография помещения (необязательно)"
+                />
+
+                <ErrorMessage message={formError ?? ""} />
+
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      "Сохранить"
+                    )}
+                  </Button>
+                </div>
+              </FormGroup>
+            </form>
           </CardContent>
         </Card>
-      </div>
 
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Содержимое помещения</CardTitle>
+              <CardDescription>
+                Вещи, места и контейнеры, которые находятся в этом помещении
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {roomItems.length === 0 && roomPlaces.length === 0 && roomContainers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Помещение пусто
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {roomItems.length > 0 && (
+                    <EntityContentGrid
+                      items={roomItems}
+                      emptyMessage=""
+                      entityType="items"
+                      title="Вещи"
+                    />
+                  )}
+                  {roomPlaces.length > 0 && (
+                    <EntityContentGrid
+                      items={roomPlaces}
+                      emptyMessage=""
+                      entityType="places"
+                      title="Места"
+                    />
+                  )}
+                  {roomContainers.length > 0 && (
+                    <EntityContentGrid
+                      items={roomContainers}
+                      emptyMessage=""
+                      entityType="containers"
+                      title="Контейнеры"
+                    />
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
+
   );
 }

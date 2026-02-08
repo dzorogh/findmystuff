@@ -22,12 +22,14 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-import MovePlaceForm from "@/components/forms/move-place-form";
+import MoveEntityForm from "@/components/forms/move-entity-form";
+import { PLACES_LIST_CONFIG } from "@/lib/entities/places/list-config";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import type { Transition, PlaceEntity } from "@/types/entity";
+import { PageHeader } from "@/components/layout/page-header";
 
 type Place = PlaceEntity;
 
@@ -199,132 +201,149 @@ export default function PlaceDetailPage() {
   const selectedPlaceType = placeTypes.find((t) => t.id === place.entity_type_id);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Редактирование места</CardTitle>
-          <CardDescription className="flex items-center gap-2 flex-wrap">
-            ID: #{place.id}
-            {place.deleted_at && (
-              <>
-                <span className="text-muted-foreground">•</span>
-                <Badge variant="destructive">Удалено</Badge>
-              </>
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleEditSubmit}>
-            <FormGroup>
-              <FormField label="Название места" htmlFor={`place-name-${place.id}`}>
-                <Input
-                  id={`place-name-${place.id}`}
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Например: Ш1П1, С1П2"
-                  disabled={isSubmitting}
-                />
-              </FormField>
-
-              {selectedPlaceType && (
-                <FormField
-                  label="Тип места"
-                  description="Тип места нельзя изменить после создания"
-                >
-                  <div className="rounded-md border bg-muted px-3 py-2">
-                    <p className="text-sm font-medium">{selectedPlaceType.name}</p>
-                  </div>
-                </FormField>
-              )}
-
-              <ImageUpload
-                value={photoUrl}
-                onChange={setPhotoUrl}
-                disabled={isSubmitting}
-                label="Фотография места (необязательно)"
-              />
-
-              <ErrorMessage message={formError ?? ""} />
-
-              <div className="flex justify-end pt-2">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
-                    </>
-                  ) : (
-                    "Сохранить"
-                  )}
-                </Button>
-              </div>
-            </FormGroup>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-col gap-4">
-      <Card>
+    <div className="space-y-4">
+      <PageHeader
+        title={place.name ?? `Место #${place.id}`}
+        ancestors={[
+          { label: "Места", href: "/places" },
+        ]}
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
           <CardHeader>
-            <CardTitle>Содержимое места</CardTitle>
-            <CardDescription>
-              Вещи и контейнеры, которые находятся в этом месте
+            <CardTitle>Редактирование места</CardTitle>
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              ID: #{place.id}
+              {place.deleted_at && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <Badge variant="destructive">Удалено</Badge>
+                </>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {placeItems.length === 0 && placeContainers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Место пусто
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {placeItems.length > 0 && (
-                  <EntityContentGrid
-                    items={placeItems}
-                    emptyMessage=""
-                    entityType="items"
-                    title="Вещи"
+            <form onSubmit={handleEditSubmit}>
+              <FormGroup>
+                <FormField label="Название места" htmlFor={`place-name-${place.id}`}>
+                  <Input
+                    id={`place-name-${place.id}`}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Например: Ш1П1, С1П2"
+                    disabled={isSubmitting}
                   />
+                </FormField>
+
+                {selectedPlaceType && (
+                  <FormField
+                    label="Тип места"
+                    description="Тип места нельзя изменить после создания"
+                  >
+                    <div className="rounded-md border bg-muted px-3 py-2">
+                      <p className="text-sm font-medium">{selectedPlaceType.name}</p>
+                    </div>
+                  </FormField>
                 )}
-                {placeContainers.length > 0 && (
-                  <EntityContentGrid
-                    items={placeContainers}
-                    emptyMessage=""
-                    entityType="containers"
-                    title="Контейнеры"
-                  />
-                )}
-              </div>
-            )}
+
+                <ImageUpload
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  disabled={isSubmitting}
+                  label="Фотография места (необязательно)"
+                />
+
+                <ErrorMessage message={formError ?? ""} />
+
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      "Сохранить"
+                    )}
+                  </Button>
+                </div>
+              </FormGroup>
+            </form>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>История перемещений</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransitionsTable
-              transitions={transitions}
-              emptyMessage="История перемещений пуста"
-            />
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Содержимое места</CardTitle>
+              <CardDescription>
+                Вещи и контейнеры, которые находятся в этом месте
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {placeItems.length === 0 && placeContainers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Место пусто
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {placeItems.length > 0 && (
+                    <EntityContentGrid
+                      items={placeItems}
+                      emptyMessage=""
+                      entityType="items"
+                      title="Вещи"
+                    />
+                  )}
+                  {placeContainers.length > 0 && (
+                    <EntityContentGrid
+                      items={placeContainers}
+                      emptyMessage=""
+                      entityType="containers"
+                      title="Контейнеры"
+                    />
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>История перемещений</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TransitionsTable
+                transitions={transitions}
+                emptyMessage="История перемещений пуста"
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {isMoveDialogOpen && place && (
+          <MoveEntityForm
+            title="Переместить место"
+            entityDisplayName={place.name ?? `Место #${place.id}`}
+            destinationTypes={PLACES_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "container"]}
+            buildPayload={(destinationType, destinationId) => ({
+              place_id: place.id,
+              destination_type: destinationType,
+              destination_id: destinationId,
+            })}
+            getSuccessMessage={(name) => `Место успешно перемещено в ${name}`}
+            getErrorMessage={() => "Произошла ошибка при перемещении места"}
+            open={isMoveDialogOpen}
+            onOpenChange={setIsMoveDialogOpen}
+            onSuccess={() => {
+              setIsMoveDialogOpen(false);
+              loadPlaceData();
+            }}
+          />
+        )}
       </div>
-
-      {isMoveDialogOpen && place && (
-        <MovePlaceForm
-          placeId={place.id}
-          placeName={place.name}
-          open={isMoveDialogOpen}
-          onOpenChange={setIsMoveDialogOpen}
-          onSuccess={() => {
-            setIsMoveDialogOpen(false);
-            loadPlaceData();
-          }}
-        />
-      )}
     </div>
+
   );
 }

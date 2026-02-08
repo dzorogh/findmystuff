@@ -107,7 +107,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
         isDeleting={isDeleting}
         isRestoring={isRestoring}
         showEdit={false}
-        onEdit={() => {}}
+        onEdit={() => { }}
         onMove={() => setIsMoveDialogOpen(true)}
         onPrintLabel={() => printLabel(item.id, item.name)}
         onDelete={handleDelete}
@@ -115,7 +115,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
       />
     );
     return () => setEntityActions(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [item, isDeleting, isRestoring]);
 
   const handleEditSuccess = useCallback(() => {

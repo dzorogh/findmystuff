@@ -13,7 +13,9 @@ import { Combobox } from "@/components/ui/combobox";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
-import MoveItemForm from "@/components/forms/move-item-form";
+import MoveEntityForm from "@/components/forms/move-entity-form";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
+import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
@@ -117,7 +119,7 @@ export default function ItemDetailPage() {
                 htmlFor={`item-type-${item.id}`}
               >
                 <Combobox
-                  options={[
+                  items={[
                     { value: "", label: "Не указан" },
                     ...itemTypes.map((type) => ({
                       value: type.id.toString(),
@@ -125,10 +127,7 @@ export default function ItemDetailPage() {
                     })),
                   ]}
                   value={itemTypeId}
-                  onValueChange={setItemTypeId}
-                  placeholder="Выберите тип вещи..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы вещей не найдены"
+                  onValueChange={(v) => setItemTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
               </FormField>
@@ -174,10 +173,18 @@ export default function ItemDetailPage() {
         </Card>
       </div>
 
-      {isMoveDialogOpen && (
-        <MoveItemForm
-          itemId={item.id}
-          itemName={item.name}
+      {isMoveDialogOpen && item && (
+        <MoveEntityForm
+          title="Переместить вещь"
+          entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
+          destinationTypes={ITEMS_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "place", "container"]}
+          buildPayload={(destinationType, destinationId) => ({
+            item_id: item.id,
+            destination_type: destinationType,
+            destination_id: destinationId,
+          })}
+          getSuccessMessage={(name) => `Вещь успешно перемещена в ${name}`}
+          getErrorMessage={() => "Произошла ошибка при перемещении вещи"}
           open={isMoveDialogOpen}
           onOpenChange={setIsMoveDialogOpen}
           onSuccess={handleMoveSuccess}

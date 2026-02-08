@@ -63,15 +63,6 @@ export const SecondaryMenu = () => {
         },
     ];
 
-    const renderLabel = (item: typeof menuItems[number]) => {
-        return (
-            <>
-                {item.icon ? <item.icon data-icon="inline-start" /> : <Loader2Icon data-icon="inline-start" className="animate-spin" />}
-                {item.label ? item.label : <Skeleton className="h-4 w-32 bg-foreground/20" />}
-            </>
-        )
-    }
-
     return (
         <ScrollArea>
             <div className="flex flex-col gap-1">
@@ -80,11 +71,12 @@ export const SecondaryMenu = () => {
                         key={index}
                         variant={item.href ? (pathname.startsWith(item.href) ? "secondary" : "ghost") : "ghost"}
                         nativeButton={!item.href}
-                        render={item.href ? <Link href={item.href}>{renderLabel(item)}</Link> : undefined}
+                        render={item.href ? <Link href={item.href} /> : undefined}
                         onClick={item.onClick}
                         className="w-full justify-start"
                     >
-                        {!item.href && renderLabel(item)}
+                        {item.icon ? <item.icon data-icon="inline-start" /> : <Loader2Icon data-icon="inline-start" className="animate-spin" />}
+                        {item.label ? item.label : <Skeleton className="h-4 w-32 bg-foreground/20" />}
                     </Button>
                 ))}
             </div>

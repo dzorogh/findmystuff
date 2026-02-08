@@ -25,8 +25,10 @@ export const PrimaryMenu = () => {
                         key={item.href}
                         variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
                         nativeButton={false}
-                        render={<Link href={item.href}><item.icon data-icon="inline-start" /> {item.label}</Link>}
-                    />
+                        render={<Link href={item.href} />}
+                    >
+                        <item.icon data-icon="inline-start" /> {item.label}
+                    </Button>
                 ))}
             </div>
         </ScrollArea>

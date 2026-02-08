@@ -125,7 +125,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 htmlFor="item-type"
               >
                 <Combobox
-                  options={[
+                  items={[
                     { value: "", label: "Не указан" },
                     ...itemTypes.map((type) => ({
                       value: type.id.toString(),
@@ -133,10 +133,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                     })),
                   ]}
                   value={itemTypeId}
-                  onValueChange={setItemTypeId}
-                  placeholder="Выберите тип вещи..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы вещей не найдены"
+                  onValueChange={(v) => setItemTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
               </FormField>

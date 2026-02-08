@@ -135,15 +135,12 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 description="Маркировка будет сгенерирована автоматически (например, КОР-001)"
               >
                 <Combobox
-                  options={containerTypes.map((type) => ({
+                  items={containerTypes.map((type) => ({
                     value: type.id.toString(),
                     label: type.name,
                   }))}
                   value={containerTypeId}
-                  onValueChange={setContainerTypeId}
-                  placeholder="Выберите тип контейнера..."
-                  searchPlaceholder="Поиск типа контейнера..."
-                  emptyText="Типы контейнеров не найдены"
+                  onValueChange={(v) => setContainerTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
               </FormField>

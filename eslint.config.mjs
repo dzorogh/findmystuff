@@ -54,11 +54,6 @@ const eslintConfig = defineConfig([
           selector: "CallExpression[callee.name='fetch']",
           message: "Прямые fetch-запросы разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
         },
-        // Запрещаем Supabase методы .from() - проверяем, что это вызывается на объекте supabase
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='from']",
-          message: "Прямые Supabase запросы (.from()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
         // Запрещаем Supabase методы .rpc()
         {
           selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='rpc']",

@@ -25,13 +25,19 @@ import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import type { Container, Place, Room } from "@/types/entity";
 
+export type DestinationType = "room" | "place" | "container";
+
 interface LocationComboboxProps {
-  destinationType: "room" | "place" | "container" | null;
+  destinationType: DestinationType | null;
   selectedDestinationId: string;
-  onDestinationTypeChange: (type: "room" | "place" | "container" | null) => void;
+  onDestinationTypeChange: (type: DestinationType | null) => void;
   onDestinationIdChange: (id: string) => void;
   disabled?: boolean;
   showRoomFirst?: boolean;
+  /** When set, only these destination types are shown (e.g. for move form). */
+  allowedTypes?: DestinationType[];
+  /** When moving a container, exclude this id from container list. */
+  excludeContainerId?: number;
   label?: string;
   id?: string;
 }
@@ -43,6 +49,8 @@ const LocationCombobox = ({
   onDestinationIdChange,
   disabled = false,
   showRoomFirst = true,
+  allowedTypes,
+  excludeContainerId,
   label = "Местоположение (необязательно)",
   id = "location-combobox",
 }: LocationComboboxProps) => {
@@ -60,7 +68,7 @@ const LocationCombobox = ({
       ? isLoadingRooms
       : false;
 
-  const destinations =
+  const rawDestinations =
     destinationType === "container"
       ? containers
       : destinationType === "place"
@@ -68,6 +76,10 @@ const LocationCombobox = ({
       : destinationType === "room"
       ? rooms
       : [];
+  const destinations =
+    destinationType === "container" && excludeContainerId != null
+      ? rawDestinations.filter((c) => (c as { id: number }).id !== excludeContainerId)
+      : rawDestinations;
 
   const destinationLabel =
     destinationType === "container"
@@ -78,7 +90,7 @@ const LocationCombobox = ({
       ? "помещение"
       : "";
 
-  const buttonOrder = showRoomFirst
+  const fullButtonOrder = showRoomFirst
     ? [
         { type: "room" as const, label: "Помещение", icon: Building2 },
         { type: "place" as const, label: "Место", icon: Warehouse },
@@ -89,6 +101,9 @@ const LocationCombobox = ({
         { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
         { type: "room" as const, label: "Помещение", icon: Building2 },
       ];
+  const buttonOrder = allowedTypes?.length
+    ? fullButtonOrder.filter((b) => allowedTypes.includes(b.type))
+    : fullButtonOrder;
 
   const selectedDestination = destinations.find(
     (dest) => dest.id.toString() === selectedDestinationId

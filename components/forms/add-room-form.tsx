@@ -105,7 +105,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                 htmlFor="room-type"
               >
                 <Combobox
-                  options={[
+                  items={[
                     { value: "", label: "Не указан" },
                     ...roomTypes.map((type) => ({
                       value: type.id.toString(),
@@ -113,10 +113,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                     })),
                   ]}
                   value={roomTypeId}
-                  onValueChange={setRoomTypeId}
-                  placeholder="Выберите тип помещения..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы помещений не найдены"
+                  onValueChange={(v) => setRoomTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
               </FormField>

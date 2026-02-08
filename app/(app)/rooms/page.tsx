@@ -1,68 +1,56 @@
 "use client";
 
 import { Suspense } from "react";
-import RoomsList from "@/components/lists/rooms-list";
 import AddRoomForm from "@/components/forms/add-room-form";
-import { EntityListToolbar } from "@/components/common/entity-list-toolbar";
-import { useEntityListPageState } from "@/lib/app/hooks/use-entity-list-page";
+import { PageHeader } from "@/components/layout/page-header";
+import { EntityList } from "@/components/lists/entity-list";
+import { useListPage } from "@/lib/app/hooks/use-list-page";
+import { ROOMS_LIST_CONFIG } from "@/lib/entities/rooms/list-config";
+import { useRoomsListPageBehavior } from "@/lib/entities/rooms/use-rooms-list-page-behavior";
+import { useRoomsListRowActions } from "@/lib/entities/rooms/use-rooms-list-row-actions";
 
-const RoomsPageContent = () => {
-  const {
-    refreshTrigger,
-    searchQuery,
-    isSearching,
-    resultsCount,
-    isFiltersOpen,
-    setIsFiltersOpen,
-    activeFiltersCount,
-    setActiveFiltersCount,
-    sort,
-    setSort,
-    isAddDialogOpen,
-    handleEntityAdded,
-    handleAddDialogOpenChange,
-    handleSearchChange,
-    handleSearchStateChange,
-  } = useEntityListPageState();
+function RoomsPageContent() {
+  const listConfig = { ...ROOMS_LIST_CONFIG, ...useRoomsListPageBehavior() };
+  const listPage = useListPage(listConfig);
+  const getRowActions = useRoomsListRowActions({ refreshList: listPage.refreshList });
 
   return (
-    <div className="space-y-4">
-        <EntityListToolbar
-          placeholder="Введите название помещения..."
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          isSearching={isSearching}
-          resultsCount={resultsCount}
-          resultsLabel={{ singular: "помещение", plural: "помещений" }}
-          activeFiltersCount={activeFiltersCount}
-          onOpenFilters={() => setIsFiltersOpen(true)}
-          sort={sort}
-          onSortChange={setSort}
-        />
-        <RoomsList 
-          refreshTrigger={refreshTrigger}
-          searchQuery={searchQuery}
-          sort={sort}
-          onSearchStateChange={handleSearchStateChange}
-          filtersOpen={isFiltersOpen}
-          onFiltersOpenChange={setIsFiltersOpen}
-          onActiveFiltersCountChange={setActiveFiltersCount}
-        />
-        <AddRoomForm
-          open={isAddDialogOpen}
-          onOpenChange={handleAddDialogOpenChange}
-          onSuccess={handleEntityAdded}
-        />
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Помещения" />
+      <EntityList
+        entityType="rooms"
+        data={listPage.data}
+        isLoading={listPage.isLoading}
+        error={listPage.error}
+        searchQuery={listPage.searchQuery}
+        onSearchChange={listPage.handleSearchChange}
+        sort={listPage.sort}
+        onSortChange={listPage.setSort}
+        filters={listPage.filters}
+        onFiltersChange={listPage.setFilters}
+        isFiltersOpen={listPage.isFiltersOpen}
+        onFiltersOpenChange={listPage.setIsFiltersOpen}
+        activeFiltersCount={listPage.activeFiltersCount}
+        resultsCount={listPage.resultsCount}
+        resultsLabel={listPage.resultsLabel}
+        filterConfig={listPage.filterConfig}
+        columnsConfig={listPage.columnsConfig}
+        actionsConfig={listPage.actionsConfig}
+        getRowActions={getRowActions}
+      />
+      <AddRoomForm
+        open={listPage.isAddDialogOpen ?? false}
+        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => {})}
+        onSuccess={listPage.handleEntityAdded}
+      />
     </div>
   );
-};
+}
 
-const RoomsPage = () => {
-  return (
-    <Suspense fallback={null}>
-      <RoomsPageContent />
-    </Suspense>
-  );
-};
+const RoomsPage = () => (
+  <Suspense fallback={null}>
+    <RoomsPageContent />
+  </Suspense>
+);
 
 export default RoomsPage;

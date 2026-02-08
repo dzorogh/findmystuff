@@ -143,15 +143,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 description="Маркировка будет сгенерирована автоматически (например, Ш1)"
               >
                 <Combobox
-                  options={placeTypes.map((type) => ({
+                  items={placeTypes.map((type) => ({
                     value: type.id.toString(),
                     label: type.name,
                   }))}
                   value={placeTypeId}
-                  onValueChange={setPlaceTypeId}
-                  placeholder="Выберите тип места..."
-                  searchPlaceholder="Поиск типа места..."
-                  emptyText="Типы мест не найдены"
+                  onValueChange={(v) => setPlaceTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
               </FormField>

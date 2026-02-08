@@ -53,3 +53,5 @@ export function RoomsSelect({ value, onValueChange }: RoomsSelectProps) {
     </Field>
   );
 }
+
+export { RoomsSelect as RoomFilter };

@@ -24,7 +24,8 @@ import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityLocation } from "@/components/entity-detail/entity-location";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-import MoveContainerForm from "@/components/forms/move-container-form";
+import MoveEntityForm from "@/components/forms/move-entity-form";
+import { CONTAINERS_LIST_CONFIG } from "@/lib/entities/containers/list-config";
 import ImageUpload from "@/components/common/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
@@ -237,7 +238,7 @@ export default function ContainerDetailPage() {
                   htmlFor={`container-type-${container.id}`}
                 >
                   <Combobox
-                    options={[
+                    items={[
                       { value: "", label: "Не указан" },
                       ...containerTypes.map((type) => ({
                         value: type.id.toString(),
@@ -245,10 +246,7 @@ export default function ContainerDetailPage() {
                       })),
                     ]}
                     value={containerTypeId}
-                    onValueChange={setContainerTypeId}
-                    placeholder="Выберите тип контейнера..."
-                    searchPlaceholder="Поиск типа контейнера..."
-                    emptyText="Типы контейнеров не найдены"
+                    onValueChange={(v) => setContainerTypeId(v ?? "")}
                     disabled={isSubmitting}
                   />
                 </FormField>
@@ -316,9 +314,18 @@ export default function ContainerDetailPage() {
       </div>
 
       {isMoving && container && (
-        <MoveContainerForm
-          containerId={container.id}
-          containerName={container.name}
+        <MoveEntityForm
+          title="Переместить контейнер"
+          entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
+          destinationTypes={CONTAINERS_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "place", "container"]}
+          buildPayload={(destinationType, destinationId) => ({
+            container_id: container.id,
+            destination_type: destinationType,
+            destination_id: destinationId,
+          })}
+          getSuccessMessage={(name) => `Контейнер успешно перемещён в ${name}`}
+          getErrorMessage={() => "Произошла ошибка при перемещении контейнера"}
+          excludeContainerId={container.id}
           open={isMoving}
           onOpenChange={setIsMoving}
           onSuccess={() => {
