@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEFAULT_ENTITY_SORT, getEntitySortParams, type EntitySortOption } from "@/lib/entities/helpers/sort";
-import type { ListPageConfig } from "@/lib/app/types/list-config";
+import type { EntityConfig, EntityDisplay, Filters, Results } from "@/lib/app/types/entity-config";
 
 const DEBOUNCE_MS = 300;
 
@@ -67,55 +67,51 @@ function useDebouncedSearch(
   }, [searchQuery, delay, skipInitial]);
 }
 
-export interface EntityListState<T, TFilters extends { showDeleted: boolean }> {
+export interface EntityListState<T> {
   data: T[];
   isLoading: boolean;
   error: string | null;
   searchQuery: string;
   sort: EntitySortOption;
-  filters: TFilters;
+  filters: Filters;
   isFiltersOpen: boolean;
-  resultsLabel: { one: string; few: string; many: string };
+  results: Results;
 }
 
-export function useListPage<TFilters extends { showDeleted: boolean }>(
-  config: ListPageConfig<TFilters>
-) {
+export function useListPage(config: EntityConfig) {
   const {
-    filterConfig,
-    columnsConfig,
-    actionsConfig,
-    moveFormConfig,
-    addFormConfig,
-    resultsLabel,
-    initialFilters,
-    listIcon,
-    getListDisplayName,
-    fetchList,
+    filters: filtersConfig,
+    columns,
+    actions,
+    addForm,
+    labels,
+    icon,
+    getName,
+    fetch,
     pagination,
+    kind,
+    basePath,
+    apiTable,
   } = config;
 
+  const filterFields = filtersConfig.fields;
+  const initialFilters = filtersConfig.initial;
+  const results = labels.results;
   const hasPagination = pagination != null;
-
-  const hasMove =
-    moveFormConfig.enabled &&
-    actionsConfig.actions.includes("move");
-
-  const hasAddForm = addFormConfig != null;
+  const hasAddForm = addForm != null;
 
   const pageSize = hasPagination ? pagination.pageSize : 20;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<EntitySortOption>(DEFAULT_ENTITY_SORT);
-  const [filters, setFilters] = useState(initialFilters);
+  const [filters, setFilters] = useState<Filters>(initialFilters);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<unknown[]>([]);
+  const [data, setData] = useState<EntityDisplay[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [addFormOpen, setAddFormOpen] = useState(false);
-  const [movingId, setMovingId] = useState<number | null>(null);
 
   const isMountedRef = useRef(true);
   const { shouldStart, isLatest, finish } = useRequestKey();
@@ -161,12 +157,12 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
       try {
         const params = {
           query: query?.trim(),
-          filters,
+          filterValues: filters,
           sortBy,
           sortDirection,
           ...(hasPagination ? { page } : {}),
         };
-        const result = await fetchList(params as Parameters<typeof fetchList>[0]);
+        const result = await fetch(params);
         if (!isMountedRef.current || !isLatest(requestKey)) return;
         const list = Array.isArray(result?.data) ? result.data : [];
         setData(list);
@@ -189,7 +185,7 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
       sortBy,
       sortDirection,
       hasPagination,
-      fetchList,
+      fetch,
       shouldStart,
       isLatest,
       finish,
@@ -282,15 +278,18 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
     isFiltersOpen,
     setIsFiltersOpen,
     resultsCount,
-    resultsLabel,
+    results,
     activeFiltersCount,
-    filterConfig,
-    columnsConfig,
-    actionsConfig,
-    moveFormConfig,
-    addFormConfig,
-    listIcon,
-    getListDisplayName,
+    filterFields,
+    columns,
+    actions,
+    addForm,
+    icon,
+    getName,
+    labels,
+    kind,
+    basePath,
+    apiTable,
     refreshList,
   };
 
@@ -301,16 +300,12 @@ export function useListPage<TFilters extends { showDeleted: boolean }>(
       totalPages,
       totalCount,
       goToPage,
-      itemsPerPage: pageSize,
+      pageSize,
     }),
     ...(hasAddForm && {
       isAddFormOpen,
       handleAddFormOpenChange,
       handleEntityAdded,
-    }),
-    ...(hasMove && {
-      movingId,
-      setMovingId,
     }),
   };
 }

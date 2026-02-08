@@ -1,58 +1,15 @@
 "use client";
 
 import { Suspense } from "react";
-import AddRoomForm from "@/components/forms/add-room-form";
-import { PageHeader } from "@/components/layout/page-header";
-import { EntityList } from "@/components/lists/entity-list";
+import { ListPageContent } from "@/components/lists/list-page-content";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
-import { ROOMS_LIST_CONFIG } from "@/lib/entities/rooms/list-config";
-import { useRoomsListPageBehavior } from "@/lib/entities/rooms/use-rooms-list-page-behavior";
-import { useRoomsListRowActions } from "@/lib/entities/rooms/use-rooms-list-row-actions";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
 
 function RoomsPageContent() {
-  const listConfig = { ...ROOMS_LIST_CONFIG, ...useRoomsListPageBehavior() };
-  const listPage = useListPage(listConfig);
-  const getRowActions = useRoomsListRowActions({ refreshList: listPage.refreshList });
+  const listPage = useListPage(roomsEntityConfig);
+  const getRowActions = roomsEntityConfig.useActions({ refreshList: listPage.refreshList });
 
-  return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        title="Помещения"
-        actions={<Button variant="default" size="sm" onClick={() => listPage.handleAddDialogOpenChange?.(true)}>
-          <Plus data-icon="inline-start" /> Добавить помещение
-        </Button>}
-      />
-      <EntityList
-        data={listPage.data}
-        isLoading={listPage.isLoading}
-        error={listPage.error}
-        searchQuery={listPage.searchQuery}
-        onSearchChange={listPage.handleSearchChange}
-        sort={listPage.sort}
-        onSortChange={listPage.setSort}
-        filters={listPage.filters}
-        onFiltersChange={listPage.setFilters}
-        isFiltersOpen={listPage.isFiltersOpen}
-        onFiltersOpenChange={listPage.setIsFiltersOpen}
-        activeFiltersCount={listPage.activeFiltersCount}
-        resultsCount={listPage.resultsCount}
-        resultsLabel={listPage.resultsLabel}
-        filterConfig={listPage.filterConfig}
-        columnsConfig={listPage.columnsConfig}
-        actionsConfig={listPage.actionsConfig}
-        listIcon={listPage.listIcon}
-        getListDisplayName={listPage.getListDisplayName}
-        getRowActions={getRowActions}
-      />
-      <AddRoomForm
-        open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
-        onSuccess={listPage.handleEntityAdded}
-      />
-    </div>
-  );
+  return <ListPageContent listPage={listPage} getRowActions={getRowActions} />;
 }
 
 const RoomsPage = () => (

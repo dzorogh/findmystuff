@@ -14,8 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
@@ -25,7 +24,7 @@ import { EntityLocation } from "@/components/entity-detail/entity-location";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import MoveEntityForm from "@/components/forms/move-entity-form";
-import { CONTAINERS_LIST_CONFIG } from "@/lib/entities/containers/list-config";
+import { containersEntityConfig } from "@/lib/entities/containers/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
@@ -230,11 +229,9 @@ export default function ContainerDetailPage() {
           </CardHeader>
           <CardContent className="pt-4">
             <form onSubmit={handleEditSubmit}>
-              <FormGroup>
-                <FormField
-                  label="Название контейнера"
-                  htmlFor={`container-name-${container.id}`}
-                >
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`container-name-${container.id}`}>Название контейнера</FieldLabel>
                   <Input
                     id={`container-name-${container.id}`}
                     type="text"
@@ -243,12 +240,10 @@ export default function ContainerDetailPage() {
                     placeholder="Введите название контейнера"
                     disabled={isSubmitting}
                   />
-                </FormField>
+                </Field>
 
-                <FormField
-                  label="Тип контейнера"
-                  htmlFor={`container-type-${container.id}`}
-                >
+                <Field>
+                  <FieldLabel htmlFor={`container-type-${container.id}`}>Тип контейнера</FieldLabel>
                   <Combobox
                     items={[
                       { value: "", label: "Не указан" },
@@ -261,7 +256,7 @@ export default function ContainerDetailPage() {
                     onValueChange={(v) => setContainerTypeId(v ?? "")}
                     disabled={isSubmitting}
                   />
-                </FormField>
+                </Field>
 
                 <ImageUpload
                   value={photoUrl}
@@ -289,7 +284,7 @@ export default function ContainerDetailPage() {
                     )}
                   </Button>
                 </div>
-              </FormGroup>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>
@@ -327,16 +322,16 @@ export default function ContainerDetailPage() {
 
       {isMoving && container && (
         <MoveEntityForm
-          title="Переместить контейнер"
+          title={containersEntityConfig.labels.moveTitle}
           entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
-          destinationTypes={CONTAINERS_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "place", "container"]}
+          destinationTypes={containersEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
           buildPayload={(destinationType, destinationId) => ({
             container_id: container.id,
             destination_type: destinationType,
             destination_id: destinationId,
           })}
-          getSuccessMessage={(name) => `Контейнер успешно перемещён в ${name}`}
-          getErrorMessage={() => "Произошла ошибка при перемещении контейнера"}
+          getSuccessMessage={containersEntityConfig.labels.moveSuccess}
+          getErrorMessage={() => containersEntityConfig.labels.moveError}
           excludeContainerId={container.id}
           open={isMoving}
           onOpenChange={setIsMoving}

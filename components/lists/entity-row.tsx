@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Building2, Package, Warehouse, Container as ContainerIcon } from "lucide-react";
@@ -10,8 +10,8 @@ import { EntityActions } from "@/lib/entities/components/entity-actions";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type {
   ListColumnConfig,
-  ListActionsConfig,
-} from "@/lib/app/types/list-config";
+  ActionsConfig,
+} from "@/lib/app/types/entity-config";
 import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { cn } from "@/lib/utils";
@@ -35,17 +35,17 @@ type ListEntity = Item | Room | Place | Container;
 interface EntityRowProps {
   entity: ListEntity;
   columnsConfig: ListColumnConfig[];
-  actionsConfig: ListActionsConfig;
+  actions: ActionsConfig;
   /** Иконка из конфига списка (колонка «Название»). */
-  listIcon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
   /** Форматирование имени из конфига списка. */
-  getListDisplayName?: (entity: { id: number; name: string | null }) => string;
+  getName?: (entity: { id: number; name: string | null }) => string;
   actionCallbacks: EntityActionsCallbacks;
   /** Подпись помещения (для колонки room и под имени). */
   roomLabel?: string;
 }
 
-/** Нейтральный fallback имени, если getListDisplayName не передан из конфига. */
+/** Нейтральный fallback имени, если getName не передан из конфига. */
 function getDisplayNameFallback(entity: { id: number; name: string | null }): string {
   const name = entity.name?.trim();
   return name !== undefined && name !== "" ? name : `#${entity.id}`;
@@ -56,8 +56,8 @@ function renderCellContent(
   entity: ListEntity,
   roomLabel: string | undefined,
   editHref: string | undefined,
-  listIcon: React.ComponentType<{ className?: string }> | undefined,
-  getListDisplayName: ((entity: { id: number; name: string | null }) => string) | undefined
+  icon: React.ComponentType<{ className?: string }> | undefined,
+  getName: ((entity: { id: number; name: string | null }) => string) | undefined
 ): React.ReactNode {
   const id = entity.id;
   const deletedAt = entity.deleted_at;
@@ -78,8 +78,8 @@ function renderCellContent(
       );
 
     case "name": {
-      const Icon = listIcon ?? Package;
-      const displayName = getListDisplayName?.(entity) ?? getDisplayNameFallback(entity);
+      const Icon = icon ?? Package;
+      const displayName = getName?.(entity) ?? getDisplayNameFallback(entity);
       const subline =
         "item_type" in entity && entity.item_type?.name
           ? entity.item_type.name
@@ -334,31 +334,46 @@ function renderCellContent(
 export const EntityRow = memo(function EntityRow({
   entity,
   columnsConfig,
-  actionsConfig,
-  listIcon,
-  getListDisplayName,
+  actions,
+  icon,
+  getName,
   actionCallbacks,
   roomLabel,
 }: EntityRowProps) {
   const isDeleted = !!entity.deleted_at;
   const router = useRouter();
+  const pointerStartedOnRowRef = useRef(false);
+
+  const isInteractiveTarget = (target: HTMLElement) =>
+    Boolean(target.closest("a, button, [role='button'], input, textarea, select, label"));
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    pointerStartedOnRowRef.current = e.button === 0 && !isInteractiveTarget(target);
+  };
 
   const handleRowClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest("a, button, [role='button']")) return;
+    const canNavigate = pointerStartedOnRowRef.current && !isInteractiveTarget(target);
+    pointerStartedOnRowRef.current = false;
+    if (!canNavigate) return;
     if (actionCallbacks.editHref) router.push(actionCallbacks.editHref);
   };
 
   return (
     <TableRow
       className={cn(entity.deleted_at ? "opacity-60" : "", "cursor-pointer")}
+      onPointerDown={handlePointerDown}
+      onPointerCancel={() => {
+        pointerStartedOnRowRef.current = false;
+      }}
       onClick={handleRowClick}
     >
       {columnsConfig.map((col) => {
         const cellContent =
           col.key === "actions" ? (
             <EntityActions
-              actionsConfig={actionsConfig}
+              actions={actions}
               callbacks={actionCallbacks}
               isDeleted={isDeleted}
             />
@@ -368,8 +383,8 @@ export const EntityRow = memo(function EntityRow({
               entity,
               roomLabel,
               actionCallbacks.editHref,
-              listIcon,
-              getListDisplayName
+              icon,
+              getName
             )
           );
 

@@ -13,8 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
@@ -23,7 +22,7 @@ import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import MoveEntityForm from "@/components/forms/move-entity-form";
-import { PLACES_LIST_CONFIG } from "@/lib/entities/places/list-config";
+import { placesEntityConfig } from "@/lib/entities/places/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
@@ -224,8 +223,9 @@ export default function PlaceDetailPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleEditSubmit}>
-              <FormGroup>
-                <FormField label="Название места" htmlFor={`place-name-${place.id}`}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`place-name-${place.id}`}>Название места</FieldLabel>
                   <Input
                     id={`place-name-${place.id}`}
                     type="text"
@@ -234,17 +234,18 @@ export default function PlaceDetailPage() {
                     placeholder="Например: Ш1П1, С1П2"
                     disabled={isSubmitting}
                   />
-                </FormField>
+                </Field>
 
                 {selectedPlaceType && (
-                  <FormField
-                    label="Тип места"
-                    description="Тип места нельзя изменить после создания"
-                  >
+                  <Field>
+                    <FieldLabel>Тип места</FieldLabel>
+                    <FieldDescription>
+                      Тип места нельзя изменить после создания
+                    </FieldDescription>
                     <div className="rounded-md border bg-muted px-3 py-2">
                       <p className="text-sm font-medium">{selectedPlaceType.name}</p>
                     </div>
-                  </FormField>
+                  </Field>
                 )}
 
                 <ImageUpload
@@ -268,7 +269,7 @@ export default function PlaceDetailPage() {
                     )}
                   </Button>
                 </div>
-              </FormGroup>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>
@@ -324,16 +325,16 @@ export default function PlaceDetailPage() {
 
         {isMoveDialogOpen && place && (
           <MoveEntityForm
-            title="Переместить место"
+            title={placesEntityConfig.labels.moveTitle}
             entityDisplayName={place.name ?? `Место #${place.id}`}
-            destinationTypes={PLACES_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "container"]}
+            destinationTypes={placesEntityConfig.actions.move?.destinationTypes ?? ["room", "container"]}
             buildPayload={(destinationType, destinationId) => ({
               place_id: place.id,
               destination_type: destinationType,
               destination_id: destinationId,
             })}
-            getSuccessMessage={(name) => `Место успешно перемещено в ${name}`}
-            getErrorMessage={() => "Произошла ошибка при перемещении места"}
+            getSuccessMessage={placesEntityConfig.labels.moveSuccess}
+            getErrorMessage={() => placesEntityConfig.labels.moveError}
             open={isMoveDialogOpen}
             onOpenChange={setIsMoveDialogOpen}
             onSuccess={() => {

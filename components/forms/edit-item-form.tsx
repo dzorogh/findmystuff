@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { getItem, updateItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
@@ -113,11 +112,9 @@ const EditItemForm = ({
           <SheetDescription>Измените название вещи</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Тип вещи (необязательно)"
-              htmlFor={`item-type-${itemId}`}
-            >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor={`item-type-${itemId}`}>Тип вещи (необязательно)</FieldLabel>
               <Combobox
                 items={[
                   { value: "", label: "Не указан" },
@@ -130,12 +127,10 @@ const EditItemForm = ({
                 onValueChange={(v) => setItemTypeId(v ?? "")}
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
-            <FormField
-              label="Название вещи"
-              htmlFor={`item-name-${itemId}`}
-            >
+            <Field>
+              <FieldLabel htmlFor={`item-name-${itemId}`}>Название вещи</FieldLabel>
               <Input
                 id={`item-name-${itemId}`}
                 type="text"
@@ -144,7 +139,7 @@ const EditItemForm = ({
                 placeholder="Введите название вещи"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
             <ImageUpload
               value={photoUrl}
@@ -160,7 +155,7 @@ const EditItemForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

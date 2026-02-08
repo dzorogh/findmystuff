@@ -17,8 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { usePlaces } from "@/lib/places/hooks/use-places";
@@ -128,8 +127,9 @@ const LocationCombobox = ({
   };
 
   return (
-    <FormGroup>
-      <FormField label={label}>
+    <FieldGroup>
+      <Field>
+        <FieldLabel>{label}</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {buttonOrder.map(({ type, label: btnLabel, icon: Icon }) => (
             <Button
@@ -150,10 +150,13 @@ const LocationCombobox = ({
             </Button>
           ))}
         </div>
-      </FormField>
+      </Field>
 
       {destinationType && (
-        <FormField label={`Выберите ${destinationLabel}`} htmlFor={`${id}-combobox`}>
+        <Field>
+          <FieldLabel htmlFor={`${id}-combobox`}>
+            {`Выберите ${destinationLabel}`}
+          </FieldLabel>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -230,9 +233,9 @@ const LocationCombobox = ({
                   : "Помещения не найдены"}
             </p>
           )}
-        </FormField>
+        </Field>
       )}
-    </FormGroup>
+    </FieldGroup>
   );
 };
 

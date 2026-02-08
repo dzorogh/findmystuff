@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { createTransition } from "@/lib/entities/api";
 import { Button } from "@/components/ui/button";
-import { FormGroup } from "@/components/ui/form-group";
+import { FieldGroup } from "@/components/ui/field";
 import { Divider } from "@/components/ui/divider";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
@@ -199,7 +199,7 @@ function MoveEntityFormBody({
       </SheetHeader>
       <form onSubmit={handleSubmit}>
         <div className="p-2">
-          <FormGroup>
+          <FieldGroup>
             <Button
               type="button"
               variant="outline"
@@ -230,7 +230,7 @@ function MoveEntityFormBody({
             />
 
             <ErrorMessage message={error || ""} />
-          </FormGroup>
+          </FieldGroup>
         </div>
         <FormFooter
           isSubmitting={isSubmitting}

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { getContainer, updateContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import ImageUpload from "@/components/fields/image-upload";
@@ -110,11 +109,9 @@ const EditContainerForm = ({
           <SheetDescription>Измените название контейнера</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Название контейнера"
-              htmlFor={`container-name-${containerId}`}
-            >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor={`container-name-${containerId}`}>Название контейнера</FieldLabel>
               <Input
                 id={`container-name-${containerId}`}
                 type="text"
@@ -123,13 +120,13 @@ const EditContainerForm = ({
                 placeholder="Введите название контейнера"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
-            <FormField
-              label="Тип контейнера"
-              htmlFor={`container-type-${containerId}`}
-              description="Тип контейнера нельзя изменить после создания"
-            >
+            <Field>
+              <FieldLabel htmlFor={`container-type-${containerId}`}>Тип контейнера</FieldLabel>
+              <FieldDescription>
+                Тип контейнера нельзя изменить после создания
+              </FieldDescription>
               <div className="rounded-md border bg-muted px-3 py-2">
                 {(() => {
                   const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
@@ -140,7 +137,7 @@ const EditContainerForm = ({
                   );
                 })()}
               </div>
-            </FormField>
+            </Field>
 
             <ImageUpload
               value={photoUrl}
@@ -156,7 +153,7 @@ const EditContainerForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

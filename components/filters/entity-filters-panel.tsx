@@ -1,28 +1,27 @@
 "use client";
 
-import { FieldSet } from "@/components/ui/field";
+import { Field, FieldLabel, FieldSet } from "@/components/ui/field";
 import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
 import { LocationTypeSelect } from "@/components/fields/location-type-select";
 import { RoomsSelect } from "@/components/fields/rooms-select";
-import { FormField } from "@/components/ui/form-field";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FilterFieldConfig } from "@/lib/app/types/list-config";
+import type { FilterFieldConfig, Filters } from "@/lib/app/types/entity-config";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
-export interface EntityFiltersPanelProps<T extends { showDeleted: boolean }> {
-  filterConfig: FilterFieldConfig[];
-  filters: T;
-  onFiltersChange: (filters: T) => void;
+export interface EntityFiltersPanelProps {
+  fields: FilterFieldConfig[];
+  filters: Filters;
+  onFiltersChange: (filters: Filters) => void;
 }
 
-export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
-  filterConfig,
+export function EntityFiltersPanel({
+  fields,
   filters,
   onFiltersChange,
-}: EntityFiltersPanelProps<T>) {
-  const showDeletedField = filterConfig.find((f) => f.type === "showDeleted");
+}: EntityFiltersPanelProps) {
+  const showDeletedField = fields.find((f) => f.type === "showDeleted");
   const showDeletedLabel =
     showDeletedField?.type === "showDeleted"
       ? showDeletedField.label
@@ -32,7 +31,7 @@ export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
     onFiltersChange({ ...filters, showDeleted: checked });
   };
 
-  const otherFields = filterConfig.filter((f) => f.type !== "showDeleted");
+  const otherFields = fields.filter((f) => f.type !== "showDeleted");
 
   const fieldsContent = (
     <>
@@ -51,7 +50,7 @@ export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
                 onFiltersChange({
                   ...filters,
                   [field.key]: v,
-                } as T)
+                })
               }
             />
           );
@@ -72,7 +71,7 @@ export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
                 onFiltersChange({
                   ...filters,
                   [field.key]: v === "all" ? null : v,
-                } as T)
+                })
               }
             />
           );
@@ -91,7 +90,7 @@ export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
                   ...filters,
                   [field.key]:
                     v === "all" || v == null ? null : parseInt(String(v), 10),
-                } as T)
+                })
               }
             />
           );
@@ -110,7 +109,7 @@ export function EntityFiltersPanel<T extends { showDeleted: boolean }>({
                   ...filters,
                   [field.key]:
                     v === "all" || v == null ? null : parseInt(String(v), 10),
-                } as T)
+                })
               }
               label={
                 field.entityKind === "place"
@@ -155,7 +154,8 @@ function EntityTypeFilterField({
     useEntityTypeFilterOptions(entityKind);
 
   return (
-    <FormField label={label}>
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
       {isLoading ? (
         <Skeleton className="h-9 w-full" />
       ) : (
@@ -165,6 +165,6 @@ function EntityTypeFilterField({
           onValueChange={(v) => onValueChange(v === "all" ? null : v)}
         />
       )}
-    </FormField>
+    </Field>
   );
 }

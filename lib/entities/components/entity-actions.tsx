@@ -16,7 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import type { ListActionsConfig, ListActionKey } from "@/lib/app/types/list-config";
+import type { ActionsConfig, ActionKey } from "@/lib/app/types/entity-config";
 
 interface ListActionItem {
   label: string;
@@ -40,7 +40,7 @@ export interface EntityActionsCallbacks {
 }
 
 const ACTION_META: Record<
-  ListActionKey,
+  ActionKey,
   { label: string; icon: LucideIcon; showAsIconOnMobile: boolean }
 > = {
   edit: { label: "Редактировать", icon: Pencil, showAsIconOnMobile: false },
@@ -57,15 +57,15 @@ const RESTORE_META = {
 };
 
 function buildActions(
-  actionsConfig: ListActionsConfig,
+  actions: ActionsConfig,
   callbacks: EntityActionsCallbacks,
   isDeleted: boolean
 ): ListActionItem[] {
-  if (isDeleted && actionsConfig.showRestoreWhenDeleted && callbacks.onRestore) {
+  if (isDeleted && actions.showRestoreWhenDeleted && callbacks.onRestore) {
     return [{ ...RESTORE_META, restore: true, onClick: callbacks.onRestore }];
   }
   const list: ListActionItem[] = [];
-  for (const key of actionsConfig.actions) {
+  for (const key of actions.actions) {
     const meta = ACTION_META[key];
     if (!meta) continue;
     if (key === "edit" && callbacks.editHref) {
@@ -88,7 +88,7 @@ function buildActions(
 }
 
 interface EntityActionsProps {
-  actionsConfig: ListActionsConfig;
+  actions: ActionsConfig;
   callbacks: EntityActionsCallbacks;
   isDeleted: boolean;
   disabled?: boolean;
@@ -96,7 +96,7 @@ interface EntityActionsProps {
 }
 
 export function EntityActions({
-  actionsConfig,
+  actions,
   callbacks,
   isDeleted,
   disabled = false,
@@ -104,7 +104,7 @@ export function EntityActions({
 }: EntityActionsProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const actions = buildActions(actionsConfig, callbacks, isDeleted);
+  const actionItems = buildActions(actions, callbacks, isDeleted);
 
   const renderLabel = (item: ListActionItem) => {
     const Icon = item.icon;
@@ -123,15 +123,15 @@ export function EntityActions({
       item.restore && "text-green-600 hover:text-green-700"
     );
 
-  const withIcon = actions.filter((a) => a.showAsIconOnMobile);
-  const inPopover = actions.filter((a) => !a.showAsIconOnMobile);
+  const withIcon = actionItems.filter((a) => a.showAsIconOnMobile);
+  const inPopover = actionItems.filter((a) => !a.showAsIconOnMobile);
 
-  if (actions.length === 0) return null;
+  if (actionItems.length === 0) return null;
 
   return (
     <div className={cn("flex items-center justify-end gap-1 sm:gap-2", className)}>
       <div className="hidden md:flex">
-        {actions.map((item, index) => {
+        {actionItems.map((item, index) => {
           const Icon = item.icon;
           if (item.custom) {
             return <span key={index}>{item.custom}</span>;

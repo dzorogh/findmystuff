@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { createContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
@@ -128,12 +127,12 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
               </div>
             </div>
           ) : (
-            <FormGroup>
-              <FormField
-                label="Тип контейнера"
-                htmlFor="container-type"
-                description="Маркировка будет сгенерирована автоматически (например, КОР-001)"
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="container-type">Тип контейнера</FieldLabel>
+                <FieldDescription>
+                  Маркировка будет сгенерирована автоматически (например, КОР-001)
+                </FieldDescription>
                 <Combobox
                   items={containerTypes.map((type) => ({
                     value: type.id.toString(),
@@ -143,13 +142,13 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                   onValueChange={(v) => setContainerTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
-              <FormField
-                label="Название контейнера (необязательно)"
-                htmlFor="container-name"
-                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
-              >
+              <Field>
+                <FieldLabel htmlFor="container-name">Название контейнера (необязательно)</FieldLabel>
+                <FieldDescription>
+                  Дополнительное описание. ID и дата создания заполнятся автоматически.
+                </FieldDescription>
                 <Input
                   id="container-name"
                   type="text"
@@ -158,7 +157,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                   placeholder="Введите название контейнера"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
               <LocationCombobox
                 destinationType={destinationType}
@@ -186,7 +185,7 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 submitLabel="Добавить контейнер"
                 submitIcon={Plus}
               />
-            </FormGroup>
+            </FieldGroup>
           )}
         </form>
       </SheetContent>

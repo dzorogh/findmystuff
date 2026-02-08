@@ -13,46 +13,50 @@ import { ListShell } from "@/components/lists/list-shell";
 import { EntityListSkeleton } from "@/components/lists/entity-list-skeleton";
 import { EntityRow, getRoomLabel, ROOM_EMPTY_LABEL } from "@/components/lists/entity-row";
 import { EntityFiltersPanel } from "@/components/filters/entity-filters-panel";
-import type { ListColumnConfig, ListActionsConfig } from "@/lib/app/types/list-config";
-import type { FilterFieldConfig } from "@/lib/app/types/list-config";
+import type {
+  EntityDisplay,
+  ListColumnConfig,
+  ActionsConfig,
+  FilterFieldConfig,
+  Filters,
+  Results,
+} from "@/lib/app/types/entity-config";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { EntityActionsCallbacks } from "@/lib/entities/components/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
-export interface EntityListProps<T extends { showDeleted: boolean }> {
-  data: unknown[];
+export interface EntityListProps {
+  data: EntityDisplay[];
   isLoading: boolean;
   error: string | null;
   searchQuery: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   sort: EntitySortOption;
   onSortChange: (sort: EntitySortOption) => void;
-  filters: T;
-  onFiltersChange: (filters: T) => void;
+  filters: Filters;
+  onFiltersChange: (filters: Filters) => void;
   isFiltersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
   activeFiltersCount: number;
   resultsCount: number;
-  resultsLabel: { one: string; few: string; many: string };
-  filterConfig: FilterFieldConfig[];
-  columnsConfig: ListColumnConfig[];
-  actionsConfig: ListActionsConfig;
-  listIcon?: React.ComponentType<{ className?: string }>;
-  getListDisplayName?: (entity: { id: number; name: string | null }) => string;
-  getRowActions: (
-    entity: Item | Room | Place | Container
-  ) => EntityActionsCallbacks;
+  results: Results;
+  filterFields: FilterFieldConfig[];
+  columns: ListColumnConfig[];
+  actions: ActionsConfig;
+  icon?: React.ComponentType<{ className?: string }>;
+  getName?: (entity: { id: number; name: string | null }) => string;
+  getRowActions: (entity: EntityDisplay) => EntityActionsCallbacks;
 }
 
 /** Подпись помещения для строки: только у сущностей с last_location (items). */
-function getRoomLabelForRow(entity: unknown): string | undefined {
+function getRoomLabelForRow(entity: EntityDisplay): string | undefined {
   const loc = (entity as Item).last_location;
   if (!loc) return undefined;
   return getRoomLabel(loc) ?? ROOM_EMPTY_LABEL;
 }
 
-export function EntityList<T extends { showDeleted: boolean }>({
+export function EntityList({
   data,
   isLoading,
   error,
@@ -66,20 +70,20 @@ export function EntityList<T extends { showDeleted: boolean }>({
   onFiltersOpenChange,
   activeFiltersCount,
   resultsCount,
-  resultsLabel,
-  filterConfig,
-  columnsConfig,
-  actionsConfig,
-  listIcon,
-  getListDisplayName,
+  results,
+  filterFields,
+  columns,
+  actions,
+  icon,
+  getName,
   getRowActions,
-}: EntityListProps<T>) {
+}: EntityListProps) {
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
   const emptyTitle =
     resultsCount === 0
       ? `По вашему запросу ничего не найдено`
-      : `${resultsLabel.many} не найдены`;
+      : `${results.many} не найдены`;
 
   return (
     <div className="flex flex-col gap-4">
@@ -101,7 +105,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
           <Table>
             <TableHeader>
               <TableRow>
-                {columnsConfig.map((col) => (
+                {columns.map((col) => (
                   <TableHead
                     key={col.key}
                     className={`${col.width ?? ""} ${col.hideOnMobile ? "hidden sm:table-cell" : ""
@@ -114,7 +118,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
               </TableRow>
             </TableHeader>
             {isLoading ? (
-              <EntityListSkeleton columnsConfig={columnsConfig} />
+              <EntityListSkeleton columnsConfig={columns} />
             ) : (
               <TableBody>
                 {list.map((entity) => {
@@ -125,10 +129,10 @@ export function EntityList<T extends { showDeleted: boolean }>({
                     <EntityRow
                       key={row.id}
                       entity={row}
-                      columnsConfig={columnsConfig}
-                      actionsConfig={actionsConfig}
-                      listIcon={listIcon}
-                      getListDisplayName={getListDisplayName}
+                      columnsConfig={columns}
+                      actions={actions}
+                      icon={icon}
+                      getName={getName}
                       actionCallbacks={rowActions}
                       roomLabel={roomLabel}
                     />
@@ -148,7 +152,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
         activeFiltersCount={activeFiltersCount}
       >
         <EntityFiltersPanel
-          filterConfig={filterConfig}
+          fields={filterFields}
           filters={filters}
           onFiltersChange={onFiltersChange}
         />

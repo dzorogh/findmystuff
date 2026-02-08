@@ -12,7 +12,7 @@ import AppSidebar from "@/components/navigation/app-sidebar";
 import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/users/server";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
@@ -74,7 +74,7 @@ export default async function RootLayout({
                     <SidebarInset>
                       <main className="flex flex-col flex-1 overflow-hidden h-full">
                         <div className="flex-1 overflow-y-auto">
-                          <div className="mx-auto p-6">
+                          <div className="mx-auto md:p-6 p-4">
                             {children}
                           </div>
                         </div>

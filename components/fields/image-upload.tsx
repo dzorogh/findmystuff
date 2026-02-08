@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { photoApi } from "@/lib/shared/api/photo";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
@@ -102,10 +102,11 @@ const ImageUpload = ({
   };
 
   return (
-    <FormField
-      label={label}
-      description="Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 10MB"
-    >
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      <FieldDescription>
+        Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 10MB
+      </FieldDescription>
       <div className="space-y-3">
         {preview ? (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
@@ -181,7 +182,7 @@ const ImageUpload = ({
           disabled={disabled || isUploading}
         />
       </div>
-    </FormField>
+    </Field>
   );
 };
 

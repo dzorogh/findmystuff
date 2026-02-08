@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FormField } from "@/components/ui/form-field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 
@@ -46,11 +46,11 @@ const RoomCombobox = ({
   );
 
   return (
-    <FormField
-      label={label}
-      htmlFor={`${id}-combobox`}
-      required={required}
-    >
+    <Field>
+      <FieldLabel htmlFor={`${id}-combobox`}>
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -117,7 +117,7 @@ const RoomCombobox = ({
           Помещения не найдены. Сначала создайте помещение.
         </p>
       )}
-    </FormField>
+    </Field>
   );
 };
 

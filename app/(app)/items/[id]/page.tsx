@@ -7,14 +7,13 @@ import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import { ITEMS_LIST_CONFIG } from "@/lib/entities/items/list-config";
+import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
@@ -109,8 +108,9 @@ export default function ItemDetailPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <FormGroup>
-                <FormField label="Название вещи" htmlFor={`item-name-${item.id}`}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`item-name-${item.id}`}>Название вещи</FieldLabel>
                   <Input
                     id={`item-name-${item.id}`}
                     type="text"
@@ -119,7 +119,7 @@ export default function ItemDetailPage() {
                     placeholder="Введите название вещи"
                     disabled={isSubmitting}
                   />
-                </FormField>
+                </Field>
 
                 <ItemTypeSelect
                   value={itemTypeId ? parseInt(itemTypeId) : null}
@@ -147,7 +147,7 @@ export default function ItemDetailPage() {
                     )}
                   </Button>
                 </div>
-              </FormGroup>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>
@@ -169,16 +169,16 @@ export default function ItemDetailPage() {
 
         {isMoveDialogOpen && item && (
           <MoveEntityForm
-            title="Переместить вещь"
+            title={itemsEntityConfig.labels.moveTitle}
             entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
-            destinationTypes={ITEMS_LIST_CONFIG.moveFormConfig.destinationTypes ?? ["room", "place", "container"]}
+            destinationTypes={itemsEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
             buildPayload={(destinationType, destinationId) => ({
               item_id: item.id,
               destination_type: destinationType,
               destination_id: destinationId,
             })}
-            getSuccessMessage={(name) => `Вещь успешно перемещена в ${name}`}
-            getErrorMessage={() => "Произошла ошибка при перемещении вещи"}
+            getSuccessMessage={itemsEntityConfig.labels.moveSuccess}
+            getErrorMessage={() => itemsEntityConfig.labels.moveError}
             open={isMoveDialogOpen}
             onOpenChange={setIsMoveDialogOpen}
             onSuccess={handleMoveSuccess}

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { getPlace, updatePlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
@@ -127,11 +126,9 @@ const EditPlaceForm = ({
           <SheetDescription>Измените название места</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Название места"
-              htmlFor={`place-name-${placeId}`}
-            >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor={`place-name-${placeId}`}>Название места</FieldLabel>
               <Input
                 id={`place-name-${placeId}`}
                 type="text"
@@ -140,21 +137,23 @@ const EditPlaceForm = ({
                 placeholder="Например: Ш1П1, С1П2"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
             {(() => {
               const selectedType = placeTypes.find(t => t.id.toString() === placeTypeId);
               return selectedType ? (
-                <FormField
-                  label="Тип места"
-                  description="Тип места нельзя изменить после создания"
+                <Field
                 >
+                  <FieldLabel>Тип места</FieldLabel>
+                  <FieldDescription>
+                    Тип места нельзя изменить после создания
+                  </FieldDescription>
                   <div className="rounded-md border bg-muted px-3 py-2">
                     <p className="text-sm font-medium">
                       {selectedType.name}
                     </p>
                   </div>
-                </FormField>
+                </Field>
               ) : null;
             })()}
 
@@ -172,7 +171,7 @@ const EditPlaceForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

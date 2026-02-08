@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
@@ -108,11 +108,11 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
               onValueChange={value => setItemTypeId(value ? parseInt(value) : null)}
             />
 
-            <FormField
-              label="Название вещи"
-              htmlFor="item-name"
-              description="Поле необязательное. ID и дата создания заполнятся автоматически."
-            >
+            <Field>
+              <FieldLabel htmlFor="item-name">Название вещи</FieldLabel>
+              <FieldDescription>
+                Поле необязательное. ID и дата создания заполнятся автоматически.
+              </FieldDescription>
               <Input
                 id="item-name"
                 type="text"
@@ -121,7 +121,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                 placeholder="Введите название вещи"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
             <LocationCombobox
               destinationType={destinationType}

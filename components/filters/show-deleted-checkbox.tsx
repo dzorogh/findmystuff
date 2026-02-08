@@ -1,6 +1,6 @@
 "use client";
 
-import { FormField } from "@/components/ui/form-field";
+import { Field, FieldDescription } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 
 interface ShowDeletedCheckboxProps {
@@ -17,7 +17,7 @@ export const ShowDeletedCheckbox = ({
   description,
 }: ShowDeletedCheckboxProps) => {
   return (
-    <FormField description={description}>
+    <Field>
       <div className="flex items-center space-x-2">
         <input
           type="checkbox"
@@ -30,6 +30,7 @@ export const ShowDeletedCheckbox = ({
           {label}
         </Label>
       </div>
-    </FormField>
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
+    </Field>
   );
 };

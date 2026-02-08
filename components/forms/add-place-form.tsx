@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { createPlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
@@ -121,12 +120,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
               </div>
             </div>
           ) : (
-            <FormGroup>
-              <FormField
-                label="Название места (необязательно)"
-                htmlFor="place-name"
-                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="place-name">Название места (необязательно)</FieldLabel>
+                <FieldDescription>
+                  Дополнительное описание. ID и дата создания заполнятся автоматически.
+                </FieldDescription>
                 <Input
                   id="place-name"
                   type="text"
@@ -135,13 +134,13 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   placeholder="Введите название места"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
-              <FormField
-                label="Тип места"
-                htmlFor="place-type"
-                description="Маркировка будет сгенерирована автоматически (например, Ш1)"
-              >
+              <Field>
+                <FieldLabel htmlFor="place-type">Тип места</FieldLabel>
+                <FieldDescription>
+                  Маркировка будет сгенерирована автоматически (например, Ш1)
+                </FieldDescription>
                 <Combobox
                   items={placeTypes.map((type) => ({
                     value: type.id.toString(),
@@ -151,7 +150,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   onValueChange={(v) => setPlaceTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
               <RoomCombobox
                 selectedRoomId={selectedRoomId}
@@ -177,7 +176,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 submitLabel="Добавить место"
                 submitIcon={Plus}
               />
-            </FormGroup>
+            </FieldGroup>
           )}
         </form>
       </SheetContent>

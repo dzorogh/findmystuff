@@ -13,8 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
@@ -240,11 +239,9 @@ export default function RoomDetailPage() {
         </CardHeader>
         <CardContent className="pt-4">
           <form onSubmit={handleEditSubmit}>
-            <FormGroup>
-              <FormField
-                label="Тип помещения (необязательно)"
-                htmlFor={`room-type-${room.id}`}
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor={`room-type-${room.id}`}>Тип помещения (необязательно)</FieldLabel>
                 <Combobox
                   items={[
                     { value: "", label: "Не указан" },
@@ -257,9 +254,10 @@ export default function RoomDetailPage() {
                   onValueChange={(v) => setRoomTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
-              <FormField label="Название помещения" htmlFor={`room-name-${room.id}`}>
+              <Field>
+                <FieldLabel htmlFor={`room-name-${room.id}`}>Название помещения</FieldLabel>
                 <Input
                   id={`room-name-${room.id}`}
                   type="text"
@@ -268,7 +266,7 @@ export default function RoomDetailPage() {
                   placeholder="Введите название помещения"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
               <ImageUpload
                 value={photoUrl}
@@ -291,7 +289,7 @@ export default function RoomDetailPage() {
                   )}
                 </Button>
               </div>
-            </FormGroup>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

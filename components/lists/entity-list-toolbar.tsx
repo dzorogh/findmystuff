@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Filter } from "lucide-react";
+import { Filter, SortAsc } from "lucide-react";
 import { SearchField } from "@/components/fields/search";
 import {
   ENTITY_SORT_OPTIONS,
@@ -47,8 +47,8 @@ export function EntityListToolbar({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Select items={ENTITY_SORT_OPTIONS} value={sort} onValueChange={(v) => v != null && onSortChange(v as EntitySortOption)}>
-          <SelectTrigger className="w-42">
-            <SelectValue />
+          <SelectTrigger >
+            <SortAsc data-icon="inline-start" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

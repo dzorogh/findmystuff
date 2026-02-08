@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { createRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -99,11 +98,9 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
               </div>
             </div>
           ) : (
-            <FormGroup>
-              <FormField
-                label="Тип помещения (необязательно)"
-                htmlFor="room-type"
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="room-type">Тип помещения (необязательно)</FieldLabel>
                 <Combobox
                   items={[
                     { value: "", label: "Не указан" },
@@ -116,13 +113,13 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   onValueChange={(v) => setRoomTypeId(v ?? "")}
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
-              <FormField
-                label="Название помещения"
-                htmlFor="room-name"
-                description="Поле необязательное. ID и дата создания заполнятся автоматически."
-              >
+              <Field>
+                <FieldLabel htmlFor="room-name">Название помещения</FieldLabel>
+                <FieldDescription>
+                  Поле необязательное. ID и дата создания заполнятся автоматически.
+                </FieldDescription>
                 <Input
                   id="room-name"
                   type="text"
@@ -131,7 +128,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   placeholder="Введите название помещения"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
               <ImageUpload
                 value={photoUrl}
@@ -148,7 +145,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                 submitLabel="Добавить помещение"
                 submitIcon={Plus}
               />
-            </FormGroup>
+            </FieldGroup>
           )}
         </form>
       </SheetContent>
