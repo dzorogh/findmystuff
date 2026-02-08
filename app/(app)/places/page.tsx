@@ -18,7 +18,7 @@ function PlacesPageContent() {
   const setMovingId = "setMovingId" in listPage ? listPage.setMovingId : undefined;
   const getRowActions = usePlacesListRowActions({
     refreshList: listPage.refreshList,
-    setMovingId: setMovingId ?? (() => {}),
+    setMovingId: setMovingId ?? (() => { }),
   });
   const places = Array.isArray(listPage.data) ? listPage.data : [];
   const movingId = "movingId" in listPage ? listPage.movingId : null;
@@ -27,7 +27,7 @@ function PlacesPageContent() {
   ) as { name?: string | null } | undefined;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Места" />
       <EntityList
         data={listPage.data}
@@ -53,7 +53,7 @@ function PlacesPageContent() {
       />
       <AddPlaceForm
         open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => {})}
+        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
         onSuccess={listPage.handleEntityAdded}
       />
       {movingId != null && (

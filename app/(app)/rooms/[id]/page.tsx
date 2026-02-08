@@ -218,7 +218,7 @@ export default function RoomDetailPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <PageHeader
         title={room.name ?? `Помещение #${room.id}`}
         ancestors={[
@@ -306,11 +306,11 @@ export default function RoomDetailPage() {
           </CardHeader>
           <CardContent>
             {roomItems.length === 0 && roomPlaces.length === 0 && roomContainers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Помещение пусто
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="flex flex-col gap-2">
                 {roomItems.length > 0 && (
                   <EntityContentGrid
                     items={roomItems}

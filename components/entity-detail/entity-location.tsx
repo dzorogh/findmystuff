@@ -47,7 +47,7 @@ export const EntityLocation = ({ location, variant = "default" }: EntityLocation
         <h3 className="text-sm font-medium mb-2">Местоположение</h3>
         {location ? (
           <div className="space-y-3">
-            <div className="rounded-md border bg-muted/50 p-4 space-y-2">
+            <div className="rounded-md border bg-muted/50 p-2 space-y-2">
               {location.destination_type === "room" && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">

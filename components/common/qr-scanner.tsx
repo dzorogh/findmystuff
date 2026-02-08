@@ -103,9 +103,9 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
     if (scannerRef.current) {
       try {
         if (isScanningRef.current) {
-          await scannerRef.current.stop().catch(() => {});
+          await scannerRef.current.stop().catch(() => { });
         }
-        await scannerRef.current.clear().catch(() => {});
+        await scannerRef.current.clear().catch(() => { });
       } catch (err) {
         // Игнорируем ошибки при остановке
         console.debug("Error stopping scanner:", err);
@@ -115,7 +115,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
       scannerRef.current = null;
     }
     isInitializingRef.current = false;
-    
+
     // Очищаем все элементы, созданные html5-qrcode
     const element = document.getElementById(qrReaderId);
     if (element) {
@@ -148,7 +148,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
 
     // Защита от множественных инициализаций - используем счетчик попыток
     const currentAttempt = ++initAttemptRef.current;
-    
+
     if (isInitializingRef.current || isScanningRef.current) {
       console.debug("Scanner already initializing or scanning, skipping");
       return;
@@ -226,7 +226,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
 
         // Ждем, пока элемент будет в DOM
         await new Promise((resolve) => setTimeout(resolve, 100));
-        
+
         const element = document.getElementById(qrReaderId);
         if (!element) {
           throw new Error("Элемент для сканера не найден в DOM");
@@ -248,7 +248,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
 
         // Динамический импорт для избежания проблем с SSR
         const html5QrcodeModule = await import("html5-qrcode");
-        
+
         // Различные варианты экспорта модуля
         type Html5QrcodeInstance = {
           start: (
@@ -283,7 +283,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         } else {
           throw new Error("Не удалось найти Html5Qrcode в модуле. Проверьте установку пакета html5-qrcode.");
         }
-        
+
         if (!Html5Qrcode || typeof Html5Qrcode !== "function") {
           throw new Error("Html5Qrcode не является функцией. Возможна проблема с версией пакета.");
         }
@@ -312,8 +312,8 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         }
 
         // Предпочитаем заднюю камеру на мобильных устройствах
-        const backCamera = devices.find((device) => 
-          device.label?.toLowerCase().includes("back") || 
+        const backCamera = devices.find((device) =>
+          device.label?.toLowerCase().includes("back") ||
           device.label?.toLowerCase().includes("rear") ||
           device.label?.toLowerCase().includes("environment")
         );
@@ -341,7 +341,7 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         const containerElement = document.getElementById(qrReaderId);
         const containerWidth = containerElement?.clientWidth || Math.min(400, window.innerWidth - 80);
         const containerSize = containerWidth; // Для квадратного контейнера используем ширину
-        
+
         // Размер qrbox должен быть меньше контейнера (квадратный)
         const qrboxSize = Math.min(250, containerSize - 40);
 
@@ -392,13 +392,13 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
 
         console.error("QR Scanner initialization error:", err);
         let errorMessage = "Не удалось инициализировать сканер";
-        
+
         if (err instanceof Error) {
           errorMessage = err.message;
         } else if (typeof err === "string") {
           errorMessage = err;
         }
-        
+
         setError(errorMessage);
         isScanningRef.current = false;
         setIsScanning(false);
@@ -474,16 +474,16 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
   const content = (
     <>
       {/* Backdrop - блокирует клики на элементы на фоне */}
-      <div 
+      <div
         className="fixed inset-0 z-[9999] bg-black/80"
       />
       {/* Контейнер с модальным окном */}
-      <div 
-        className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+      <div
+        className="fixed inset-0 z-[10000] flex items-center justify-center p-2"
         onClick={(e) => {
           const target = e.target as HTMLElement;
           const modal = modalRef.current;
-          
+
           // Если клик был вне модального окна (на контейнере или backdrop), закрываем
           if (!modal || !modal.contains(target)) {
             handleClose(e);
@@ -491,83 +491,83 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
         }}
         style={{ pointerEvents: 'auto' }}
       >
-        <div 
+        <div
           ref={modalRef}
-          className="relative w-full max-w-md rounded-lg bg-background p-4 shadow-lg pointer-events-auto"
+          className="relative w-full max-w-md rounded-lg bg-background p-2 shadow-lg pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
-        <div className="absolute top-4 right-4 z-[60] pointer-events-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClose(e);
-            }}
-            aria-label="Закрыть сканер"
-            className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="relative z-50 mb-4 flex items-center justify-between pointer-events-auto">
-          <h3 className="text-lg font-semibold">Сканирование QR-кода</h3>
-        </div>
-
-        {!isNativePlatform && (
-          <div
-            ref={containerRef}
-            id={qrReaderId}
-            className={cn(
-              "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          />
-        )}
-
-        {error && (
-          <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        {!isScanning && !error && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{isNativePlatform ? "Готово к сканированию" : "Инициализация камеры..."}</span>
-          </div>
-        )}
-
-        {isScanning && (
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            {isNativePlatform ? "Открыта камера для сканирования..." : "Наведите камеру на QR-код"}
-          </div>
-        )}
-
-        <div className={cn("relative z-[60] mt-4 flex justify-end pointer-events-auto", isNativePlatform && "justify-between")}>
-          {isNativePlatform && (
+          <div className="absolute top-2 right-4 z-[60] pointer-events-auto">
             <Button
-              variant="default"
+              variant="ghost"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
-                handleNativeScan();
+                handleClose(e);
               }}
-              disabled={isScanning}
+              aria-label="Закрыть сканер"
+              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
             >
-              {error ? "Сканировать снова" : "Открыть камеру"}
+              <X className="h-4 w-4" />
             </Button>
+          </div>
+          <div className="relative z-50 mb-4 flex items-center justify-between pointer-events-auto">
+            <h3 className="text-lg font-semibold">Сканирование QR-кода</h3>
+          </div>
+
+          {!isNativePlatform && (
+            <div
+              ref={containerRef}
+              id={qrReaderId}
+              className={cn(
+                "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            />
           )}
-          <Button 
-            variant="outline" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClose(e);
-            }} 
-            className="relative z-[60] pointer-events-auto bg-background"
-          >
-            Отмена
-          </Button>
-        </div>
+
+          {error && (
+            <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {!isScanning && !error && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{isNativePlatform ? "Готово к сканированию" : "Инициализация камеры..."}</span>
+            </div>
+          )}
+
+          {isScanning && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {isNativePlatform ? "Открыта камера для сканирования..." : "Наведите камеру на QR-код"}
+            </div>
+          )}
+
+          <div className={cn("relative z-[60] mt-4 flex justify-end pointer-events-auto", isNativePlatform && "justify-between")}>
+            {isNativePlatform && (
+              <Button
+                variant="default"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNativeScan();
+                }}
+                disabled={isScanning}
+              >
+                {error ? "Сканировать снова" : "Открыть камеру"}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClose(e);
+              }}
+              className="relative z-[60] pointer-events-auto bg-background"
+            >
+              Отмена
+            </Button>
+          </div>
         </div>
       </div>
     </>

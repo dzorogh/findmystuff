@@ -95,14 +95,14 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <PageHeader
         title={item.name ?? `Вещь #${item.id}`}
         ancestors={[
           { label: "Вещи", href: "/items" },
         ]}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         <Card>
           <CardHeader>
             <CardTitle>Редактирование вещи</CardTitle>
@@ -153,7 +153,7 @@ export default function ItemDetailPage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Card>
             <CardHeader>
               <CardTitle>История перемещений</CardTitle>

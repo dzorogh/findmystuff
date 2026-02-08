@@ -24,9 +24,9 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="mx-auto flex h-full items-center justify-center px-4">
+    <div className="mx-auto flex h-full items-center justify-center px-2">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
+        <CardHeader className="flex flex-col gap-2 text-center">
           <div className="flex justify-center">
             <Logo size="lg" showText />
           </div>
@@ -35,7 +35,7 @@ const LoginPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="flex flex-col gap-2">
             <p className="text-center text-sm text-muted-foreground">
               Приложение для быстрого поиска и учета вещей в домашнем складе
             </p>

@@ -81,7 +81,7 @@ export function EntityList<T extends { showDeleted: boolean }>({
       : `${resultsLabel.many} не найдены`;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <EntityListToolbar
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}

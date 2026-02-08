@@ -18,7 +18,7 @@ function ItemsPageContent() {
   const getRowActions = useItemsListRowActions({ refreshList: listPage.refreshList });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <PageHeader
         title="Вещи"
         actions={

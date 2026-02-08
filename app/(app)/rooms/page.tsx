@@ -15,7 +15,7 @@ function RoomsPageContent() {
   const getRowActions = useRoomsListRowActions({ refreshList: listPage.refreshList });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Помещения" />
       <EntityList
         data={listPage.data}
@@ -41,7 +41,7 @@ function RoomsPageContent() {
       />
       <AddRoomForm
         open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => {})}
+        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
         onSuccess={listPage.handleEntityAdded}
       />
     </div>

@@ -77,9 +77,9 @@ const ForgotPasswordPage = () => {
 
   if (isSuccess) {
     return (
-      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
+      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center space-y-4">
+          <CardHeader className="text-center flex flex-col gap-2">
             <div className="flex justify-center">
               <Logo size="lg" showText={true} />
             </div>
@@ -88,7 +88,7 @@ const ForgotPasswordPage = () => {
               Если аккаунт с таким email существует, мы отправили ссылку для сброса пароля.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-2">
             <Button asChild variant="outline" className="w-full">
               <Link
                 href="/auth/login"
@@ -106,9 +106,9 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
+    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
+        <CardHeader className="text-center flex flex-col gap-2">
           <div className="flex justify-center">
             <Logo size="lg" showText={true} />
           </div>
@@ -118,7 +118,7 @@ const ForgotPasswordPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <div className="space-y-2">
               <Label htmlFor="forgot-email">Email</Label>
               <Input

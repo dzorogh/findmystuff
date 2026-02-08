@@ -52,7 +52,7 @@ const EmailPasswordForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <div className="space-y-2">
         <Label htmlFor="email-signin">Email</Label>
         <Input

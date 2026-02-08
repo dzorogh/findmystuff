@@ -122,11 +122,11 @@ export default function PageUsers() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Пользователи" />
 
       {users.length === 0 && !isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-4 text-muted-foreground">
           <p>Пользователи не найдены</p>
         </div>
       ) : (

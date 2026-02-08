@@ -63,19 +63,19 @@ const LocationCombobox = ({
     destinationType === "container"
       ? isLoadingContainers
       : destinationType === "place"
-      ? isLoadingPlaces
-      : destinationType === "room"
-      ? isLoadingRooms
-      : false;
+        ? isLoadingPlaces
+        : destinationType === "room"
+          ? isLoadingRooms
+          : false;
 
   const rawDestinations =
     destinationType === "container"
       ? containers
       : destinationType === "place"
-      ? places
-      : destinationType === "room"
-      ? rooms
-      : [];
+        ? places
+        : destinationType === "room"
+          ? rooms
+          : [];
   const destinations =
     destinationType === "container" && excludeContainerId != null
       ? rawDestinations.filter((c) => (c as { id: number }).id !== excludeContainerId)
@@ -85,22 +85,22 @@ const LocationCombobox = ({
     destinationType === "container"
       ? "контейнер"
       : destinationType === "place"
-      ? "местоположение"
-      : destinationType === "room"
-      ? "помещение"
-      : "";
+        ? "местоположение"
+        : destinationType === "room"
+          ? "помещение"
+          : "";
 
   const fullButtonOrder = showRoomFirst
     ? [
-        { type: "room" as const, label: "Помещение", icon: Building2 },
-        { type: "place" as const, label: "Место", icon: Warehouse },
-        { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
-      ]
+      { type: "room" as const, label: "Помещение", icon: Building2 },
+      { type: "place" as const, label: "Место", icon: Warehouse },
+      { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
+    ]
     : [
-        { type: "place" as const, label: "Место", icon: Warehouse },
-        { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
-        { type: "room" as const, label: "Помещение", icon: Building2 },
-      ];
+      { type: "place" as const, label: "Место", icon: Warehouse },
+      { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
+      { type: "room" as const, label: "Помещение", icon: Building2 },
+    ];
   const buttonOrder = allowedTypes?.length
     ? fullButtonOrder.filter((b) => allowedTypes.includes(b.type))
     : fullButtonOrder;
@@ -112,10 +112,9 @@ const LocationCombobox = ({
   const getDisplayName = (dest: Container | Place | Room) => {
     const displayName =
       dest.name ||
-      `${
-        destinationType === "container"
-          ? "Контейнер"
-          : destinationType === "place"
+      `${destinationType === "container"
+        ? "Контейнер"
+        : destinationType === "place"
           ? "Место"
           : "Помещение"
       } #${dest.id}`;
@@ -176,7 +175,7 @@ const LocationCombobox = ({
                 <CommandInput placeholder={`Поиск ${destinationLabel}...`} />
                 <CommandList>
                   {isLoading ? (
-                    <div className="p-4 space-y-2">
+                    <div className="p-2 space-y-2">
                       {[...Array(3)].map((_, i) => (
                         <Skeleton key={i} className="h-9 w-full" />
                       ))}
@@ -187,8 +186,8 @@ const LocationCombobox = ({
                         {destinationType === "container"
                           ? "Контейнеры не найдены"
                           : destinationType === "place"
-                          ? "Местоположения не найдены"
-                          : "Помещения не найдены"}
+                            ? "Местоположения не найдены"
+                            : "Помещения не найдены"}
                       </CommandEmpty>
                       <CommandGroup>
                         {destinations.map((dest) => {
@@ -227,8 +226,8 @@ const LocationCombobox = ({
               {destinationType === "container"
                 ? "Контейнеры не найдены"
                 : destinationType === "place"
-                ? "Местоположения не найдены"
-                : "Помещения не найдены"}
+                  ? "Местоположения не найдены"
+                  : "Помещения не найдены"}
             </p>
           )}
         </FormField>

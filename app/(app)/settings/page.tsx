@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const itemTypesManagerRef = useRef<EntityTypesManagerRef>(null);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Настройки" />
 
       {error && (
@@ -28,7 +28,7 @@ export default function SettingsPage() {
       )}
 
       {/* Раздел: Контейнеры */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Контейнеры</h2>
         </div>
@@ -60,7 +60,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Раздел: Места */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Места</h2>
         </div>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Раздел: Помещения */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Помещения</h2>
         </div>
@@ -123,7 +123,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Раздел: Вещи */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Вещи</h2>
         </div>

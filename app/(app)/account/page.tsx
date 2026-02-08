@@ -55,7 +55,7 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Аккаунт" />
 
       <Card>
@@ -82,7 +82,7 @@ export default function AccountPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <div className="space-y-2">
               <Label htmlFor="account-new-password">Новый пароль</Label>
               <Input

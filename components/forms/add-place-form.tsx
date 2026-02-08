@@ -106,7 +106,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           {isLoading || isLoadingTypes ? (
-            <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-10 w-full" />

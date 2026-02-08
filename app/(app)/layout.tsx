@@ -51,10 +51,10 @@ export default async function RootLayout({
     <html
       lang="ru"
       suppressHydrationWarning
-      className={`${GeistSans.variable} h-full`}
+      className="h-full"
     >
       <body
-        className="antialiased h-full"
+        className={`${GeistSans.variable} antialiased h-full`}
       >
         <NativeAppMarker />
         <ThemeProvider

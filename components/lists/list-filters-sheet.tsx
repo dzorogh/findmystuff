@@ -32,7 +32,7 @@ export function ListFiltersSheet({
         <SheetHeader>
           <SheetTitle>{displayTitle}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto p-2">{children}</div>
       </SheetContent>
     </Sheet>
   );

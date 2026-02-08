@@ -102,7 +102,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit}>
-          <FieldGroup className="p-4">
+          <FieldGroup className="p-2">
             <ItemTypeSelect
               value={itemTypeId}
               onValueChange={value => setItemTypeId(value ? parseInt(value) : null)}

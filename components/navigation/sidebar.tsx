@@ -9,15 +9,15 @@ const Sidebar = ({ className }: { className?: string }) => {
     <>
       {/* Desktop Sidebar */}
       <aside className={cn("hidden md:flex h-full flex-col z-40", className)}>
-        <div className="h-16 flex items-center px-6 border-b shrink-0">
+        <div className="h-16 flex items-center px-3 border-b shrink-0">
           <Link href="/" className="flex items-center">
             <Logo size="md" showText={true} />
           </Link>
         </div>
-        <div className="p-4 flex-grow">
+        <div className="p-2 flex-grow">
           <PrimaryMenu />
         </div>
-        <div className="border-t p-4">
+        <div className="border-t p-2">
           <SecondaryMenu />
         </div>
       </aside>

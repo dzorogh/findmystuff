@@ -104,9 +104,9 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-4">
       {/* Поиск */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -126,7 +126,7 @@ export default function Home() {
 
       {/* Результаты поиска */}
       {searchQuery && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold">
               Результаты поиска
@@ -148,7 +148,7 @@ export default function Home() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
               {searchResults.map((result) => (
                 <Card
                   key={`${result.type}-${result.id}`}
@@ -195,7 +195,7 @@ export default function Home() {
 
       {/* Быстрые действия */}
       {!searchQuery && (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card
             className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1"
             onClick={() => router.push("/items")}

@@ -198,7 +198,7 @@ function MoveEntityFormBody({
         <SheetDescription>{entityDisplayName}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit}>
-        <div className="p-4">
+        <div className="p-2">
           <FormGroup>
             <Button
               type="button"

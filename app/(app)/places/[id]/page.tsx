@@ -201,14 +201,14 @@ export default function PlaceDetailPage() {
   const selectedPlaceType = placeTypes.find((t) => t.id === place.entity_type_id);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <PageHeader
         title={place.name ?? `Место #${place.id}`}
         ancestors={[
           { label: "Места", href: "/places" },
         ]}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         <Card>
           <CardHeader>
             <CardTitle>Редактирование места</CardTitle>
@@ -273,7 +273,7 @@ export default function PlaceDetailPage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Card>
             <CardHeader>
               <CardTitle>Содержимое места</CardTitle>
@@ -283,11 +283,11 @@ export default function PlaceDetailPage() {
             </CardHeader>
             <CardContent>
               {placeItems.length === 0 && placeContainers.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   Место пусто
                 </p>
               ) : (
-                <div className="space-y-4">
+                <div className="flex flex-col gap-2">
                   {placeItems.length > 0 && (
                     <EntityContentGrid
                       items={placeItems}

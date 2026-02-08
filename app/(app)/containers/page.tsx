@@ -18,7 +18,7 @@ function ContainersPageContent() {
   const setMovingId = "setMovingId" in listPage ? listPage.setMovingId : undefined;
   const getRowActions = useContainersListRowActions({
     refreshList: listPage.refreshList,
-    setMovingId: setMovingId ?? (() => {}),
+    setMovingId: setMovingId ?? (() => { }),
   });
   const containers = Array.isArray(listPage.data) ? listPage.data : [];
   const movingId = "movingId" in listPage ? listPage.movingId : null;
@@ -27,7 +27,7 @@ function ContainersPageContent() {
   ) as { name?: string | null } | undefined;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <PageHeader title="Контейнеры" />
       <EntityList
         data={listPage.data}
@@ -53,7 +53,7 @@ function ContainersPageContent() {
       />
       <AddContainerForm
         open={listPage.isAddDialogOpen ?? false}
-        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => {})}
+        onOpenChange={listPage.handleAddDialogOpenChange ?? (() => { })}
         onSuccess={listPage.handleEntityAdded}
       />
       {movingId != null && (

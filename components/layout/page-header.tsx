@@ -17,7 +17,7 @@ export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderP
 
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-9 w-64" />
             </div>
@@ -25,7 +25,7 @@ export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderP
     }
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
             <PageBreadcrumb path={breadcrumb} />
             <div className="flex justify-between items-center">
                 <PageTitle title={title} />

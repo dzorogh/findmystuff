@@ -9,7 +9,7 @@ interface PageContainerProps {
 
 export const PageContainer = ({ children, className }: PageContainerProps) => {
   return (
-    <div className={cn("mx-auto p-4", className)}>
+    <div className={cn("mx-auto p-2", className)}>
       {children}
     </div>
   );

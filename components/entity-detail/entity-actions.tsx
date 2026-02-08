@@ -38,7 +38,7 @@ export const EntityActions = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isDisabled = isDeleting || isRestoring;
 
-  const btnClass = "h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-4 sm:py-2 shrink-0";
+  const btnClass = "h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-2 sm:py-2 shrink-0";
   const iconClass = "h-4 w-4 sm:mr-2";
   const textClass = "hidden sm:inline";
 
