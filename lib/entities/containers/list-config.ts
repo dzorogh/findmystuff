@@ -31,8 +31,8 @@ export const CONTAINERS_LIST_CONFIG: ListConfig<
     { type: "locationType", key: "locationType" },
   ],
   columnsConfig: [
-    { key: "id", label: "ID", width: "w-[50px]", hideOnMobile: true },
-    { key: "name", label: "Название" },
+    { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
+    { key: "name", label: "Название", width: "w-80" },
     { key: "location", label: "Расположение" },
     { key: "actions", label: "Действия" },
   ],

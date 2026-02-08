@@ -27,8 +27,8 @@ export const ROOMS_LIST_CONFIG: ListConfig<RoomsFilters, "id" | "name" | "counts
     { type: "yesNoAll", key: "hasPlaces", label: "Есть места" },
   ],
   columnsConfig: [
-    { key: "id", label: "ID", width: "w-[50px]", hideOnMobile: true },
-    { key: "name", label: "Название" },
+    { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
+    { key: "name", label: "Название", width: "w-80" },
     { key: "counts", label: "Вещи / Места / Контейнеры" },
     { key: "actions", label: "Действия" },
   ],

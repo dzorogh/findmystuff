@@ -24,8 +24,8 @@ export const PLACES_LIST_CONFIG: ListConfig<PlacesFilters, "id" | "name" | "room
     { type: "room", key: "roomId" },
   ],
   columnsConfig: [
-    { key: "id", label: "ID", width: "w-[50px]", hideOnMobile: true },
-    { key: "name", label: "Название" },
+    { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
+    { key: "name", label: "Название", width: "w-80" },
     { key: "room", label: "Помещение" },
     { key: "actions", label: "Действия" },
   ],

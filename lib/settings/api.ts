@@ -38,7 +38,6 @@ class SettingsApiClient extends HttpClient {
 
         if (response.error) {
           const result = { data: [] as Setting[], error: response.error };
-          settingsRequestResult.set(requestKey, result);
           return result;
         }
 
@@ -53,7 +52,6 @@ class SettingsApiClient extends HttpClient {
           data: [] as Setting[],
           error: err instanceof Error ? err.message : "Ошибка загрузки настроек",
         };
-        settingsRequestResult.set(requestKey, result);
         return result;
       } finally {
         loadingSettingsRequest.delete(requestKey);

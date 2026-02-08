@@ -27,7 +27,7 @@ export const ITEMS_LIST_CONFIG: ListConfig<ItemsFilters, "id" | "name" | "room" 
     { type: "room", key: "roomId" },
   ],
   columnsConfig: [
-    { key: "id", label: "ID", width: "w-16", hideOnMobile: true },
+    { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
     { key: "room", label: "Помещение", width: "w-40", hideOnMobile: true },
     { key: "movedAt", label: "Дата перемещения", width: "w-40", hideOnMobile: true },

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/shared/supabase/client";
 import { getClientUser } from "@/lib/users/api";
 import { toast } from "sonner";
 
@@ -20,15 +21,33 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
+    const supabase = createClient();
+
+    const refreshUser = () => {
+      setIsLoading(true);
       getClientUser()
         .then(setUser)
         .catch(() => setUser(null))
         .finally(() => setIsLoading(false));
+    };
+
+    try {
+      refreshUser();
     } catch (err) {
       console.error("Error getting client user:", err);
       toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
+      setIsLoading(false);
     }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      refreshUser();
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   return (
