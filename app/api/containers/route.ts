@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { getContainersWithLocationRpc } from "@/lib/containers/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Container } from "@/types/entity";
 
 /**
@@ -12,15 +14,11 @@ import type { Container } from "@/types/entity";
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
@@ -29,17 +27,14 @@ export async function GET(request: NextRequest) {
       searchParams.get("sortDirection")
     );
 
-    const { data: containersData, error: fetchError } = await supabase.rpc(
-      "get_containers_with_location",
-      {
-        search_query: query?.trim() || null,
-        show_deleted: showDeleted,
-        page_limit: 2000,
-        page_offset: 0,
-        sort_by: sortBy,
-        sort_direction: sortDirection,
-      }
-    );
+    const { data: containersData, error: fetchError } = await getContainersWithLocationRpc(supabase, {
+      search_query: query?.trim() || null,
+      show_deleted: showDeleted,
+      page_limit: 2000,
+      page_offset: 0,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
+    });
 
     if (fetchError) {
       return NextResponse.json(
@@ -107,15 +102,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 

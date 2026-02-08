@@ -2,6 +2,7 @@
  * API для помещений (rooms)
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
@@ -11,6 +12,26 @@ import type {
   Container,
   CreateRoomResponse,
 } from "@/types/entity";
+
+/** RPC get_rooms_with_counts (вызывать из app/api). */
+export function getRoomsWithCountsRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+  }
+) {
+  return supabase.rpc("get_rooms_with_counts", params);
+}
+
+/** RPC get_item_ids_in_room (вызывать из app/api). */
+export function getItemIdsInRoomRpc(supabase: SupabaseClient, roomId: number) {
+  return supabase.rpc("get_item_ids_in_room", { p_room_id: roomId });
+}
 
 class RoomsApiClient extends HttpClient {
   async getRooms(params?: {

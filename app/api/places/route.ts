@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
+import { getPlacesWithRoomRpc } from "@/lib/places/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Place } from "@/types/entity";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -201,15 +203,11 @@ const fetchPlacesFallback = async (
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
@@ -218,17 +216,14 @@ export async function GET(request: NextRequest) {
       searchParams.get("sortDirection")
     );
 
-    const { data: placesData, error: fetchError } = await supabase.rpc(
-      "get_places_with_room",
-      {
-        search_query: query,
-        show_deleted: showDeleted,
-        page_limit: 2000,
-        page_offset: 0,
-        sort_by: sortBy,
-        sort_direction: sortDirection,
-      }
-    );
+    const { data: placesData, error: fetchError } = await getPlacesWithRoomRpc(supabase, {
+      search_query: query,
+      show_deleted: showDeleted,
+      page_limit: 2000,
+      page_offset: 0,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
+    });
 
     if (fetchError) {
       if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
@@ -280,15 +275,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 

@@ -2,6 +2,28 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+
+/** Пути, где разрешены прямые запросы к Supabase и fetch (в остальных местах запрещены) */
+const fetchAndSupabaseAllowedPaths = [
+  "lib/*/api.ts",
+  "lib/shared/api/**/*.ts",
+];
+
+const ALLOWED_PATHS_HINT = "Прямые запросы разрешены только в " + fetchAndSupabaseAllowedPaths.join(", ") + ".";
+
+/** Правила: fetch и прямые запросы к Supabase запрещены везде, кроме fetchAndSupabaseAllowedPaths */
+const fetchAndSupabaseRestrictedSyntax = [
+  { selector: "CallExpression[callee.name='fetch']", message: `Прямые fetch-запросы запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='rpc']", message: `Прямые Supabase запросы (.rpc()) запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='insert'][callee.object.type='MemberExpression']", message: `Прямые Supabase запросы (.insert()) запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='update'][callee.object.type='MemberExpression']", message: `Прямые Supabase запросы (.update()) запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='delete'][callee.object.type='MemberExpression']", message: `Прямые Supabase запросы (.delete()) запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getUser'][callee.object.type='MemberExpression'][callee.object.property.name='auth']", message: `Прямые запросы к auth API (.auth.getUser()) запрещены. ${ALLOWED_PATHS_HINT}` },
+  { selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getSession'][callee.object.type='MemberExpression'][callee.object.property.name='auth']", message: `Прямые запросы к auth API (.auth.getSession()) запрещены. ${ALLOWED_PATHS_HINT}` },
+];
+
+
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -16,7 +38,7 @@ const eslintConfig = defineConfig([
     // Android build files
     "android/**",
   ]),
-  // Правила для компонентов, страниц и хуков (запрещаем прямые запросы)
+  // JSX и общие правила для app, components, hooks, lib
   {
     files: [
       "app/**/*.{ts,tsx}",
@@ -25,65 +47,27 @@ const eslintConfig = defineConfig([
       "lib/**/*.{ts,tsx}",
     ],
     rules: {
-      // JSX: если тег многострочный, то каждый проп на отдельной строке
-      // Пример:
-      // <Component
-      //   foo="bar"
-      //   baz="qux"
-      // />
       "react/jsx-first-prop-new-line": ["error", "multiline-multiprop"],
       "react/jsx-max-props-per-line": ["error", { maximum: 1, when: "multiline" }],
-
-      // Запрещаем импорт createClient из @/lib/supabase/client
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "@/lib/supabase/client",
-              message: "Импорт createClient из @/lib/supabase/client разрешен только в сервисах (lib/), API routes (app/api/), контекстах (contexts/) и auth компонентах (components/auth/). Используйте apiClient из @/lib/api-client",
-              allowTypeImports: true,
-            },
-          ],
-        },
-      ],
-      // Запрещаем использование fetch
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "CallExpression[callee.name='fetch']",
-          message: "Прямые fetch-запросы разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
-        // Запрещаем Supabase методы .rpc()
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='rpc']",
-          message: "Прямые Supabase запросы (.rpc()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
-        // Запрещаем Supabase методы .insert() - только если это часть цепочки запросов
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='insert'][callee.object.type='MemberExpression']",
-          message: "Прямые Supabase запросы (.insert()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
-        // Запрещаем Supabase методы .update() - только если это часть цепочки запросов
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='update'][callee.object.type='MemberExpression']",
-          message: "Прямые Supabase запросы (.update()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
-        // Запрещаем Supabase методы .delete() - только если это часть цепочки запросов (не params.delete)
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='delete'][callee.object.type='MemberExpression']",
-          message: "Прямые Supabase запросы (.delete()) разрешены только в сервисах (lib/), API routes (app/api/) и контекстах (contexts/). Используйте apiClient из @/lib/api-client",
-        },
-        // Запрещаем Supabase auth методы .auth.getUser() и .auth.getSession() - только в компонентах (не в контекстах и auth компонентах)
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getUser'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
-          message: "Прямые запросы к auth API (.auth.getUser()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах и auth компонентах (components/auth/). Используйте хук useUser из @/lib/users/context",
-        },
-        {
-          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='getSession'][callee.object.type='MemberExpression'][callee.object.property.name='auth']",
-          message: "Прямые запросы к auth API (.auth.getSession()) разрешены только в сервисах (lib/), API routes (app/api/), контекстах и auth компонентах (components/auth/). Используйте хук useUser из @/lib/users/context",
-        },
-      ],
+    },
+  },
+  // Fetch и прямые запросы к Supabase: запрет для app/components/hooks/lib
+  {
+    files: [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "hooks/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...fetchAndSupabaseRestrictedSyntax],
+    },
+  },
+  // В этих путях разрешены и Supabase, и fetch, и auth
+  {
+    files: fetchAndSupabaseAllowedPaths,
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
   // Игнорировать переменные/аргументы с префиксом _ (намеренно неиспользуемые)

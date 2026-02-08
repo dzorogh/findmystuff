@@ -2,6 +2,7 @@
  * API для мест (places)
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
@@ -11,6 +12,21 @@ import type {
   Container,
   CreatePlaceResponse,
 } from "@/types/entity";
+
+/** RPC get_places_with_room (вызывать из app/api). */
+export function getPlacesWithRoomRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+  }
+) {
+  return supabase.rpc("get_places_with_room", params);
+}
 
 class PlacesApiClient extends HttpClient {
   async getPlaces(params?: {

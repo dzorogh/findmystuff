@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { getItemsWithRoomRpc } from "@/lib/entities/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Item } from "@/types/entity";
 
 /**
@@ -15,15 +17,11 @@ import type { Item } from "@/types/entity";
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
@@ -39,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const from = (page - 1) * limit;
 
-    const { data: itemsData, error: itemsError } = await supabase.rpc("get_items_with_room", {
+    const { data: itemsData, error: itemsError } = await getItemsWithRoomRpc(supabase, {
       search_query: query?.trim() || null,
       show_deleted: showDeleted,
       page_limit: limit,
@@ -124,15 +122,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const body = await request.json();
     const { name, photo_url, destination_type, destination_id, item_type_id } = body;
 

@@ -2,6 +2,7 @@
  * API для контейнеров (containers)
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
@@ -10,6 +11,21 @@ import type {
   Item,
   CreateContainerResponse,
 } from "@/types/entity";
+
+/** RPC get_containers_with_location (вызывать из app/api). */
+export function getContainersWithLocationRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+  }
+) {
+  return supabase.rpc("get_containers_with_location", params);
+}
 
 class ContainersApiClient extends HttpClient {
   async getContainers(params?: {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getServerUser } from "@/lib/users/server";
 
 export interface Setting {
   id: number;
@@ -14,10 +15,8 @@ export interface Setting {
 
 export async function GET(_request: NextRequest) {
   try {
+    const user = await getServerUser();
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     // Загружаем персональные настройки пользователя и глобальные (где user_id IS NULL)
     let query = supabase
@@ -58,10 +57,8 @@ export async function GET(_request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const user = await getServerUser();
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     const body = await request.json();
     const { key, value, isUserSetting } = body;

@@ -2,6 +2,7 @@
  * API для сущностей: items, entity-types, transitions
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
@@ -13,6 +14,24 @@ import type {
   UpdateEntityTypeResponse,
   CreateTransitionResponse,
 } from "@/types/entity";
+
+/** RPC get_items_with_room (вызывать из app/api). */
+export function getItemsWithRoomRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    location_type: string | null;
+    room_id: number | null;
+    has_photo: boolean | null;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+  }
+) {
+  return supabase.rpc("get_items_with_room", params);
+}
 
 class EntitiesApiClient extends HttpClient {
   async getItems(params?: {

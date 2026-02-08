@@ -9,10 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
 import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
-import { RoomFilter } from "@/components/fields/rooms-select";
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Home() {
   const { user, isLoading } = useUser();

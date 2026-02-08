@@ -39,7 +39,7 @@ export default function ItemDetailPage() {
     entityLabel,
   } = useItemDetail();
 
-  const { types: itemTypes } = useEntityTypes("item");
+  useEntityTypes("item");
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);

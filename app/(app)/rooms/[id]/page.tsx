@@ -35,10 +35,8 @@ export default function RoomDetailPage() {
   const params = useParams();
   const router = useRouter();
   const roomId = parseInt(params.id as string, 10);
+  const isInvalidId = Number.isNaN(roomId);
 
-  if (Number.isNaN(roomId)) {
-    return <EntityDetailError error="Некорректный ID помещения" entityName="Помещение" />;
-  }
   const { user, isLoading: isUserLoading } = useUser();
   const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [room, setRoom] = useState<Room | null>(null);
@@ -179,6 +177,10 @@ export default function RoomDetailPage() {
     return () => setEntityActions(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
   }, [room, isDeleting, isRestoring]);
+
+  if (isInvalidId) {
+    return <EntityDetailError error="Некорректный ID помещения" entityName="Помещение" />;
+  }
 
   if (isUserLoading || isLoading) {
     return <EntityDetailSkeleton />;
@@ -339,7 +341,5 @@ export default function RoomDetailPage() {
         </Card>
       </div>
     </div>
-    </div >
-
   );
 }
