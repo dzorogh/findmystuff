@@ -1,7 +1,6 @@
-"use client";
-
-import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import Image from "next/image";
+import logoWithName from "@/public/logo-with-name.svg";
+import logoIcon from "@/public/logo-icon.svg";
 
 interface LogoProps {
   className?: string;
@@ -9,42 +8,19 @@ interface LogoProps {
   size?: "sm" | "md" | "lg";
 }
 
-const emptySubscribe = () => () => {};
-const getClientSnapshot = () => true;
-const getServerSnapshot = () => false;
-
 const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
-  const { theme, resolvedTheme } = useTheme();
-  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
-
   const sizes = {
     sm: "h-6",
     md: "h-8",
     lg: "h-12",
   };
 
-  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
-
-  if (showText) {
-    return (
-      <div className={`${className || ""} ${sizes[size]}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- SVG logo, next/image not needed */}
-        <img
-          src="/logo-with-name.svg"
-          alt="FindMyStuff"
-          className={`h-full w-auto ${isDark ? "invert" : ""}`}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className={`${className || ""} ${sizes[size]}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- SVG logo, next/image not needed */}
-      <img
-        src="/logo-icon.svg"
+      <Image
+        src={showText ? logoWithName : logoIcon}
         alt="FindMyStuff"
-        className={`h-full w-auto ${isDark ? "invert" : ""}`}
+        className={`h-full w-auto dark:invert`}
       />
     </div>
   );

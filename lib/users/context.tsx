@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { createClient } from "@/lib/shared/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/shared/supabase/client";
+import { getClientUser } from "@/lib/users/api";
+import { toast } from "sonner";
 
 interface UserContextType {
   user: User | null;
@@ -20,48 +22,37 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const supabase = createClient();
-    const log = (message: string, details?: unknown) => {
-      const suffix = details ? ` ${JSON.stringify(details)}` : "";
-      console.log(`[auth][user-context] ${message}${suffix}`);
-    };
+    let isActive = true;
 
-    const getUser = async () => {
+    const refreshUser = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        log("getSession", session?.user?.id || null);
-
-        if (session?.user) {
-          setUser(session.user);
-        }
-
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        log("getUser", currentUser?.id || null);
-        setUser(currentUser ?? session?.user ?? null);
-      } catch (error) {
-        console.error("Ошибка получения пользователя:", error);
-        log("getUser error", error);
+        const currentUser = await getClientUser();
+        if (!isActive) return;
+        setUser(currentUser);
+      } catch (err) {
+        if (!isActive) return;
+        console.error("Error getting client user:", err);
+        toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
         setUser(null);
       } finally {
-        setIsLoading(false);
+        if (isActive) {
+          setIsLoading(false);
+        }
       }
     };
 
-    getUser();
+    void refreshUser();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      log("onAuthStateChange", { event: _event, userId: session?.user?.id || null });
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+    } = supabase.auth.onAuthStateChange(() => {
+      setIsLoading(true);
+      void refreshUser();
     });
 
     return () => {
-      subscription.unsubscribe();
+      isActive = false;
+      subscription?.unsubscribe();
     };
   }, []);
 

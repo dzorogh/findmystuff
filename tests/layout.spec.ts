@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test';
 test('has menu', async ({ page }) => {
   // page is authenticated
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Помещения' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Места' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Контейнеры' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Вещи' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Пользователи' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Настройки' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Помещения', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Места', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Контейнеры', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Вещи', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Пользователи', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Настройки', exact: true })).toBeVisible();
 });

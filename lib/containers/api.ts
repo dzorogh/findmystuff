@@ -2,7 +2,9 @@
  * API для контейнеров (containers)
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
   Container,
   Transition,
@@ -10,11 +12,42 @@ import type {
   CreateContainerResponse,
 } from "@/types/entity";
 
+/** RPC get_containers_with_location (вызывать из app/api). */
+export function getContainersWithLocationRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+    p_entity_type_id?: number | null;
+    p_has_items?: boolean | null;
+    p_destination_type?: string | null;
+  }
+) {
+  return supabase.rpc("get_containers_with_location", params);
+}
+
 class ContainersApiClient extends HttpClient {
-  async getContainers(params?: { query?: string; showDeleted?: boolean }) {
+  async getContainers(params?: {
+    query?: string;
+    showDeleted?: boolean;
+    sortBy?: SortBy;
+    sortDirection?: SortDirection;
+    entityTypeId?: number | null;
+    hasItems?: boolean | null;
+    locationType?: string | null;
+  }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
+    appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
+    if (params?.entityTypeId != null) searchParams.set("entityTypeId", String(params.entityTypeId));
+    if (params?.hasItems != null) searchParams.set("hasItems", String(params.hasItems));
+    if (params?.locationType != null && params.locationType !== "all")
+      searchParams.set("locationType", params.locationType);
     const queryString = searchParams.toString();
     return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`);
   }

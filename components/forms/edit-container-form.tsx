@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react";
 import { getContainer, updateContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -18,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditContainerFormProps {
   containerId: number;
@@ -39,29 +39,29 @@ const EditContainerForm = ({
   const { isLoading } = useUser();
   const { types: containerTypes } = useEntityTypes("container");
   const [name, setName] = useState(containerName || "");
-  const [containerTypeId] = useState(initialContainerTypeId?.toString() || "");
+  const [containerTypeId, setContainerTypeId] = useState<number | null>(initialContainerTypeId || null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-      // Загружаем текущее фото при открытии формы
-      useEffect(() => {
-        if (open && containerId) {
-          const loadPhoto = async () => {
-            try {
-              const response = await getContainer(containerId);
-              if (response.data?.container?.photo_url) {
-                setPhotoUrl(response.data.container.photo_url);
-              } else {
-                setPhotoUrl(null);
-              }
-            } catch {
-              setPhotoUrl(null);
-            }
-          };
-          loadPhoto();
+  // Загружаем текущее фото при открытии формы
+  useEffect(() => {
+    if (open && containerId) {
+      const loadPhoto = async () => {
+        try {
+          const response = await getContainer(containerId);
+          if (response.data?.container?.photo_url) {
+            setPhotoUrl(response.data.container.photo_url);
+          } else {
+            setPhotoUrl(null);
+          }
+        } catch {
+          setPhotoUrl(null);
         }
-      }, [open, containerId]);
+      };
+      loadPhoto();
+    }
+  }, [open, containerId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -87,7 +87,7 @@ const EditContainerForm = ({
       if (onSuccess) {
         onSuccess();
       }
-      
+
       onOpenChange(false);
     } catch (err) {
       setError(
@@ -110,11 +110,15 @@ const EditContainerForm = ({
           <SheetDescription>Измените название контейнера</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Название контейнера"
-              htmlFor={`container-name-${containerId}`}
-            >
+          <FieldGroup>
+            <EntityTypeSelect
+              type="container"
+              value={containerTypeId}
+              onValueChange={(v) => setContainerTypeId(v ? parseInt(v) : null)}
+            />
+
+            <Field>
+              <FieldLabel htmlFor={`container-name-${containerId}`}>Название контейнера</FieldLabel>
               <Input
                 id={`container-name-${containerId}`}
                 type="text"
@@ -123,16 +127,16 @@ const EditContainerForm = ({
                 placeholder="Введите название контейнера"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
-            <FormField
-              label="Тип контейнера"
-              htmlFor={`container-type-${containerId}`}
-              description="Тип контейнера нельзя изменить после создания"
-            >
+            <Field>
+              <FieldLabel htmlFor={`container-type-${containerId}`}>Тип контейнера</FieldLabel>
+              <FieldDescription>
+                Тип контейнера нельзя изменить после создания
+              </FieldDescription>
               <div className="rounded-md border bg-muted px-3 py-2">
                 {(() => {
-                  const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+                  const selectedType = containerTypes.find(t => t.id === containerTypeId);
                   return (
                     <p className="text-sm font-medium">
                       {selectedType ? selectedType.name : "Тип не выбран"}
@@ -140,7 +144,7 @@ const EditContainerForm = ({
                   );
                 })()}
               </div>
-            </FormField>
+            </Field>
 
             <ImageUpload
               value={photoUrl}
@@ -156,7 +160,7 @@ const EditContainerForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { createUser } from "@/lib/users/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -79,14 +78,16 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
             Создайте нового пользователя. Пароль будет сгенерирован автоматически.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Email"
-              htmlFor="user-email"
-              required
-              description="Пароль будет автоматически сгенерирован и показан после создания"
-            >
+        <form onSubmit={handleSubmit} className="px-6">
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="user-email">
+                Email
+                <span className="text-destructive ml-1">*</span>
+              </FieldLabel>
+              <FieldDescription>
+                Пароль будет автоматически сгенерирован и показан после создания
+              </FieldDescription>
               <Input
                 id="user-email"
                 type="email"
@@ -96,7 +97,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
                 disabled={isSubmitting}
                 required
               />
-            </FormField>
+            </Field>
 
             <ErrorMessage message={error || ""} />
 
@@ -106,7 +107,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
               submitLabel="Добавить пользователя"
               submitIcon={Plus}
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

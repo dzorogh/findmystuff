@@ -31,7 +31,7 @@ export const EntityContentGrid = ({
 }: EntityContentGridProps) => {
   if (items.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8">
+      <p className="text-sm text-muted-foreground text-center py-4">
         {emptyMessage}
       </p>
     );
@@ -42,13 +42,13 @@ export const EntityContentGrid = ({
   const hrefPrefix = `/${entityType}`;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       {title && (
         <h4 className="text-sm font-medium mb-3">
           {title} ({items.length})
         </h4>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {items.map((item) => (
           <Link
             key={item.id}
@@ -56,7 +56,7 @@ export const EntityContentGrid = ({
             className="group"
           >
             <Card className="h-full hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
+              <CardContent className="p-2">
                 <div className="flex flex-col items-center text-center space-y-2">
                   {item.photo_url ? (
                     <div className="relative w-20 h-20 rounded-lg overflow-hidden border">

@@ -6,7 +6,7 @@ jest.mock("@/lib/users/context", () => ({
   useUser: () => ({ user: { id: "1" }, isLoading: false }),
 }));
 
-jest.mock("@/lib/users/api", () => ({
+jest.mock("@/lib/settings/api", () => ({
   getSettings: jest.fn().mockResolvedValue({
     data: [{ id: 1, key: "theme", value: "dark", category: "ui", user_id: null }],
     error: null,
@@ -42,7 +42,7 @@ const Consumer = () => {
 describe("SettingsContext", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getSettings } = require("@/lib/users/api");
+    const { getSettings } = require("@/lib/settings/api");
     getSettings.mockResolvedValue({
       data: [{ id: 1, key: "theme", value: "dark", category: "ui", user_id: null }],
       error: null,
@@ -76,7 +76,7 @@ describe("SettingsContext", () => {
   });
 
   it("getUserSetting возвращает значение пользовательской настройки", async () => {
-    const { getSettings } = require("@/lib/users/api");
+    const { getSettings } = require("@/lib/settings/api");
     getSettings.mockResolvedValue({
       data: [
         { id: 1, key: "theme", value: "dark", category: "ui", user_id: null },
@@ -110,7 +110,7 @@ describe("SettingsContext", () => {
       expect(screen.getByTestId("settings-count")).toHaveTextContent("1");
     });
 
-    const { updateSetting } = require("@/lib/users/api");
+    const { updateSetting } = require("@/lib/settings/api");
     updateSetting.mockResolvedValue({ data: {}, error: null });
 
     await act(async () => {

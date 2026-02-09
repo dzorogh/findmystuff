@@ -20,8 +20,17 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       }
     ],
-    // Используем unoptimized для внешних изображений, чтобы избежать проблем с оптимизацией
-    unoptimized: false,
+  },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['turbopack-inline-svg-loader'],
+        condition: {
+          content: /^[\s\S]{0,20000}$/, // <-- Inline SVGs smaller than ~20Kb (since Next.js v16)
+        },
+        as: '*.js',
+      },
+    },
   },
 };
 

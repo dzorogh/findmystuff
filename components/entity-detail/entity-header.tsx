@@ -31,7 +31,7 @@ export const EntityHeader = ({
   if (layout === "compact") {
     return (
       <CardHeader>
-        <div className="flex flex-wrap items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start sm:items-center justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0 flex-1 shrink-0 basis-full sm:basis-0">
             <EntityPhoto
               photoUrl={photoUrl}
@@ -65,8 +65,8 @@ export const EntityHeader = ({
 
   return (
     <CardHeader>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2 flex-1">
           <EntityPhoto
             photoUrl={photoUrl}
             name={displayName}

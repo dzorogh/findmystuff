@@ -46,15 +46,15 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-48" />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-48" />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-48" />
         </div>
@@ -64,7 +64,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
 
   if (transitions.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8">
+      <p className="text-sm text-muted-foreground text-center py-4">
         {emptyMessage}
       </p>
     );

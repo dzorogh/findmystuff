@@ -2,7 +2,9 @@
  * API для сущностей: items, entity-types, transitions
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
   Item,
   Transition,
@@ -13,6 +15,24 @@ import type {
   CreateTransitionResponse,
 } from "@/types/entity";
 
+/** RPC get_items_with_room (вызывать из app/api). */
+export function getItemsWithRoomRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    location_type: string | null;
+    room_id: number | null;
+    has_photo: boolean | null;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+  }
+) {
+  return supabase.rpc("get_items_with_room", params);
+}
+
 class EntitiesApiClient extends HttpClient {
   async getItems(params?: {
     query?: string;
@@ -22,6 +42,8 @@ class EntitiesApiClient extends HttpClient {
     locationType?: string | null;
     roomId?: number | null;
     hasPhoto?: boolean | null;
+    sortBy?: SortBy;
+    sortDirection?: SortDirection;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -33,6 +55,7 @@ class EntitiesApiClient extends HttpClient {
     if (params?.hasPhoto !== undefined && params.hasPhoto !== null) {
       searchParams.set("hasPhoto", params.hasPhoto ? "true" : "false");
     }
+    appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Item[]>(`/items${queryString ? `?${queryString}` : ""}`);
   }

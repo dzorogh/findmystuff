@@ -1,22 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/shared/supabase/server";
+import { getServerUser } from "@/lib/users/server";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const user = await getServerUser();
 
-    if (error) {
+    if (!user) {
       return NextResponse.json(
-        { error: error.message },
+        { error: "Не авторизован" },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({ user: user || null });
+    return NextResponse.json({ data: { user } });
   } catch (error) {
     console.error("Ошибка получения пользователя:", error);
     return NextResponse.json(

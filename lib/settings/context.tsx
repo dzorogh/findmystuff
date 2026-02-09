@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getSettings, updateSetting as updateSettingApi, type Setting } from "@/lib/users/api";
+import { getSettings, updateSetting as updateSettingApi, type Setting } from "@/lib/settings/api";
 import { useUser } from "@/lib/users/context";
 import { ThemeSync } from "@/components/theme/theme-sync";
 

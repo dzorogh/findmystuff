@@ -3,8 +3,6 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  getSettings,
-  updateSetting,
 } from "@/lib/users/api";
 
 describe("users/api", () => {
@@ -76,32 +74,4 @@ describe("users/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][1].method).toBe("DELETE");
   });
 
-  it("getSettings вызывает /settings и возвращает data", async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          data: [{ id: 1, key: "theme", value: "dark", category: "ui" }],
-        }),
-    });
-
-    const result = await getSettings();
-
-    expect(result.data).toBeDefined();
-    expect(Array.isArray(result.data)).toBe(true);
-  });
-
-  it("updateSetting вызывает PUT /settings", async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ data: { id: 1 } }),
-    });
-
-    await updateSetting("theme", "light");
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/settings",
-      expect.objectContaining({ method: "PUT" })
-    );
-  });
 });

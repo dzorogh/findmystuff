@@ -59,6 +59,8 @@ export interface Place extends BaseEntity {
   // Дополнительные поля из списков
   room_id?: number | null;
   room_name?: string | null;
+  /** Данные о комнате (из API списка мест) */
+  room?: { room_id: number; room_name: string | null } | null;
   items_count?: number;
   containers_count?: number;
 }

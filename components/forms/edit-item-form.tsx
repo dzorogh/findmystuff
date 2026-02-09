@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react";
 import { getItem, updateItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -19,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditItemFormProps {
   itemId: number;
@@ -90,7 +90,7 @@ const EditItemForm = ({
       if (onSuccess) {
         onSuccess();
       }
-      
+
       onOpenChange(false);
     } catch (err) {
       setError(
@@ -113,32 +113,15 @@ const EditItemForm = ({
           <SheetDescription>Измените название вещи</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Тип вещи (необязательно)"
-              htmlFor={`item-type-${itemId}`}
-            >
-              <Combobox
-                options={[
-                  { value: "", label: "Не указан" },
-                  ...itemTypes.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  })),
-                ]}
-                value={itemTypeId}
-                onValueChange={setItemTypeId}
-                placeholder="Выберите тип вещи..."
-                searchPlaceholder="Поиск типа..."
-                emptyText="Типы вещей не найдены"
-                disabled={isSubmitting}
-              />
-            </FormField>
+          <FieldGroup>
+            <EntityTypeSelect
+              type="item"
+              value={itemTypeId ? parseInt(itemTypeId) : null}
+              onValueChange={(v) => setItemTypeId(v ?? "")}
+            />
 
-            <FormField
-              label="Название вещи"
-              htmlFor={`item-name-${itemId}`}
-            >
+            <Field>
+              <FieldLabel htmlFor={`item-name-${itemId}`}>Название вещи</FieldLabel>
               <Input
                 id={`item-name-${itemId}`}
                 type="text"
@@ -147,7 +130,7 @@ const EditItemForm = ({
                 placeholder="Введите название вещи"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
             <ImageUpload
               value={photoUrl}
@@ -163,7 +146,7 @@ const EditItemForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

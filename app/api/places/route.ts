@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
+import { getPlacesWithRoomRpc } from "@/lib/places/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Place } from "@/types/entity";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -68,20 +71,46 @@ const buildCountMap = (rows: Array<{ destination_id: number | null }>) => {
   return counts;
 };
 
+const parseOptionalInt = (value: string | null): number | null => {
+  if (value == null || value === "") return null;
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? null : n;
+};
+
 const fetchPlacesFallback = async (
   supabase: SupabaseClient,
   query: string | null,
-  showDeleted: boolean
+  showDeleted: boolean,
+  sortBy: SortBy,
+  sortDirection: SortDirection,
+  entityTypeId: number | null,
+  roomId: number | null
 ) => {
   let fallbackQuery = supabase
     .from("places")
     .select("id, name, entity_type_id, created_at, deleted_at, photo_url, entity_type:entity_types(name)")
-    .order("created_at", { ascending: false })
+    .order(sortBy === "name" ? "name" : "created_at", { ascending: sortDirection === "asc" })
     .limit(2000);
 
   fallbackQuery = showDeleted
     ? fallbackQuery.not("deleted_at", "is", null)
     : fallbackQuery.is("deleted_at", null);
+
+  if (entityTypeId != null) {
+    fallbackQuery = fallbackQuery.eq("entity_type_id", entityTypeId);
+  }
+
+  if (roomId != null) {
+    const { data: placeIdsInRoom } = await supabase
+      .from("mv_place_last_room_transition")
+      .select("place_id")
+      .eq("room_id", roomId);
+    const ids = (placeIdsInRoom ?? []).map((r: { place_id: number }) => r.place_id);
+    if (ids.length === 0) {
+      return { data: [] as Place[], error: null };
+    }
+    fallbackQuery = fallbackQuery.in("id", ids);
+  }
 
   const { data: fallbackRows, error: fallbackError } = await fallbackQuery;
   if (fallbackError) {
@@ -184,35 +213,50 @@ const fetchPlacesFallback = async (
   return { data: places, error: null };
 };
 
+/**
+ * List places, optionally filtered by text, including deleted items, and sorted.
+ *
+ * Calls a Supabase RPC to retrieve places with their room data; falls back to a client-side query when the RPC fails due to a missing column. Requires an authenticated user and returns HTTP responses describing the result.
+ *
+ * @param request - Incoming request whose URL may include query parameters:
+ *   - `query`: text to search in place name or entity type name
+ *   - `showDeleted`: `"true"` to include deleted places
+ *   - `sortBy`: field to sort by (e.g., `name` or `created_at`)
+ *   - `sortDirection`: `asc` or `desc`
+ * @returns On success, a JSON object with `data` containing an array of `Place` objects. If the user is not authenticated, returns a 401 response with an `error` message. On server or database errors, returns a 500 response with an `error` message.
+ */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
-
-    const { data: placesData, error: fetchError } = await supabase.rpc(
-      "get_places_with_room",
-      {
-        search_query: query,
-        show_deleted: showDeleted,
-        page_limit: 2000,
-        page_offset: 0,
-      }
+    const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
+    const roomId = parseOptionalInt(searchParams.get("roomId"));
+    const { sortBy, sortDirection } = normalizeSortParams(
+      searchParams.get("sortBy"),
+      searchParams.get("sortDirection")
     );
+
+    const { data: placesData, error: fetchError } = await getPlacesWithRoomRpc(supabase, {
+      search_query: query,
+      show_deleted: showDeleted,
+      page_limit: 2000,
+      page_offset: 0,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
+      filter_entity_type_id: entityTypeId ?? undefined,
+      filter_room_id: roomId ?? undefined,
+    });
 
     if (fetchError) {
       if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
         const { data: fallbackPlaces, error: fallbackError } =
-          await fetchPlacesFallback(supabase, query, showDeleted);
+          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection, entityTypeId, roomId);
 
         if (fallbackError) {
           return NextResponse.json(
@@ -259,15 +303,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
