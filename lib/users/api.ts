@@ -1,24 +1,14 @@
 /**
- * API методы для работы с пользователями (users) и настройками (settings)
+ * API методы для работы с пользователями (users)
  */
-
+import type { User, SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
-import type { User } from "@supabase/supabase-js";
 
-export interface Setting {
-  id: number;
-  key: string;
-  value: string;
-  description: string | null;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string | null;
+/** Получить текущего пользователя из Supabase (для server-side). Вызывать только из lib. */
+export async function getAuthUser(supabase: SupabaseClient): Promise<User | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
 }
-
-// Кэш для settings (как в старом SettingsApi)
-const loadingSettingsRequest = new Map<string, Promise<{ data: Setting[]; error: string | null }>>();
-const settingsRequestResult = new Map<string, { data: Setting[]; error: string | null }>();
 
 class UsersApiClient extends HttpClient {
   async getUsers() {
@@ -51,71 +41,21 @@ class UsersApiClient extends HttpClient {
     });
   }
 
-  async getSettings(): Promise<{ data: Setting[]; error: string | null }> {
-    const requestKey = "settings";
-
-    if (settingsRequestResult.has(requestKey)) {
-      const cached = settingsRequestResult.get(requestKey)!;
-      return { data: cached.data, error: cached.error };
-    }
-
-    if (loadingSettingsRequest.has(requestKey)) {
-      const result = await loadingSettingsRequest.get(requestKey)!;
-      return { data: result.data, error: result.error };
-    }
-
-    const requestPromise = (async () => {
-      try {
-        const response = await this.request<{ data: Setting[] }>("/settings");
-
-        if (response.error) {
-          const result = { data: [] as Setting[], error: response.error };
-          settingsRequestResult.set(requestKey, result);
-          return result;
-        }
-
-        const result = {
-          data: response.data?.data || [],
-          error: null,
-        };
-        settingsRequestResult.set(requestKey, result);
-        return result;
-      } catch (err) {
-        const result = {
-          data: [] as Setting[],
-          error: err instanceof Error ? err.message : "Ошибка загрузки настроек",
-        };
-        settingsRequestResult.set(requestKey, result);
-        return result;
-      } finally {
-        loadingSettingsRequest.delete(requestKey);
-      }
-    })();
-
-    loadingSettingsRequest.set(requestKey, requestPromise);
-    const result = await requestPromise;
-    return { data: result.data, error: result.error };
-  }
-
-  async updateSetting(key: string, value: string, isUserSetting = false) {
-    settingsRequestResult.delete("settings");
-    loadingSettingsRequest.delete("settings");
-
-    return this.request<{ success: boolean }>("/settings", {
-      method: "PUT",
-      body: JSON.stringify({ key, value, isUserSetting }),
-    });
+  /** Текущий пользователь через GET /api/auth/user (для контекста на клиенте). */
+  async getCurrentUser(): Promise<User | null> {
+    const res = await this.request<{ user: User | null }>("/auth/user");
+    if (res.error) return null;
+    return res.data?.user ?? null;
   }
 }
 
 const usersApiClient = new UsersApiClient();
 
 export const getUsers = () => usersApiClient.getUsers();
+/** Получить текущего пользователя на клиенте через API (для контекста). */
+export const getClientUser = () => usersApiClient.getCurrentUser();
 export const createUser = (data: { email: string; email_confirm?: boolean }) =>
   usersApiClient.createUser(data);
 export const updateUser = (data: { id: string; email: string }) =>
   usersApiClient.updateUser(data);
 export const deleteUser = (userId: string) => usersApiClient.deleteUser(userId);
-export const getSettings = () => usersApiClient.getSettings();
-export const updateSetting = (key: string, value: string, isUserSetting = false) =>
-  usersApiClient.updateSetting(key, value, isUserSetting);

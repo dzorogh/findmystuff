@@ -3,16 +3,15 @@
 import { useState } from "react";
 import { createRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -21,6 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EntityTypeSelect } from "../fields/entity-type-select";
 
 interface AddRoomFormProps {
   open: boolean;
@@ -56,15 +56,15 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
       setName("");
       setRoomTypeId("");
       setPhotoUrl(null);
-      
+
       toast.success("Помещение успешно добавлено в склад", {
         description: "Помещение добавлено",
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
+
       setTimeout(() => {
         onOpenChange(false);
       }, 100);
@@ -86,9 +86,9 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
             Введите название помещения
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit} className="px-6">
           {isLoading || isLoadingTypes ? (
-            <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-10 w-full" />
@@ -99,33 +99,12 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
               </div>
             </div>
           ) : (
-            <FormGroup>
-              <FormField
-                label="Тип помещения (необязательно)"
-                htmlFor="room-type"
-              >
-                <Combobox
-                  options={[
-                    { value: "", label: "Не указан" },
-                    ...roomTypes.map((type) => ({
-                      value: type.id.toString(),
-                      label: type.name,
-                    })),
-                  ]}
-                  value={roomTypeId}
-                  onValueChange={setRoomTypeId}
-                  placeholder="Выберите тип помещения..."
-                  searchPlaceholder="Поиск типа..."
-                  emptyText="Типы помещений не найдены"
-                  disabled={isSubmitting}
-                />
-              </FormField>
-
-              <FormField
-                label="Название помещения"
-                htmlFor="room-name"
-                description="Поле необязательное. ID и дата создания заполнятся автоматически."
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="room-name">Название помещения</FieldLabel>
+                <FieldDescription>
+                  Поле необязательное. ID и дата создания заполнятся автоматически.
+                </FieldDescription>
                 <Input
                   id="room-name"
                   type="text"
@@ -134,7 +113,13 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   placeholder="Введите название помещения"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
+
+              <EntityTypeSelect
+                type="room"
+                value={roomTypeId ? parseInt(roomTypeId) : null}
+                onValueChange={(v) => setRoomTypeId(v ?? "")}
+              />
 
               <ImageUpload
                 value={photoUrl}
@@ -151,7 +136,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                 submitLabel="Добавить помещение"
                 submitIcon={Plus}
               />
-            </FormGroup>
+            </FieldGroup>
           )}
         </form>
       </SheetContent>

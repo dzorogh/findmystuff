@@ -2,7 +2,9 @@
  * API для мест (places)
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type {
   Place,
   Transition,
@@ -11,11 +13,38 @@ import type {
   CreatePlaceResponse,
 } from "@/types/entity";
 
+/** RPC get_places_with_room (вызывать из app/api). */
+export function getPlacesWithRoomRpc(
+  supabase: SupabaseClient,
+  params: {
+    search_query: string | null;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    sort_by: SortBy;
+    sort_direction: SortDirection;
+    filter_entity_type_id?: number | null;
+    filter_room_id?: number | null;
+  }
+) {
+  return supabase.rpc("get_places_with_room", params);
+}
+
 class PlacesApiClient extends HttpClient {
-  async getPlaces(params?: { query?: string; showDeleted?: boolean }) {
+  async getPlaces(params?: {
+    query?: string;
+    showDeleted?: boolean;
+    sortBy?: SortBy;
+    sortDirection?: SortDirection;
+    entityTypeId?: number | null;
+    roomId?: number | null;
+  }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
+    if (params?.entityTypeId != null) searchParams.set("entityTypeId", String(params.entityTypeId));
+    if (params?.roomId != null) searchParams.set("roomId", String(params.roomId));
+    appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Place[]>(`/places${queryString ? `?${queryString}` : ""}`);
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getServerUser } from "@/lib/users/server";
 
 const ALLOWED_TABLES = ["items", "places", "containers", "rooms"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
@@ -47,15 +48,11 @@ export async function POST(
   context: DuplicateParams
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const resolvedParams = await Promise.resolve(context.params);
     const table = resolvedParams.table as TableName;
     const sourceId = Number.parseInt(resolvedParams.id, 10);
@@ -82,7 +79,7 @@ export async function POST(
       return NextResponse.json({ error: "Сущность не найдена" }, { status: 404 });
     }
 
-    const source = sourceEntity as SourceRow;
+    const source = sourceEntity as unknown as SourceRow;
     if (source.deleted_at) {
       return NextResponse.json(
         { error: "Нельзя дублировать удаленную сущность" },

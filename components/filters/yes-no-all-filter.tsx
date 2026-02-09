@@ -1,7 +1,7 @@
 "use client";
 
-import { FormField } from "@/components/ui/form-field";
-import { Combobox } from "@/components/ui/combobox";
+import { FieldSet, FieldLegend, Field, FieldLabel } from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface YesNoAllFilterProps {
   label: string;
@@ -23,15 +23,18 @@ export const YesNoAllFilter = ({ label, value, onChange }: YesNoAllFilterProps) 
   };
 
   return (
-    <FormField label={label}>
-      <Combobox
-        options={YES_NO_ALL_OPTIONS}
-        value={stringValue}
-        onValueChange={handleValueChange}
-        placeholder="Выберите..."
-        searchPlaceholder="Поиск..."
-        emptyText="Не найдено"
-      />
-    </FormField>
+    <FieldSet className="w-full max-w-xs">
+      <FieldLegend variant="label">{label}</FieldLegend>
+      <RadioGroup value={stringValue} onValueChange={handleValueChange}>
+        {YES_NO_ALL_OPTIONS.map((option) => (
+          <Field orientation="horizontal" key={option.value}>
+            <RadioGroupItem value={option.value} id={`yes-no-all-${option.value}`} />
+            <FieldLabel htmlFor={`yes-no-all-${option.value}`} className="font-normal">
+              {option.label}
+            </FieldLabel>
+          </Field>
+        ))}
+      </RadioGroup>
+    </FieldSet>
   );
 };

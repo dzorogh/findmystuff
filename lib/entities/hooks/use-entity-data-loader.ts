@@ -1,16 +1,11 @@
 import { useEffect, useRef } from "react";
-import type { User } from "@supabase/supabase-js";
 
 interface UseEntityDataLoaderOptions {
-  user: User | null;
-  isUserLoading: boolean;
   entityId: number;
   loadData: () => Promise<void>;
 }
 
 export const useEntityDataLoader = ({
-  user,
-  isUserLoading,
   entityId,
   loadData,
 }: UseEntityDataLoaderOptions) => {
@@ -18,10 +13,8 @@ export const useEntityDataLoader = ({
   const lastLoadKeyRef = useRef<string | null>(null);
   const requestIdRef = useRef<number>(0);
 
-  useEffect(() => {
-    if (!user || isUserLoading) return;
-
-    const loadKey = `${user.id}-${entityId}`;
+  useEffect(() => { 
+    const loadKey = `${entityId}`;
     const currentRequestId = ++requestIdRef.current;
 
     if (lastLoadKeyRef.current === loadKey && loadingRef.current) return;
@@ -45,5 +38,5 @@ export const useEntityDataLoader = ({
       isCancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isUserLoading, entityId]);
+  }, [entityId]);
 };

@@ -49,6 +49,7 @@ describe('useContainers', () => {
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
+      expect(result.current.error).not.toBeNull()
     })
 
     expect(result.current.error).not.toBeNull()

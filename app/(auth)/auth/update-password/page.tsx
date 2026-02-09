@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/shared/supabase/client";
@@ -41,18 +41,20 @@ const UpdatePasswordPage = () => {
   // Сохраняем наличие recovery в hash при первом рендере, т.к. Supabase может очистить hash
   const hadRecoveryHashRef = useRef<boolean>(false);
   const recoverySessionRef = useRef<{ accessToken: string; refreshToken: string } | null>(null);
-  if (typeof window !== "undefined" && !hadRecoveryHashRef.current) {
+  const exchangedCodeRef = useRef<string | null>(null);
+  const appliedRecoverySessionRef = useRef(false);
+
+  useEffect(() => {
+    if (hadRecoveryHashRef.current) return;
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const accessToken = hashParams.get("access_token");
     const refreshToken = hashParams.get("refresh_token");
-
-    hadRecoveryHashRef.current = hashParams.get("type") === "recovery";
+    if (hashParams.get("type") !== "recovery") return;
+    hadRecoveryHashRef.current = true;
     if (accessToken && refreshToken) {
       recoverySessionRef.current = { accessToken, refreshToken };
     }
-  }
-  const exchangedCodeRef = useRef<string | null>(null);
-  const appliedRecoverySessionRef = useRef(false);
+  }, []);
 
   useEffect(() => {
     if (
@@ -189,8 +191,8 @@ const UpdatePasswordPage = () => {
 
   if (!checkDone || isUserLoading || isExchangingCode || isApplyingRecoverySession) {
     return (
-      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
-        <div className="flex flex-col items-center gap-4 text-muted-foreground">
+      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
           <p>Загрузка...</p>
         </div>
@@ -200,9 +202,9 @@ const UpdatePasswordPage = () => {
 
   if (!isReady) {
     return (
-      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
+      <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center space-y-4">
+          <CardHeader className="text-center flex flex-col gap-2">
             <div className="flex justify-center">
               <Logo size="lg" showText={true} />
             </div>
@@ -223,9 +225,9 @@ const UpdatePasswordPage = () => {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-4">
+    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
+        <CardHeader className="text-center flex flex-col gap-2">
           <div className="flex justify-center">
             <Logo size="lg" showText={true} />
           </div>
@@ -235,7 +237,7 @@ const UpdatePasswordPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <div className="space-y-2">
               <Label htmlFor="new-password">Новый пароль</Label>
               <Input
@@ -288,4 +290,21 @@ const UpdatePasswordPage = () => {
   );
 };
 
-export default UpdatePasswordPage;
+function UpdatePasswordFallback() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] items-center justify-center px-2">
+      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
+        <p>Загрузка...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<UpdatePasswordFallback />}>
+      <UpdatePasswordPage />
+    </Suspense>
+  );
+}

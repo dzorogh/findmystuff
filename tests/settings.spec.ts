@@ -11,10 +11,10 @@ test.describe('settings', () => {
     await expect(page.getByRole('heading', { name: 'Помещения' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Вещи' })).toBeVisible();
 
-    await expect(page.getByRole('heading', { name: 'Типы контейнеров' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Типы мест' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Типы помещений' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Типы вещей' })).toBeVisible();
+    await expect(page.getByText('Типы контейнеров')).toBeVisible();
+    await expect(page.getByText('Типы мест')).toBeVisible();
+    await expect(page.getByText('Типы помещений')).toBeVisible();
+    await expect(page.getByText('Типы вещей')).toBeVisible();
 
     await expect(page.getByRole('button', { name: 'Добавить тип' })).toHaveCount(4);
   });

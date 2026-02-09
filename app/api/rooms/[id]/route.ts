@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getItemIdsInRoomRpc } from "@/lib/rooms/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Item, Place, Container, Transition } from "@/types/entity";
 
 export async function GET(
@@ -7,15 +9,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const resolvedParams = await Promise.resolve(params);
     const roomId = parseInt(resolvedParams.id, 10);
 
@@ -30,7 +28,7 @@ export async function GET(
         .select("id, name, photo_url, created_at, deleted_at, room_type_id, entity_types(name)")
         .eq("id", roomId)
         .single(),
-      supabase.rpc("get_item_ids_in_room", { p_room_id: roomId }),
+      getItemIdsInRoomRpc(supabase, roomId),
       supabase
         .from("transitions")
         .select("place_id, container_id, destination_type, destination_id, created_at")
@@ -192,15 +190,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const resolvedParams = await Promise.resolve(params);
     const roomId = parseInt(resolvedParams.id, 10);
 

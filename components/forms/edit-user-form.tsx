@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import { updateUser } from "@/lib/users/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -88,13 +87,15 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Email"
-              htmlFor={`user-email-${user.id}`}
-              required
-              description="При сохранении будет автоматически сгенерирован новый пароль"
-            >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor={`user-email-${user.id}`}>
+                Email
+                <span className="text-destructive ml-1">*</span>
+              </FieldLabel>
+              <FieldDescription>
+                При сохранении будет автоматически сгенерирован новый пароль
+              </FieldDescription>
               <Input
                 id={`user-email-${user.id}`}
                 type="email"
@@ -104,7 +105,7 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
                 disabled={isSubmitting}
                 required
               />
-            </FormField>
+            </Field>
 
             <ErrorMessage message={error || ""} />
 
@@ -113,7 +114,7 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

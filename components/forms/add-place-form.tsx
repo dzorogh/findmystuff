@@ -3,17 +3,16 @@
 import { useState } from "react";
 import { createPlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { Combobox } from "@/components/ui/combobox";
-import RoomCombobox from "@/components/location/room-combobox";
-import ImageUpload from "@/components/common/image-upload";
+import RoomCombobox from "@/components/fields/room-combobox";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -22,6 +21,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface AddPlaceFormProps {
   open: boolean;
@@ -104,9 +104,9 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
             Введите название места. Рекомендуемый формат: Ш1П1 (Шкаф 1 Полка 1), С1П1 (Стеллаж 1 Полка 1)
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit} className="px-6">
           {isLoading || isLoadingTypes ? (
-            <div className="space-y-4 py-4">
+            <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-10 w-full" />
@@ -121,12 +121,9 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
               </div>
             </div>
           ) : (
-            <FormGroup>
-              <FormField
-                label="Название места (необязательно)"
-                htmlFor="place-name"
-                description="Дополнительное описание. ID и дата создания заполнятся автоматически."
-              >
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="place-name">Название места</FieldLabel>
                 <Input
                   id="place-name"
                   type="text"
@@ -135,26 +132,13 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                   placeholder="Введите название места"
                   disabled={isSubmitting}
                 />
-              </FormField>
+              </Field>
 
-              <FormField
-                label="Тип места"
-                htmlFor="place-type"
-                description="Маркировка будет сгенерирована автоматически (например, Ш1)"
-              >
-                <Combobox
-                  options={placeTypes.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  }))}
-                  value={placeTypeId}
-                  onValueChange={setPlaceTypeId}
-                  placeholder="Выберите тип места..."
-                  searchPlaceholder="Поиск типа места..."
-                  emptyText="Типы мест не найдены"
-                  disabled={isSubmitting}
-                />
-              </FormField>
+              <EntityTypeSelect
+                type="place"
+                value={placeTypeId ? parseInt(placeTypeId) : null}
+                onValueChange={(v) => setPlaceTypeId(v ?? "")}
+              />
 
               <RoomCombobox
                 selectedRoomId={selectedRoomId}
@@ -180,7 +164,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 submitLabel="Добавить место"
                 submitIcon={Plus}
               />
-            </FormGroup>
+            </FieldGroup>
           )}
         </form>
       </SheetContent>

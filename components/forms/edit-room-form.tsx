@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react";
 import { getRoom, updateRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/ui/form-field";
-import { FormGroup } from "@/components/ui/form-group";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import ImageUpload from "@/components/common/image-upload";
+import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
-import { FormFooter } from "@/components/common/form-footer";
+import { FormFooter } from "@/components/forms/form-footer";
 import {
   Sheet,
   SheetContent,
@@ -19,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditRoomFormProps {
   roomId: number;
@@ -94,7 +94,7 @@ const EditRoomForm = ({
       if (onSuccess) {
         onSuccess();
       }
-      
+
       onOpenChange(false);
     } catch (err) {
       setError(
@@ -117,13 +117,17 @@ const EditRoomForm = ({
           <SheetDescription>Измените название помещения</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
-          <FormGroup>
-            <FormField
-              label="Тип помещения (необязательно)"
-              htmlFor={`room-type-${roomId}`}
-            >
+          <FieldGroup>
+            <EntityTypeSelect
+              type="room"
+              value={roomTypeId ? parseInt(roomTypeId) : null}
+              onValueChange={(v) => setRoomTypeId(v ?? "")}
+            />
+
+            <Field>
+              <FieldLabel htmlFor={`room-type-${roomId}`}>Тип помещения (необязательно)</FieldLabel>
               <Combobox
-                options={[
+                items={[
                   { value: "", label: "Не указан" },
                   ...roomTypes.map((type) => ({
                     value: type.id.toString(),
@@ -131,18 +135,13 @@ const EditRoomForm = ({
                   })),
                 ]}
                 value={roomTypeId}
-                onValueChange={setRoomTypeId}
-                placeholder="Выберите тип помещения..."
-                searchPlaceholder="Поиск типа..."
-                emptyText="Типы помещений не найдены"
+                onValueChange={(v) => setRoomTypeId(v ?? "")}
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
-            <FormField
-              label="Название помещения"
-              htmlFor={`room-name-${roomId}`}
-            >
+            <Field>
+              <FieldLabel htmlFor={`room-name-${roomId}`}>Название помещения</FieldLabel>
               <Input
                 id={`room-name-${roomId}`}
                 type="text"
@@ -151,7 +150,7 @@ const EditRoomForm = ({
                 placeholder="Введите название помещения"
                 disabled={isSubmitting}
               />
-            </FormField>
+            </Field>
 
             <ImageUpload
               value={photoUrl}
@@ -167,7 +166,7 @@ const EditRoomForm = ({
               onCancel={() => onOpenChange(false)}
               submitLabel="Сохранить"
             />
-          </FormGroup>
+          </FieldGroup>
         </form>
       </SheetContent>
     </Sheet>

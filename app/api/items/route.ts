@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { getItemsWithRoomRpc } from "@/lib/entities/api";
+import { getServerUser } from "@/lib/users/server";
 import type { Item } from "@/types/entity";
 
+/**
+ * Retrieve a paginated, optionally filtered and sorted list of items including each item's last known location and the total matching count.
+ *
+ * Expects query parameters: `query`, `showDeleted`, `page`, `limit`, `locationType`, `roomId`, `hasPhoto`, `sortBy`, and `sortDirection`. Requires an authenticated user; responds with 401 if not authenticated.
+ *
+ * @param request - Incoming NextRequest containing the query parameters described above
+ * @returns An object with `data` and `totalCount`:
+ *  - `data`: an array of items where each item includes `id`, `name`, `item_type_id`, optional `item_type` (with `name`), `created_at`, `deleted_at`, `photo_url`, `room_id`, `room_name`, and `last_location` (object with `destination_type`, `destination_id`, `moved_at`, `room_name` or `null` if no location).
+ *  - `totalCount`: the total number of items matching the query
+ */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
@@ -21,10 +30,14 @@ export async function GET(request: NextRequest) {
     const locationType = searchParams.get("locationType") || null;
     const roomId = searchParams.get("roomId") ? parseInt(searchParams.get("roomId")!, 10) : null;
     const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
+    const { sortBy, sortDirection } = normalizeSortParams(
+      searchParams.get("sortBy"),
+      searchParams.get("sortDirection")
+    );
 
     const from = (page - 1) * limit;
 
-    const { data: itemsData, error: itemsError } = await supabase.rpc("get_items_with_room", {
+    const { data: itemsData, error: itemsError } = await getItemsWithRoomRpc(supabase, {
       search_query: query?.trim() || null,
       show_deleted: showDeleted,
       page_limit: limit,
@@ -32,6 +45,8 @@ export async function GET(request: NextRequest) {
       location_type: locationType,
       room_id: roomId,
       has_photo: hasPhoto,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
     });
 
     if (itemsError) {
@@ -107,15 +122,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-
+    const supabase = await createClient();
     const body = await request.json();
     const { name, photo_url, destination_type, destination_id, item_type_id } = body;
 
