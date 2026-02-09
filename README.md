@@ -1,61 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Домашний склад
 
-## Getting Started
+Веб-приложение для управления домашним складом и быстрого поиска вещей. Иерархия: **Помещения → Места → Контейнеры → Вещи**.
 
-First, run the development server:
+## Возможности
+
+- Иерархическая организация: помещения, места, контейнеры, вещи
+- Единый поиск по всем сущностям
+- Перемещение вещей и контейнеров между уровнями
+- Мягкое удаление с восстановлением
+- UI на ShadCN + Tailwind CSS
+
+## Стек
+
+- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, ShadCN UI
+- **Backend:** Supabase (PostgreSQL, Auth, RLS), Google OAuth 2.0
+- **Инструменты:** ESLint, pnpm
+
+---
+
+## Быстрый старт
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-## Android (Capacitor)
+## Переменные окружения
 
-Приложение запускается как нативная оболочка над работающим Next.js сервером.
+Создайте `.env.local`:
 
-1. Установить зависимости: `npm install`
-2. Один раз создать Android-проект: `npm run android:add`
-3. Dev-сервер и синхронизация:
-   - `npm run dev:external`
-   - `CAPACITOR_SERVER_URL="http://<LAN-IP>:3000" npm run android:sync`
-4. Открыть Android Studio: `npm run android:open`
+```env
+# Supabase (обязательно)
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon-key>
 
-Продакшен URL:
-`CAPACITOR_SERVER_URL="https://<DOMAIN>" npm run android:sync`
+# База данных (для серверной логики при необходимости)
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+```
 
-## QR-сканнер и доступ к камере
+**DATABASE_URL:** Supabase Dashboard → Settings → Database → Connection string → вкладка **URI**. Подставьте реальный пароль; специальные символы в пароле кодируйте (`@` → `%40`, `#` → `%23`, `%` → `%25`).
 
-Для работы QR-сканнера на мобильных устройствах требуется HTTPS соединение. Используйте Cloudflare Tunnel для доступа к локальному серверу разработки:
+---
 
-1. Установите `cloudflared`: `brew install cloudflare/cloudflare/cloudflared` (macOS)
-2. Запустите dev сервер: `pnpm dev`
-3. В отдельном терминале запустите туннель: `pnpm dev:tunnel`
-4. Откройте предоставленный HTTPS URL на телефоне
+## Supabase
 
-Подробная инструкция: [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md)
+### Google OAuth
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Google Cloud Console:** Credentials → Create Credentials → OAuth client ID → Web application.
+2. **Authorized JavaScript origins:** `http://localhost:3000`, `https://<project-ref>.supabase.co`, ваш production URL.
+3. **Authorized redirect URIs — только один:**  
+   `https://<project-ref>.supabase.co/auth/v1/callback`  
+   (скопируйте точный URL из Supabase: Authentication → Providers → Google).  
+   Не добавляйте `http://localhost:3000/auth/callback`.
+4. **Supabase Dashboard:** Authentication → Providers → Google — вставьте Client ID и Client Secret.
 
-## Learn More
+Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 
-To learn more about Next.js, take a look at the following resources:
+### Ошибка redirect_uri_mismatch (400)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+В Google Cloud Console в **Authorized redirect URIs** должен быть **только** Supabase callback URL:  
+`https://<project-ref>.supabase.co/auth/v1/callback`. Удалите локальные и другие redirect URI, сохраните и подождите 2–5 минут.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Редирект на localhost на production
 
-## Deploy on Vercel
+В Supabase: **Settings → API** задайте **Site URL** = ваш production URL (например `https://yourdomain.com`). В **Redirect URLs** добавьте `http://localhost:3000/**` и `https://yourdomain.com/**`. На сервере задайте `NEXT_PUBLIC_APP_URL=https://yourdomain.com`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Supabase MCP (Cursor)
+
+В Cursor Settings → MCP добавьте сервер (подставьте свой `project-ref`):
+
+**HTTP (простой вариант):**
+```json
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=YOUR_PROJECT_REF"
+    }
+  }
+}
+```
+
+При первом использовании откроется OAuth. Альтернатива: [Personal Access Token](https://supabase.com/dashboard/account/tokens) в аргументах или env.
+
+---
+
+## Деплой (Infisical + Dokploy)
+
+- **Build type:** Dockerfile, путь `./Dockerfile`.
+- **Environment:** задать `INFISICAL_PROJECT_ID`, `INFISICAL_TOKEN` (или Machine Identity: `INFISICAL_CLIENT_ID` + `INFISICAL_CLIENT_SECRET`). Секреты подставляются при запуске контейнера через `infisical run -- node server.js`.
+
+---
+
+## Архитектура и код
+
+### Структура данных
+
+- **rooms** — помещения  
+- **places** — места (привязка к помещению через `transitions`)  
+- **containers** — контейнеры  
+- **items** — вещи  
+- **transitions** — история перемещений; текущее местоположение = последняя запись по `created_at`.
+
+У сущностей есть `deleted_at` (мягкое удаление). Включён RLS.
+
+### Правила ESLint
+
+Прямые запросы к БД и импорт `createClient` из `@/lib/supabase/client` разрешены только в:
+
+- `lib/`, `app/api/`, `contexts/`, `components/auth/`
+
+В страницах, остальных компонентах и хуках используйте **API-клиент** (`apiClient`), а не прямые вызовы Supabase/fetch. Проверка: `npm run lint`.
+
+---
+
+## Сборка и запуск
+
+```bash
+npm build
+npm start
+```
+
+Миграции и RLS настраиваются в Supabase (SQL Editor или MCP).
