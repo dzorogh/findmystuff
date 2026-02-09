@@ -2,39 +2,50 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "./page-breadcrumb";
 import { PageTitle } from "./page-title";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { PageHeaderContextActions } from "./page-header-context-actions";
 
 interface PageHeaderProps {
-    isLoading?: boolean;
-    title: string;
-    ancestors?: {
-        label: string;
-        href: string;
-    }[];
-    actions?: React.ReactNode;
+  isLoading?: boolean;
+  title: string;
+  ancestors?: {
+    label: string;
+    href: string;
+  }[];
+  /** Явные кнопки шапки. Если не переданы, показываются действия из контекста (страницы сущностей). */
+  actions?: React.ReactNode;
 }
 
-export const PageHeader = ({ isLoading, title, ancestors, actions }: PageHeaderProps) => {
-    const breadcrumb = ancestors ? [...ancestors, { label: title, href: "" }] : [{ label: title, href: "" }];
+export const PageHeader = ({
+  isLoading,
+  title,
+  ancestors,
+  actions,
+}: PageHeaderProps) => {
+  const breadcrumb = ancestors
+    ? [...ancestors, { label: title, href: "" }]
+    : [{ label: title, href: "" }];
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col gap-2">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-9 w-64" />
-            </div>
-        );
-    }
-
+  if (isLoading) {
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-2" />
-                <PageBreadcrumb path={breadcrumb} />
-            </div>
-            <div className="flex justify-between items-center">
-                <PageTitle title={title} />
-                {actions}
-            </div>
-        </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-9 w-64" />
+      </div>
     );
+  }
+
+  const headerActions = actions ?? <PageHeaderContextActions />;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="-ml-2" />
+        <PageBreadcrumb path={breadcrumb} />
+      </div>
+      <div className="flex justify-between items-center">
+        <PageTitle title={title} />
+        {headerActions}
+      </div>
+    </div>
+  );
 };

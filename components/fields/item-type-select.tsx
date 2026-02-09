@@ -28,9 +28,12 @@ export function ItemTypeSelect({ value, onValueChange }: ItemTypeSelectProps) {
 
   return (
     <Field>
-      <FieldLabel htmlFor="item-type">Тип вещи</FieldLabel>
+      <FieldLabel htmlFor="item-type">
+        Тип вещи
+      </FieldLabel>
 
       <Combobox
+        key={selectedItemType ? `type-${selectedItemType.value}` : "type-empty"}
         value={selectedItemType ?? null}
         items={itemTypeOptions}
         onValueChange={handleValueChange}

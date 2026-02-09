@@ -117,14 +117,9 @@ function MoveEntityFormBody({
         throw new Error(response.error);
       }
 
-      let destinationName: string | undefined;
-      if (destinationType === "container") {
-        destinationName = containers.find((c) => c.id === parseInt(selectedDestinationId))?.name ?? undefined;
-      } else if (destinationType === "place") {
-        destinationName = places.find((p) => p.id === parseInt(selectedDestinationId))?.name ?? undefined;
-      } else {
-        destinationName = rooms.find((r) => r.id === parseInt(selectedDestinationId))?.name ?? undefined;
-      }
+      const id = parseInt(selectedDestinationId);
+      const listByType = { container: containers, place: places, room: rooms };
+      const destinationName = listByType[destinationType].find((d) => d.id === id)?.name ?? undefined;
       const typeLabel = DESTINATION_TYPE_LABELS[destinationType];
       const finalDestinationName = destinationName || `${typeLabel} #${selectedDestinationId}`;
 
@@ -159,16 +154,11 @@ function MoveEntityFormBody({
       return;
     }
 
-    let destinationExists = false;
-    if (result.type === "container") {
-      destinationExists = containers.some(
-        (c) => c.id === result.id && (excludeContainerId == null || c.id !== excludeContainerId)
-      );
-    } else if (result.type === "place") {
-      destinationExists = places.some((p) => p.id === result.id);
-    } else {
-      destinationExists = rooms.some((r) => r.id === result.id);
-    }
+    const listByType = { container: containers, place: places, room: rooms };
+    const isExcluded =
+      result.type === "container" && excludeContainerId != null && result.id === excludeContainerId;
+    const destinationExists =
+      !isExcluded && listByType[result.type as DestinationType].some((d) => d.id === result.id);
 
     if (!destinationExists) {
       const typeLabel = DESTINATION_TYPE_LABELS[result.type as DestinationType];
@@ -198,7 +188,7 @@ function MoveEntityFormBody({
         <SheetDescription>{entityDisplayName}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit}>
-        <div className="p-2">
+        <div className="px-6">
           <FieldGroup>
             <Button
               type="button"
