@@ -25,9 +25,9 @@ export const useRooms = (includeDeleted = false) => {
     const unsubscribe = roomsCache.subscribe(key, notify);
     roomsCache.load(key, async () => {
       const res = await getRoomsSimple(includeDeleted);
-      return { 
-        data: res.data ?? null, 
-        error: res.error ? new Error(res.error) : null 
+      return {
+        data: res.data ?? null,
+        error: res.error ?? undefined,
       };
     });
     return unsubscribe;

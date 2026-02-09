@@ -215,8 +215,13 @@ const UpdatePasswordPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/auth/forgot-password">Сбросить пароль</Link>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/auth/forgot-password" />}
+              nativeButton={false}
+            >
+              Сбросить пароль
             </Button>
           </CardContent>
         </Card>

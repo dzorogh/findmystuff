@@ -89,15 +89,14 @@ const ForgotPasswordPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <Button asChild variant="outline" className="w-full">
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-2"
-                aria-label="Вернуться на главную"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden />
-                Ко входу
-              </Link>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/auth/login" />}
+              nativeButton={false}
+            >
+              <ArrowLeft data-icon="inline-start" />
+              Ко входу
             </Button>
           </CardContent>
         </Card>

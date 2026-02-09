@@ -7,7 +7,7 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { toast } from "sonner";
-import type { EntityLabels, MoveConfig, TableName } from "@/lib/app/types/entity-config";
+import type { EntityLabels, MoveConfig, MoveDestinationType, TableName } from "@/lib/app/types/entity-config";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 interface UsePlacesActionsParams {
@@ -28,7 +28,7 @@ export function usePlacesActions({
   const printPlace = usePrintEntityLabel("place");
   const singularLower = labels.singular.toLowerCase();
   const moveEnabled = move?.enabled ?? false;
-  const destinationTypes = useMemo(
+  const destinationTypes = useMemo<MoveDestinationType[]>(
     () => move?.destinationTypes ?? ["room", "container"],
     [move?.destinationTypes]
   );

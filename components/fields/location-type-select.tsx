@@ -19,7 +19,10 @@ export function LocationTypeSelect({ value, onValueChange }: LocationTypeSelectP
   return (
     <Field>
       <FieldLabel htmlFor="location-type">Тип места</FieldLabel>
-      <Select value={value || "all"} onValueChange={onValueChange}>
+      <Select
+        value={value || "all"}
+        onValueChange={(val) => onValueChange(val ?? "all")}
+      >
         <SelectTrigger id="location-type">
           <SelectValue placeholder="Выберите тип места..." />
         </SelectTrigger>

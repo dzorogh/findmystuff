@@ -65,21 +65,24 @@ const ContainerCombobox = ({
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-            disabled={disabled || availableContainers.length === 0}
-            id={`${id}-combobox`}
-          >
-            {selectedContainer
-              ? getDisplayName(selectedContainer)
-              : "-- Выберите контейнер --"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+              disabled={disabled || availableContainers.length === 0}
+              id={`${id}-combobox`}
+            >
+              {selectedContainer
+                ? getDisplayName(selectedContainer)
+                : "-- Выберите контейнер --"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          }
+          nativeButton={false}
+        />
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
           <Command>
             <CommandInput placeholder="Поиск контейнера..." />

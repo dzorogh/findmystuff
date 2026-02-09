@@ -52,21 +52,24 @@ const RoomCombobox = ({
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-            disabled={disabled || (isLoading ? false : rooms.length === 0)}
-            id={`${id}-combobox`}
-          >
-            {selectedRoom
-              ? selectedRoom.name || `Помещение #${selectedRoom.id}`
-              : "-- Выберите помещение --"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+              disabled={disabled || (isLoading ? false : rooms.length === 0)}
+              id={`${id}-combobox`}
+            >
+              {selectedRoom
+                ? selectedRoom.name || `Помещение #${selectedRoom.id}`
+                : "-- Выберите помещение --"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          }
+          nativeButton={false}
+        />
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
           <Command>
             <CommandInput placeholder="Поиск помещения..." />
