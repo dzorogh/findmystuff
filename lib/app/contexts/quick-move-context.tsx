@@ -13,7 +13,6 @@ const QuickMoveContext = createContext<QuickMoveContextValue | undefined>(undefi
 export const QuickMoveProvider = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
   const handleOpenChange = useCallback((newOpen: boolean) => {
-    console.log("[QuickMove] QuickMoveProvider onOpenChange", { open: newOpen });
     setOpen(newOpen);
   }, []);
 

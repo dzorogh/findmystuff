@@ -5,7 +5,7 @@ import type { Item } from "@/types/entity";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import type { EntityLabels, MoveConfig } from "@/lib/app/types/entity-config";
+import type { EntityLabels, MoveConfig, MoveDestinationType } from "@/lib/app/types/entity-config";
 
 interface UseItemsActionsParams {
   refreshList: () => void;
@@ -22,7 +22,7 @@ export function useItemsActions({
 }: UseItemsActionsParams) {
   const itemListActions = useItemListActions({ refreshList });
   const moveEnabled = move?.enabled ?? false;
-  const destinationTypes = useMemo(
+  const destinationTypes = useMemo<MoveDestinationType[]>(
     () => move?.destinationTypes ?? ["room", "place", "container"],
     [move?.destinationTypes]
   );

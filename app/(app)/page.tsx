@@ -56,7 +56,6 @@ export default function Home() {
     }, 300);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   const getIcon = (type: string) => {

@@ -222,7 +222,6 @@ function MoveEntityFormBody({
               }}
               onDestinationIdChange={setSelectedDestinationId}
               disabled={isSubmitting}
-              showRoomFirst={true}
               allowedTypes={destinationTypes}
               excludeContainerId={excludeContainerId}
               label="Тип назначения"

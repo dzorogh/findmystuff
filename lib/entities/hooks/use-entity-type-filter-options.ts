@@ -14,21 +14,19 @@ export function useEntityTypeFilterOptions(
   const { types, isLoading } = useEntityTypes(category);
   const options = useMemo(() => {
     const options = [];
+
     if (includeAll) {
       options.push(ALL_TYPES_OPTION);
     }
+
     if (includeEmpty) {
       options.push(EMPTY_OPTION);
     }
+
     if (types?.length) {
       options.push(...types.map((t) => ({ value: t.id.toString(), label: t.name })));
-      return [
-        includeAll ? ALL_TYPES_OPTION : null,
-        includeEmpty ? EMPTY_OPTION : null,
-        ...types.map((t) => ({ value: t.id.toString(), label: t.name })),
-      ];
     }
-    return [];
+    return options;
   }, [types, includeAll, includeEmpty]);
   return { options, isLoading };
 }

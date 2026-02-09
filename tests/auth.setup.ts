@@ -16,7 +16,7 @@ setup('authenticate', async ({ page }) => {
   // Wait for the final URL to ensure that the cookies are actually set.
   await page.waitForURL('http://localhost:3000/');
   // Alternatively, you can wait until the page reaches a state where all cookies are set.
-  await expect(page.getByRole('button', { name: 'Помещения' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Помещения', exact: true })).toBeVisible();
 
   // End of authentication steps.
 

@@ -165,7 +165,6 @@ const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormPro
                 onDestinationTypeChange={setDestinationType}
                 onDestinationIdChange={setSelectedDestinationId}
                 disabled={isSubmitting}
-                showRoomFirst={true}
                 label="Указать местоположение (необязательно)"
                 id="add-container-location"
               />

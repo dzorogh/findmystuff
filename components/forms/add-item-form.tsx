@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
-import { Field, FieldDescription, FieldLabel, FieldGroup } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { FieldGroup } from "@/components/ui/field";
 import { ItemTypeSelect } from "../fields/item-type-select";
 
 interface AddItemFormProps {
@@ -93,7 +94,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="h-full flex flex-col overflow-y-auto no-scrollbar">
         <SheetHeader>
           <SheetTitle>Добавить новую вещь</SheetTitle>
           <SheetDescription>
@@ -101,47 +102,48 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit}>
-          <FieldGroup className="p-2">
-            <ItemTypeSelect
-              value={itemTypeId}
-              onValueChange={value => setItemTypeId(value ? parseInt(value) : null)}
-            />
-
-            <Field>
-              <FieldLabel htmlFor="item-name">Название вещи</FieldLabel>
-              <FieldDescription>
-                Поле необязательное. ID и дата создания заполнятся автоматически.
-              </FieldDescription>
-              <Input
-                id="item-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Введите название вещи"
-                disabled={isSubmitting}
+          <div className="px-6">
+            <FieldGroup>
+              <ItemTypeSelect
+                value={itemTypeId}
+                onValueChange={value => setItemTypeId(value ? parseInt(value) : null)}
               />
-            </Field>
 
-            <LocationCombobox
-              destinationType={destinationType}
-              selectedDestinationId={selectedDestinationId}
-              onDestinationTypeChange={setDestinationType}
-              onDestinationIdChange={setSelectedDestinationId}
-              disabled={isSubmitting}
-              showRoomFirst={true}
-              label="Указать местоположение (необязательно)"
-              id="add-item-location"
-            />
+              <Field>
+                <FieldLabel htmlFor="item-name">Название вещи</FieldLabel>
+                <FieldDescription>
+                  Поле необязательное. ID и дата создания заполнятся автоматически.
+                </FieldDescription>
+                <Input
+                  id="item-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Введите название вещи"
+                  disabled={isSubmitting}
+                />
+              </Field>
 
-            <ImageUpload
-              value={photoUrl}
-              onChange={setPhotoUrl}
-              disabled={isSubmitting}
-              label="Фотография вещи (необязательно)"
-            />
+              <LocationCombobox
+                destinationType={destinationType}
+                selectedDestinationId={selectedDestinationId}
+                onDestinationTypeChange={setDestinationType}
+                onDestinationIdChange={setSelectedDestinationId}
+                disabled={isSubmitting}
+                label="Указать местоположение (необязательно)"
+                id="add-item-location"
+              />
 
-            <ErrorMessage message={error || ""} />
-          </FieldGroup>
+              <ImageUpload
+                value={photoUrl}
+                onChange={setPhotoUrl}
+                disabled={isSubmitting}
+                label="Фотография вещи (необязательно)"
+              />
+
+              <ErrorMessage message={error || ""} />
+            </FieldGroup>
+          </div>
 
           <SheetFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

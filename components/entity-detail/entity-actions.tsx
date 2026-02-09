@@ -2,7 +2,6 @@
 
 import { type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import MoveEntityForm, {
   type MoveEntityFormProps,
@@ -127,7 +126,6 @@ export function EntityActions({
   disabled = false,
   className,
 }: EntityActionsProps) {
-  const pathname = usePathname();
   const actionItems = buildActions(actions, callbacks, isDeleted);
 
   if (actionItems.length === 0) return null;
@@ -140,12 +138,10 @@ export function EntityActions({
           return <span key={item.key}>{item.custom}</span>;
         }
 
-        const active = Boolean(item.href && pathname.startsWith(item.href));
-
         return (
           <Button
             key={item.key}
-            variant={active ? "secondary" : item.variant}
+            variant={item.variant}
             size="icon"
             title={item.label}
             aria-label={item.label}

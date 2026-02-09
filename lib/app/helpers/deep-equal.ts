@@ -1,6 +1,6 @@
 /**
- * Deep equality check for values (objects, arrays, primitives).
- * Handles null, dates, and avoids circular reference issues for filter-like structures.
+ * Recursively compares primitives, arrays, and plain objects by value.
+ * Does not support circular references or special types (Date, RegExp, etc.).
  */
 export function deepEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;

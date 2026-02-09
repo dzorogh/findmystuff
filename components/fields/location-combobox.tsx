@@ -32,7 +32,6 @@ interface LocationComboboxProps {
   onDestinationTypeChange: (type: DestinationType | null) => void;
   onDestinationIdChange: (id: string) => void;
   disabled?: boolean;
-  showRoomFirst?: boolean;
   /** When set, only these destination types are shown (e.g. for move form). */
   allowedTypes?: DestinationType[];
   /** When moving a container, exclude this id from container list. */
@@ -47,7 +46,6 @@ const LocationCombobox = ({
   onDestinationTypeChange,
   onDestinationIdChange,
   disabled = false,
-  showRoomFirst = true,
   allowedTypes,
   excludeContainerId,
   label = "Местоположение (необязательно)",
@@ -58,71 +56,56 @@ const LocationCombobox = ({
   const { containers, isLoading: isLoadingContainers } = useContainers();
   const [open, setOpen] = React.useState(false);
 
-  const isLoading =
-    destinationType === "container"
-      ? isLoadingContainers
-      : destinationType === "place"
-        ? isLoadingPlaces
-        : destinationType === "room"
-          ? isLoadingRooms
-          : false;
+  const loadingByType: Record<DestinationType, boolean> = {
+    container: isLoadingContainers,
+    place: isLoadingPlaces,
+    room: isLoadingRooms,
+  };
+  const isLoading = destinationType ? loadingByType[destinationType] : false;
 
-  const rawDestinations =
-    destinationType === "container"
-      ? containers
-      : destinationType === "place"
-        ? places
-        : destinationType === "room"
-          ? rooms
-          : [];
+  const dataByType: Record<DestinationType, (Room | Place | Container)[]> = {
+    container: containers,
+    place: places,
+    room: rooms,
+  };
+  const rawDestinations = destinationType ? dataByType[destinationType] : [];
   const destinations =
     destinationType === "container" && excludeContainerId != null
       ? rawDestinations.filter((c) => (c as { id: number }).id !== excludeContainerId)
       : rawDestinations;
 
-  const destinationLabel =
-    destinationType === "container"
-      ? "контейнер"
-      : destinationType === "place"
-        ? "местоположение"
-        : destinationType === "room"
-          ? "помещение"
-          : "";
+  const labelByType: Record<DestinationType, string> = {
+    container: "контейнер",
+    place: "местоположение",
+    room: "помещение",
+  };
+  const fallbackNameByType: Record<DestinationType, string> = {
+    container: "Контейнер",
+    place: "Место",
+    room: "Помещение",
+  };
+  const destinationLabel = destinationType ? labelByType[destinationType] : "";
 
-  const fullButtonOrder = showRoomFirst
-    ? [
-      { type: "room" as const, label: "Помещение", icon: Building2 },
-      { type: "place" as const, label: "Место", icon: Warehouse },
-      { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
-    ]
-    : [
-      { type: "place" as const, label: "Место", icon: Warehouse },
-      { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
-      { type: "room" as const, label: "Помещение", icon: Building2 },
-    ];
+  const buttonOrderOptions = [
+    { type: "room" as const, label: "Помещение", icon: Building2 },
+    { type: "place" as const, label: "Место", icon: Warehouse },
+    { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
+  ];
   const buttonOrder = allowedTypes?.length
-    ? fullButtonOrder.filter((b) => allowedTypes.includes(b.type))
-    : fullButtonOrder;
+    ? buttonOrderOptions.filter((b) => allowedTypes.includes(b.type))
+    : buttonOrderOptions;
 
   const selectedDestination = destinations.find(
     (dest) => dest.id.toString() === selectedDestinationId
   );
 
   const getDisplayName = (dest: Container | Place | Room) => {
-    const displayName =
-      dest.name ||
-      `${destinationType === "container"
-        ? "Контейнер"
-        : destinationType === "place"
-          ? "Место"
-          : "Помещение"
-      } #${dest.id}`;
-
+    const fallback = destinationType ? fallbackNameByType[destinationType] : "Объект";
+    const displayName = dest.name || `${fallback} #${dest.id}`;
     const typeName =
       destinationType === "container" || destinationType === "place"
         ? (dest as Container | Place).entity_type?.name
         : null;
-
     return typeName ? `${displayName} (${typeName})` : displayName;
   };
 

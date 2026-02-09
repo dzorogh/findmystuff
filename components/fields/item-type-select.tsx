@@ -17,7 +17,7 @@ type ItemTypeOption = {
 
 export function ItemTypeSelect({ value, onValueChange }: ItemTypeSelectProps) {
   const { options: itemTypeOptions, isLoading: isLoadingItemTypes } =
-    useEntityTypeFilterOptions("item");
+    useEntityTypeFilterOptions("item", false, true);
 
   const handleValueChange = (value: ItemTypeOption | null) => {
     if (!value) return;
