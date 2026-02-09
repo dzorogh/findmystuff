@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { searchApi } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
-import { useUser } from "@/lib/users/context";
 import type { SearchResult } from "@/types/entity";
+import Link from "next/link";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const ENTITY_CONFIG = {
   item: { Icon: Package, label: "Вещи" },
@@ -18,19 +18,19 @@ const ENTITY_CONFIG = {
 } as const;
 
 export default function Home() {
-  const { user, isLoading } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
 
   const performSearch = async (queryToSearch: string) => {
-    if (!user || !queryToSearch.trim()) {
+    if (!queryToSearch.trim()) {
       setSearchResults([]);
       return;
     }
 
     setIsSearching(true);
+
     try {
       const response = await searchApi.search(queryToSearch.trim());
       // API возвращает { data: SearchResult[] }
@@ -46,7 +46,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!user || !searchQuery.trim()) {
+    if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
     }
@@ -57,16 +57,7 @@ export default function Home() {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, user?.id]);
-
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (!user) {
-    return null;
-  }
+  }, [searchQuery]);
 
   const getIcon = (type: string) => {
     const config = ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG];
@@ -89,26 +80,45 @@ export default function Home() {
     }
   };
 
+  const quickActions = [
+    {
+      label: "Вещи",
+      icon: Package,
+      href: "/items",
+      description: "Просмотр всех вещей",
+    },
+    {
+      label: "Места",
+      icon: Warehouse,
+      href: "/places",
+      description: "Просмотр всех мест",
+    },
+    {
+      label: "Контейнеры",
+      icon: Container,
+      href: "/containers",
+      description: "Просмотр всех контейнеров",
+    },
+    {
+      label: "Помещения",
+      icon: Building2,
+      href: "/rooms",
+      description: "Просмотр всех помещений",
+    },
+  ];
   return (
     <div className="flex flex-col gap-4">
       {/* Поиск */}
-      <div className="flex flex-col gap-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Введите название вещи, места, контейнера или помещения..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12 text-base"
-          />
-          {isSearching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-          )}
-        </div>
-      </div>
+      <InputGroup>
+        <InputGroupInput
+          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchQuery}
+          placeholder="Введите название вещи, места, контейнера или помещения..."
+        />
+        <InputGroupAddon>
+          <Search />
+        </InputGroupAddon>
+      </InputGroup>
 
       {/* Результаты поиска */}
       {searchQuery && (
@@ -181,70 +191,23 @@ export default function Home() {
 
       {/* Быстрые действия */}
       {!searchQuery && (
-        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card
-            className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1"
-            onClick={() => router.push("/items")}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </div>
-              <CardTitle className="text-lg">Вещи</CardTitle>
-              <CardDescription className="text-sm">Просмотр всех вещей</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1"
-            onClick={() => router.push("/places")}
-          >
-            <CardHeader className="">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Warehouse className="h-5 w-5 text-primary" />
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </div>
-              <CardTitle className="text-lg">Места</CardTitle>
-              <CardDescription className="text-sm">Просмотр всех мест</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1"
-            onClick={() => router.push("/containers")}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Container className="h-5 w-5 text-primary" />
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </div>
-              <CardTitle className="text-lg">Контейнеры</CardTitle>
-              <CardDescription className="text-sm">Просмотр всех контейнеров</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="group cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-1"
-            onClick={() => router.push("/rooms")}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Building2 className="h-5 w-5 text-primary" />
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </div>
-              <CardTitle className="text-lg">Помещения</CardTitle>
-              <CardDescription className="text-sm">Просмотр всех помещений</CardDescription>
-            </CardHeader>
-          </Card>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {quickActions.map((action) => (
+            <Link key={action.href} href={action.href} className="group">
+              <Card className="group-hover:bg-primary/10">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <action.icon className="h-5 w-5" />
+                    </div>
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                  <CardTitle className="text-lg">{action.label}</CardTitle>
+                  <CardDescription className="text-sm">{action.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
     </div>
