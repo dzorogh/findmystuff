@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditRoomFormProps {
   roomId: number;
@@ -117,6 +118,12 @@ const EditRoomForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FieldGroup>
+            <EntityTypeSelect
+              type="room"
+              value={roomTypeId ? parseInt(roomTypeId) : null}
+              onValueChange={(v) => setRoomTypeId(v ?? "")}
+            />
+
             <Field>
               <FieldLabel htmlFor={`room-type-${roomId}`}>Тип помещения (необязательно)</FieldLabel>
               <Combobox

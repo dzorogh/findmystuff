@@ -5,47 +5,48 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
-interface ItemTypeSelectProps {
+interface EntityTypeSelectProps {
+  type: "place" | "container" | "room" | "item";
   value: number | null;
   onValueChange?: (value: string) => void;
 }
 
-type ItemTypeOption = {
+type EntityTypeOption = {
   value: string;
   label: string;
 }
 
-export function ItemTypeSelect({ value, onValueChange }: ItemTypeSelectProps) {
-  const { options: itemTypeOptions, isLoading: isLoadingItemTypes } =
-    useEntityTypeFilterOptions("item", false, true);
+export function EntityTypeSelect({ type, value, onValueChange }: EntityTypeSelectProps) {
+  const { options: entityTypeOptions, isLoading: isLoadingEntityTypes } =
+    useEntityTypeFilterOptions(type, false, true);
 
-  const handleValueChange = (value: ItemTypeOption | null) => {
+  const handleValueChange = (value: EntityTypeOption | null) => {
     if (!value) return;
     onValueChange?.(value.value);
   };
 
-  const selectedItemType = itemTypeOptions.find(option => option && option.value === value?.toString());
+  const selectedEntityType = entityTypeOptions.find(option => option && option.value === value?.toString());
 
   return (
     <Field>
       <FieldLabel htmlFor="item-type">
-        Тип вещи
+        Тип
       </FieldLabel>
 
       <Combobox
-        key={selectedItemType ? `type-${selectedItemType.value}` : "type-empty"}
-        value={selectedItemType ?? null}
-        items={itemTypeOptions}
+        key={selectedEntityType ? `type-${selectedEntityType.value}` : "type-empty"}
+        value={selectedEntityType ?? null}
+        items={entityTypeOptions}
         onValueChange={handleValueChange}
       >
-        {isLoadingItemTypes ? (
+        {isLoadingEntityTypes ? (
           <Skeleton className="h-9 w-full" />
         ) : (
-          <ComboboxInput id="item-type" placeholder="Выберите тип вещи..." />
+          <ComboboxInput id="entity-type" placeholder="Выберите тип..." />
         )}
         <ComboboxContent>
           <ComboboxList>
-            {(option: typeof itemTypeOptions[number]) => (
+            {(option: typeof entityTypeOptions[number]) => (
               <ComboboxItem key={option?.value} value={option}>
                 {option?.label}
               </ComboboxItem>
@@ -56,5 +57,3 @@ export function ItemTypeSelect({ value, onValueChange }: ItemTypeSelectProps) {
     </Field>
   );
 }
-
-export { ItemTypeSelect as ItemTypeFilter };

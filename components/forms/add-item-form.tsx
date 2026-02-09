@@ -18,7 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { FieldGroup } from "@/components/ui/field";
-import { ItemTypeSelect } from "../fields/item-type-select";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface AddItemFormProps {
   open: boolean;
@@ -104,7 +104,8 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
         <form onSubmit={handleSubmit}>
           <div className="px-6">
             <FieldGroup>
-              <ItemTypeSelect
+              <EntityTypeSelect
+                type="item"
                 value={itemTypeId}
                 onValueChange={value => setItemTypeId(value ? parseInt(value) : null)}
               />

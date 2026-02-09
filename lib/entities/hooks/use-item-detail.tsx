@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
-import { useUser } from "@/lib/users/context";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -22,8 +21,6 @@ export interface UseItemDetailReturn {
   isLoading: boolean;
   isLoadingTransitions: boolean;
   error: string | null;
-  isUserLoading: boolean;
-  user: ReturnType<typeof useUser>["user"];
   isMoveDialogOpen: boolean;
   setIsMoveDialogOpen: (open: boolean) => void;
   handleEditSuccess: () => void;
@@ -36,7 +33,6 @@ export const useItemDetail = (): UseItemDetailReturn => {
   const params = useParams();
   const router = useRouter();
   const itemId = parseInt(params.id as string);
-  const { user, isLoading: isUserLoading } = useUser();
   const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
 
   const [item, setItem] = useState<Item | null>(null);
@@ -46,14 +42,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
   const [error, setError] = useState<string | null>(null);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/");
-    }
-  }, [isUserLoading, user, router]);
-
   const loadItemData = useCallback(async () => {
-    if (!user) return;
     setIsPageLoading(true);
     setIsLoading(true);
     setError(null);
@@ -78,11 +67,9 @@ export const useItemDetail = (): UseItemDetailReturn => {
       setIsLoading(false);
       setIsPageLoading(false);
     }
-  }, [user, itemId, setEntityName, setIsLoading]);
+  }, [itemId, setEntityName, setIsLoading]);
 
   useEntityDataLoader({
-    user,
-    isUserLoading,
     entityId: itemId,
     loadData: loadItemData,
   });
@@ -137,8 +124,6 @@ export const useItemDetail = (): UseItemDetailReturn => {
     isLoading,
     isLoadingTransitions,
     error,
-    isUserLoading,
-    user,
     isMoveDialogOpen,
     setIsMoveDialogOpen,
     handleEditSuccess,

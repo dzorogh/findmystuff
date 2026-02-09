@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditContainerFormProps {
   containerId: number;
@@ -38,7 +39,7 @@ const EditContainerForm = ({
   const { isLoading } = useUser();
   const { types: containerTypes } = useEntityTypes("container");
   const [name, setName] = useState(containerName || "");
-  const [containerTypeId] = useState(initialContainerTypeId?.toString() || "");
+  const [containerTypeId, setContainerTypeId] = useState<number | null>(initialContainerTypeId || null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,12 @@ const EditContainerForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FieldGroup>
+            <EntityTypeSelect
+              type="container"
+              value={containerTypeId}
+              onValueChange={(v) => setContainerTypeId(v ? parseInt(v) : null)}
+            />
+
             <Field>
               <FieldLabel htmlFor={`container-name-${containerId}`}>Название контейнера</FieldLabel>
               <Input
@@ -129,7 +136,7 @@ const EditContainerForm = ({
               </FieldDescription>
               <div className="rounded-md border bg-muted px-3 py-2">
                 {(() => {
-                  const selectedType = containerTypes.find(t => t.id.toString() === containerTypeId);
+                  const selectedType = containerTypes.find(t => t.id === containerTypeId);
                   return (
                     <p className="text-sm font-medium">
                       {selectedType ? selectedType.name : "Тип не выбран"}

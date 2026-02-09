@@ -92,7 +92,7 @@ export const roomsEntityConfig: EntityConfig = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "counts", label: "Вещи / Места / Контейнеры" },
+    { key: "counts", label: "Содержимое" },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchRooms,

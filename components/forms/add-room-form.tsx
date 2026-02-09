@@ -20,6 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EntityTypeSelect } from "../fields/entity-type-select";
 
 interface AddRoomFormProps {
   open: boolean;
@@ -100,22 +101,6 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
           ) : (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="room-type">Тип помещения (необязательно)</FieldLabel>
-                <Combobox
-                  items={[
-                    { value: "", label: "Не указан" },
-                    ...roomTypes.map((type) => ({
-                      value: type.id.toString(),
-                      label: type.name,
-                    })),
-                  ]}
-                  value={roomTypeId}
-                  onValueChange={(v) => setRoomTypeId(v ?? "")}
-                  disabled={isSubmitting}
-                />
-              </Field>
-
-              <Field>
                 <FieldLabel htmlFor="room-name">Название помещения</FieldLabel>
                 <FieldDescription>
                   Поле необязательное. ID и дата создания заполнятся автоматически.
@@ -129,6 +114,12 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   disabled={isSubmitting}
                 />
               </Field>
+
+              <EntityTypeSelect
+                type="room"
+                value={roomTypeId ? parseInt(roomTypeId) : null}
+                onValueChange={(v) => setRoomTypeId(v ?? "")}
+              />
 
               <ImageUpload
                 value={photoUrl}

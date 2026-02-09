@@ -21,6 +21,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface AddPlaceFormProps {
   open: boolean;
@@ -122,10 +123,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
           ) : (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="place-name">Название места (необязательно)</FieldLabel>
-                <FieldDescription>
-                  Дополнительное описание. ID и дата создания заполнятся автоматически.
-                </FieldDescription>
+                <FieldLabel htmlFor="place-name">Название места</FieldLabel>
                 <Input
                   id="place-name"
                   type="text"
@@ -136,21 +134,11 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 />
               </Field>
 
-              <Field>
-                <FieldLabel htmlFor="place-type">Тип места</FieldLabel>
-                <FieldDescription>
-                  Маркировка будет сгенерирована автоматически (например, Ш1)
-                </FieldDescription>
-                <Combobox
-                  items={placeTypes.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  }))}
-                  value={placeTypeId}
-                  onValueChange={(v) => setPlaceTypeId(v ?? "")}
-                  disabled={isSubmitting}
-                />
-              </Field>
+              <EntityTypeSelect
+                type="place"
+                value={placeTypeId ? parseInt(placeTypeId) : null}
+                onValueChange={(v) => setPlaceTypeId(v ?? "")}
+              />
 
               <RoomCombobox
                 selectedRoomId={selectedRoomId}

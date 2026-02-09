@@ -1,26 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
-import { useUser } from "@/lib/users/context";
 import { getContainer, updateContainer } from "@/lib/containers/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Combobox } from "@/components/ui/combobox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
-import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { EntityLocation } from "@/components/entity-detail/entity-location";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import MoveEntityForm from "@/components/forms/move-entity-form";
@@ -31,6 +24,8 @@ import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { Transition, ContainerEntity } from "@/types/entity";
+import { PageHeader } from "@/components/layout/page-header";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface Container extends ContainerEntity {
   entity_type?: {
@@ -50,8 +45,6 @@ export default function ContainerDetailPage() {
   const router = useRouter();
   const containerId = parseContainerId(params?.id) ?? NaN;
   const isInvalidId = Number.isNaN(containerId);
-  const { user, isLoading: isUserLoading } = useUser();
-  const { setEntityName, setIsLoading, setEntityActions } = useCurrentPage();
   const [container, setContainer] = useState<Container | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
   const [containerItems, setContainerItems] = useState<Array<{
@@ -71,17 +64,10 @@ export default function ContainerDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/");
-    }
-  }, [isUserLoading, user, router]);
-
   const loadContainerData = useCallback(async () => {
-    if (!user || Number.isNaN(containerId)) return;
+    if (Number.isNaN(containerId)) return;
 
     setIsPageLoading(true);
-    setIsLoading(true); // Устанавливаем загрузку в контекст для TopBar
     setError(null);
 
     try {
@@ -90,8 +76,6 @@ export default function ContainerDetailPage() {
       if (response.error || !response.data) {
         setError("Контейнер не найден");
         setIsPageLoading(false);
-        setIsLoading(false);
-        setEntityName(null);
         return;
       }
 
@@ -100,18 +84,8 @@ export default function ContainerDetailPage() {
       if (!containerData) {
         setError("Контейнер не найден");
         setIsPageLoading(false);
-        setIsLoading(false);
-        setEntityName(null);
         return;
       }
-
-      // Устанавливаем имя в контекст сразу после получения данных контейнера
-      // чтобы оно отображалось в крошках как можно раньше
-      const nameToSet = getEntityDisplayName("container", containerData.id, containerData.name);
-      flushSync(() => {
-        setEntityName(nameToSet);
-      });
-      setIsLoading(false);
 
       setContainer(containerData);
       setTransitions(transitionsWithNames);
@@ -119,16 +93,12 @@ export default function ContainerDetailPage() {
     } catch (err) {
       console.error("Ошибка загрузки данных контейнера:", err);
       setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
-      setIsLoading(false); // Загрузка завершена с ошибкой
-      setEntityName(null);
     } finally {
       setIsPageLoading(false);
     }
-  }, [user, containerId, setEntityName, setIsLoading]);
+  }, [containerId]);
 
   useEntityDataLoader({
-    user,
-    isUserLoading,
     entityId: containerId,
     loadData: loadContainerData,
   });
@@ -150,45 +120,16 @@ export default function ContainerDetailPage() {
     }
   }, [container]);
 
-  useEffect(() => {
-    if (!container) {
-      setEntityActions(null);
-      return;
-    }
-    setEntityActions(
-      <EntityActions
-        actions={{
-          actions: ["move", "printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          onMove: () => setIsMoving(true),
-          onPrintLabel: () => printLabel(container.id, container.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!container.deleted_at}
-        disabled={isDeleting || isRestoring}
-      />
-    );
-    return () => setEntityActions(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers from hooks; re-run only when entity/loading state changes
-  }, [container, isDeleting, isRestoring]);
-
   if (isInvalidId) {
     return <EntityDetailError error="Некорректный ID контейнера" entityName="Контейнер" />;
   }
 
-  if (isUserLoading || isLoading) {
-    return <EntityDetailSkeleton />;
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  if (error || !container) {
+  if (error && !isLoading) {
     return <EntityDetailError error={error} entityName="Контейнер" />;
+  }
+
+  if (!isLoading && !container) {
+    return null;
   }
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -214,136 +155,136 @@ export default function ContainerDetailPage() {
     }
   };
 
+  const isPageLoading = isLoading;
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Редактирование контейнера</CardTitle>
-            <CardDescription className="flex items-center gap-2 flex-wrap">
-              ID: #{container.id}
-              {container.deleted_at && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Badge variant="destructive">Удалено</Badge>
-                </>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <form onSubmit={handleEditSubmit}>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor={`container-name-${container.id}`}>Название контейнера</FieldLabel>
-                  <Input
-                    id={`container-name-${container.id}`}
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Введите название контейнера"
-                    disabled={isSubmitting}
-                  />
-                </Field>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        isLoading={isPageLoading}
+        title={container?.name ?? (container ? `Контейнер #${container.id}` : "Контейнер")}
+        ancestors={[
+          { label: "Контейнеры", href: "/containers" },
+        ]}
+      />
+      {isPageLoading ? (
+        <EntityDetailSkeleton />
+      ) : container ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Редактирование контейнера</CardTitle>
+                <CardDescription className="flex items-center gap-2 flex-wrap">
+                  ID: #{container.id}
+                  {container.deleted_at && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      <Badge variant="destructive">Удалено</Badge>
+                    </>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleEditSubmit}>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor={`container-name-${container.id}`}>Название контейнера</FieldLabel>
+                      <Input
+                        id={`container-name-${container.id}`}
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Введите название контейнера"
+                        disabled={isSubmitting}
+                      />
+                    </Field>
 
-                <Field>
-                  <FieldLabel htmlFor={`container-type-${container.id}`}>Тип контейнера</FieldLabel>
-                  <Combobox
-                    items={[
-                      { value: "", label: "Не указан" },
-                      ...containerTypes.map((type) => ({
-                        value: type.id.toString(),
-                        label: type.name,
-                      })),
-                    ]}
-                    value={containerTypeId}
-                    onValueChange={(v) => setContainerTypeId(v ?? "")}
-                    disabled={isSubmitting}
-                  />
-                </Field>
+                    <EntityTypeSelect
+                      type="container"
+                      value={containerTypeId ? parseInt(containerTypeId) : null}
+                      onValueChange={(v) => setContainerTypeId(v ?? "")}
+                    />
 
-                <ImageUpload
-                  value={photoUrl}
-                  onChange={setPhotoUrl}
-                  disabled={isSubmitting}
-                  label="Фотография контейнера (необязательно)"
+                    <ImageUpload
+                      value={photoUrl}
+                      onChange={setPhotoUrl}
+                      disabled={isSubmitting}
+                      label="Фотография контейнера (необязательно)"
+                    />
+
+                    <ErrorMessage message={formError ?? ""} />
+
+                    <div className="flex justify-end">
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          "Сохранить"
+                        )}
+                      </Button>
+                    </div>
+                  </FieldGroup>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>История перемещений</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransitionsTable
+                  transitions={transitions}
+                  emptyMessage="История перемещений пуста"
                 />
+              </CardContent>
+            </Card>
 
-                <EntityLocation
-                  location={container.last_location ?? null}
-                  variant="detailed"
+            <Card>
+              <CardHeader>
+                <CardTitle>Содержимое контейнера</CardTitle>
+                <CardDescription>
+                  Вещи, которые находятся в этом контейнере
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <EntityContentGrid
+                  items={containerItems}
+                  emptyMessage="Контейнер пуст"
+                  entityType="items"
                 />
+              </CardContent>
+            </Card>
+          </div>
 
-                <ErrorMessage message={formError ?? ""} />
-
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Сохранение...
-                      </>
-                    ) : (
-                      "Сохранить"
-                    )}
-                  </Button>
-                </div>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>История перемещений</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransitionsTable
-              transitions={transitions}
-              emptyMessage="История перемещений пуста"
+          {isMoving && container && (
+            <MoveEntityForm
+              title={containersEntityConfig.labels.moveTitle}
+              entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
+              destinationTypes={containersEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
+              buildPayload={(destinationType, destinationId) => ({
+                container_id: container.id,
+                destination_type: destinationType,
+                destination_id: destinationId,
+              })}
+              getSuccessMessage={containersEntityConfig.labels.moveSuccess}
+              getErrorMessage={() => containersEntityConfig.labels.moveError}
+              excludeContainerId={container.id}
+              open={isMoving}
+              onOpenChange={setIsMoving}
+              onSuccess={() => {
+                setIsMoving(false);
+                loadContainerData();
+              }}
             />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Содержимое контейнера</CardTitle>
-            <CardDescription>
-              Вещи, которые находятся в этом контейнере
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EntityContentGrid
-              items={containerItems}
-              emptyMessage="Контейнер пуст"
-              entityType="items"
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {isMoving && container && (
-        <MoveEntityForm
-          title={containersEntityConfig.labels.moveTitle}
-          entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
-          destinationTypes={containersEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
-          buildPayload={(destinationType, destinationId) => ({
-            container_id: container.id,
-            destination_type: destinationType,
-            destination_id: destinationId,
-          })}
-          getSuccessMessage={containersEntityConfig.labels.moveSuccess}
-          getErrorMessage={() => containersEntityConfig.labels.moveError}
-          excludeContainerId={container.id}
-          open={isMoving}
-          onOpenChange={setIsMoving}
-          onSuccess={() => {
-            setIsMoving(false);
-            loadContainerData();
-          }}
-        />
-      )}
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

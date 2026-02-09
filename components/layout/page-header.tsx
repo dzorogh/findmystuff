@@ -28,8 +28,8 @@ export const PageHeader = ({
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2">
-        <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-8 w-64" />
       </div>
     );
   }
@@ -37,13 +37,17 @@ export const PageHeader = ({
   const headerActions = actions ?? <PageHeaderContextActions />;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-2" />
-        <PageBreadcrumb path={breadcrumb} />
+    <div className="flex justify-between items-end gap-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger className="-ml-2" />
+          <PageBreadcrumb path={breadcrumb} />
+        </div>
+        <div className="flex justify-between items-center">
+          <PageTitle title={title} />
+        </div>
       </div>
-      <div className="flex justify-between items-center">
-        <PageTitle title={title} />
+      <div className="flex shrink-0 items-center">
         {headerActions}
       </div>
     </div>

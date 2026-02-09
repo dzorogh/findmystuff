@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditItemFormProps {
   itemId: number;
@@ -113,21 +114,11 @@ const EditItemForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor={`item-type-${itemId}`}>Тип вещи (необязательно)</FieldLabel>
-              <Combobox
-                items={[
-                  { value: "", label: "Не указан" },
-                  ...itemTypes.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  })),
-                ]}
-                value={itemTypeId}
-                onValueChange={(v) => setItemTypeId(v ?? "")}
-                disabled={isSubmitting}
-              />
-            </Field>
+            <EntityTypeSelect
+              type="item"
+              value={itemTypeId ? parseInt(itemTypeId) : null}
+              onValueChange={(v) => setItemTypeId(v ?? "")}
+            />
 
             <Field>
               <FieldLabel htmlFor={`item-name-${itemId}`}>Название вещи</FieldLabel>

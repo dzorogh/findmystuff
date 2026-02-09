@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const EntityDetailSkeleton = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div>
         <Card>
           <CardHeader>
@@ -20,7 +20,7 @@ export const EntityDetailSkeleton = () => {
           </CardContent>
         </Card>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-48" />

@@ -18,7 +18,7 @@ import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { updateItem } from "@/lib/entities/api";
-import { ItemTypeSelect } from "@/components/fields/item-type-select";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PageHeader } from "@/components/layout/page-header";
 
 export default function ItemDetailPage() {
@@ -28,8 +28,6 @@ export default function ItemDetailPage() {
     isLoading,
     isLoadingTransitions,
     error,
-    isUserLoading,
-    user,
     isMoveDialogOpen,
     setIsMoveDialogOpen,
     handleEditSuccess,
@@ -79,111 +77,113 @@ export default function ItemDetailPage() {
     }
   };
 
-  if (isUserLoading || isLoading) {
-    return <EntityDetailSkeleton />;
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  if (error || !item) {
+  if (error && !isLoading) {
     return <EntityDetailError error={error} entityName={entityLabel} />;
+  }
+
+  if (!isLoading && !item) {
+    return null;
   }
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={item.name ?? `Вещь #${item.id}`}
+        isLoading={isLoading}
+        title={item?.name ?? (item ? `Вещь #${item.id}` : "Вещь")}
         ancestors={[
           { label: "Вещи", href: "/items" },
         ]}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Редактирование вещи</CardTitle>
-            <CardDescription>ID: #{item.id}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor={`item-name-${item.id}`}>Название вещи</FieldLabel>
-                  <Input
-                    id={`item-name-${item.id}`}
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Введите название вещи"
-                    disabled={isSubmitting}
-                  />
-                </Field>
-
-                <ItemTypeSelect
-                  value={itemTypeId ? parseInt(itemTypeId) : null}
-                  onValueChange={(v) => setItemTypeId(v ?? "")}
-                />
-
-                <ImageUpload
-                  value={photoUrl}
-                  onChange={setPhotoUrl}
-                  disabled={isSubmitting}
-                  label="Фотография вещи (необязательно)"
-                />
-
-                <ErrorMessage message={formError ?? ""} />
-
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Сохранение...
-                      </>
-                    ) : (
-                      "Сохранить"
-                    )}
-                  </Button>
-                </div>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="flex flex-col gap-2">
+      {isLoading ? (
+        <EntityDetailSkeleton />
+      ) : item ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>История перемещений</CardTitle>
+              <CardTitle>Редактирование вещи</CardTitle>
+              <CardDescription>ID: #{item.id}</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransitionsTable
-                transitions={transitions}
-                emptyMessage="История перемещений пуста"
-                isLoading={isLoadingTransitions}
-              />
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor={`item-name-${item.id}`}>Название вещи</FieldLabel>
+                    <Input
+                      id={`item-name-${item.id}`}
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Введите название вещи"
+                      disabled={isSubmitting}
+                    />
+                  </Field>
+
+                  <EntityTypeSelect
+                    type="item"
+                    value={itemTypeId ? parseInt(itemTypeId) : null}
+                    onValueChange={(v) => setItemTypeId(v ?? "")}
+                  />
+
+                  <ImageUpload
+                    value={photoUrl}
+                    onChange={setPhotoUrl}
+                    disabled={isSubmitting}
+                    label="Фотография вещи (необязательно)"
+                  />
+
+                  <ErrorMessage message={formError ?? ""} />
+
+                  <div className="flex justify-end pt-2">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Сохранение...
+                        </>
+                      ) : (
+                        "Сохранить"
+                      )}
+                    </Button>
+                  </div>
+                </FieldGroup>
+              </form>
             </CardContent>
           </Card>
-        </div>
 
-        {isMoveDialogOpen && item && (
-          <MoveEntityForm
-            title={itemsEntityConfig.labels.moveTitle}
-            entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
-            destinationTypes={itemsEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
-            buildPayload={(destinationType, destinationId) => ({
-              item_id: item.id,
-              destination_type: destinationType,
-              destination_id: destinationId,
-            })}
-            getSuccessMessage={itemsEntityConfig.labels.moveSuccess}
-            getErrorMessage={() => itemsEntityConfig.labels.moveError}
-            open={isMoveDialogOpen}
-            onOpenChange={setIsMoveDialogOpen}
-            onSuccess={handleMoveSuccess}
-          />
-        )}
-      </div>
+          <div className="flex flex-col gap-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>История перемещений</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransitionsTable
+                  transitions={transitions}
+                  emptyMessage="История перемещений пуста"
+                  isLoading={isLoadingTransitions}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {isMoveDialogOpen && item && (
+            <MoveEntityForm
+              title={itemsEntityConfig.labels.moveTitle}
+              entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
+              destinationTypes={itemsEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
+              buildPayload={(destinationType, destinationId) => ({
+                item_id: item.id,
+                destination_type: destinationType,
+                destination_id: destinationId,
+              })}
+              getSuccessMessage={itemsEntityConfig.labels.moveSuccess}
+              getErrorMessage={() => itemsEntityConfig.labels.moveError}
+              open={isMoveDialogOpen}
+              onOpenChange={setIsMoveDialogOpen}
+              onSuccess={handleMoveSuccess}
+            />
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

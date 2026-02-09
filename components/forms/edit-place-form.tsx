@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 interface EditPlaceFormProps {
   placeId: number;
@@ -127,6 +128,12 @@ const EditPlaceForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FieldGroup>
+            <EntityTypeSelect
+              type="place"
+              value={placeTypeId ? parseInt(placeTypeId) : null}
+              onValueChange={(v) => setPlaceTypeId(v ?? "")}
+            />
+
             <Field>
               <FieldLabel htmlFor={`place-name-${placeId}`}>Название места</FieldLabel>
               <Input
