@@ -152,7 +152,7 @@ export default function RoomDetailPage() {
   const isPageLoading = isLoading;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         isLoading={isPageLoading}
         title={room?.name ?? (room ? `Помещение #${room.id}` : "Помещение")}
@@ -177,7 +177,7 @@ export default function RoomDetailPage() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="">
               <form onSubmit={handleEditSubmit}>
                 <FieldGroup>
                   <Field>
@@ -207,7 +207,7 @@ export default function RoomDetailPage() {
 
                   <ErrorMessage message={formError ?? ""} />
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex justify-end">
                     <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <>

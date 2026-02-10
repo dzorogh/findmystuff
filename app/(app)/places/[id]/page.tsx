@@ -141,7 +141,7 @@ export default function PlaceDetailPage() {
   const isPageLoading = isLoading;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         isLoading={isPageLoading}
         title={place?.name ?? (place ? `Место #${place.id}` : "Место")}

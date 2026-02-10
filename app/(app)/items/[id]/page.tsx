@@ -86,7 +86,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         isLoading={isLoading}
         title={item?.name ?? (item ? `Вещь #${item.id}` : "Вещь")}

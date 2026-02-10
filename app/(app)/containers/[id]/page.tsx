@@ -158,7 +158,7 @@ export default function ContainerDetailPage() {
   const isPageLoading = isLoading;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         isLoading={isPageLoading}
         title={container?.name ?? (container ? `Контейнер #${container.id}` : "Контейнер")}
