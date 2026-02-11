@@ -11,6 +11,7 @@ import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
 import AppSidebar from "@/components/navigation/app-sidebar";
 import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/users/server";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -47,6 +48,9 @@ export default async function RootLayout({
     redirect("/auth/login");
   }
 
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+
   return (
     <html
       lang="ru"
@@ -66,7 +70,7 @@ export default async function RootLayout({
           <UserProvider>
             <SettingsProvider>
               <CurrentPageProvider>
-                <SidebarProvider>
+                <SidebarProvider defaultOpen={defaultOpen}>
                   <CapacitorAuthListener />
                   <QuickMoveProvider>
                     <AppSidebar />

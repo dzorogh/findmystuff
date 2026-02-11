@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, UserIcon, Settings, Users } from "lucide-react";
+import { LogOut, UserIcon, Settings, Users, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/sign-out";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 
-export const SecondaryMenu = () => {
+export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
     const pathname = usePathname();
 
     const handleSignOut = async () => {
@@ -41,6 +41,11 @@ export const SecondaryMenu = () => {
             onClick: handleSignOut,
             icon: LogOut,
         },
+        {
+            label: "Свернуть меню",
+            onClick: toggleSidebar,
+            icon: PanelLeft,
+        },
     ];
 
     return (
@@ -54,7 +59,7 @@ export const SecondaryMenu = () => {
                         isActive={item.href ? pathname.startsWith(item.href) : false}
                     >
                         <item.icon data-icon="inline-start" />
-                        {item.label}
+                        <span className="whitespace-nowrap">{item.label}</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             ))}

@@ -29,7 +29,7 @@ export const PageHeader = ({
     return (
       <div className="flex flex-col gap-2">
         <div className="flex gap-1">
-          <SidebarTrigger className="-ml-2" /> <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-8 w-40" />
         </div>
         <Skeleton className="h-8 w-64" />
       </div>
@@ -42,7 +42,6 @@ export const PageHeader = ({
     <div className="flex justify-between items-end gap-2">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-2" />
           <PageBreadcrumb path={breadcrumb} />
         </div>
         <div className="flex justify-between items-center">

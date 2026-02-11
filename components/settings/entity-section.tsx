@@ -37,9 +37,7 @@ export function EntitySection({ title, cardTitle, category, managerRef }: Entity
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <EntityTypesManager ref={managerRef} category={category} />
-        </CardContent>
+        <EntityTypesManager ref={managerRef} category={category} />
       </Card>
     </div>
   );

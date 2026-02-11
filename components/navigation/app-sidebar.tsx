@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { SecondaryMenu } from "./secondary-menu";
 import { PrimaryMenu } from "./primary-menu";
@@ -19,24 +20,25 @@ import { QrCodeIcon, ArrowLeftRight } from "lucide-react";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 
 const AppSidebar = () => {
-  const { setOpen } = useQuickMove();
+  const { setOpen: setQuickMoveOpen } = useQuickMove();
+  const { toggleSidebar, open } = useSidebar();
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <Logo size="sm" showText={false} />
-              <span className="text-sm font-bold">FindMyStuff</span>
+            <SidebarMenuButton size={open ? "lg" : "default"} render={<Link href="/" />}>
+              <Logo data-icon="inline-start" size="sm" showText={false} />
+              {open ? <span className="text-sm font-bold">FindMyStuff</span> : null}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               variant="outline"
-              onClick={() => setOpen(true)}
+              onClick={() => setQuickMoveOpen(true)}
             >
-              <QrCodeIcon />
+              <QrCodeIcon data-icon="inline-start" />
               Перемещение
               <ArrowLeftRight data-icon="inline-end" className="ml-auto" />
             </SidebarMenuButton>
@@ -50,7 +52,7 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SecondaryMenu />
+        <SecondaryMenu toggleSidebar={toggleSidebar} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
