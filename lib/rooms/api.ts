@@ -90,7 +90,7 @@ class RoomsApiClient extends HttpClient {
     });
   }
 
-  async updateRoom(id: number, data: { name?: string; photo_url?: string; room_type_id?: number | null }) {
+  async updateRoom(id: number, data: { name?: string; photo_url?: string | null; room_type_id?: number | null }) {
     return this.request<Room>(`/rooms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

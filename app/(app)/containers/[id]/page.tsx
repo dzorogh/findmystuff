@@ -65,39 +65,43 @@ export default function ContainerDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const loadContainerData = useCallback(async () => {
-    if (Number.isNaN(containerId)) return;
+  const loadContainerData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (Number.isNaN(containerId)) return;
 
-    setIsPageLoading(true);
-    setError(null);
+      const silent = options?.silent ?? false;
+      if (!silent) setIsPageLoading(true);
+      setError(null);
 
-    try {
-      const response = await getContainer(containerId);
+      try {
+        const response = await getContainer(containerId);
 
-      if (response.error || !response.data) {
-        setError("Контейнер не найден");
-        setIsPageLoading(false);
-        return;
+        if (response.error || !response.data) {
+          setError("Контейнер не найден");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
+
+        const { container: containerData, transitions: transitionsWithNames, items } = response.data;
+
+        if (!containerData) {
+          setError("Контейнер не найден");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
+
+        setContainer(containerData);
+        setTransitions(transitionsWithNames);
+        setContainerItems(items || []);
+      } catch (err) {
+        console.error("Ошибка загрузки данных контейнера:", err);
+        setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
+      } finally {
+        if (!silent) setIsPageLoading(false);
       }
-
-      const { container: containerData, transitions: transitionsWithNames, items } = response.data;
-
-      if (!containerData) {
-        setError("Контейнер не найден");
-        setIsPageLoading(false);
-        return;
-      }
-
-      setContainer(containerData);
-      setTransitions(transitionsWithNames);
-      setContainerItems(items || []);
-    } catch (err) {
-      console.error("Ошибка загрузки данных контейнера:", err);
-      setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
-    } finally {
-      setIsPageLoading(false);
-    }
-  }, [containerId]);
+    },
+    [containerId]
+  );
 
   useEntityDataLoader({
     entityId: containerId,
@@ -146,7 +150,7 @@ export default function ContainerDetailPage() {
       });
       if (response.error) throw new Error(response.error);
       toast.success("Контейнер успешно обновлен");
-      loadContainerData();
+      loadContainerData({ silent: true });
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Произошла ошибка при сохранении"
@@ -221,7 +225,7 @@ export default function ContainerDetailPage() {
                         const res = await updateContainer(container.id, { photo_url: url });
                         if (res.error) return;
                         toast.success("Изображение сгенерировано и сохранено");
-                        loadContainerData();
+                        loadContainerData({ silent: true });
                       }}
                       disabled={isSubmitting}
                     />

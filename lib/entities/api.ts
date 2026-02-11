@@ -82,7 +82,7 @@ class EntitiesApiClient extends HttpClient {
     });
   }
 
-  async updateItem(id: number, data: { name?: string; photo_url?: string; item_type_id?: number | null }) {
+  async updateItem(id: number, data: { name?: string; photo_url?: string | null; item_type_id?: number | null }) {
     return this.request<Item>(`/items/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

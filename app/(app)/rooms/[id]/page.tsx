@@ -61,46 +61,50 @@ export default function RoomDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const loadRoomData = useCallback(async () => {
-    setIsPageLoading(true);
-    setError(null);
+  const loadRoomData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      if (!silent) setIsPageLoading(true);
+      setError(null);
 
-    try {
-      const response = await getRoom(roomId);
+      try {
+        const response = await getRoom(roomId);
 
-      if (response.error || !response.data) {
-        setError("Помещение не найдено");
-        setIsPageLoading(false);
-        return;
+        if (response.error || !response.data) {
+          setError("Помещение не найдено");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
+
+        const { room: roomData, items, places, containers } = response.data;
+
+        if (!roomData) {
+          setError("Помещение не найдено");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
+
+        setRoom({
+          id: roomData.id,
+          name: roomData.name,
+          photo_url: roomData.photo_url,
+          created_at: roomData.created_at,
+          deleted_at: roomData.deleted_at,
+          room_type_id: roomData.room_type_id ?? null,
+        });
+
+        setRoomItems(items || []);
+        setRoomPlaces(places || []);
+        setRoomContainers(containers || []);
+      } catch (err) {
+        console.error("Ошибка загрузки данных помещения:", err);
+        setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
+      } finally {
+        if (!silent) setIsPageLoading(false);
       }
-
-      const { room: roomData, items, places, containers } = response.data;
-
-      if (!roomData) {
-        setError("Помещение не найдено");
-        setIsPageLoading(false);
-        return;
-      }
-
-      setRoom({
-        id: roomData.id,
-        name: roomData.name,
-        photo_url: roomData.photo_url,
-        created_at: roomData.created_at,
-        deleted_at: roomData.deleted_at,
-        room_type_id: roomData.room_type_id ?? null,
-      });
-
-      setRoomItems(items || []);
-      setRoomPlaces(places || []);
-      setRoomContainers(containers || []);
-    } catch (err) {
-      console.error("Ошибка загрузки данных помещения:", err);
-      setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
-    } finally {
-      setIsPageLoading(false);
-    }
-  }, [roomId]);
+    },
+    [roomId]
+  );
 
   useEntityDataLoader({
     entityId: roomId,
@@ -140,7 +144,7 @@ export default function RoomDetailPage() {
       });
       if (response.error) throw new Error(response.error);
       toast.success("Помещение успешно обновлено");
-      await loadRoomData();
+      await loadRoomData({ silent: true });
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Произошла ошибка при сохранении"
@@ -214,7 +218,7 @@ export default function RoomDetailPage() {
                       const res = await updateRoom(room.id, { photo_url: url });
                       if (res.error) return;
                       toast.success("Изображение сгенерировано и сохранено");
-                      await loadRoomData();
+                      await loadRoomData({ silent: true });
                     }}
                     disabled={isSubmitting}
                   />

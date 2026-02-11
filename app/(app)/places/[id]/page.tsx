@@ -61,39 +61,42 @@ export default function PlaceDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const loadPlaceData = useCallback(async () => {
+  const loadPlaceData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      if (!silent) setIsPageLoading(true);
+      setError(null);
 
-    setIsPageLoading(true);
-    setError(null);
+      try {
+        const response = await getPlace(placeId);
 
-    try {
-      const response = await getPlace(placeId);
+        if (response.error || !response.data) {
+          setError("Место не найдено");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
 
-      if (response.error || !response.data) {
-        setError("Место не найдено");
-        setIsPageLoading(false);
-        return;
+        const { place: placeData, transitions: transitionsWithNames, items, containers } = response.data;
+
+        if (!placeData) {
+          setError("Место не найдено");
+          if (!silent) setIsPageLoading(false);
+          return;
+        }
+
+        setPlace(placeData);
+        setTransitions(transitionsWithNames);
+        setPlaceItems(items || []);
+        setPlaceContainers(containers || []);
+      } catch (err) {
+        console.error("Ошибка загрузки данных места:", err);
+        setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
+      } finally {
+        if (!silent) setIsPageLoading(false);
       }
-
-      const { place: placeData, transitions: transitionsWithNames, items, containers } = response.data;
-
-      if (!placeData) {
-        setError("Место не найдено");
-        setIsPageLoading(false);
-        return;
-      }
-
-      setPlace(placeData);
-      setTransitions(transitionsWithNames);
-      setPlaceItems(items || []);
-      setPlaceContainers(containers || []);
-    } catch (err) {
-      console.error("Ошибка загрузки данных места:", err);
-      setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
-    } finally {
-      setIsPageLoading(false);
-    }
-  }, [placeId]);
+    },
+    [placeId]
+  );
 
   // TODO: Remove this once we have a proper data loader
   useEntityDataLoader({
@@ -129,7 +132,7 @@ export default function PlaceDetailPage() {
       });
       if (response.error) throw new Error(response.error);
       toast.success("Место успешно обновлено");
-      loadPlaceData();
+      loadPlaceData({ silent: true });
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Произошла ошибка при сохранении"
@@ -203,7 +206,7 @@ export default function PlaceDetailPage() {
                       const res = await updatePlace(place.id, { photo_url: url });
                       if (res.error) return;
                       toast.success("Изображение сгенерировано и сохранено");
-                      loadPlaceData();
+                      loadPlaceData({ silent: true });
                     }}
                     disabled={isSubmitting}
                   />

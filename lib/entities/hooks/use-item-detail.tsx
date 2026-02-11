@@ -42,32 +42,42 @@ export const useItemDetail = (): UseItemDetailReturn => {
   const [error, setError] = useState<string | null>(null);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
-  const loadItemData = useCallback(async () => {
-    setIsPageLoading(true);
-    setIsLoading(true);
-    setError(null);
-    try {
-      const loadedItem = await fetchItemById(itemId);
-      setItem(loadedItem);
-      const nameToSet = loadedItem.name ?? `Вещь #${loadedItem.id}`;
-      flushSync(() => setEntityName(nameToSet));
-      setIsLoading(false);
-      setIsPageLoading(false);
-      setIsLoadingTransitions(true);
-      try {
-        const loadedTransitions = await fetchItemTransitions(itemId);
-        setTransitions(loadedTransitions);
-      } finally {
-        setIsLoadingTransitions(false);
+  const loadItemData = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      if (!silent) {
+        setIsPageLoading(true);
+        setIsLoading(true);
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : LOAD_ERROR_MESSAGE;
-      setError(message);
-      setEntityName(null);
-      setIsLoading(false);
-      setIsPageLoading(false);
-    }
-  }, [itemId, setEntityName, setIsLoading]);
+      setError(null);
+      try {
+        const loadedItem = await fetchItemById(itemId);
+        setItem(loadedItem);
+        const nameToSet = loadedItem.name ?? `Вещь #${loadedItem.id}`;
+        flushSync(() => setEntityName(nameToSet));
+        if (!silent) {
+          setIsLoading(false);
+          setIsPageLoading(false);
+        }
+        if (!silent) setIsLoadingTransitions(true);
+        try {
+          const loadedTransitions = await fetchItemTransitions(itemId);
+          setTransitions(loadedTransitions);
+        } finally {
+          if (!silent) setIsLoadingTransitions(false);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : LOAD_ERROR_MESSAGE;
+        setError(message);
+        setEntityName(null);
+        if (!silent) {
+          setIsLoading(false);
+          setIsPageLoading(false);
+        }
+      }
+    },
+    [itemId, setEntityName, setIsLoading]
+  );
 
   useEntityDataLoader({
     entityId: itemId,
@@ -109,7 +119,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
   }, [item, isDeleting, isRestoring]);
 
   const handleEditSuccess = useCallback(() => {
-    loadItemData();
+    loadItemData({ silent: true });
   }, [loadItemData]);
 
   const handleMoveSuccess = useCallback(() => {

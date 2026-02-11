@@ -77,7 +77,7 @@ class PlacesApiClient extends HttpClient {
 
   async updatePlace(
     id: number,
-    data: { name?: string; entity_type_id?: number; photo_url?: string }
+    data: { name?: string; entity_type_id?: number; photo_url?: string | null }
   ) {
     return this.request<Place>(`/places/${id}`, {
       method: "PUT",
