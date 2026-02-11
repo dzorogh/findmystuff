@@ -31,7 +31,7 @@ export async function generateEntityImage(
       model: "dall-e-3",
       prompt,
       n: 1,
-      size: "1024x1024",
+      size: "1792x1024", // 16:9 widescreen
       response_format: "b64_json",
       quality: "standard",
     });
