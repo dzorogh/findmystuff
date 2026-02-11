@@ -19,6 +19,7 @@ import { EntityContentGrid } from "@/components/entity-detail/entity-content-gri
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { containersEntityConfig } from "@/lib/entities/containers/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
+import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -210,6 +211,19 @@ export default function ContainerDetailPage() {
                       onChange={setPhotoUrl}
                       disabled={isSubmitting}
                       label="Фотография контейнера (необязательно)"
+                    />
+                    <GenerateImageButton
+                      entityName={name}
+                      entityType="container"
+                      onSuccess={async (url) => {
+                        setPhotoUrl(url);
+                        if (!container) return;
+                        const res = await updateContainer(container.id, { photo_url: url });
+                        if (res.error) return;
+                        toast.success("Изображение сгенерировано и сохранено");
+                        loadContainerData();
+                      }}
+                      disabled={isSubmitting}
                     />
 
                     <ErrorMessage message={formError ?? ""} />

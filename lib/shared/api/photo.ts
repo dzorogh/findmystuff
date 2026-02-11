@@ -32,6 +32,36 @@ export class PhotoApi extends HttpClient {
 
     return { data: { url: data.url } };
   }
+
+  async findEntityImage(params: { name: string; entityType?: string }) {
+    const response = await fetch(`${this.apiBaseUrl}/find-entity-image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: params.name,
+        entityType: params.entityType,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Ошибка поиска изображения";
+      try {
+        const error = await response.json();
+        errorMessage = error.error || errorMessage;
+      } catch {
+        errorMessage = `Ошибка сервера: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.url) {
+      throw new Error("Сервер не вернул URL изображения");
+    }
+
+    return { data: { url: data.url } };
+  }
 }
+
 
 export const photoApi = new PhotoApi();

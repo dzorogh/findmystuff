@@ -19,6 +19,7 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import ImageUpload from "@/components/fields/image-upload";
+import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
 import type { RoomEntity } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
@@ -203,6 +204,19 @@ export default function RoomDetailPage() {
                     onChange={setPhotoUrl}
                     disabled={isSubmitting}
                     label="Фотография помещения (необязательно)"
+                  />
+                  <GenerateImageButton
+                    entityName={name}
+                    entityType="room"
+                    onSuccess={async (url) => {
+                      setPhotoUrl(url);
+                      if (!room) return;
+                      const res = await updateRoom(room.id, { photo_url: url });
+                      if (res.error) return;
+                      toast.success("Изображение сгенерировано и сохранено");
+                      await loadRoomData();
+                    }}
+                    disabled={isSubmitting}
                   />
 
                   <ErrorMessage message={formError ?? ""} />

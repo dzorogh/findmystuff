@@ -15,6 +15,7 @@ import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
+import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { updateItem } from "@/lib/entities/api";
@@ -129,6 +130,19 @@ export default function ItemDetailPage() {
                     onChange={setPhotoUrl}
                     disabled={isSubmitting}
                     label="Фотография вещи (необязательно)"
+                  />
+                  <GenerateImageButton
+                    entityName={name}
+                    entityType="item"
+                    onSuccess={async (url) => {
+                      setPhotoUrl(url);
+                      if (!item) return;
+                      const res = await updateItem(item.id, { photo_url: url });
+                      if (res.error) return;
+                      toast.success("Изображение сгенерировано и сохранено");
+                      handleEditSuccess();
+                    }}
+                    disabled={isSubmitting}
                   />
 
                   <ErrorMessage message={formError ?? ""} />

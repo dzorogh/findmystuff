@@ -23,6 +23,7 @@ import { EntityContentGrid } from "@/components/entity-detail/entity-content-gri
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { placesEntityConfig } from "@/lib/entities/places/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
+import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -192,6 +193,19 @@ export default function PlaceDetailPage() {
                     onChange={setPhotoUrl}
                     disabled={isSubmitting}
                     label="Фотография места (необязательно)"
+                  />
+                  <GenerateImageButton
+                    entityName={name}
+                    entityType="place"
+                    onSuccess={async (url) => {
+                      setPhotoUrl(url);
+                      if (!place) return;
+                      const res = await updatePlace(place.id, { photo_url: url });
+                      if (res.error) return;
+                      toast.success("Изображение сгенерировано и сохранено");
+                      loadPlaceData();
+                    }}
+                    disabled={isSubmitting}
                   />
 
                   <ErrorMessage message={formError ?? ""} />
