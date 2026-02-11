@@ -60,7 +60,7 @@ export default function ItemDetailPage() {
       const response = await updateItem(item.id, {
         name: name.trim() || undefined,
         item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
-        photo_url: photoUrl || undefined,
+        photo_url: (photoUrl ?? "") || null,
       });
 
       if (response.error) {

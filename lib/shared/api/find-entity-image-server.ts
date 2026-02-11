@@ -15,25 +15,21 @@ export async function generateEntityImage(
 > {
   const typeHints: Record<string, string> = {
     item: "предмет, вещь",
-    place: "место, локация",
-    room: "комната, помещение",
+    place: "место хранения, полка, ячейка",
+    room: "комната или помещение или область/зона или пространство на улице",
     container: "контейнер, коробка, ящик",
   };
   const typeHint = entityType ? typeHints[entityType] ?? "" : "";
-  const prompt =
-    typeHint.length > 0
-      ? `Professional product photograph of "${entityName}" (${typeHint}), clean white background, high quality, realistic`
-      : `Professional product photograph of "${entityName}", clean white background, high quality, realistic`;
+  const prompt = `Professional photograph of "${entityName}" (${typeHint}), clean white background, high quality, realistic. No text on background.`
 
   try {
     const openai = new OpenAI({ apiKey });
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1.5",
       prompt,
       n: 1,
-      size: "1792x1024", // 16:9 widescreen
-      response_format: "b64_json",
-      quality: "standard",
+      size: "1536x1024",
+      quality: "low"
     });
 
     const b64 = response.data?.[0]?.b64_json;

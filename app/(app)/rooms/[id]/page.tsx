@@ -136,7 +136,7 @@ export default function RoomDetailPage() {
       const response = await updateRoom(room.id, {
         name: name.trim() || undefined,
         room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
-        photo_url: photoUrl || undefined,
+        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Помещение успешно обновлено");

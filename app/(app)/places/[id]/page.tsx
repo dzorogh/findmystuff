@@ -125,7 +125,7 @@ export default function PlaceDetailPage() {
     try {
       const response = await updatePlace(place.id, {
         name: name.trim() || undefined,
-        photo_url: photoUrl || undefined,
+        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Место успешно обновлено");

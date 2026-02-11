@@ -142,7 +142,7 @@ export default function ContainerDetailPage() {
       const response = await updateContainer(container.id, {
         name: name.trim() || undefined,
         entity_type_id: containerTypeId ? parseInt(containerTypeId, 10) : null,
-        photo_url: photoUrl || undefined,
+        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Контейнер успешно обновлен");
