@@ -11,7 +11,7 @@ interface LogoProps {
 const Logo = ({ className, showText = true, size = "md" }: LogoProps) => {
   const sizes = {
     sm: "h-6",
-    md: "h-8",
+    md: "h-9",
     lg: "h-12",
   };
 

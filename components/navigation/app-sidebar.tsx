@@ -28,7 +28,7 @@ const AppSidebar = () => {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size={open ? "lg" : "default"} render={<Link href="/" />}>
+            <SidebarMenuButton render={<Link href="/" />}>
               <Logo data-icon="inline-start" size="sm" showText={false} />
               {open ? <span className="text-sm font-bold">FindMyStuff</span> : null}
             </SidebarMenuButton>
