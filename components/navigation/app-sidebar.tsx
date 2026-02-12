@@ -18,25 +18,36 @@ import { PrimaryMenu } from "./primary-menu";
 import Link from "next/link";
 import { QrCodeIcon, ArrowLeftRight } from "lucide-react";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const AppSidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const { toggleSidebar, open } = useSidebar();
+  const { toggleSidebar, open, state } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/" />}>
-              <Logo data-icon="inline-start" size="sm" showText={false} />
-              {open ? <span className="text-sm font-bold">FindMyStuff</span> : null}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Tooltip disabled={state !== "collapsed"}>
+            <TooltipTrigger render={
+              <SidebarMenuItem className="h-12 flex items-center">
+                <SidebarMenuButton render={<Link href="/" />}>
+                  <Logo data-icon="inline-start" size="sm" showText={false} />
+                  {open ? <span className="text-sm font-bold">FindMyStuff</span> : null}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            } />
+            <TooltipContent side="right" align="center">
+              Главная
+            </TooltipContent>
+          </Tooltip>
           <SidebarMenuItem>
             <SidebarMenuButton
+              size="sm"
               variant="outline"
               onClick={() => setQuickMoveOpen(true)}
+              tooltip="Перемещение"
             >
               <QrCodeIcon data-icon="inline-start" />
               Перемещение

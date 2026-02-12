@@ -5,11 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/sign-out";
 import { toast } from "sonner";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 
 export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
     const pathname = usePathname();
+
+    const { state } = useSidebar();
 
     const handleSignOut = async () => {
         try {
@@ -51,17 +54,24 @@ export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) 
     return (
         <SidebarMenu>
             {menuItems.map((item, index) => (
-                <SidebarMenuItem key={index}>
-                    <SidebarMenuButton
-                        size="sm"
-                        render={item.href ? <Link href={item.href} /> : undefined}
-                        onClick={item.onClick}
-                        isActive={item.href ? pathname.startsWith(item.href) : false}
-                    >
-                        <item.icon data-icon="inline-start" />
-                        <span className="whitespace-nowrap">{item.label}</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Tooltip key={index} disabled={state !== "collapsed"}>
+                    <TooltipTrigger render={
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                size="sm"
+                                render={item.href ? <Link href={item.href} /> : undefined}
+                                onClick={item.onClick}
+                                isActive={item.href ? pathname.startsWith(item.href) : false}
+                            >
+                                <item.icon data-icon="inline-start" />
+                                <span className="whitespace-nowrap">{item.label}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    } />
+                    <TooltipContent side="right" align="center">
+                        {item.label}
+                    </TooltipContent>
+                </Tooltip>
             ))}
         </SidebarMenu>
     );

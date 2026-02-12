@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/users/server";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "FindMyStuff - Быстрый поиск вещей",
@@ -73,17 +74,19 @@ export default async function RootLayout({
                 <SidebarProvider defaultOpen={defaultOpen}>
                   <CapacitorAuthListener />
                   <QuickMoveProvider>
-                    <AppSidebar />
+                    <TooltipProvider>
+                      <AppSidebar />
 
-                    <SidebarInset>
-                      <main className="flex flex-col flex-1 overflow-hidden h-full">
-                        <div className="flex-1 overflow-y-auto">
-                          <div className="mx-auto md:p-6 p-4">
-                            {children}
+                      <SidebarInset>
+                        <main className="flex flex-col flex-1 overflow-hidden h-full">
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="mx-auto md:p-6 p-4">
+                              {children}
+                            </div>
                           </div>
-                        </div>
-                      </main>
-                    </SidebarInset>
+                        </main>
+                      </SidebarInset>
+                    </TooltipProvider>
                   </QuickMoveProvider>
                   <Toaster />
                 </SidebarProvider>
