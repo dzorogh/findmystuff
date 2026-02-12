@@ -14,7 +14,6 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import {
   SUPPORTED_CURRENCIES,
   formatAmountDisplay,
-  formatMoney,
   minorUnitsToDisplayString,
   parseMoneyToMinorUnits,
 } from "@/lib/shared/money";

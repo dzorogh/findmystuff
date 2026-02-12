@@ -28,18 +28,6 @@ export function getCurrencyMinorUnits(currency: string): number {
   return CURRENCY_MINOR_UNITS[currency] ?? 2;
 }
 
-/** Форматирует amount (в минимальных единицах) для отображения. */
-export function formatMoney(amount: number, currency: string): string {
-  const minorUnits = getCurrencyMinorUnits(currency);
-  const majorUnits = amount / Math.pow(10, minorUnits);
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: minorUnits,
-    maximumFractionDigits: minorUnits,
-  }).format(majorUnits);
-}
-
 /** Форматирует число для отображения (без валюты, с разделителями). */
 export function formatAmountDisplay(amount: number, currency: string): string {
   const minorUnits = getCurrencyMinorUnits(currency);
