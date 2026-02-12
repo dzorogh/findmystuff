@@ -39,4 +39,41 @@ describe("settings/api", () => {
       expect.objectContaining({ method: "PUT" })
     );
   });
+
+  it("getSettings возвращает error при response.error", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ error: "Server error" }),
+    });
+
+    const result = await getSettings();
+
+    expect(result.error).toBe("Server error");
+    expect(result.data).toEqual([]);
+  });
+
+  it("updateSetting с isUserSetting=true передаёт в body", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: { id: 1 } }),
+    });
+
+    await updateSetting("theme", "dark", true);
+
+    const callBody = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    expect(callBody.isUserSetting).toBe(true);
+  });
+
+  it("getSettings использует кэш при повторном вызове", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [{ id: 1, key: "theme", value: "dark" }] }),
+    });
+
+    const result1 = await getSettings();
+    const result2 = await getSettings();
+
+    expect(result1.data).toEqual(result2.data);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
 });

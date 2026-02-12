@@ -1,5 +1,6 @@
 import {
   getUsers,
+  getClientUser,
   createUser,
   updateUser,
   deleteUser,
@@ -74,4 +75,48 @@ describe("users/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][1].method).toBe("DELETE");
   });
 
+  it("getUsers возвращает error при raw.error", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ error: "Server error" }),
+    });
+
+    const result = await getUsers();
+
+    expect(result.error).toBe("Server error");
+  });
+
+  it("getUsers обрабатывает ответ с users в корне", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ users: [{ id: "1", email: "a@b.com" }] }),
+    });
+
+    const result = await getUsers();
+
+    expect(result.data?.users).toHaveLength(1);
+    expect(result.data?.users?.[0].email).toBe("a@b.com");
+  });
+
+  it("getClientUser возвращает user при успехе", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: { user: { id: "u1", email: "u@b.com" } } }),
+    });
+
+    const result = await getClientUser();
+
+    expect(result).toEqual({ id: "u1", email: "u@b.com" });
+  });
+
+  it("getClientUser возвращает null при ошибке", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ error: "Unauthorized" }),
+    });
+
+    const result = await getClientUser();
+
+    expect(result).toBeNull();
+  });
 });

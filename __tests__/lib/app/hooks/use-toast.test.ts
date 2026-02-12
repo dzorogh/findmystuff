@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { useToast, toast } from "@/lib/app/hooks/use-toast";
+import { useToast, toast, reducer } from "@/lib/app/hooks/use-toast";
 
 describe("useToast", () => {
   it("возвращает toasts и функции toast, dismiss", () => {
@@ -80,5 +80,41 @@ describe("toast", () => {
     expect(() => {
       toast({ title: "Title", description: "Description" });
     }).not.toThrow();
+  });
+
+  it("onOpenChange(false) вызывает dismiss и закрывает тост", () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.toast({ title: "Test" });
+    });
+    const toastWithHandler = result.current.toasts[0];
+    expect(toastWithHandler.open).toBe(true);
+
+    act(() => {
+      (toastWithHandler as { onOpenChange?: (open: boolean) => void }).onOpenChange?.(false);
+    });
+
+    expect(result.current.toasts[0].open).toBe(false);
+  });
+});
+
+describe("reducer REMOVE_TOAST", () => {
+  it("REMOVE_TOAST с toastId удаляет один тост", () => {
+    const state = {
+      toasts: [
+        { id: "1", title: "A" },
+        { id: "2", title: "B" },
+      ],
+    };
+    const next = reducer(state, { type: "REMOVE_TOAST", toastId: "1" });
+    expect(next.toasts).toHaveLength(1);
+    expect((next.toasts[0] as { id: string }).id).toBe("2");
+  });
+
+  it("REMOVE_TOAST без toastId очищает все тосты", () => {
+    const state = { toasts: [{ id: "1", title: "A" }] };
+    const next = reducer(state, { type: "REMOVE_TOAST", toastId: undefined });
+    expect(next.toasts).toEqual([]);
   });
 });

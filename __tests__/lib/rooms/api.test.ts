@@ -95,4 +95,52 @@ describe("rooms/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/api/rooms/1");
     expect((global.fetch as jest.Mock).mock.calls[0][1].method).toBe("PUT");
   });
+
+  it("getRooms с hasItems=true добавляет hasItems в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRooms({ hasItems: true });
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("hasItems=true");
+  });
+
+  it("getRooms с hasItems=false добавляет hasItems в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRooms({ hasItems: false });
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("hasItems=false");
+  });
+
+  it("getRooms с hasContainers и hasPlaces добавляет параметры", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRooms({ hasContainers: true, hasPlaces: false });
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("hasContainers=true");
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("hasPlaces=false");
+  });
+
+  it("getRooms с sortBy и sortDirection добавляет параметры сортировки", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRooms({ sortBy: "name", sortDirection: "desc" });
+    const url = (global.fetch as jest.Mock).mock.calls[0][0];
+    expect(url).toContain("sortBy=name");
+    expect(url).toContain("sortDirection=desc");
+  });
+
+  it("getRoomsSimple(false) вызывает /rooms?showDeleted=false", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRoomsSimple(false);
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("showDeleted=false");
+  });
 });

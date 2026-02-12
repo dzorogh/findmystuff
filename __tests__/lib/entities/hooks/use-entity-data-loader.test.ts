@@ -40,4 +40,21 @@ describe('useEntityDataLoader', () => {
       expect(loadData).toHaveBeenCalled()
     })
   })
+
+  it('не падает при размонтировании до завершения loadData', async () => {
+    const loadData = jest.fn().mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 100))
+    )
+
+    const { unmount } = renderHook(() =>
+      useEntityDataLoader({
+        entityId: 1,
+        loadData,
+      })
+    )
+
+    await waitFor(() => expect(loadData).toHaveBeenCalled())
+    unmount()
+    await new Promise((r) => setTimeout(r, 150))
+  })
 })

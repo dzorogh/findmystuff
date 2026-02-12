@@ -3,7 +3,7 @@ import { render, screen, act, waitFor } from "@testing-library/react";
 import { SettingsProvider, useSettings } from "@/lib/settings/context";
 
 jest.mock("@/lib/users/context", () => ({
-  useUser: () => ({ user: { id: "1" }, isLoading: false }),
+  useUser: jest.fn(() => ({ user: { id: "1" }, isLoading: false })),
 }));
 
 jest.mock("@/lib/settings/api", () => ({
@@ -75,6 +75,24 @@ describe("SettingsContext", () => {
     consoleSpy.mockRestore();
   });
 
+  it("при ошибке getSettings показывает error", async () => {
+    const { getSettings } = require("@/lib/settings/api");
+    getSettings.mockResolvedValue({ data: [], error: "Server error" });
+
+    render(
+      <SettingsProvider>
+        <Consumer />
+      </SettingsProvider>
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("error")).toHaveTextContent("Server error");
+      },
+      { timeout: 3000 }
+    );
+  });
+
   it("getUserSetting возвращает значение пользовательской настройки", async () => {
     const { getSettings } = require("@/lib/settings/api");
     getSettings.mockResolvedValue({
@@ -119,6 +137,44 @@ describe("SettingsContext", () => {
 
     await waitFor(() => {
       expect(updateSetting).toHaveBeenCalledWith("theme", "light", true);
+    });
+  });
+
+  it("updateUserSetting без user возвращает ошибку авторизации", async () => {
+    const { useUser } = require("@/lib/users/context");
+    useUser.mockImplementation(() => ({ user: null, isLoading: false }));
+
+    const TestConsumer = () => {
+      const [result, setResult] = React.useState<string | null>(null);
+      const { updateUserSetting } = useSettings();
+      return (
+        <div>
+          <button
+            data-testid="update-no-user"
+            onClick={async () => {
+              const r = await updateUserSetting("theme", "light");
+              setResult(r.error ?? "ok");
+            }}
+          />
+          <span data-testid="result">{result ?? "pending"}</span>
+        </div>
+      );
+    };
+
+    render(
+      <SettingsProvider>
+        <TestConsumer />
+      </SettingsProvider>
+    );
+
+    await act(async () => {
+      screen.getByTestId("update-no-user").click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("result")).toHaveTextContent(
+        "Пользователь не авторизован"
+      );
     });
   });
 });
