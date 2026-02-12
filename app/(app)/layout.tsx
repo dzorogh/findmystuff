@@ -17,7 +17,10 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
-  title: "FindMyStuff - Быстрый поиск вещей",
+  title: {
+    template: "%s - FindMyStuff",
+    default: "Поиск",
+  },
   description: "Приложение для учета домашнего склада и быстрого поиска вещей",
   icons: {
     icon: [
