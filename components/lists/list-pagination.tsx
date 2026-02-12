@@ -27,6 +27,7 @@ export function ListPagination({
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
+            text="Назад"
             size="default"
             onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
             className={
@@ -54,6 +55,7 @@ export function ListPagination({
         )}
         <PaginationItem>
           <PaginationNext
+            text="Вперёд"
             size="default"
             onClick={() =>
               currentPage < totalPages && onPageChange(currentPage + 1)
