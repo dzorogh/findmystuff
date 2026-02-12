@@ -25,7 +25,7 @@ export default defineConfig({
     }
   ],
   webServer: {
-    command: 'npm run dev:ci',
+    command: process.env.CI ? 'npm run start:ci' : 'npm run build:ci && npm run start:ci',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
