@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useId } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { parseEntityQrPayload, type EntityQrPayload } from "@/lib/entities/helpers/qr-code";
@@ -465,116 +472,76 @@ const QRScanner = ({ onScanSuccess, onClose, open }: QRScannerProps) => {
     };
   }, [open, qrReaderId, isNativePlatform]);
 
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  if (!open || !mounted) {
+  if (!mounted) {
     return null;
   }
 
-  const content = (
-    <>
-      {/* Backdrop - блокирует клики на элементы на фоне */}
-      <div
-        className="fixed inset-0 z-[9999] bg-black/80"
-      />
-      {/* Контейнер с модальным окном */}
-      <div
-        className="fixed inset-0 z-[10000] flex items-center justify-center p-2"
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          const modal = modalRef.current;
-
-          // Если клик был вне модального окна (на контейнере или backdrop), закрываем
-          if (!modal || !modal.contains(target)) {
-            handleClose(e);
-          }
-        }}
-        style={{ pointerEvents: 'auto' }}
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          handleClose();
+        }
+      }}
+    >
+      <DialogContent
+        className="max-w-md"
       >
-        <div
-          ref={modalRef}
-          className="relative w-full max-w-md rounded-lg bg-background p-2 shadow-lg pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="absolute top-2 right-4 z-[60] pointer-events-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose(e);
-              }}
-              aria-label="Закрыть сканер"
-              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="relative z-50 mb-4 flex items-center justify-between pointer-events-auto">
-            <h3 className="text-lg font-semibold">Сканирование QR-кода</h3>
-          </div>
+        <DialogHeader>
+          <DialogTitle>Сканирование QR-кода</DialogTitle>
+        </DialogHeader>
 
-          {!isNativePlatform && (
-            <div
-              ref={containerRef}
-              id={qrReaderId}
-              className={cn(
-                "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
-              )}
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-
-          {error && (
-            <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          {!isScanning && !error && (
-            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{isNativePlatform ? "Готово к сканированию" : "Инициализация камеры..."}</span>
-            </div>
-          )}
-
-          {isScanning && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              {isNativePlatform ? "Открыта камера для сканирования..." : "Наведите камеру на QR-код"}
-            </div>
-          )}
-
-          <div className={cn("relative z-[60] mt-4 flex justify-end pointer-events-auto", isNativePlatform && "justify-between")}>
-            {isNativePlatform && (
-              <Button
-                variant="default"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNativeScan();
-                }}
-                disabled={isScanning}
-              >
-                {error ? "Сканировать снова" : "Открыть камеру"}
-              </Button>
+        {!isNativePlatform && (
+          <div
+            ref={containerRef}
+            id={qrReaderId}
+            className={cn(
+              "relative z-0 w-full overflow-hidden rounded-lg border aspect-square bg-muted"
             )}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
+
+        {error && (
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {!isScanning && !error && (
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{isNativePlatform ? "Готово к сканированию" : "Инициализация камеры..."}</span>
+          </div>
+        )}
+
+        {isScanning && (
+          <div className="text-center text-sm text-muted-foreground">
+            {isNativePlatform ? "Открыта камера для сканирования..." : "Наведите камеру на QR-код"}
+          </div>
+        )}
+
+        <DialogFooter className={cn(isNativePlatform && "sm:justify-between")}>
+          {isNativePlatform && (
             <Button
-              variant="outline"
+              variant="default"
               onClick={(e) => {
                 e.stopPropagation();
-                handleClose(e);
+                handleNativeScan();
               }}
-              className="relative z-[60] pointer-events-auto bg-background"
+              disabled={isScanning}
             >
-              Отмена
+              {error ? "Сканировать снова" : "Открыть камеру"}
             </Button>
-          </div>
-        </div>
-      </div>
-    </>
+          )}
+          <DialogClose render={<Button variant="outline" />}>
+            Отмена
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-
-  // Используем Portal для полной изоляции от других модальных окон
-  return createPortal(content, document.body);
 };
 
 export default QRScanner;
