@@ -1,22 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Warehouse, Container as ContainerIcon, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Warehouse, Container as ContainerIcon, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
@@ -54,7 +48,6 @@ const LocationCombobox = ({
   const { rooms, isLoading: isLoadingRooms } = useRooms();
   const { places, isLoading: isLoadingPlaces } = usePlaces();
   const { containers, isLoading: isLoadingContainers } = useContainers();
-  const [open, setOpen] = React.useState(false);
 
   const loadingByType: Record<DestinationType, boolean> = {
     container: isLoadingContainers,
@@ -79,11 +72,6 @@ const LocationCombobox = ({
     place: "местоположение",
     room: "помещение",
   };
-  const fallbackNameByType: Record<DestinationType, string> = {
-    container: "Контейнер",
-    place: "Место",
-    room: "Помещение",
-  };
   const destinationLabel = destinationType ? labelByType[destinationType] : "";
 
   const buttonOrderOptions = [
@@ -95,18 +83,29 @@ const LocationCombobox = ({
     ? buttonOrderOptions.filter((b) => allowedTypes.includes(b.type))
     : buttonOrderOptions;
 
-  const selectedDestination = destinations.find(
-    (dest) => dest.id.toString() === selectedDestinationId
-  );
+  const items = React.useMemo(() => {
+    const fallbackByType: Record<DestinationType, string> = {
+      container: "Контейнер",
+      place: "Место",
+      room: "Помещение",
+    };
+    const fallback = destinationType ? fallbackByType[destinationType] : "Объект";
+    return destinations.map((dest) => {
+      const displayName = dest.name || `${fallback} #${dest.id}`;
+      const typeName =
+        destinationType === "container" || destinationType === "place"
+          ? (dest as Container | Place).entity_type?.name
+          : null;
+      const label = typeName ? `${displayName} (${typeName})` : displayName;
+      return { value: dest.id.toString(), label };
+    });
+  }, [destinations, destinationType]);
 
-  const getDisplayName = (dest: Container | Place | Room) => {
-    const fallback = destinationType ? fallbackNameByType[destinationType] : "Объект";
-    const displayName = dest.name || `${fallback} #${dest.id}`;
-    const typeName =
-      destinationType === "container" || destinationType === "place"
-        ? (dest as Container | Place).entity_type?.name
-        : null;
-    return typeName ? `${displayName} (${typeName})` : displayName;
+  const selectedItem =
+    items.find((i) => i.value === selectedDestinationId) ?? null;
+
+  const handleValueChange = (item: { value: string; label: string } | null) => {
+    onDestinationIdChange(item?.value ?? "");
   };
 
   return (
@@ -124,7 +123,6 @@ const LocationCombobox = ({
               onClick={() => {
                 onDestinationTypeChange(type);
                 onDestinationIdChange("");
-                setOpen(false);
               }}
               disabled={disabled}
             >
@@ -140,76 +138,38 @@ const LocationCombobox = ({
           <FieldLabel htmlFor={`${id}-combobox`}>
             {`Выберите ${destinationLabel}`}
           </FieldLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger
-              render={
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-full justify-between"
-                  disabled={disabled || (isLoading ? false : destinations.length === 0)}
-                  id={`${id}-combobox`}
-                >
-                  {selectedDestination
-                    ? getDisplayName(selectedDestination)
-                    : `-- Выберите ${destinationLabel} --`}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              }
-              nativeButton={false}
-            />
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command>
-                <CommandInput placeholder={`Поиск ${destinationLabel}...`} />
-                <CommandList>
-                  {isLoading ? (
-                    <div className="p-2 space-y-2">
-                      {[...Array(3)].map((_, i) => (
-                        <Skeleton key={i} className="h-9 w-full" />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <CommandEmpty>
-                        {destinationType === "container"
-                          ? "Контейнеры не найдены"
-                          : destinationType === "place"
-                            ? "Местоположения не найдены"
-                            : "Помещения не найдены"}
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {destinations.map((dest) => {
-                          const displayName = getDisplayName(dest);
-                          const isSelected = dest.id.toString() === selectedDestinationId;
-                          const itemValue = `${dest.id}-${displayName}`;
-                          return (
-                            <CommandItem
-                              key={dest.id}
-                              value={itemValue}
-                              keywords={[dest.id.toString(), displayName, dest.name || ""]}
-                              onSelect={() => {
-                                onDestinationIdChange(dest.id.toString());
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  isSelected ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {displayName}
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+
+          <Combobox
+            value={selectedItem}
+            items={items}
+            onValueChange={handleValueChange}
+            disabled={disabled || (isLoading ? false : destinations.length === 0)}
+          >
+            {isLoading ? (
+              <Skeleton className="h-9 w-full" />
+            ) : (
+              <ComboboxInput
+                id={`${id}-combobox`}
+                placeholder={`Поиск ${destinationLabel}...`}
+              />
+            )}
+            <ComboboxContent>
+              <ComboboxEmpty>
+                {destinationType === "container"
+                  ? "Контейнеры не найдены"
+                  : destinationType === "place"
+                    ? "Местоположения не найдены"
+                    : "Помещения не найдены"}
+              </ComboboxEmpty>
+              <ComboboxList>
+                {(item: { value: string; label: string }) => (
+                  <ComboboxItem key={item.value} value={item}>
+                    {item.label}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
           {!isLoading && destinations.length === 0 && (
             <p className="text-xs text-muted-foreground">
               {destinationType === "container"
