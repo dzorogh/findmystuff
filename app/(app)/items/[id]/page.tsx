@@ -20,6 +20,7 @@ import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { updateItem } from "@/lib/entities/api";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
+import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 import { PageHeader } from "@/components/layout/page-header";
 
 export default function ItemDetailPage() {
@@ -40,6 +41,7 @@ export default function ItemDetailPage() {
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [price, setPrice] = useState<PriceValue | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -48,6 +50,11 @@ export default function ItemDetailPage() {
       setName(item.name ?? "");
       setItemTypeId(item.item_type_id?.toString() ?? "");
       setPhotoUrl(item.photo_url ?? null);
+      setPrice(
+        item.price?.amount != null && item.price?.currency
+          ? { amount: item.price.amount, currency: item.price.currency }
+          : null
+      );
     }
   }, [item]);
 
@@ -62,6 +69,8 @@ export default function ItemDetailPage() {
         name: name.trim() || undefined,
         item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
         photo_url: (photoUrl ?? "") || null,
+        price_amount: price?.amount ?? null,
+        price_currency: price?.currency ?? null,
       });
 
       if (response.error) {
@@ -125,6 +134,13 @@ export default function ItemDetailPage() {
                     type="item"
                     value={itemTypeId ? parseInt(itemTypeId) : null}
                     onValueChange={(v) => setItemTypeId(v ?? "")}
+                  />
+
+                  <PriceInput
+                    value={price}
+                    onChange={setPrice}
+                    id={`item-price-${item.id}`}
+                    disabled={isSubmitting}
                   />
 
                   <ImageUpload

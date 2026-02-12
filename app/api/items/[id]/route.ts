@@ -35,7 +35,7 @@ export async function GET(
     // Загружаем вещь
     const { data: itemData, error: itemError } = await supabase
       .from("items")
-      .select("id, name, created_at, deleted_at, photo_url, item_type_id, entity_types(name)")
+      .select("id, name, created_at, deleted_at, photo_url, item_type_id, price_amount, price_currency, entity_types(name)")
       .eq("id", itemId)
       .single();
 
@@ -198,11 +198,15 @@ export async function GET(
         : itemTypes && !Array.isArray(itemTypes)
           ? itemTypes
           : null;
-      const { entity_types: _et, ...restItemData } = itemData;
+      const { entity_types: _et, price_amount, price_currency, ...restItemData } = itemData;
       const item: Item = {
         ...restItemData,
         item_type_id: itemData.item_type_id ?? null,
         item_type: itemEntityType?.name ? { name: itemEntityType.name } : null,
+        price:
+          price_amount != null && price_currency
+            ? { amount: price_amount, currency: price_currency }
+            : null,
         last_location: lastLocation,
       };
 
@@ -387,11 +391,15 @@ export async function GET(
       : itemTypes && !Array.isArray(itemTypes)
         ? itemTypes
         : null;
-    const { entity_types: _et2, ...restItemData } = itemData;
+    const { entity_types: _et2, price_amount, price_currency, ...restItemData } = itemData;
     const item: Item = {
       ...restItemData,
       item_type_id: itemData.item_type_id ?? null,
       item_type: itemEntityType?.name ? { name: itemEntityType.name } : null,
+      price:
+        price_amount != null && price_currency
+          ? { amount: price_amount, currency: price_currency }
+          : null,
       last_location: lastLocation,
     };
 
@@ -433,12 +441,39 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, photo_url, item_type_id } = body;
+    const { name, photo_url, item_type_id, price_amount, price_currency } = body;
 
-    const updateData: { name?: string | null; photo_url?: string | null; item_type_id?: number | null } = {};
+    const hasPriceAmount = price_amount != null && price_amount !== "";
+    const hasPriceCurrency = price_currency != null && price_currency !== "";
+    if (hasPriceAmount !== hasPriceCurrency) {
+      return NextResponse.json(
+        { error: "Цена и валюта должны быть указаны вместе или оба опущены" },
+        { status: 400 }
+      );
+    }
+
+    const updateData: {
+      name?: string | null;
+      photo_url?: string | null;
+      item_type_id?: number | null;
+      price_amount?: number | null;
+      price_currency?: string | null;
+    } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
     if (item_type_id !== undefined) updateData.item_type_id = item_type_id != null ? (Number(item_type_id) || null) : null;
+    if (price_amount !== undefined) updateData.price_amount = hasPriceAmount ? Number(price_amount) : null;
+    if (price_currency !== undefined) updateData.price_currency = hasPriceCurrency ? String(price_currency).trim() : null;
+
+    if (
+      updateData.price_amount != null &&
+      (updateData.price_amount < 0 || !Number.isInteger(updateData.price_amount))
+    ) {
+      return NextResponse.json(
+        { error: "Сумма цены должна быть целым неотрицательным числом в минимальных единицах" },
+        { status: 400 }
+      );
+    }
 
     const { data, error } = await supabase
       .from("items")

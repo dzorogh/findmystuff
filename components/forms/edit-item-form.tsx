@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { getItem, updateItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
@@ -19,6 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
+import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 
 interface EditItemFormProps {
   itemId: number;
@@ -42,6 +42,7 @@ const EditItemForm = ({
   const [name, setName] = useState(itemName || "");
   const [itemTypeId, setItemTypeId] = useState<string>(initialItemTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [price, setPrice] = useState<PriceValue | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +57,11 @@ const EditItemForm = ({
           if (item) {
             setPhotoUrl(item.photo_url || null);
             if (item.item_type_id != null) setItemTypeId(item.item_type_id.toString());
+            setPrice(
+              item.price?.amount != null && item.price?.currency
+                ? { amount: item.price.amount, currency: item.price.currency }
+                : null
+            );
           }
         } catch {
           setPhotoUrl(null);
@@ -75,6 +81,8 @@ const EditItemForm = ({
         name: name.trim() || undefined,
         item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
         photo_url: photoUrl || undefined,
+        price_amount: price?.amount ?? null,
+        price_currency: price?.currency ?? null,
       });
 
       if (response.error) {
@@ -131,6 +139,13 @@ const EditItemForm = ({
                 disabled={isSubmitting}
               />
             </Field>
+
+            <PriceInput
+              value={price}
+              onChange={setPrice}
+              id={`item-price-${itemId}`}
+              disabled={isSubmitting}
+            />
 
             <ImageUpload
               value={photoUrl}

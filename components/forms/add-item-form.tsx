@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { FieldGroup } from "@/components/ui/field";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
+import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 
 interface AddItemFormProps {
   open: boolean;
@@ -32,6 +33,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [price, setPrice] = useState<PriceValue | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +55,8 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
         name: name.trim() || undefined,
         item_type_id: itemTypeId,
         photo_url: photoUrl || undefined,
+        price_amount: price?.amount,
+        price_currency: price?.currency,
         destination_type: destinationType || undefined,
         destination_id: selectedDestinationId ? parseInt(selectedDestinationId) : undefined,
       });
@@ -66,6 +70,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       setDestinationType(null);
       setSelectedDestinationId("");
       setPhotoUrl(null);
+      setPrice(null);
 
       toast.success(
         destinationType && selectedDestinationId
@@ -124,6 +129,12 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
                   disabled={isSubmitting}
                 />
               </Field>
+
+              <PriceInput
+                value={price}
+                onChange={setPrice}
+                disabled={isSubmitting}
+              />
 
               <LocationCombobox
                 destinationType={destinationType}

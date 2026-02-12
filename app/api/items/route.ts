@@ -73,6 +73,8 @@ export async function GET(request: NextRequest) {
       created_at: string;
       deleted_at: string | null;
       photo_url: string | null;
+      price_amount: number | null;
+      price_currency: string | null;
       destination_type: string | null;
       destination_id: number | null;
       moved_at: string | null;
@@ -80,6 +82,10 @@ export async function GET(request: NextRequest) {
       room_id: number | null;
     }) => {
       const hasLocation = Boolean(item.destination_type);
+      const price =
+        item.price_amount != null && item.price_currency
+          ? { amount: item.price_amount, currency: item.price_currency }
+          : null;
 
       return {
         id: item.id,
@@ -89,6 +95,7 @@ export async function GET(request: NextRequest) {
         created_at: item.created_at,
         deleted_at: item.deleted_at,
         photo_url: item.photo_url,
+        price,
         room_id: item.room_id ?? null,
         room_name: item.room_name ?? null,
         last_location: hasLocation
@@ -128,17 +135,48 @@ export async function POST(request: NextRequest) {
     }
     const supabase = await createClient();
     const body = await request.json();
-    const { name, photo_url, destination_type, destination_id, item_type_id } = body;
+    const {
+      name,
+      photo_url,
+      destination_type,
+      destination_id,
+      item_type_id,
+      price_amount,
+      price_currency,
+    } = body;
+
+    const hasPriceAmount = price_amount != null && price_amount !== "";
+    const hasPriceCurrency = price_currency != null && price_currency !== "";
+    if (hasPriceAmount !== hasPriceCurrency) {
+      return NextResponse.json(
+        { error: "Цена и валюта должны быть указаны вместе или оба опущены" },
+        { status: 400 }
+      );
+    }
 
     const insertItemData: {
       name: string | null;
       photo_url: string | null;
       item_type_id: number | null;
+      price_amount: number | null;
+      price_currency: string | null;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       item_type_id: item_type_id != null ? (Number(item_type_id) || null) : null,
+      price_amount: hasPriceAmount ? Number(price_amount) : null,
+      price_currency: hasPriceCurrency ? String(price_currency).trim() : null,
     };
+
+    if (
+      insertItemData.price_amount != null &&
+      (insertItemData.price_amount < 0 || !Number.isInteger(insertItemData.price_amount))
+    ) {
+      return NextResponse.json(
+        { error: "Сумма цены должна быть целым неотрицательным числом в минимальных единицах" },
+        { status: 400 }
+      );
+    }
 
     const { data: newItem, error: insertError } = await supabase
       .from("items")
