@@ -28,7 +28,7 @@ export const useEntityDataLoader = ({
     let isCancelled = false;
     const loadPromise = loadData();
 
-    loadPromise.finally(() => {
+    Promise.resolve(loadPromise).finally(() => {
       if (!isCancelled && currentRequestId === requestIdRef.current) {
         loadingRef.current = false;
       }
