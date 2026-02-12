@@ -1,7 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "./page-breadcrumb";
 import { PageTitle } from "./page-title";
-import { PageHeaderContextActions } from "./page-header-context-actions";
 
 interface PageHeaderProps {
   isLoading?: boolean;
@@ -10,7 +9,7 @@ interface PageHeaderProps {
     label: string;
     href: string;
   }[];
-  /** Явные кнопки шапки. Если не переданы, показываются действия из контекста (страницы сущностей). */
+  /** Кнопки шапки (действия страницы). */
   actions?: React.ReactNode;
 }
 
@@ -35,7 +34,7 @@ export const PageHeader = ({
     );
   }
 
-  const headerActions = actions ?? <PageHeaderContextActions />;
+  const headerActions = actions ?? null;
 
   return (
     <div className="flex justify-between items-end gap-2">

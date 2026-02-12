@@ -34,6 +34,7 @@ export default function ItemDetailPage() {
     handleEditSuccess,
     handleMoveSuccess,
     entityLabel,
+    headerActions,
   } = useItemDetail();
 
   const [name, setName] = useState("");
@@ -94,6 +95,7 @@ export default function ItemDetailPage() {
         ancestors={[
           { label: "Вещи", href: "/items" },
         ]}
+        actions={headerActions}
       />
       {isLoading ? (
         <EntityDetailSkeleton />

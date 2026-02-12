@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Combobox } from "@/components/ui/combobox";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
+import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
+import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
-
+import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
@@ -111,6 +112,15 @@ export default function RoomDetailPage() {
     loadData: loadRoomData,
   });
 
+  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+    entityType: "rooms",
+    entityId: roomId,
+    entityName: "Помещение",
+    onSuccess: loadRoomData,
+  });
+
+  const printLabel = usePrintEntityLabel("room");
+
   useEffect(() => {
     if (room) {
       setName(room.name ?? "");
@@ -156,6 +166,24 @@ export default function RoomDetailPage() {
 
   const isPageLoading = isLoading;
 
+  const headerActions =
+    room != null ? (
+      <EntityActions
+        actions={{
+          actions: ["printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onPrintLabel: () => printLabel(room.id, room.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
+        isDeleted={!!room.deleted_at}
+        disabled={isDeleting || isRestoring}
+        buttonVariant="default"
+      />
+    ) : null;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -164,6 +192,7 @@ export default function RoomDetailPage() {
         ancestors={[
           { label: "Помещения", href: "/rooms" },
         ]}
+        actions={headerActions}
       />
       {isPageLoading ? (
         <EntityDetailSkeleton />

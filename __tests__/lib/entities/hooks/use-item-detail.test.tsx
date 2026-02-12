@@ -7,14 +7,6 @@ import type { Item } from "@/types/entity";
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useParams: () => ({ id: "1" }),
-  useRouter: () => ({ push: mockPush }),
-}));
-jest.mock("@/lib/app/contexts/current-page-context", () => ({
-  useCurrentPage: () => ({
-    setEntityName: jest.fn(),
-    setIsLoading: jest.fn(),
-    setEntityActions: jest.fn(),
-  }),
 }));
 jest.mock("@/lib/users/context", () => ({
   useUser: () => ({ user: { id: "u1" }, isLoading: false }),
@@ -23,7 +15,12 @@ jest.mock("@/lib/entities/hooks/use-entity-data-loader", () => ({
   useEntityDataLoader: () => ({}),
 }));
 jest.mock("@/lib/entities/hooks/use-entity-actions", () => ({
-  useEntityActions: () => ({}),
+  useEntityActions: () => ({
+    isDeleting: false,
+    isRestoring: false,
+    handleDelete: jest.fn(),
+    handleRestore: jest.fn(),
+  }),
 }));
 jest.mock("@/lib/entities/hooks/use-print-entity-label", () => ({
   usePrintEntityLabel: () => jest.fn(),

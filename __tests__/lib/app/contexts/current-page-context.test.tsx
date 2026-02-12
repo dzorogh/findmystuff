@@ -6,13 +6,12 @@ import {
 } from "@/lib/app/contexts/current-page-context";
 
 const Consumer = () => {
-  const { entityName, isLoading, entityActions, setEntityName, setIsLoading, setEntityActions } =
+  const { entityName, isLoading, setEntityName, setIsLoading } =
     useCurrentPage();
   return (
     <div>
       <span data-testid="entityName">{entityName ?? "null"}</span>
       <span data-testid="isLoading">{String(isLoading)}</span>
-      <span data-testid="hasActions">{entityActions ? "yes" : "no"}</span>
       <button
         type="button"
         onClick={() => setEntityName("Test Entity")}
@@ -22,11 +21,6 @@ const Consumer = () => {
         type="button"
         onClick={() => setIsLoading(true)}
         aria-label="set loading"
-      />
-      <button
-        type="button"
-        onClick={() => setEntityActions(<span>Actions</span>)}
-        aria-label="set actions"
       />
     </div>
   );
@@ -42,7 +36,6 @@ describe("CurrentPageContext", () => {
 
     expect(screen.getByTestId("entityName")).toHaveTextContent("null");
     expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
-    expect(screen.getByTestId("hasActions")).toHaveTextContent("no");
   });
 
   it("обновляет entityName через setEntityName", () => {
@@ -71,20 +64,6 @@ describe("CurrentPageContext", () => {
     });
 
     expect(screen.getByTestId("isLoading")).toHaveTextContent("true");
-  });
-
-  it("обновляет entityActions через setEntityActions", () => {
-    render(
-      <CurrentPageProvider>
-        <Consumer />
-      </CurrentPageProvider>
-    );
-
-    act(() => {
-      screen.getByLabelText("set actions").click();
-    });
-
-    expect(screen.getByTestId("hasActions")).toHaveTextContent("yes");
   });
 
   it("useCurrentPage выбрасывает ошибку вне провайдера", () => {

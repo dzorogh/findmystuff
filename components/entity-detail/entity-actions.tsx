@@ -29,7 +29,7 @@ interface ListActionItem {
   icon: LucideIcon;
   href?: string;
   onClick?: () => void;
-  variant: "ghost" | "secondary" | "destructive";
+  variant: "ghost" | "secondary" | "destructive" | "default";
   custom?: ReactNode;
 }
 
@@ -54,7 +54,8 @@ const ACTION_META: Record<ActionKey, ActionMeta> = {
 function buildActions(
   actions: ActionsConfig,
   callbacks: EntityActionsCallbacks,
-  isDeleted: boolean
+  isDeleted: boolean,
+  buttonVariant?: "ghost" | "default"
 ): ListActionItem[] {
   if (isDeleted && actions.showRestoreWhenDeleted && callbacks.onRestore) {
     return [{
@@ -91,11 +92,21 @@ function buildActions(
             ),
           });
         } else if (callbacks.onMove) {
-          list.push({ ...base, onClick: callbacks.onMove });
+          list.push({
+            ...base,
+            variant: (buttonVariant ?? "ghost") as ListActionItem["variant"],
+            onClick: callbacks.onMove,
+          });
         }
         break;
       case "printLabel":
-        if (callbacks.onPrintLabel) list.push({ ...base, onClick: callbacks.onPrintLabel });
+        if (callbacks.onPrintLabel) {
+          list.push({
+            ...base,
+            variant: (buttonVariant ?? "ghost") as ListActionItem["variant"],
+            onClick: callbacks.onPrintLabel,
+          });
+        }
         break;
       case "duplicate":
         if (callbacks.onDuplicate) list.push({ ...base, onClick: callbacks.onDuplicate });
@@ -117,6 +128,7 @@ interface EntityActionsProps {
   isDeleted: boolean;
   disabled?: boolean;
   className?: string;
+  buttonVariant?: "ghost" | "default";
 }
 
 export function EntityActions({
@@ -125,13 +137,14 @@ export function EntityActions({
   isDeleted,
   disabled = false,
   className,
+  buttonVariant,
 }: EntityActionsProps) {
-  const actionItems = buildActions(actions, callbacks, isDeleted);
+  const actionItems = buildActions(actions, callbacks, isDeleted, buttonVariant);
 
   if (actionItems.length === 0) return null;
 
   return (
-    <div className={cn("flex items-center justify-end", className)}>
+    <div className={cn("flex items-center justify-end gap-2", className)}>
       {actionItems.map((item) => {
         const Icon = item.icon;
         if (item.custom) {

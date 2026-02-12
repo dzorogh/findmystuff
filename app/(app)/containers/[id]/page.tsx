@@ -14,6 +14,7 @@ import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
+import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
 import MoveEntityForm from "@/components/forms/move-entity-form";
@@ -162,6 +163,25 @@ export default function ContainerDetailPage() {
 
   const isPageLoading = isLoading;
 
+  const headerActions =
+    container != null ? (
+      <EntityActions
+        actions={{
+          actions: ["move", "printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onMove: () => setIsMoving(true),
+          onPrintLabel: () => printLabel(container.id, container.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
+        isDeleted={!!container.deleted_at}
+        disabled={isDeleting || isRestoring}
+        buttonVariant="default"
+      />
+    ) : null;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -170,6 +190,7 @@ export default function ContainerDetailPage() {
         ancestors={[
           { label: "Контейнеры", href: "/containers" },
         ]}
+        actions={headerActions}
       />
       {isPageLoading ? (
         <EntityDetailSkeleton />

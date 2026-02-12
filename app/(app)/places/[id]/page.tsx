@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { flushSync } from "react-dom";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useCurrentPage } from "@/lib/app/contexts/current-page-context";
 import { getPlace, updatePlace } from "@/lib/places/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,11 +96,19 @@ export default function PlaceDetailPage() {
     [placeId]
   );
 
-  // TODO: Remove this once we have a proper data loader
   useEntityDataLoader({
     entityId: placeId,
     loadData: loadPlaceData,
   });
+
+  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+    entityType: "places",
+    entityId: placeId,
+    entityName: "Место",
+    onSuccess: loadPlaceData,
+  });
+
+  const printLabel = usePrintEntityLabel("place");
 
   useEffect(() => {
     if (place) {
@@ -144,6 +150,25 @@ export default function PlaceDetailPage() {
 
   const isPageLoading = isLoading;
 
+  const headerActions =
+    place != null ? (
+      <EntityActions
+        actions={{
+          actions: ["move", "printLabel", "delete"],
+          showRestoreWhenDeleted: true,
+        }}
+        callbacks={{
+          onMove: () => setIsMoveDialogOpen(true),
+          onPrintLabel: () => printLabel(place.id, place.name),
+          onDelete: handleDelete,
+          onRestore: handleRestore,
+        }}
+        isDeleted={!!place.deleted_at}
+        disabled={isDeleting || isRestoring}
+        buttonVariant="default"
+      />
+    ) : null;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
@@ -152,6 +177,7 @@ export default function PlaceDetailPage() {
         ancestors={[
           { label: "Места", href: "/places" },
         ]}
+        actions={headerActions}
       />
       {isPageLoading ? (
         <EntityDetailSkeleton />
