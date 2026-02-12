@@ -1,7 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "./page-breadcrumb";
 import { PageTitle } from "./page-title";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { PageHeaderContextActions } from "./page-header-context-actions";
 
 interface PageHeaderProps {
