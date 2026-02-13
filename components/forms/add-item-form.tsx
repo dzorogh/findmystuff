@@ -20,6 +20,7 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
+import { DatePicker } from "@/components/fields/date-picker";
 
 interface AddItemFormProps {
   open: boolean;
@@ -34,6 +35,9 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);
+  const [currentValue, setCurrentValue] = useState<PriceValue | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [purchaseDate, setPurchaseDate] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +61,10 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
         photo_url: photoUrl || undefined,
         price_amount: price?.amount,
         price_currency: price?.currency,
+        current_value_amount: currentValue?.amount,
+        current_value_currency: currentValue?.currency,
+        quantity: quantity >= 1 ? quantity : 1,
+        purchase_date: purchaseDate.trim() || undefined,
         destination_type: destinationType || undefined,
         destination_id: selectedDestinationId ? parseInt(selectedDestinationId) : undefined,
       });
@@ -71,6 +79,9 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
       setSelectedDestinationId("");
       setPhotoUrl(null);
       setPrice(null);
+      setCurrentValue(null);
+      setQuantity(1);
+      setPurchaseDate("");
 
       toast.success(
         destinationType && selectedDestinationId
@@ -133,6 +144,35 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
               <PriceInput
                 value={price}
                 onChange={setPrice}
+                disabled={isSubmitting}
+              />
+
+              <PriceInput
+                value={currentValue}
+                onChange={setCurrentValue}
+                id="add-item-current-value"
+                label="Текущая оценочная стоимость (необязательно)"
+                disabled={isSubmitting}
+              />
+
+              <Field>
+                <FieldLabel htmlFor="add-item-quantity">Количество</FieldLabel>
+                <Input
+                  id="add-item-quantity"
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  disabled={isSubmitting}
+                />
+              </Field>
+
+              <DatePicker
+                value={purchaseDate}
+                onChange={setPurchaseDate}
+                id="add-item-purchase-date"
+                label="Дата покупки"
+                placeholder="Выберите дату"
                 disabled={isSubmitting}
               />
 

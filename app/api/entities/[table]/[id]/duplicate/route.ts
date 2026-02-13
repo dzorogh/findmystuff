@@ -17,6 +17,10 @@ type SourceRow = {
   item_type_id?: number | null;
   price_amount?: number | null;
   price_currency?: string | null;
+  current_value_amount?: number | null;
+  current_value_currency?: string | null;
+  quantity?: number | null;
+  purchase_date?: string | null;
   entity_type_id?: number | null;
   room_type_id?: number | null;
 };
@@ -27,7 +31,7 @@ type LastTransitionRow = {
 };
 
 const SOURCE_SELECT_BY_TABLE: Record<TableName, string> = {
-  items: "id, name, photo_url, item_type_id, price_amount, price_currency, deleted_at",
+  items: "id, name, photo_url, item_type_id, price_amount, price_currency, current_value_amount, current_value_currency, quantity, purchase_date, deleted_at",
   places: "id, name, photo_url, entity_type_id, deleted_at",
   containers: "id, name, photo_url, entity_type_id, deleted_at",
   rooms: "id, name, photo_url, room_type_id, deleted_at",
@@ -102,6 +106,10 @@ export async function POST(
         item_type_id: source.item_type_id ?? null,
         price_amount: source.price_amount ?? null,
         price_currency: source.price_currency ?? null,
+        current_value_amount: source.current_value_amount ?? null,
+        current_value_currency: source.current_value_currency ?? null,
+        quantity: source.quantity ?? 1,
+        purchase_date: source.purchase_date ?? null,
       };
     } else if (table === "rooms") {
       insertData = {

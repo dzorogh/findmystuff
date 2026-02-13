@@ -51,6 +51,12 @@ export interface Item extends BaseEntity {
   room_name?: string | null;
   /** Fowler Money Pattern: amount в минимальных единицах + currency ISO 4217 */
   price?: { amount: number; currency: string } | null;
+  /** Текущая оценочная стоимость. Fowler Money Pattern. */
+  currentValue?: { amount: number; currency: string } | null;
+  /** Количество единиц вещи */
+  quantity?: number | null;
+  /** Дата покупки (YYYY-MM-DD) */
+  purchaseDate?: string | null;
 }
 
 export interface Place extends BaseEntity {
@@ -119,6 +125,9 @@ export interface CreateItemResponse {
   created_at: string;
   deleted_at: string | null;
   price?: { amount: number; currency: string } | null;
+  currentValue?: { amount: number; currency: string } | null;
+  quantity?: number | null;
+  purchaseDate?: string | null;
 }
 
 export interface CreatePlaceResponse {

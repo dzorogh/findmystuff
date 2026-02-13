@@ -75,6 +75,10 @@ class EntitiesApiClient extends HttpClient {
     item_type_id?: number | null;
     price_amount?: number | null;
     price_currency?: string | null;
+    current_value_amount?: number | null;
+    current_value_currency?: string | null;
+    quantity?: number | null;
+    purchase_date?: string | null;
     destination_type?: string;
     destination_id?: number;
   }) {
@@ -92,6 +96,10 @@ class EntitiesApiClient extends HttpClient {
       item_type_id?: number | null;
       price_amount?: number | null;
       price_currency?: string | null;
+      current_value_amount?: number | null;
+      current_value_currency?: string | null;
+      quantity?: number | null;
+      purchase_date?: string | null;
     }
   ) {
     return this.request<Item>(`/items/${id}`, {

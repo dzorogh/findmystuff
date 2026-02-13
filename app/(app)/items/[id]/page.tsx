@@ -21,6 +21,7 @@ import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { updateItem } from "@/lib/entities/api";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
+import { DatePicker } from "@/components/fields/date-picker";
 import { PageHeader } from "@/components/layout/page-header";
 
 export default function ItemDetailPage() {
@@ -42,6 +43,9 @@ export default function ItemDetailPage() {
   const [itemTypeId, setItemTypeId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);
+  const [currentValue, setCurrentValue] = useState<PriceValue | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [purchaseDate, setPurchaseDate] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -55,6 +59,13 @@ export default function ItemDetailPage() {
           ? { amount: item.price.amount, currency: item.price.currency }
           : null
       );
+      setCurrentValue(
+        item.currentValue?.amount != null && item.currentValue?.currency
+          ? { amount: item.currentValue.amount, currency: item.currentValue.currency }
+          : null
+      );
+      setQuantity(item.quantity ?? 1);
+      setPurchaseDate(item.purchaseDate ?? "");
     }
   }, [item]);
 
@@ -71,6 +82,10 @@ export default function ItemDetailPage() {
         photo_url: (photoUrl ?? "") || null,
         price_amount: price?.amount ?? null,
         price_currency: price?.currency ?? null,
+        current_value_amount: currentValue?.amount ?? null,
+        current_value_currency: currentValue?.currency ?? null,
+        quantity: quantity >= 1 ? quantity : 1,
+        purchase_date: purchaseDate.trim() || null,
       });
 
       if (response.error) {
@@ -140,6 +155,35 @@ export default function ItemDetailPage() {
                     value={price}
                     onChange={setPrice}
                     id={`item-price-${item.id}`}
+                    disabled={isSubmitting}
+                  />
+
+                  <PriceInput
+                    value={currentValue}
+                    onChange={setCurrentValue}
+                    id={`item-current-value-${item.id}`}
+                    label="Текущая оценочная стоимость (необязательно)"
+                    disabled={isSubmitting}
+                  />
+
+                  <Field>
+                    <FieldLabel htmlFor={`item-quantity-${item.id}`}>Количество</FieldLabel>
+                    <Input
+                      id={`item-quantity-${item.id}`}
+                      type="number"
+                      min={1}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      disabled={isSubmitting}
+                    />
+                  </Field>
+
+                  <DatePicker
+                    value={purchaseDate}
+                    onChange={setPurchaseDate}
+                    id={`item-purchase-date-${item.id}`}
+                    label="Дата покупки"
+                    placeholder="Выберите дату"
                     disabled={isSubmitting}
                   />
 

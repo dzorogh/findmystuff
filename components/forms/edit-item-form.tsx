@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
+import { DatePicker } from "@/components/fields/date-picker";
 
 interface EditItemFormProps {
   itemId: number;
@@ -43,6 +44,9 @@ const EditItemForm = ({
   const [itemTypeId, setItemTypeId] = useState<string>(initialItemTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);
+  const [currentValue, setCurrentValue] = useState<PriceValue | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [purchaseDate, setPurchaseDate] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +66,13 @@ const EditItemForm = ({
                 ? { amount: item.price.amount, currency: item.price.currency }
                 : null
             );
+            setCurrentValue(
+              item.currentValue?.amount != null && item.currentValue?.currency
+                ? { amount: item.currentValue.amount, currency: item.currentValue.currency }
+                : null
+            );
+            setQuantity(item.quantity ?? 1);
+            setPurchaseDate(item.purchaseDate ?? "");
           }
         } catch {
           setPhotoUrl(null);
@@ -83,6 +94,10 @@ const EditItemForm = ({
         photo_url: photoUrl || undefined,
         price_amount: price?.amount ?? null,
         price_currency: price?.currency ?? null,
+        current_value_amount: currentValue?.amount ?? null,
+        current_value_currency: currentValue?.currency ?? null,
+        quantity: quantity >= 1 ? quantity : 1,
+        purchase_date: purchaseDate.trim() || null,
       });
 
       if (response.error) {
@@ -144,6 +159,35 @@ const EditItemForm = ({
               value={price}
               onChange={setPrice}
               id={`item-price-${itemId}`}
+              disabled={isSubmitting}
+            />
+
+            <PriceInput
+              value={currentValue}
+              onChange={setCurrentValue}
+              id={`item-current-value-${itemId}`}
+              label="Текущая оценочная стоимость (необязательно)"
+              disabled={isSubmitting}
+            />
+
+            <Field>
+              <FieldLabel htmlFor={`item-quantity-${itemId}`}>Количество</FieldLabel>
+              <Input
+                id={`item-quantity-${itemId}`}
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                disabled={isSubmitting}
+              />
+            </Field>
+
+            <DatePicker
+              value={purchaseDate}
+              onChange={setPurchaseDate}
+              id={`item-purchase-date-${itemId}`}
+              label="Дата покупки"
+              placeholder="Выберите дату"
               disabled={isSubmitting}
             />
 

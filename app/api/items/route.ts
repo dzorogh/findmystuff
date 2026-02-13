@@ -75,6 +75,10 @@ export async function GET(request: NextRequest) {
       photo_url: string | null;
       price_amount: number | null;
       price_currency: string | null;
+      current_value_amount: number | null;
+      current_value_currency: string | null;
+      quantity: number | null;
+      purchase_date: string | null;
       destination_type: string | null;
       destination_id: number | null;
       moved_at: string | null;
@@ -86,6 +90,10 @@ export async function GET(request: NextRequest) {
         item.price_amount != null && item.price_currency
           ? { amount: item.price_amount, currency: item.price_currency }
           : null;
+      const currentValue =
+        item.current_value_amount != null && item.current_value_currency
+          ? { amount: item.current_value_amount, currency: item.current_value_currency }
+          : null;
 
       return {
         id: item.id,
@@ -96,6 +104,9 @@ export async function GET(request: NextRequest) {
         deleted_at: item.deleted_at,
         photo_url: item.photo_url,
         price,
+        currentValue,
+        quantity: item.quantity ?? null,
+        purchaseDate: item.purchase_date ?? null,
         room_id: item.room_id ?? null,
         room_name: item.room_name ?? null,
         last_location: hasLocation
@@ -143,6 +154,10 @@ export async function POST(request: NextRequest) {
       item_type_id,
       price_amount,
       price_currency,
+      current_value_amount,
+      current_value_currency,
+      quantity,
+      purchase_date,
     } = body;
 
     const hasPriceAmount = price_amount != null && price_amount !== "";
@@ -154,18 +169,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const hasCurrentValueAmount = current_value_amount != null && current_value_amount !== "";
+    const hasCurrentValueCurrency = current_value_currency != null && current_value_currency !== "";
+    if (hasCurrentValueAmount !== hasCurrentValueCurrency) {
+      return NextResponse.json(
+        { error: "Текущая стоимость и валюта должны быть указаны вместе или оба опущены" },
+        { status: 400 }
+      );
+    }
+
     const insertItemData: {
       name: string | null;
       photo_url: string | null;
       item_type_id: number | null;
       price_amount: number | null;
       price_currency: string | null;
+      current_value_amount: number | null;
+      current_value_currency: string | null;
+      quantity: number | null;
+      purchase_date: string | null;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       item_type_id: item_type_id != null ? (Number(item_type_id) || null) : null,
       price_amount: hasPriceAmount ? Number(price_amount) : null,
       price_currency: hasPriceCurrency ? String(price_currency).trim() : null,
+      current_value_amount: hasCurrentValueAmount ? Number(current_value_amount) : null,
+      current_value_currency: hasCurrentValueCurrency ? String(current_value_currency).trim() : null,
+      quantity: quantity != null && quantity !== "" ? Number(quantity) : 1,
+      purchase_date: purchase_date && purchase_date.trim() ? purchase_date.trim() : null,
     };
 
     if (
@@ -174,6 +206,26 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Сумма цены должна быть целым неотрицательным числом в минимальных единицах" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      insertItemData.current_value_amount != null &&
+      (insertItemData.current_value_amount < 0 || !Number.isInteger(insertItemData.current_value_amount))
+    ) {
+      return NextResponse.json(
+        { error: "Сумма текущей стоимости должна быть целым неотрицательным числом в минимальных единицах" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      insertItemData.quantity != null &&
+      (insertItemData.quantity < 1 || !Number.isInteger(insertItemData.quantity))
+    ) {
+      return NextResponse.json(
+        { error: "Количество должно быть целым числом не менее 1" },
         { status: 400 }
       );
     }
