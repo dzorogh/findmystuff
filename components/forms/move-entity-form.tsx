@@ -11,6 +11,7 @@ import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import LocationCombobox, { type DestinationType } from "@/components/fields/location-combobox";
+import type { MoveDestinationType } from "@/lib/app/types/entity-config";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/forms/form-footer";
 import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
@@ -48,7 +49,8 @@ const DESTINATION_TYPE_LABELS_LOWER: Record<DestinationType, string> = {
 export interface MoveEntityFormProps {
   title: string;
   entityDisplayName: string;
-  destinationTypes: DestinationType[];
+  /** Типы назначения. "building" игнорируется — для помещений используется MoveRoomForm. */
+  destinationTypes: MoveDestinationType[];
   buildPayload: (destinationType: string, destinationId: number) => TransitionPayload;
   getSuccessMessage: (destinationName: string) => string;
   getErrorMessage: () => string;
@@ -273,6 +275,12 @@ export default function MoveEntityForm({
 
   const { isLoading } = useUser();
 
+  /** MoveEntityForm поддерживает только room/place/container; building — для MoveRoomForm. */
+  const locationTypes = useMemo(
+    () => destinationTypes.filter((t): t is DestinationType => t !== "building"),
+    [destinationTypes]
+  );
+
   if (isLoading) {
     return null;
   }
@@ -289,11 +297,11 @@ export default function MoveEntityForm({
         <SheetTrigger render={trigger ?? defaultTrigger} />
       )}
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
-        {open && destinationTypes.length > 0 ? (
+        {open && locationTypes.length > 0 ? (
           <MoveEntityFormBody
             title={title}
             entityDisplayName={entityDisplayName}
-            destinationTypes={destinationTypes}
+            destinationTypes={locationTypes}
             buildPayload={buildPayload}
             getSuccessMessage={getSuccessMessage}
             getErrorMessage={getErrorMessage}

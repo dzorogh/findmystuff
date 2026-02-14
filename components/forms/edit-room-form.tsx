@@ -19,11 +19,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
+import BuildingCombobox from "@/components/fields/building-combobox";
 
 interface EditRoomFormProps {
   roomId: number;
   roomName: string | null;
   roomTypeId?: number | null;
+  buildingId?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -33,6 +35,7 @@ const EditRoomForm = ({
   roomId,
   roomName,
   roomTypeId: initialRoomTypeId,
+  buildingId: initialBuildingId,
   open,
   onOpenChange,
   onSuccess,
@@ -41,6 +44,7 @@ const EditRoomForm = ({
   const { types: roomTypes } = useEntityTypes("room");
   const [name, setName] = useState(roomName || "");
   const [roomTypeId, setRoomTypeId] = useState<string>(initialRoomTypeId?.toString() || "");
+  const [buildingId, setBuildingId] = useState<string>(initialBuildingId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +53,7 @@ const EditRoomForm = ({
     if (open && roomId) {
       setName(roomName || "");
       setRoomTypeId(initialRoomTypeId?.toString() || "");
+      setBuildingId(initialBuildingId?.toString() || "");
       const loadRoom = async () => {
         try {
           const response = await getRoom(roomId);
@@ -57,6 +62,7 @@ const EditRoomForm = ({
             if (room.photo_url) setPhotoUrl(room.photo_url);
             else setPhotoUrl(null);
             if (room.room_type_id != null) setRoomTypeId(room.room_type_id.toString());
+            if (room.building_id != null) setBuildingId(room.building_id.toString());
           }
         } catch {
           setPhotoUrl(null);
@@ -66,9 +72,10 @@ const EditRoomForm = ({
     } else {
       setName("");
       setRoomTypeId("");
+      setBuildingId("");
       setPhotoUrl(null);
     }
-  }, [open, roomId, roomName, initialRoomTypeId]);
+  }, [open, roomId, roomName, initialRoomTypeId, initialBuildingId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,6 +86,7 @@ const EditRoomForm = ({
       const response = await updateRoom(roomId, {
         name: name.trim() || undefined,
         room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
+        building_id: buildingId ? parseInt(buildingId) : null,
         photo_url: photoUrl || undefined,
       });
 
@@ -118,6 +126,13 @@ const EditRoomForm = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="mt-6">
           <FieldGroup>
+            <BuildingCombobox
+              selectedBuildingId={buildingId}
+              onBuildingIdChange={setBuildingId}
+              disabled={isSubmitting}
+              label="Здание (необязательно)"
+            />
+
             <EntityTypeSelect
               type="room"
               value={roomTypeId ? parseInt(roomTypeId) : null}

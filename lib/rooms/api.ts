@@ -26,6 +26,7 @@ export function getRoomsWithCountsRpc(
     has_items?: boolean | null;
     has_containers?: boolean | null;
     has_places?: boolean | null;
+    filter_building_id?: number | null;
   }
 ) {
   return supabase.rpc("get_rooms_with_counts", {
@@ -38,6 +39,7 @@ export function getRoomsWithCountsRpc(
     has_items: params.has_items ?? null,
     has_containers: params.has_containers ?? null,
     has_places: params.has_places ?? null,
+    filter_building_id: params.filter_building_id ?? null,
   });
 }
 
@@ -55,6 +57,7 @@ class RoomsApiClient extends HttpClient {
     hasItems?: boolean | null;
     hasContainers?: boolean | null;
     hasPlaces?: boolean | null;
+    buildingId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -65,6 +68,8 @@ class RoomsApiClient extends HttpClient {
       searchParams.set("hasContainers", String(params.hasContainers));
     if (params?.hasPlaces !== undefined && params?.hasPlaces !== null)
       searchParams.set("hasPlaces", String(params.hasPlaces));
+    if (params?.buildingId !== undefined && params?.buildingId !== null)
+      searchParams.set("buildingId", String(params.buildingId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Room[]>(`/rooms${queryString ? `?${queryString}` : ""}`);
@@ -83,14 +88,27 @@ class RoomsApiClient extends HttpClient {
     return this.request<Room[]>(`/rooms?showDeleted=${includeDeleted}`);
   }
 
-  async createRoom(data: { name?: string; photo_url?: string; room_type_id?: number | null }) {
+  async createRoom(data: {
+    name?: string;
+    photo_url?: string;
+    room_type_id?: number | null;
+    building_id?: number | null;
+  }) {
     return this.request<CreateRoomResponse>("/rooms", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateRoom(id: number, data: { name?: string; photo_url?: string | null; room_type_id?: number | null }) {
+  async updateRoom(
+    id: number,
+    data: {
+      name?: string;
+      photo_url?: string | null;
+      room_type_id?: number | null;
+      building_id?: number | null;
+    }
+  ) {
     return this.request<Room>(`/rooms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

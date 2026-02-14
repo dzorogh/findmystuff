@@ -8,7 +8,7 @@ import { photoApi } from "@/lib/shared/api/photo";
 
 interface GenerateImageButtonProps {
   entityName: string;
-  entityType?: "item" | "place" | "room" | "container";
+  entityType?: "item" | "place" | "room" | "container" | "building";
   onSuccess: (url: string) => void;
   disabled?: boolean;
 }

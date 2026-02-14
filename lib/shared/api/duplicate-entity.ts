@@ -1,6 +1,6 @@
 import { HttpClient } from "./http-client";
 
-export type DuplicatableEntityTable = "items" | "places" | "containers" | "rooms";
+export type DuplicatableEntityTable = "items" | "places" | "containers" | "rooms" | "buildings";
 
 class DuplicateEntityApi extends HttpClient {
   async duplicate(table: DuplicatableEntityTable, id: number) {

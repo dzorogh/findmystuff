@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EntityTypeSelect } from "../fields/entity-type-select";
+import BuildingCombobox from "../fields/building-combobox";
 
 interface AddRoomFormProps {
   open: boolean;
@@ -33,6 +34,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
   const { types: roomTypes, isLoading: isLoadingTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState<string>("");
+  const [buildingId, setBuildingId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
       const response = await createRoom({
         name: name.trim() || undefined,
         room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
+        building_id: buildingId ? parseInt(buildingId) : null,
         photo_url: photoUrl || undefined,
       });
 
@@ -55,6 +58,7 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
 
       setName("");
       setRoomTypeId("");
+      setBuildingId("");
       setPhotoUrl(null);
 
       toast.success("Помещение успешно добавлено в склад", {
@@ -114,6 +118,13 @@ const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
                   disabled={isSubmitting}
                 />
               </Field>
+
+              <BuildingCombobox
+                selectedBuildingId={buildingId}
+                onBuildingIdChange={setBuildingId}
+                disabled={isSubmitting}
+                label="Здание (необязательно)"
+              />
 
               <EntityTypeSelect
                 type="room"

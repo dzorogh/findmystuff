@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
 
-export type EntityCategory = "container" | "place" | "room" | "item";
+export type EntityCategory = "container" | "place" | "room" | "item" | "building";
 
 interface EntitySectionProps {
   title: string;

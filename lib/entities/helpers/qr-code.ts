@@ -5,7 +5,7 @@
 
 import type { EntityTypeName } from "@/types/entity";
 
-const VALID_TYPES: EntityTypeName[] = ["item", "place", "container", "room"];
+const VALID_TYPES: EntityTypeName[] = ["item", "place", "container", "room", "building"];
 const TYPE_PATTERN = VALID_TYPES.join("|");
 const PAYLOAD_REGEX = new RegExp(`^(${TYPE_PATTERN}):(\\d+)$`);
 

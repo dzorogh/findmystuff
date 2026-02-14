@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { searchApi } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Warehouse, Container, Building2, ArrowRight } from "lucide-react";
+import { Search, Package, Warehouse, Container, DoorOpen, ArrowRight } from "lucide-react";
 import type { SearchResult } from "@/types/entity";
 import Link from "next/link";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -14,7 +14,7 @@ const ENTITY_CONFIG = {
   item: { Icon: Package, label: "Вещи" },
   place: { Icon: Warehouse, label: "Места" },
   container: { Icon: Container, label: "Контейнеры" },
-  room: { Icon: Building2, label: "Помещения" },
+  room: { Icon: DoorOpen, label: "Помещения" },
 } as const;
 
 export default function Home() {
@@ -100,7 +100,7 @@ export default function Home() {
     },
     {
       label: "Помещения",
-      icon: Building2,
+      icon: DoorOpen,
       href: "/rooms",
       description: "Просмотр всех помещений",
     },
@@ -169,7 +169,7 @@ export default function Home() {
                         ) : result.locationType === "container" ? (
                           <Container className="h-3 w-3" />
                         ) : (
-                          <Building2 className="h-3 w-3" />
+                          <DoorOpen className="h-3 w-3" />
                         )}
                         <span>
                           {result.locationType === "place" ? "Место" : result.locationType === "container" ? "Контейнер" : "Помещение"}: {result.location}

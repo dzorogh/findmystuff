@@ -1,4 +1,4 @@
-import { Building2 } from "lucide-react";
+import { DoorOpen } from "lucide-react";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { getRooms } from "@/lib/rooms/api";
 import type {
@@ -16,6 +16,7 @@ export interface RoomsFilters extends Filters {
   hasItems: boolean | null;
   hasContainers: boolean | null;
   hasPlaces: boolean | null;
+  buildingId: number | null;
 }
 
 export const DEFAULT_ROOMS_FILTERS: RoomsFilters = {
@@ -23,6 +24,7 @@ export const DEFAULT_ROOMS_FILTERS: RoomsFilters = {
   hasItems: null,
   hasContainers: null,
   hasPlaces: null,
+  buildingId: null,
 };
 
 async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
@@ -36,6 +38,7 @@ async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
     hasItems: filters.hasItems ?? undefined,
     hasContainers: filters.hasContainers ?? undefined,
     hasPlaces: filters.hasPlaces ?? undefined,
+    buildingId: filters.buildingId ?? undefined,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   const totalCount = response?.totalCount ?? list.length;
@@ -48,6 +51,7 @@ function useRoomsConfigActions(params: { refreshList: () => void }) {
     basePath: roomsEntityConfig.basePath,
     apiTable: roomsEntityConfig.apiTable,
     labels: roomsEntityConfig.labels,
+    move: roomsEntityConfig.actions.move,
   });
   return (entity: EntityDisplay) => getRowActions(entity as Room);
 }
@@ -69,8 +73,12 @@ export const roomsEntityConfig: EntityConfig = {
     duplicateSuccess: "Помещение успешно дублировано",
   },
   actions: {
-    actions: ["edit", "printLabel", "duplicate", "delete"],
+    actions: ["edit", "move", "printLabel", "duplicate", "delete"],
     showRestoreWhenDeleted: true,
+    move: {
+      enabled: true,
+      destinationTypes: ["building"],
+    },
   },
   useActions: useRoomsConfigActions,
   addForm: {
@@ -79,10 +87,11 @@ export const roomsEntityConfig: EntityConfig = {
   },
   getName: (entity) =>
     entity.name != null && entity.name.trim() !== "" ? entity.name : `Помещение #${entity.id}`,
-  icon: Building2,
+  icon: DoorOpen,
   filters: {
     fields: [
       { type: "showDeleted", label: "Показывать удаленные помещения" },
+      { type: "building", key: "buildingId" },
       { type: "yesNoAll", key: "hasItems", label: "Есть вещи" },
       { type: "yesNoAll", key: "hasContainers", label: "Есть контейнеры" },
       { type: "yesNoAll", key: "hasPlaces", label: "Есть места" },

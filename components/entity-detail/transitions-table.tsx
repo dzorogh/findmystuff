@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Building2, Warehouse, Container } from "lucide-react";
+import { Calendar, DoorOpen, Warehouse, Container } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
   const getLocationIcon = (type: string | null) => {
     switch (type) {
       case "room":
-        return <Building2 className="h-4 w-4 text-primary flex-shrink-0" />;
+        return <DoorOpen className="h-4 w-4 text-primary flex-shrink-0" />;
       case "place":
         return <Warehouse className="h-4 w-4 text-primary flex-shrink-0" />;
       case "container":
@@ -97,7 +97,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
                     </div>
                     {transition.room_name && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <Building2 className="h-3 w-3 flex-shrink-0" />
+                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
                         <span>{transition.room_name}</span>
                       </div>
                     )}
@@ -117,7 +117,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
                     )}
                     {transition.room_name && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <Building2 className="h-3 w-3 flex-shrink-0" />
+                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
                         <span>{transition.room_name}</span>
                       </div>
                     )}

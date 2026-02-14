@@ -24,7 +24,10 @@ import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
 import type { RoomEntity } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
+import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
+import BuildingCombobox from "@/components/fields/building-combobox";
 
 type Room = RoomEntity;
 
@@ -58,6 +61,7 @@ export default function RoomDetailPage() {
   const { types: roomTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState("");
+  const [buildingId, setBuildingId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -125,6 +129,7 @@ export default function RoomDetailPage() {
     if (room) {
       setName(room.name ?? "");
       setRoomTypeId(room.room_type_id?.toString() ?? "");
+      setBuildingId(room.building_id?.toString() ?? "");
       setPhotoUrl(room.photo_url ?? null);
     }
   }, [room]);
@@ -150,6 +155,7 @@ export default function RoomDetailPage() {
       const response = await updateRoom(room.id, {
         name: name.trim() || undefined,
         room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
+        building_id: buildingId ? parseInt(buildingId) : null,
         photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
@@ -170,10 +176,18 @@ export default function RoomDetailPage() {
     room != null ? (
       <EntityActions
         actions={{
-          actions: ["printLabel", "delete"],
+          actions: ["move", "printLabel", "delete"],
           showRestoreWhenDeleted: true,
         }}
         callbacks={{
+          moveRoomForm: {
+            title: roomsEntityConfig.labels.moveTitle,
+            entityDisplayName: getEntityDisplayName("room", room.id, room.name),
+            roomId: room.id,
+            getSuccessMessage: roomsEntityConfig.labels.moveSuccess,
+            getErrorMessage: () => roomsEntityConfig.labels.moveError,
+            onSuccess: () => loadRoomData({ silent: true }),
+          },
           onPrintLabel: () => printLabel(room.id, room.name),
           onDelete: handleDelete,
           onRestore: handleRestore,
@@ -225,6 +239,13 @@ export default function RoomDetailPage() {
                       disabled={isSubmitting}
                     />
                   </Field>
+
+                  <BuildingCombobox
+                    selectedBuildingId={buildingId}
+                    onBuildingIdChange={setBuildingId}
+                    disabled={isSubmitting}
+                    label="Здание (необязательно)"
+                  />
 
                   <EntityTypeSelect
                     type="room"

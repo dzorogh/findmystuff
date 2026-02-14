@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
 
-const ALLOWED_TABLES = ["items", "places", "containers", "rooms"] as const;
+const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
 
 type DuplicateParams =
@@ -23,6 +23,8 @@ type SourceRow = {
   purchase_date?: string | null;
   entity_type_id?: number | null;
   room_type_id?: number | null;
+  building_type_id?: number | null;
+  building_id?: number | null;
 };
 
 type LastTransitionRow = {
@@ -34,7 +36,8 @@ const SOURCE_SELECT_BY_TABLE: Record<TableName, string> = {
   items: "id, name, photo_url, item_type_id, price_amount, price_currency, current_value_amount, current_value_currency, quantity, purchase_date, deleted_at",
   places: "id, name, photo_url, entity_type_id, deleted_at",
   containers: "id, name, photo_url, entity_type_id, deleted_at",
-  rooms: "id, name, photo_url, room_type_id, deleted_at",
+  rooms: "id, name, photo_url, room_type_id, building_id, deleted_at",
+  buildings: "id, name, photo_url, building_type_id, deleted_at",
 };
 
 const TRANSITION_ID_COLUMN_BY_TABLE: Partial<Record<TableName, "item_id" | "place_id" | "container_id">> = {
@@ -115,6 +118,12 @@ export async function POST(
       insertData = {
         ...insertData,
         room_type_id: source.room_type_id ?? null,
+        building_id: source.building_id ?? null,
+      };
+    } else if (table === "buildings") {
+      insertData = {
+        ...insertData,
+        building_type_id: source.building_type_id ?? null,
       };
     } else {
       insertData = {

@@ -3,7 +3,7 @@
 import { memo, useRef, type ComponentType, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Building2, Package, Warehouse, Container as ContainerIcon } from "lucide-react";
+import { DoorOpen, Package, Warehouse, Container as ContainerIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -20,6 +20,7 @@ import type {
   Room,
   Place,
   Container,
+  Building,
   DestinationType,
 } from "@/types/entity";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,7 @@ export function getRoomLabel(location: Item["last_location"]): string | null {
   );
 }
 
-type ListEntity = Item | Room | Place | Container;
+type ListEntity = Item | Room | Place | Container | Building;
 type IconComponent = ComponentType<{ className?: string }>;
 
 interface EntityRowProps {
@@ -69,6 +70,10 @@ function isRoomWithCounts(entity: ListEntity): entity is Room {
   return "places_count" in entity && "containers_count" in entity;
 }
 
+function isBuildingWithCounts(entity: ListEntity): entity is Building {
+  return "rooms_count" in entity && !("places_count" in entity);
+}
+
 function isPlaceEntity(entity: ListEntity): entity is Place {
   return "room" in entity && !("places_count" in entity);
 }
@@ -80,6 +85,7 @@ function isPlaceWithCounts(entity: ListEntity): entity is Place {
 function getEntitySubline(entity: ListEntity): string | null {
   if ("item_type" in entity) return entity.item_type?.name ?? null;
   if ("room_type" in entity) return entity.room_type?.name ?? null;
+  if ("building_type" in entity) return entity.building_type?.name ?? null;
   if ("entity_type" in entity) return entity.entity_type?.name ?? null;
   return null;
 }
@@ -108,7 +114,7 @@ const LOCATION_META: Record<
   DestinationType,
   { icon: IconComponent; textClass: string }
 > = {
-  room: { icon: Building2, textClass: "text-primary" },
+  room: { icon: DoorOpen, textClass: "text-primary" },
   place: { icon: Warehouse, textClass: "text-primary" },
   container: { icon: ContainerIcon, textClass: "text-primary" },
 };
@@ -185,7 +191,7 @@ function renderNameCell(
         {subline && <p className="mt-0.5 text-xs text-muted-foreground">{subline}</p>}
         {hasRoomInName && (
           <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground md:hidden">
-            <Building2 className="h-3 w-3 shrink-0" />
+            <DoorOpen className="h-3 w-3 shrink-0" />
             <span className="truncate">{roomLabel}</span>
           </div>
         )}
@@ -205,6 +211,14 @@ function renderNameCell(
             </span>
           </div>
         )}
+        {isBuildingWithCounts(entity) && (
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
+            <span className="flex items-center gap-1">
+              <DoorOpen className="h-3 w-3" />
+              {entity.rooms_count ?? 0} пом.
+            </span>
+          </div>
+        )}
         {isPlaceWithCounts(entity) && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
             <span className="flex items-center gap-1">
@@ -217,7 +231,7 @@ function renderNameCell(
             </span>
             {entity.room?.room_name && (
               <span className="flex items-center gap-1">
-                <Building2 className="h-3 w-3" />
+                <DoorOpen className="h-3 w-3" />
                 <span className="truncate">{entity.room.room_name}</span>
               </span>
             )}
@@ -238,7 +252,7 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
     const label = roomLabel ?? ROOM_EMPTY_LABEL;
     return (
       <div className="flex items-center gap-2 text-sm">
-        <Building2 className="h-4 w-4 flex-shrink-0 text-primary" />
+        <DoorOpen className="h-4 w-4 flex-shrink-0 text-primary" />
         <span className={label === ROOM_EMPTY_LABEL ? "text-muted-foreground" : ""}>
           {label}
         </span>
@@ -254,7 +268,7 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
           href={`/rooms/${room.room_id}`}
           className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
         >
-          <Building2 className="h-4 w-4 flex-shrink-0 text-primary" />
+          <DoorOpen className="h-4 w-4 flex-shrink-0 text-primary" />
           <span>{room.room_name}</span>
         </Link>
       );
@@ -272,24 +286,35 @@ function renderMovedAtCell(entity: ListEntity): ReactNode {
 }
 
 function renderCountsCell(entity: ListEntity): ReactNode {
-  if (!isRoomWithCounts(entity)) return null;
-
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-      <div className="flex items-center gap-1">
-        <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span>{entity.items_count ?? 0}</span>
+  if (isRoomWithCounts(entity)) {
+    return (
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+        <div className="flex items-center gap-1">
+          <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.items_count ?? 0}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Warehouse className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.places_count ?? 0}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <ContainerIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.containers_count ?? 0}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <Warehouse className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span>{entity.places_count ?? 0}</span>
+    );
+  }
+  if (isBuildingWithCounts(entity)) {
+    return (
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+        <div className="flex items-center gap-1">
+          <DoorOpen className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.rooms_count ?? 0} помещений</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <ContainerIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span>{entity.containers_count ?? 0}</span>
-      </div>
-    </div>
-  );
+    );
+  }
+  return null;
 }
 
 function renderLocationCell(entity: ListEntity): ReactNode {

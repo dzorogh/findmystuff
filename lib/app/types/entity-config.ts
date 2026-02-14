@@ -2,10 +2,10 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 
-export type TableName = "items" | "places" | "containers" | "rooms";
-export type EntityKind = "item" | "place" | "container" | "room";
+export type TableName = "items" | "places" | "containers" | "rooms" | "buildings";
+export type EntityKind = "item" | "place" | "container" | "room" | "building";
 export type ActionKey = "edit" | "move" | "printLabel" | "duplicate" | "delete";
-export type MoveDestinationType = "room" | "place" | "container";
+export type MoveDestinationType = "room" | "place" | "container" | "building";
 
 export interface Results {
   one: string;
@@ -57,6 +57,7 @@ export type FilterFieldConfig =
   | { type: "yesNoAll"; key: string; label: string }
   | { type: "locationType"; key: string }
   | { type: "room"; key: string }
+  | { type: "building"; key: string }
   | { type: "entityType"; key: string; entityKind: "place" | "container" };
 
 export interface ListColumnConfig {

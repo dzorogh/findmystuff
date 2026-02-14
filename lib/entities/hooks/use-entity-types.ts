@@ -12,7 +12,7 @@ export const clearEntityTypesCache = () => {
   requestResults.clear();
 };
 
-export const useEntityTypes = (category?: "place" | "container" | "room" | "item") => {
+export const useEntityTypes = (category?: "place" | "container" | "room" | "item" | "building") => {
   const [types, setTypes] = useState<EntityType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -56,6 +56,7 @@ export function DatePicker({
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
+          nativeButton={true}
           render={
             <Button
               variant="outline"

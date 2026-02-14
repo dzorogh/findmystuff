@@ -5,13 +5,13 @@
 import { HttpClient } from "./http-client";
 
 export class SoftDeleteApi extends HttpClient {
-  async softDelete(table: "items" | "places" | "containers" | "rooms", id: number) {
+  async softDelete(table: "items" | "places" | "containers" | "rooms" | "buildings", id: number) {
     return this.request<{ success: boolean }>(`/entities/${table}/${id}`, {
       method: "DELETE",
     });
   }
 
-  async restoreDeleted(table: "items" | "places" | "containers" | "rooms", id: number) {
+  async restoreDeleted(table: "items" | "places" | "containers" | "rooms" | "buildings", id: number) {
     return this.request<{ success: boolean }>(`/entities/${table}/${id}`, {
       method: "POST",
     });

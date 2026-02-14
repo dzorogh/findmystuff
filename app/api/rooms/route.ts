@@ -37,6 +37,13 @@ export async function GET(request: NextRequest) {
       hasPlacesParam === null || hasPlacesParam === ""
         ? null
         : hasPlacesParam === "true";
+    const buildingIdParam = searchParams.get("buildingId");
+    const buildingId =
+      buildingIdParam === null || buildingIdParam === ""
+        ? null
+        : parseInt(buildingIdParam, 10);
+    const filterBuildingId =
+      buildingId != null && !Number.isNaN(buildingId) ? buildingId : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -52,6 +59,7 @@ export async function GET(request: NextRequest) {
       has_items: hasItems,
       has_containers: hasContainers,
       has_places: hasPlaces,
+      filter_building_id: filterBuildingId,
     });
 
     if (fetchError) {
@@ -66,6 +74,8 @@ export async function GET(request: NextRequest) {
       name: string | null;
       room_type_id: number | null;
       room_type_name: string | null;
+      building_id: number | null;
+      building_name: string | null;
       created_at: string;
       deleted_at: string | null;
       photo_url: string | null;
@@ -91,6 +101,8 @@ export async function GET(request: NextRequest) {
       name: room.name,
       room_type_id: room.room_type_id ?? null,
       room_type: room.room_type_name ? { name: room.room_type_name } : null,
+      building_id: room.building_id ?? null,
+      building_name: room.building_name ?? null,
       created_at: room.created_at,
       deleted_at: room.deleted_at,
       photo_url: room.photo_url,
@@ -126,16 +138,18 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     const body = await request.json();
-    const { name, photo_url, room_type_id } = body;
+    const { name, photo_url, room_type_id, building_id } = body;
 
     const insertData: {
       name: string | null;
       photo_url: string | null;
       room_type_id: number | null;
+      building_id: number | null;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       room_type_id: room_type_id != null ? (Number(room_type_id) || null) : null,
+      building_id: building_id != null ? (Number(building_id) || null) : null,
     };
 
     const { data: newRoom, error: insertError } = await supabase

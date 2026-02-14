@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 export default function SettingsPage() {
   const { error } = useSettings();
+  const buildingTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const containerTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const placeTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const roomTypesManagerRef = useRef<EntityTypesManagerRef>(null);
@@ -25,6 +26,13 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <EntitySection
+        title="Здания"
+        cardTitle="Типы зданий"
+        category="building"
+        managerRef={buildingTypesManagerRef}
+      />
 
       <EntitySection
         title="Контейнеры"

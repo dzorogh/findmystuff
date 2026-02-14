@@ -8,6 +8,7 @@ import type { EntityQrPayload } from "./qr-code";
 
 /** Уровень в иерархии: больший уровень = источник (перемещаемая сущность). */
 export const ENTITY_LEVEL: Record<EntityTypeName, number> = {
+  building: -1,
   room: 0,
   place: 1,
   container: 2,
@@ -30,6 +31,8 @@ export const resolveQuickMove = (
   b: EntityQrPayload
 ): QuickMoveResult | null => {
   if (a.type === b.type) return null;
+  // Building не поддерживается как назначение при быстром перемещении
+  if (a.type === "building" || b.type === "building") return null;
 
   if (a.type === "room") {
     return { sourceType: b.type, sourceId: b.id, destType: "room", destId: a.id };

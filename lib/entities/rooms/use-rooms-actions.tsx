@@ -1,19 +1,21 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Room } from "@/types/entity";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
 import { toast } from "sonner";
-import type { EntityLabels, TableName } from "@/lib/app/types/entity-config";
+import type { EntityLabels, MoveConfig, TableName } from "@/lib/app/types/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 
 interface UseRoomsActionsParams {
   refreshList: () => void;
   basePath: string;
   apiTable: TableName;
   labels: EntityLabels;
+  move?: MoveConfig;
 }
 
 export function useRoomsActions({
@@ -21,9 +23,11 @@ export function useRoomsActions({
   basePath,
   apiTable,
   labels,
+  move,
 }: UseRoomsActionsParams) {
   const printRoom = usePrintEntityLabel("room");
   const singularLower = labels.singular.toLowerCase();
+  const moveEnabled = move?.enabled ?? false;
 
   const runEntityAction = useCallback(
     async (
@@ -54,6 +58,16 @@ export function useRoomsActions({
   const getRowActions = useCallback(
     (room: Room): EntityActionsCallbacks => ({
       editHref: `${basePath}/${room.id}`,
+      moveRoomForm: moveEnabled
+        ? {
+            title: labels.moveTitle,
+            entityDisplayName: getEntityDisplayName("room", room.id, room.name),
+            roomId: room.id,
+            getSuccessMessage: labels.moveSuccess,
+            getErrorMessage: () => labels.moveError,
+            onSuccess: refreshList,
+          }
+        : undefined,
       onDelete: () =>
         runEntityAction(room.id, "delete", {
           confirm: labels.deleteConfirm ?? `Вы уверены, что хотите удалить ${singularLower}?`,
@@ -72,7 +86,7 @@ export function useRoomsActions({
         }),
       onPrintLabel: () => printRoom(room.id, room.name),
     }),
-    [basePath, labels.deleteConfirm, labels.deleteSuccess, labels.duplicateSuccess, labels.restoreSuccess, labels.singular, printRoom, runEntityAction, singularLower]
+    [basePath, labels.deleteConfirm, labels.deleteSuccess, labels.duplicateSuccess, labels.moveError, labels.moveSuccess, labels.moveTitle, labels.restoreSuccess, labels.singular, moveEnabled, printRoom, refreshList, runEntityAction, singularLower]
   );
 
   return getRowActions;

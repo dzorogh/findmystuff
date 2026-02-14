@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
 
-const ALLOWED_TABLES = ["items", "places", "containers", "rooms"];
+const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings"];
 
 export async function DELETE(
   request: NextRequest,

@@ -25,7 +25,7 @@ export async function GET(
     const [roomResult, itemIdsResult, transitionsResult] = await Promise.all([
       supabase
         .from("rooms")
-        .select("id, name, photo_url, created_at, deleted_at, room_type_id, entity_types(name)")
+        .select("id, name, photo_url, created_at, deleted_at, room_type_id, building_id, entity_types(name), buildings(name)")
         .eq("id", roomId)
         .single(),
       getItemIdsInRoomRpc(supabase, roomId),
@@ -54,6 +54,12 @@ export async function GET(
       : roomTypes && !Array.isArray(roomTypes)
         ? roomTypes
         : null;
+    const buildingsData = roomData.buildings;
+    const buildingData = Array.isArray(buildingsData) && buildingsData.length > 0
+      ? buildingsData[0]
+      : buildingsData && !Array.isArray(buildingsData)
+        ? buildingsData
+        : null;
     const room = {
       id: roomData.id,
       name: roomData.name,
@@ -62,6 +68,8 @@ export async function GET(
       deleted_at: roomData.deleted_at,
       room_type_id: roomData.room_type_id ?? null,
       room_type: entityType?.name ? { name: entityType.name } : null,
+      building_id: roomData.building_id ?? null,
+      building_name: buildingData?.name ?? null,
     };
 
     const itemIds: number[] = Array.isArray(itemIdsResult.data)
@@ -203,16 +211,18 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, photo_url, room_type_id } = body;
+    const { name, photo_url, room_type_id, building_id } = body;
 
     const updateData: {
       name?: string | null;
       photo_url?: string | null;
       room_type_id?: number | null;
+      building_id?: number | null;
     } = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
     if (room_type_id !== undefined) updateData.room_type_id = room_type_id != null ? (Number(room_type_id) || null) : null;
+    if (building_id !== undefined) updateData.building_id = building_id != null ? (Number(building_id) || null) : null;
 
     const { data, error } = await supabase
       .from("rooms")

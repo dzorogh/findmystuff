@@ -7,13 +7,14 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
 
-export type EntityType = "item" | "place" | "container" | "room";
+export type EntityType = "item" | "place" | "container" | "room" | "building";
 
 const TABLE_MAP: Record<EntityType, string> = {
   item: "items",
   place: "places",
   container: "containers",
   room: "rooms",
+  building: "buildings",
 };
 
 const FALLBACK_LABELS: Record<EntityType, string> = {
@@ -21,6 +22,7 @@ const FALLBACK_LABELS: Record<EntityType, string> = {
   place: "Место",
   container: "Контейнер",
   room: "Помещение",
+  building: "Здание",
 };
 
 export async function getEntityNameForMetadata(

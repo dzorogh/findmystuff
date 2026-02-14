@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Container, Warehouse } from "lucide-react";
+import { Package, Container, Warehouse, DoorOpen } from "lucide-react";
 
 interface EntityItem {
   id: number;
@@ -13,7 +13,7 @@ interface EntityItem {
 interface EntityContentGridProps {
   items: EntityItem[];
   emptyMessage: string;
-  entityType: "items" | "containers" | "places";
+  entityType: "items" | "containers" | "places" | "rooms";
   title?: string;
 }
 
@@ -21,6 +21,7 @@ const entityIcons = {
   items: Package,
   containers: Container,
   places: Warehouse,
+  rooms: DoorOpen,
 };
 
 export const EntityContentGrid = ({
@@ -38,7 +39,14 @@ export const EntityContentGrid = ({
   }
 
   const Icon = entityIcons[entityType];
-  const entityName = entityType === "items" ? "Вещь" : entityType === "containers" ? "Контейнер" : "Место";
+  const entityName =
+    entityType === "items"
+      ? "Вещь"
+      : entityType === "containers"
+        ? "Контейнер"
+        : entityType === "places"
+          ? "Место"
+          : "Помещение";
   const hrefPrefix = `/${entityType}`;
 
   return (

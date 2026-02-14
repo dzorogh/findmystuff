@@ -5,6 +5,7 @@ import { EntityFiltersShell } from "./entity-filters-shell";
 import { YesNoAllFilter } from "./yes-no-all-filter";
 import { LocationTypeSelect } from "@/components/fields/location-type-select";
 import { RoomsSelect } from "@/components/fields/rooms-select";
+import { BuildingsSelect } from "@/components/fields/buildings-select";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FilterFieldConfig, Filters } from "@/lib/app/types/entity-config";
@@ -83,6 +84,25 @@ export function EntityFiltersPanel({
             | undefined;
           return (
             <RoomsSelect
+              key={field.key}
+              value={value ?? null}
+              onValueChange={(v) =>
+                onFiltersChange({
+                  ...filters,
+                  [field.key]:
+                    v === "all" || v == null ? null : parseInt(String(v), 10),
+                })
+              }
+            />
+          );
+        }
+        if (field.type === "building") {
+          const value = (filters as Record<string, unknown>)[field.key] as
+            | number
+            | null
+            | undefined;
+          return (
+            <BuildingsSelect
               key={field.key}
               value={value ?? null}
               onValueChange={(v) =>

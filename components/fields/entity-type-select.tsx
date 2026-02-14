@@ -6,7 +6,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
 interface EntityTypeSelectProps {
-  type: "place" | "container" | "room" | "item";
+  type: "place" | "container" | "room" | "item" | "building";
   value: number | null;
   onValueChange?: (value: string) => void;
 }

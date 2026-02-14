@@ -1,7 +1,7 @@
 export type DestinationType = "room" | "place" | "container";
 
 /** Тип сущности по имени (для отображения, этикеток, поиска). */
-export type EntityTypeName = "item" | "place" | "container" | "room";
+export type EntityTypeName = "item" | "place" | "container" | "room" | "building";
 
 export interface Transition {
   id: number;
@@ -25,7 +25,7 @@ export interface Location {
   room_name?: string | null;
 }
 
-export type EntityCategory = "place" | "container" | "room" | "item";
+export type EntityCategory = "place" | "container" | "room" | "item" | "building";
 
 export interface EntityType {
   id: number;
@@ -85,9 +85,17 @@ export interface Container extends BaseEntity {
   itemsCount?: number;
 }
 
+export interface Building extends BaseEntity {
+  building_type_id?: number | null;
+  building_type?: { name: string } | null;
+  rooms_count?: number;
+}
+
 export interface Room extends BaseEntity {
   room_type_id?: number | null;
   room_type?: { name: string } | null;
+  building_id?: number | null;
+  building_name?: string | null;
   items_count?: number;
   places_count?: number;
   containers_count?: number;
@@ -143,6 +151,15 @@ export interface CreateContainerResponse {
   id: number;
   name: string | null;
   entity_type_id: number | null;
+  photo_url: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export interface CreateBuildingResponse {
+  id: number;
+  name: string | null;
+  building_type_id: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;
