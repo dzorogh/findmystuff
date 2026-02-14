@@ -5,7 +5,7 @@ import type { EntityTypeName } from "@/types/entity";
 import { PrintAutoActions } from "./print-auto-actions";
 import Image from "next/image";
 
-const VALID_ENTITY_TYPES: EntityTypeName[] = ["item", "place", "container", "room", "building"];
+const VALID_ENTITY_TYPES: EntityTypeName[] = ["item", "place", "container", "room", "building", "furniture"];
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

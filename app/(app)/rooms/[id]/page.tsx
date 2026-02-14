@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getRoom, updateRoom } from "@/lib/rooms/api";
+import Link from "next/link";
+import { Sofa } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,12 @@ export default function RoomDetailPage() {
     photo_url: string | null;
     created_at: string;
   }>>([]);
+  const [roomFurniture, setRoomFurniture] = useState<Array<{
+    id: number;
+    name: string | null;
+    photo_url: string | null;
+    created_at: string;
+  }>>([]);
   const [roomContainers, setRoomContainers] = useState<Array<{
     id: number;
     name: string | null;
@@ -81,7 +89,7 @@ export default function RoomDetailPage() {
           return;
         }
 
-        const { room: roomData, items, places, containers } = response.data;
+        const { room: roomData, items, places, containers, furniture } = response.data;
 
         if (!roomData) {
           setError("Помещение не найдено");
@@ -100,6 +108,7 @@ export default function RoomDetailPage() {
 
         setRoomItems(items || []);
         setRoomPlaces(places || []);
+        setRoomFurniture(furniture || []);
         setRoomContainers(containers || []);
       } catch (err) {
         console.error("Ошибка загрузки данных помещения:", err);
@@ -292,7 +301,47 @@ export default function RoomDetailPage() {
             </CardContent>
           </Card>
 
-          <div>
+          <div className="flex flex-col gap-6">
+            {roomFurniture.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Мебель</CardTitle>
+                  <CardDescription>
+                    Мебель в этом помещении
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {roomFurniture.map((f) => (
+                      <Link
+                        key={f.id}
+                        href={`/furniture/${f.id}`}
+                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      >
+                        {f.photo_url ? (
+                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded border">
+                            <img
+                              src={f.photo_url}
+                              alt={f.name ?? ""}
+                              className="h-full w-full object-cover"
+                              width={48}
+                              height={48}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded border bg-muted">
+                            <Sofa className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium truncate block">{f.name ?? `Мебель #${f.id}`}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle>Содержимое помещения</CardTitle>

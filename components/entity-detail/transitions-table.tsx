@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, DoorOpen, Warehouse, Container } from "lucide-react";
+import { Calendar, DoorOpen, LayoutGrid, Container, Sofa } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,9 +24,11 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
       case "room":
         return <DoorOpen className="h-4 w-4 text-primary flex-shrink-0" />;
       case "place":
-        return <Warehouse className="h-4 w-4 text-primary flex-shrink-0" />;
+        return <LayoutGrid className="h-4 w-4 text-primary flex-shrink-0" />;
       case "container":
         return <Container className="h-4 w-4 text-primary flex-shrink-0" />;
+      case "furniture":
+        return <Sofa className="h-4 w-4 text-primary flex-shrink-0" />;
       default:
         return null;
     }
@@ -83,7 +85,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
           <TableRow key={transition.id}>
             <TableCell className="flex items-start gap-2">
               <div className="space-y-1">
-                {transition.destination_type === "room" && (
+                {(transition.destination_type === "room" || transition.destination_type === "furniture") && (
                   <div className="flex items-center gap-2 text-sm">
                     {getLocationIcon(transition.destination_type)}
                     <span>{getLocationName(transition)}</span>
@@ -111,7 +113,7 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
                     </div>
                     {transition.place_name && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <Warehouse className="h-3 w-3 flex-shrink-0" />
+                        <LayoutGrid className="h-3 w-3 flex-shrink-0" />
                         <span>{transition.place_name}</span>
                       </div>
                     )}

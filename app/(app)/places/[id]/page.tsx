@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,7 +19,7 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
-import MoveEntityForm from "@/components/forms/move-entity-form";
+import MovePlaceForm from "@/components/forms/move-place-form";
 import { placesEntityConfig } from "@/lib/entities/places/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
@@ -51,7 +52,6 @@ export default function PlaceDetailPage() {
   }>>([]);
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [placeTypeId, setPlaceTypeId] = useState<number | null>(null);
@@ -158,7 +158,14 @@ export default function PlaceDetailPage() {
           showRestoreWhenDeleted: true,
         }}
         callbacks={{
-          onMove: () => setIsMoveDialogOpen(true),
+          movePlaceForm: {
+            title: placesEntityConfig.labels.moveTitle,
+            entityDisplayName: place.name ?? `Место #${place.id}`,
+            placeId: place.id,
+            getSuccessMessage: placesEntityConfig.labels.moveSuccess,
+            getErrorMessage: () => placesEntityConfig.labels.moveError,
+            onSuccess: () => loadPlaceData({ silent: true }),
+          },
           onPrintLabel: () => printLabel(place.id, place.name),
           onDelete: handleDelete,
           onRestore: handleRestore,
@@ -257,6 +264,34 @@ export default function PlaceDetailPage() {
           </Card>
 
           <div className="flex flex-col gap-6">
+            {place.furniture_id && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Мебель</CardTitle>
+                  <CardDescription>
+                    Место находится в этой мебели
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/furniture/${place.furniture_id}`}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      {place.furniture_name ?? `Мебель #${place.furniture_id}`}
+                    </Link>
+                    <MovePlaceForm
+                      title={placesEntityConfig.labels.moveTitle}
+                      entityDisplayName={place.name ?? `Место #${place.id}`}
+                      placeId={place.id}
+                      getSuccessMessage={placesEntityConfig.labels.moveSuccess}
+                      getErrorMessage={() => placesEntityConfig.labels.moveError}
+                      onSuccess={() => loadPlaceData({ silent: true })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle>Содержимое места</CardTitle>
@@ -305,26 +340,6 @@ export default function PlaceDetailPage() {
             </Card>
           </div>
 
-          {isMoveDialogOpen && place && (
-            <MoveEntityForm
-              title={placesEntityConfig.labels.moveTitle}
-              entityDisplayName={place.name ?? `Место #${place.id}`}
-              destinationTypes={placesEntityConfig.actions.move?.destinationTypes ?? ["room", "container"]}
-              buildPayload={(destinationType, destinationId) => ({
-                place_id: place.id,
-                destination_type: destinationType,
-                destination_id: destinationId,
-              })}
-              getSuccessMessage={placesEntityConfig.labels.moveSuccess}
-              getErrorMessage={() => placesEntityConfig.labels.moveError}
-              open={isMoveDialogOpen}
-              onOpenChange={setIsMoveDialogOpen}
-              onSuccess={() => {
-                setIsMoveDialogOpen(false);
-                loadPlaceData();
-              }}
-            />
-          )}
         </div>
       ) : null}
     </div>

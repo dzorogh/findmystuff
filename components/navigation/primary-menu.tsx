@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, DoorOpen, Warehouse, Container, Box } from "lucide-react";
+import { Home, DoorOpen, Sofa, LayoutGrid, Container, Box } from "lucide-react";
 import Link from "next/link";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,7 +14,8 @@ export const PrimaryMenu = () => {
     const menuItems = [
         { href: "/buildings", label: "Здания", icon: Home },
         { href: "/rooms", label: "Помещения", icon: DoorOpen },
-        { href: "/places", label: "Места", icon: Warehouse },
+        { href: "/furniture", label: "Мебель", icon: Sofa },
+        { href: "/places", label: "Места", icon: LayoutGrid },
         { href: "/containers", label: "Контейнеры", icon: Container },
         { href: "/items", label: "Вещи", icon: Box },
     ];

@@ -9,6 +9,9 @@ import MoveEntityForm, {
 import MoveRoomForm, {
   type MoveRoomFormProps,
 } from "@/components/forms/move-room-form";
+import MovePlaceForm, {
+  type MovePlaceFormProps,
+} from "@/components/forms/move-place-form";
 import {
   Pencil,
   ArrowRightLeft,
@@ -40,6 +43,7 @@ export interface EntityActionsCallbacks {
   editHref?: string;
   moveForm?: Omit<MoveEntityFormProps, "trigger">;
   moveRoomForm?: Omit<MoveRoomFormProps, "trigger">;
+  movePlaceForm?: Omit<MovePlaceFormProps, "trigger">;
   onMove?: () => void;
   onPrintLabel?: () => void;
   onDuplicate?: () => void;
@@ -81,7 +85,21 @@ function buildActions(
         if (callbacks.editHref) list.push({ ...base, href: callbacks.editHref });
         break;
       case "move":
-        if (callbacks.moveRoomForm) {
+        if (callbacks.movePlaceForm) {
+          list.push({
+            ...base,
+            custom: (
+              <MovePlaceForm
+                {...callbacks.movePlaceForm}
+                trigger={
+                  <Button variant="ghost" size="icon" aria-label={meta.label}>
+                    <ArrowRightLeft data-icon="inline-start" />
+                  </Button>
+                }
+              />
+            ),
+          });
+        } else if (callbacks.moveRoomForm) {
           list.push({
             ...base,
             custom: (

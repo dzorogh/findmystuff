@@ -8,8 +8,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import { Combobox } from "@/components/ui/combobox";
-import RoomCombobox from "@/components/fields/room-combobox";
+import FurnitureCombobox from "@/components/fields/furniture-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/forms/form-footer";
@@ -34,7 +33,7 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
   const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const [name, setName] = useState("");
   const [placeTypeId, setPlaceTypeId] = useState<string>("");
-  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+  const [selectedFurnitureId, setSelectedFurnitureId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +50,9 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         return;
       }
 
-      // Помещение обязательно
-      if (!selectedRoomId) {
-        setError("Необходимо выбрать помещение");
+      // Мебель обязательна
+      if (!selectedFurnitureId) {
+        setError("Необходимо выбрать мебель");
         setIsSubmitting(false);
         return;
       }
@@ -62,8 +61,8 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
         name: name.trim() || undefined,
         entity_type_id: parseInt(placeTypeId),
         photo_url: photoUrl || undefined,
-        destination_type: "room",
-        destination_id: parseInt(selectedRoomId),
+        destination_type: "furniture",
+        destination_id: parseInt(selectedFurnitureId),
       });
 
       if (response.error) {
@@ -72,10 +71,10 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
 
       setName("");
       setPlaceTypeId(placeTypes[0]?.id.toString() || "");
-      setSelectedRoomId("");
+      setSelectedFurnitureId("");
       setPhotoUrl(null);
 
-      toast.success("Место успешно добавлено и размещено в помещении", {
+      toast.success("Место успешно добавлено и размещено в мебели", {
         description: "Место добавлено",
       });
 
@@ -140,12 +139,12 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
                 onValueChange={(v) => setPlaceTypeId(v ?? "")}
               />
 
-              <RoomCombobox
-                selectedRoomId={selectedRoomId}
-                onRoomIdChange={setSelectedRoomId}
+              <FurnitureCombobox
+                selectedFurnitureId={selectedFurnitureId}
+                onFurnitureIdChange={setSelectedFurnitureId}
                 disabled={isSubmitting}
-                label="Выберите помещение"
-                id="place-room-select"
+                label="Выберите мебель"
+                id="place-furniture-select"
                 required
               />
 

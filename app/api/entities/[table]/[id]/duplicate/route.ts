@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
 
-const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings"] as const;
+const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings", "furniture"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
 
 type DuplicateParams =
@@ -24,11 +24,13 @@ type SourceRow = {
   entity_type_id?: number | null;
   room_type_id?: number | null;
   building_type_id?: number | null;
+  furniture_type_id?: number | null;
   building_id?: number | null;
+  room_id?: number | null;
 };
 
 type LastTransitionRow = {
-  destination_type: "room" | "place" | "container" | null;
+  destination_type: "room" | "place" | "container" | "furniture" | null;
   destination_id: number | null;
 };
 
@@ -38,6 +40,7 @@ const SOURCE_SELECT_BY_TABLE: Record<TableName, string> = {
   containers: "id, name, photo_url, entity_type_id, deleted_at",
   rooms: "id, name, photo_url, room_type_id, building_id, deleted_at",
   buildings: "id, name, photo_url, building_type_id, deleted_at",
+  furniture: "id, name, photo_url, room_id, furniture_type_id, price_amount, price_currency, current_value_amount, current_value_currency, purchase_date, deleted_at",
 };
 
 const TRANSITION_ID_COLUMN_BY_TABLE: Partial<Record<TableName, "item_id" | "place_id" | "container_id">> = {
@@ -124,6 +127,17 @@ export async function POST(
       insertData = {
         ...insertData,
         building_type_id: source.building_type_id ?? null,
+      };
+    } else if (table === "furniture") {
+      insertData = {
+        ...insertData,
+        room_id: source.room_id ?? null,
+        furniture_type_id: source.furniture_type_id ?? null,
+        price_amount: source.price_amount ?? null,
+        price_currency: source.price_currency ?? null,
+        current_value_amount: source.current_value_amount ?? null,
+        current_value_currency: source.current_value_currency ?? null,
+        purchase_date: source.purchase_date ?? null,
       };
     } else {
       insertData = {

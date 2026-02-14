@@ -1,6 +1,6 @@
 /**
  * Логика быстрого перемещения: определение источника и назначения по двум отсканированным сущностям.
- * Иерархия: room (верх) → place → container → item (низ). Источник — сущность ниже по иерархии.
+ * Иерархия: room (верх) → furniture → place → container → item (низ). Источник — сущность ниже по иерархии.
  */
 
 import type { EntityTypeName, DestinationType } from "@/types/entity";
@@ -10,9 +10,10 @@ import type { EntityQrPayload } from "./qr-code";
 export const ENTITY_LEVEL: Record<EntityTypeName, number> = {
   building: -1,
   room: 0,
-  place: 1,
-  container: 2,
-  item: 3,
+  furniture: 1,
+  place: 2,
+  container: 3,
+  item: 4,
 };
 
 export interface QuickMoveResult {
@@ -39,6 +40,12 @@ export const resolveQuickMove = (
   }
   if (b.type === "room") {
     return { sourceType: a.type, sourceId: a.id, destType: "room", destId: b.id };
+  }
+  if (a.type === "furniture") {
+    return { sourceType: b.type, sourceId: b.id, destType: "furniture", destId: a.id };
+  }
+  if (b.type === "furniture") {
+    return { sourceType: a.type, sourceId: a.id, destType: "furniture", destId: b.id };
   }
 
   const levelA = ENTITY_LEVEL[a.type];

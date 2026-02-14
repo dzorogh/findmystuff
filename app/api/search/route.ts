@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
 
     const searchQuery = query.trim();
 
-    // Поиск по вещам, местам, контейнерам и помещениям параллельно
-    const [itemsResult, placesResult, containersResult, roomsResult] = await Promise.all([
+    // Поиск по вещам, местам, контейнерам, мебели и помещениям параллельно
+    const [itemsResult, placesResult, containersResult, roomsResult, furnitureResult] = await Promise.all([
       supabase
         .from("items")
         .select("id, name")
@@ -41,6 +41,12 @@ export async function GET(request: NextRequest) {
         .limit(10),
       supabase
         .from("rooms")
+        .select("id, name")
+        .ilike("name", `%${searchQuery}%`)
+        .is("deleted_at", null)
+        .limit(10),
+      supabase
+        .from("furniture")
         .select("id, name")
         .ilike("name", `%${searchQuery}%`)
         .is("deleted_at", null)
@@ -162,6 +168,17 @@ export async function GET(request: NextRequest) {
           type: "room" as const,
           id: room.id,
           name: room.name,
+        });
+      });
+    }
+
+    // Добавляем мебель
+    if (furnitureResult.data) {
+      furnitureResult.data.forEach((furniture) => {
+        results.push({
+          type: "furniture" as const,
+          id: furniture.id,
+          name: furniture.name,
         });
       });
     }

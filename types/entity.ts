@@ -1,7 +1,7 @@
-export type DestinationType = "room" | "place" | "container";
+export type DestinationType = "room" | "place" | "container" | "furniture";
 
 /** Тип сущности по имени (для отображения, этикеток, поиска). */
-export type EntityTypeName = "item" | "place" | "container" | "room" | "building";
+export type EntityTypeName = "item" | "place" | "container" | "room" | "building" | "furniture";
 
 export interface Transition {
   id: number;
@@ -25,7 +25,7 @@ export interface Location {
   room_name?: string | null;
 }
 
-export type EntityCategory = "place" | "container" | "room" | "item" | "building";
+export type EntityCategory = "place" | "container" | "room" | "item" | "building" | "furniture";
 
 export interface EntityType {
   id: number;
@@ -67,6 +67,8 @@ export interface Place extends BaseEntity {
   // Дополнительные поля из списков
   room_id?: number | null;
   room_name?: string | null;
+  furniture_id?: number | null;
+  furniture_name?: string | null;
   /** Данные о комнате (из API списка мест) */
   room?: { room_id: number; room_name: string | null } | null;
   items_count?: number;
@@ -101,6 +103,20 @@ export interface Room extends BaseEntity {
   containers_count?: number;
 }
 
+export interface Furniture extends BaseEntity {
+  room_id: number;
+  room_name?: string | null;
+  furniture_type_id?: number | null;
+  furniture_type?: { name: string } | null;
+  places_count?: number;
+  /** Fowler Money Pattern: стоимость покупки */
+  price?: { amount: number; currency: string } | null;
+  /** Текущая оценочная стоимость. Fowler Money Pattern. */
+  currentValue?: { amount: number; currency: string } | null;
+  /** Дата покупки (YYYY-MM-DD) */
+  purchaseDate?: string | null;
+}
+
 // Для обратной совместимости
 export type ItemEntity = Item;
 export type PlaceEntity = Place;
@@ -113,7 +129,7 @@ export interface SearchResult {
   name: string | null;
   type: EntityTypeName;
   location?: string | null;
-  locationType?: "place" | "container" | "room";
+  locationType?: "place" | "container" | "room" | "furniture";
 }
 
 // Типы для пользователей
@@ -169,6 +185,16 @@ export interface CreateRoomResponse {
   id: number;
   name: string | null;
   room_type_id: number | null;
+  photo_url: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export interface CreateFurnitureResponse {
+  id: number;
+  name: string | null;
+  room_id: number;
+  furniture_type_id: number | null;
   photo_url: string | null;
   created_at: string;
   deleted_at: string | null;

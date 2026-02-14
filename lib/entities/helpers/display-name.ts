@@ -13,6 +13,7 @@ export const ENTITY_TYPE_LABELS: Record<EntityTypeName, string> = {
   container: "Контейнер",
   room: "Помещение",
   building: "Здание",
+  furniture: "Мебель",
 };
 
 /**

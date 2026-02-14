@@ -62,19 +62,33 @@ export function usePlacesActions({
   const getRowActions = useCallback(
     (place: Place): EntityActionsCallbacks => ({
       editHref: `${basePath}/${place.id}`,
-      moveForm: moveEnabled ? {
-        title: labels.moveTitle,
-        entityDisplayName: getEntityDisplayName("place", place.id, place.name),
-        destinationTypes,
-        buildPayload: (destinationType, destinationId) => ({
-          place_id: place.id,
-          destination_type: destinationType,
-          destination_id: destinationId,
-        }),
-        getSuccessMessage: labels.moveSuccess,
-        getErrorMessage: () => labels.moveError,
-        onSuccess: refreshList,
-      } : undefined,
+      movePlaceForm:
+        moveEnabled && destinationTypes.length === 1 && destinationTypes[0] === "furniture"
+          ? {
+              title: labels.moveTitle,
+              entityDisplayName: getEntityDisplayName("place", place.id, place.name),
+              placeId: place.id,
+              getSuccessMessage: labels.moveSuccess,
+              getErrorMessage: () => labels.moveError,
+              onSuccess: refreshList,
+            }
+          : undefined,
+      moveForm:
+        moveEnabled && !(destinationTypes.length === 1 && destinationTypes[0] === "furniture")
+          ? {
+              title: labels.moveTitle,
+              entityDisplayName: getEntityDisplayName("place", place.id, place.name),
+              destinationTypes,
+              buildPayload: (destinationType, destinationId) => ({
+                place_id: place.id,
+                destination_type: destinationType,
+                destination_id: destinationId,
+              }),
+              getSuccessMessage: labels.moveSuccess,
+              getErrorMessage: () => labels.moveError,
+              onSuccess: refreshList,
+            }
+          : undefined,
       onDelete: () =>
         runEntityAction(place.id, "delete", {
           confirm: labels.deleteConfirm ?? `Вы уверены, что хотите удалить ${singularLower}?`,

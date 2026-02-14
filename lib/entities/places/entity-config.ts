@@ -1,4 +1,4 @@
-import { Warehouse } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import AddPlaceForm from "@/components/forms/add-place-form";
 import { getPlaces } from "@/lib/places/api";
 import type {
@@ -15,12 +15,14 @@ export interface PlacesFilters extends Filters {
   showDeleted: boolean;
   entityTypeId: number | null;
   roomId: number | null;
+  furnitureId: number | null;
 }
 
 export const DEFAULT_PLACES_FILTERS: PlacesFilters = {
   showDeleted: false,
   entityTypeId: null,
   roomId: null,
+  furnitureId: null,
 };
 
 async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
@@ -33,6 +35,7 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
     sortDirection,
     entityTypeId: filters.entityTypeId ?? undefined,
     roomId: filters.roomId ?? undefined,
+    furnitureId: filters.furnitureId ?? undefined,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   return { data: list };
@@ -73,7 +76,7 @@ export const placesEntityConfig: EntityConfig = {
     showRestoreWhenDeleted: true,
     move: {
       enabled: true,
-      destinationTypes: ["room", "container"],
+      destinationTypes: ["furniture"],
     },
   },
   useActions: (params) => usePlacesConfigActions(placesEntityConfig, params),
@@ -83,19 +86,20 @@ export const placesEntityConfig: EntityConfig = {
   },
   getName: (entity) =>
     entity.name != null && entity.name.trim() !== "" ? entity.name : `Место #${entity.id}`,
-  icon: Warehouse,
+  icon: LayoutGrid,
   filters: {
     fields: [
       { type: "showDeleted", label: "Показывать удаленные места" },
       { type: "entityType", key: "entityTypeId", entityKind: "place" },
       { type: "room", key: "roomId" },
+      { type: "furniture", key: "furnitureId" },
     ],
     initial: DEFAULT_PLACES_FILTERS,
   },
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "room", label: "Помещение" },
+    { key: "room", label: "Мебель" },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchPlaces,

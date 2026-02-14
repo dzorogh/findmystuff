@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { searchApi } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Warehouse, Container, DoorOpen, ArrowRight } from "lucide-react";
+import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight } from "lucide-react";
 import type { SearchResult } from "@/types/entity";
 import Link from "next/link";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const ENTITY_CONFIG = {
   item: { Icon: Package, label: "Вещи" },
-  place: { Icon: Warehouse, label: "Места" },
+  place: { Icon: LayoutGrid, label: "Места" },
   container: { Icon: Container, label: "Контейнеры" },
   room: { Icon: DoorOpen, label: "Помещения" },
+  furniture: { Icon: Sofa, label: "Мебель" },
 } as const;
 
 export default function Home() {
@@ -76,6 +77,8 @@ export default function Home() {
       router.push(`/containers/${result.id}`);
     } else if (result.type === "room") {
       router.push(`/rooms/${result.id}`);
+    } else if (result.type === "furniture") {
+      router.push(`/furniture/${result.id}`);
     }
   };
 
@@ -88,7 +91,7 @@ export default function Home() {
     },
     {
       label: "Места",
-      icon: Warehouse,
+      icon: LayoutGrid,
       href: "/places",
       description: "Просмотр всех мест",
     },
@@ -104,6 +107,12 @@ export default function Home() {
       href: "/rooms",
       description: "Просмотр всех помещений",
     },
+    {
+      label: "Мебель",
+      icon: Sofa,
+      href: "/furniture",
+      description: "Просмотр всей мебели",
+    },
   ];
   return (
     <div className="flex flex-col gap-4">
@@ -112,7 +121,7 @@ export default function Home() {
         <InputGroupInput
           onChange={(e) => setSearchQuery(e.target.value)}
           value={searchQuery}
-          placeholder="Введите название вещи, места, контейнера или помещения..."
+          placeholder="Введите название вещи, места, контейнера, мебели или помещения..."
         />
         <InputGroupAddon>
           <Search />
@@ -165,7 +174,7 @@ export default function Home() {
                     {result.location && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         {result.locationType === "place" ? (
-                          <Warehouse className="h-3 w-3" />
+                          <LayoutGrid className="h-3 w-3" />
                         ) : result.locationType === "container" ? (
                           <Container className="h-3 w-3" />
                         ) : (

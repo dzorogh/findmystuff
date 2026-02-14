@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Warehouse, Container as ContainerIcon, DoorOpen } from "lucide-react";
+import { LayoutGrid, Container as ContainerIcon, DoorOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -76,7 +76,7 @@ const LocationCombobox = ({
 
   const buttonOrderOptions = [
     { type: "room" as const, label: "Помещение", icon: DoorOpen },
-    { type: "place" as const, label: "Место", icon: Warehouse },
+    { type: "place" as const, label: "Место", icon: LayoutGrid },
     { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
   ];
   const buttonOrder = allowedTypes?.length

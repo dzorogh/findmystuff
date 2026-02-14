@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["place", "container", "room", "item", "building"].includes(entity_category)) {
+    if (!["place", "container", "room", "item", "building", "furniture"].includes(entity_category)) {
       return NextResponse.json(
-        { error: "entity_category должен быть 'place', 'container', 'room', 'item' или 'building'" },
+        { error: "entity_category должен быть 'place', 'container', 'room', 'item', 'building' или 'furniture'" },
         { status: 400 }
       );
     }

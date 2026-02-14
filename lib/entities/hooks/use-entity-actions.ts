@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { softDeleteApi } from "@/lib/shared/api/soft-delete";
 
 interface UseEntityActionsOptions {
-  entityType: "containers" | "items" | "places" | "rooms" | "buildings";
+  entityType: "containers" | "items" | "places" | "rooms" | "buildings" | "furniture";
   entityId: number;
   entityName: string;
   onSuccess?: () => void;

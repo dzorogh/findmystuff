@@ -10,6 +10,7 @@ import type {
   Item,
   Place,
   Container,
+  Furniture,
   CreateRoomResponse,
 } from "@/types/entity";
 
@@ -81,6 +82,7 @@ class RoomsApiClient extends HttpClient {
       items: Item[];
       places: Place[];
       containers: Container[];
+      furniture?: Furniture[];
     }>(`/rooms/${id}`);
   }
 

@@ -113,7 +113,7 @@ class EntitiesApiClient extends HttpClient {
     return this.request<EntityType[]>(url);
   }
 
-  async createEntityType(data: { entity_category: "place" | "container" | "room" | "item" | "building"; name: string }) {
+  async createEntityType(data: { entity_category: "place" | "container" | "room" | "item" | "building" | "furniture"; name: string }) {
     return this.request<CreateEntityTypeResponse>("/entity-types", {
       method: "POST",
       body: JSON.stringify(data),

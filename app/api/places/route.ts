@@ -17,6 +17,8 @@ type RpcPlaceRow = {
   photo_url: string | null;
   room_id: number | null;
   room_name: string | null;
+  furniture_id: number | null;
+  furniture_name: string | null;
   items_count: number;
   containers_count: number;
 };
@@ -52,6 +54,10 @@ const mapRpcPlaceToPlace = (place: RpcPlaceRow): Place => ({
   created_at: place.created_at,
   deleted_at: place.deleted_at,
   photo_url: place.photo_url,
+  room_id: place.room_id ?? null,
+  room_name: place.room_name ?? null,
+  furniture_id: place.furniture_id ?? null,
+  furniture_name: place.furniture_name ?? null,
   room: place.room_id
     ? {
         room_id: place.room_id,
@@ -237,6 +243,7 @@ export async function GET(request: NextRequest) {
     const showDeleted = searchParams.get("showDeleted") === "true";
     const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
     const roomId = parseOptionalInt(searchParams.get("roomId"));
+    const furnitureId = parseOptionalInt(searchParams.get("furnitureId"));
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -251,6 +258,7 @@ export async function GET(request: NextRequest) {
       sort_direction: sortDirection,
       filter_entity_type_id: entityTypeId ?? undefined,
       filter_room_id: roomId ?? undefined,
+      filter_furniture_id: furnitureId ?? undefined,
     });
 
     if (fetchError) {

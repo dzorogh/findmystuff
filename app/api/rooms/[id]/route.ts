@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getItemIdsInRoomRpc } from "@/lib/rooms/api";
 import { getServerUser } from "@/lib/users/server";
-import type { Item, Place, Container, Transition } from "@/types/entity";
+import type { Item, Place, Container, Transition, Furniture } from "@/types/entity";
 
 export async function GET(
   request: NextRequest,
@@ -21,8 +21,8 @@ export async function GET(
       return NextResponse.json({ error: "Неверный ID помещения" }, { status: 400 });
     }
 
-    // Волна 1: параллельно загружаем комнату, id вещей и transitions в комнату
-    const [roomResult, itemIdsResult, transitionsResult] = await Promise.all([
+    // Волна 1: загружаем комнату, id вещей, transitions контейнеров в комнату, места через mv, мебель
+    const [roomResult, itemIdsResult, transitionsResult, placesInRoomMv, furnitureResult] = await Promise.all([
       supabase
         .from("rooms")
         .select("id, name, photo_url, created_at, deleted_at, room_type_id, building_id, entity_types(name), buildings(name)")
@@ -34,6 +34,16 @@ export async function GET(
         .select("place_id, container_id, destination_type, destination_id, created_at")
         .eq("destination_type", "room")
         .eq("destination_id", roomId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("mv_place_last_room_transition")
+        .select("place_id")
+        .eq("room_id", roomId),
+      supabase
+        .from("furniture")
+        .select("id, name, photo_url, created_at, deleted_at, room_id, furniture_type_id")
+        .eq("room_id", roomId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
     ]);
 
@@ -79,36 +89,26 @@ export async function GET(
       : [];
 
     const allTransitionsData = transitionsResult.data ?? [];
+    const placeIdsFromMv = (placesInRoomMv.data ?? []).map((r: { place_id: number }) => r.place_id);
     const placeTransitionsMap = new Map<number, Transition>();
     const containerTransitionsMap = new Map<number, Transition>();
     allTransitionsData.forEach((t) => {
-      if (t.place_id && !placeTransitionsMap.has(t.place_id)) {
-        placeTransitionsMap.set(t.place_id, t as Transition);
-      }
       if (t.container_id && !containerTransitionsMap.has(t.container_id)) {
         containerTransitionsMap.set(t.container_id, t as Transition);
       }
     });
-
-    const placeIds = Array.from(placeTransitionsMap.keys());
+    const placeIds = placeIdsFromMv.length > 0 ? placeIdsFromMv : [];
     const containerIds = Array.from(containerTransitionsMap.keys());
 
-    // Волна 2: параллельно вещи, последние transitions мест, последние transitions контейнеров
+    // Волна 2: параллельно вещи и последние transitions контейнеров
     const transitionColumns = "place_id, container_id, destination_type, destination_id, created_at";
-    const [itemsResult, placeTransitionsResult, containerTransitionsResult] = await Promise.all([
+    const [itemsResult, containerTransitionsResult] = await Promise.all([
       itemIds.length > 0
         ? supabase
             .from("items")
             .select("id, name, photo_url, created_at, deleted_at")
             .in("id", itemIds)
             .is("deleted_at", null)
-            .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [] }),
-      placeIds.length > 0
-        ? supabase
-            .from("transitions")
-            .select(transitionColumns)
-            .in("place_id", placeIds)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] }),
       containerIds.length > 0
@@ -122,18 +122,7 @@ export async function GET(
 
     const roomItems: Item[] = (itemsResult.data ?? []) as Item[];
 
-    const lastPlaceTransitions = new Map<number, Transition>();
-    (placeTransitionsResult.data || []).forEach((t) => {
-      if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
-        lastPlaceTransitions.set(t.place_id, t as Transition);
-      }
-    });
-    const placesInRoom = Array.from(lastPlaceTransitions.entries())
-      .filter(
-        ([, transition]) =>
-          transition.destination_type === "room" && transition.destination_id === roomId
-      )
-      .map(([placeId]) => placeId);
+    const placesInRoom = placeIds;
 
     const lastContainerTransitions = new Map<number, Transition>();
     (containerTransitionsResult.data || []).forEach((t) => {
@@ -171,12 +160,32 @@ export async function GET(
     const roomPlaces: Place[] = (placesResult.data ?? []) as Place[];
     const roomContainers: Container[] = (containersResult.data ?? []) as Container[];
 
+    const furnitureRows = furnitureResult.data ?? [];
+    const roomFurniture: Furniture[] = furnitureRows.map((f: {
+      id: number;
+      name: string | null;
+      photo_url: string | null;
+      created_at: string;
+      deleted_at: string | null;
+      room_id: number;
+      furniture_type_id: number | null;
+    }) => ({
+      id: f.id,
+      name: f.name,
+      photo_url: f.photo_url,
+      created_at: f.created_at,
+      deleted_at: f.deleted_at,
+      room_id: f.room_id,
+      furniture_type_id: f.furniture_type_id ?? null,
+    }));
+
     return NextResponse.json({
       data: {
         room,
         items: roomItems,
         places: roomPlaces,
         containers: roomContainers,
+        furniture: roomFurniture,
       },
     });
   } catch (error) {

@@ -7,7 +7,7 @@ const ALL_TYPES_OPTION = { value: "all", label: "Все типы" };
 const EMPTY_OPTION = { value: "", label: "Не указан" };
 
 export function useEntityTypeFilterOptions(
-  category: "place" | "container" | "room" | "item" | "building",
+  category: "place" | "container" | "room" | "item" | "building" | "furniture",
   includeAll = true,
   includeEmpty = false,
 ) {

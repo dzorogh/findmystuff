@@ -6,6 +6,7 @@ import { YesNoAllFilter } from "./yes-no-all-filter";
 import { LocationTypeSelect } from "@/components/fields/location-type-select";
 import { RoomsSelect } from "@/components/fields/rooms-select";
 import { BuildingsSelect } from "@/components/fields/buildings-select";
+import { FurnitureSelect } from "@/components/fields/furniture-select";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FilterFieldConfig, Filters } from "@/lib/app/types/entity-config";
@@ -115,6 +116,25 @@ export function EntityFiltersPanel({
             />
           );
         }
+        if (field.type === "furniture") {
+          const value = (filters as Record<string, unknown>)[field.key] as
+            | number
+            | null
+            | undefined;
+          return (
+            <FurnitureSelect
+              key={field.key}
+              value={value ?? null}
+              onValueChange={(v) =>
+                onFiltersChange({
+                  ...filters,
+                  [field.key]:
+                    v === "all" || v == null ? null : parseInt(String(v), 10),
+                })
+              }
+            />
+          );
+        }
         if (field.type === "entityType") {
           return (
             <EntityTypeFilterField
@@ -134,7 +154,9 @@ export function EntityFiltersPanel({
               label={
                 field.entityKind === "place"
                   ? "Тип места"
-                  : "Тип контейнера"
+                  : field.entityKind === "furniture"
+                    ? "Тип мебели"
+                    : "Тип контейнера"
               }
             />
           );
@@ -158,7 +180,7 @@ export function EntityFiltersPanel({
 }
 
 interface EntityTypeFilterFieldProps {
-  entityKind: "place" | "container";
+  entityKind: "place" | "container" | "furniture";
   value: number | null | undefined;
   onValueChange: (value: string | null) => void;
   label: string;

@@ -25,6 +25,7 @@ export function getPlacesWithRoomRpc(
     sort_direction: SortDirection;
     filter_entity_type_id?: number | null;
     filter_room_id?: number | null;
+    filter_furniture_id?: number | null;
   }
 ) {
   return supabase.rpc("get_places_with_room", params);
@@ -38,12 +39,14 @@ class PlacesApiClient extends HttpClient {
     sortDirection?: SortDirection;
     entityTypeId?: number | null;
     roomId?: number | null;
+    furnitureId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
     if (params?.entityTypeId != null) searchParams.set("entityTypeId", String(params.entityTypeId));
     if (params?.roomId != null) searchParams.set("roomId", String(params.roomId));
+    if (params?.furnitureId != null) searchParams.set("furnitureId", String(params.furnitureId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
     return this.request<Place[]>(`/places${queryString ? `?${queryString}` : ""}`);

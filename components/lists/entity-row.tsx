@@ -3,7 +3,7 @@
 import { memo, useRef, type ComponentType, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DoorOpen, Package, Warehouse, Container as ContainerIcon } from "lucide-react";
+import { DoorOpen, Package, LayoutGrid, Container as ContainerIcon, Sofa } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -21,6 +21,7 @@ import type {
   Place,
   Container,
   Building,
+  Furniture,
   DestinationType,
 } from "@/types/entity";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function getRoomLabel(location: Item["last_location"]): string | null {
   );
 }
 
-type ListEntity = Item | Room | Place | Container | Building;
+type ListEntity = Item | Room | Place | Container | Building | Furniture;
 type IconComponent = ComponentType<{ className?: string }>;
 
 interface EntityRowProps {
@@ -72,6 +73,10 @@ function isRoomWithCounts(entity: ListEntity): entity is Room {
 
 function isBuildingWithCounts(entity: ListEntity): entity is Building {
   return "rooms_count" in entity && !("places_count" in entity);
+}
+
+function isFurnitureEntity(entity: ListEntity): entity is Furniture {
+  return "room_id" in entity && "places_count" in entity && !("containers_count" in entity);
 }
 
 function isPlaceEntity(entity: ListEntity): entity is Place {
@@ -115,8 +120,9 @@ const LOCATION_META: Record<
   { icon: IconComponent; textClass: string }
 > = {
   room: { icon: DoorOpen, textClass: "text-primary" },
-  place: { icon: Warehouse, textClass: "text-primary" },
+  place: { icon: LayoutGrid, textClass: "text-primary" },
   container: { icon: ContainerIcon, textClass: "text-primary" },
+  furniture: { icon: Sofa, textClass: "text-primary" },
 };
 
 function renderLocationLabel(
@@ -202,7 +208,7 @@ function renderNameCell(
               {entity.items_count ?? 0} вещ.
             </span>
             <span className="flex items-center gap-1">
-              <Warehouse className="h-3 w-3" />
+              <LayoutGrid className="h-3 w-3" />
               {entity.places_count ?? 0} мест
             </span>
             <span className="flex items-center gap-1">
@@ -229,10 +235,16 @@ function renderNameCell(
               <ContainerIcon className="h-3 w-3" />
               {entity.containers_count ?? 0} конт.
             </span>
-            {entity.room?.room_name && (
+            {(entity.furniture_name || entity.room?.room_name) && (
               <span className="flex items-center gap-1">
-                <DoorOpen className="h-3 w-3" />
-                <span className="truncate">{entity.room.room_name}</span>
+                <Sofa className="h-3 w-3" />
+                <span className="truncate">
+                  {entity.furniture_name
+                    ? entity.room?.room_name
+                      ? `${entity.furniture_name} (${entity.room.room_name})`
+                      : entity.furniture_name
+                    : entity.room?.room_name ?? ""}
+                </span>
               </span>
             )}
           </div>
@@ -261,7 +273,25 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
   }
 
   if (isPlaceEntity(entity)) {
+    const furnitureId = entity.furniture_id;
+    const furnitureName = entity.furniture_name;
     const room = entity.room;
+    if (furnitureId && furnitureName) {
+      return (
+        <div className="flex flex-col gap-0.5">
+          <Link
+            href={`/furniture/${furnitureId}`}
+            className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
+          >
+            <Sofa className="h-4 w-4 flex-shrink-0 text-primary" />
+            <span>{furnitureName}</span>
+          </Link>
+          {room?.room_name && (
+            <span className="text-xs text-muted-foreground ml-6 truncate">{room.room_name}</span>
+          )}
+        </div>
+      );
+    }
     if (room?.room_name && room.room_id) {
       return (
         <Link
@@ -274,6 +304,18 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
       );
     }
     return <span className="text-sm text-muted-foreground">—</span>;
+  }
+
+  if (isFurnitureEntity(entity) && entity.room_id && entity.room_name) {
+    return (
+      <Link
+        href={`/rooms/${entity.room_id}`}
+        className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
+      >
+        <DoorOpen className="h-4 w-4 flex-shrink-0 text-primary" />
+        <span>{entity.room_name}</span>
+      </Link>
+    );
   }
 
   return null;
@@ -294,7 +336,7 @@ function renderCountsCell(entity: ListEntity): ReactNode {
           <span>{entity.items_count ?? 0}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Warehouse className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <LayoutGrid className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span>{entity.places_count ?? 0}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -310,6 +352,16 @@ function renderCountsCell(entity: ListEntity): ReactNode {
         <div className="flex items-center gap-1">
           <DoorOpen className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span>{entity.rooms_count ?? 0} помещений</span>
+        </div>
+      </div>
+    );
+  }
+  if (isFurnitureEntity(entity)) {
+    return (
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+        <div className="flex items-center gap-1">
+          <LayoutGrid className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.places_count ?? 0} мест</span>
         </div>
       </div>
     );

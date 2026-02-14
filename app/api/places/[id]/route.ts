@@ -62,21 +62,36 @@ export async function GET(
       );
     }
 
-    // Загружаем названия помещений
     const roomIds = (transitionsData || [])
       .filter((t) => t.destination_type === "room" && t.destination_id)
       .map((t) => t.destination_id);
+    const furnitureIds = (transitionsData || [])
+      .filter((t) => t.destination_type === "furniture" && t.destination_id)
+      .map((t) => t.destination_id);
 
-    const roomsData = roomIds.length > 0
-      ? await supabase
-          .from("rooms")
-          .select("id, name")
-          .in("id", roomIds)
-          .is("deleted_at", null)
-      : { data: [] };
+    const [roomsResult, furnitureResult] = await Promise.all([
+      roomIds.length > 0
+        ? supabase.from("rooms").select("id, name").in("id", roomIds).is("deleted_at", null)
+        : Promise.resolve({ data: [] }),
+      furnitureIds.length > 0
+        ? supabase.from("furniture").select("id, name, room_id").in("id", furnitureIds).is("deleted_at", null)
+        : Promise.resolve({ data: [] }),
+    ]);
 
     const roomsMap = new Map(
-      (roomsData.data || []).map((r) => [r.id, r.name])
+      (roomsResult.data || []).map((r: { id: number; name: string }) => [r.id, r.name])
+    );
+    const furnitureMap = new Map(
+      (furnitureResult.data || []).map((f: { id: number; name: string | null }) => [f.id, f.name ?? null])
+    );
+    const furnitureRoomIds = (furnitureResult.data || [])
+      .map((f: { room_id: number }) => f.room_id)
+      .filter(Boolean);
+    const furnitureRoomsResult = furnitureRoomIds.length > 0
+      ? await supabase.from("rooms").select("id, name").in("id", furnitureRoomIds).is("deleted_at", null)
+      : { data: [] };
+    const roomNameByRoomId = new Map(
+      (furnitureRoomsResult.data || []).map((r: { id: number; name: string }) => [r.id, r.name])
     );
 
     // Формируем transitions с названиями
@@ -90,6 +105,9 @@ export async function GET(
 
       if (t.destination_type === "room" && t.destination_id) {
         transition.destination_name = roomsMap.get(t.destination_id) || null;
+      }
+      if (t.destination_type === "furniture" && t.destination_id) {
+        transition.destination_name = furnitureMap.get(t.destination_id) || null;
       }
 
       return transition;
@@ -115,6 +133,26 @@ export async function GET(
       }
     }
 
+    let furniture_id: number | null = null;
+    let furniture_name: string | null = null;
+    let room_id: number | null = null;
+    let room_name: string | null = null;
+
+    if (lastTransition?.destination_type === "furniture" && lastTransition.destination_id) {
+      furniture_id = lastTransition.destination_id;
+      furniture_name = furnitureMap.get(furniture_id) || null;
+      const furnitureRow = (furnitureResult.data || []).find(
+        (f: { id: number; room_id: number }) => f.id === furniture_id
+      );
+      if (furnitureRow?.room_id != null) {
+        room_id = furnitureRow.room_id;
+        room_name = roomNameByRoomId.get(furnitureRow.room_id) || null;
+      }
+    } else if (lastTransition?.destination_type === "room" && lastTransition.destination_id) {
+      room_id = lastTransition.destination_id;
+      room_name = roomsMap.get(room_id) || null;
+    }
+
     const place = {
       id: placeData.id,
       name: placeData.name,
@@ -124,6 +162,11 @@ export async function GET(
       created_at: placeData.created_at,
       deleted_at: placeData.deleted_at,
       last_location: lastLocation,
+      furniture_id,
+      furniture_name,
+      room_id,
+      room_name,
+      room: room_id ? { room_id, room_name } : null,
     };
 
     // Загружаем вещи и контейнеры в этом месте
