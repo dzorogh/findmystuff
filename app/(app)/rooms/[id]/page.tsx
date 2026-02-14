@@ -21,6 +21,7 @@ import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-s
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -217,6 +218,14 @@ export default function RoomDetailPage() {
         ]}
         actions={headerActions}
       />
+      {room && (
+        <EntityRelatedLinks
+          links={[
+            { href: `/furniture?roomId=${room.id}`, label: "Мебель" },
+            { href: `/items?roomId=${room.id}`, label: "Вещи" },
+          ]}
+        />
+      )}
       {isPageLoading ? (
         <EntityDetailSkeleton />
       ) : room ? (

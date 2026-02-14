@@ -1,8 +1,18 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useQueryStates } from "nuqs";
 import { deepEqual } from "@/lib/app/helpers/deep-equal";
-import { DEFAULT_ENTITY_SORT, getEntitySortParams, type EntitySortOption } from "@/lib/entities/helpers/sort";
+import {
+  getEntitySortParams,
+  sortParamsToOption,
+  type EntitySortOption,
+} from "@/lib/entities/helpers/sort";
+import {
+  listPageUrlParsers,
+  urlStateToFilters,
+  filtersToUrlState,
+} from "@/lib/app/hooks/list-page-url-state";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -109,14 +119,16 @@ export function useListPage(config: EntityConfig) {
 
   const pageSize = hasPagination ? paginationConfig.pageSize : 20;
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<EntitySortOption>(DEFAULT_ENTITY_SORT);
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [urlState, setUrlState] = useQueryStates(listPageUrlParsers);
+  const searchQuery = urlState.search;
+  const sort = sortParamsToOption(urlState.sortBy, urlState.sortDirection);
+  const filters = urlStateToFilters(urlState, initialFilters);
+  const currentPage = urlState.page;
+
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<EntityDisplay[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [addFormOpen, setAddFormOpen] = useState(false);
 
@@ -205,17 +217,12 @@ export function useListPage(config: EntityConfig) {
   const filtersKey = JSON.stringify(filters);
   useEffect(() => {
     if (hasPagination) {
-      setCurrentPage(1);
-      loadData(searchQuery, true, 1);
+      loadData(searchQuery, true, currentPage);
     } else {
       loadData(searchQuery, true);
     }
-    // This useEffect is meant to re-run only on filtersKey, sortBy, and sortDirection changes.
-    // searchQuery is handled separately via a debounced handler to avoid duplicate requests.
-    // loadData is intentionally omitted from deps to prevent immediate duplicate calls.
-    // Inside the effect: hasPagination and setCurrentPage reset pagination; loadData fetches with current searchQuery.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersKey, sortBy, sortDirection]);
+  }, [filtersKey, sortBy, sortDirection, currentPage]);
 
   const refreshList = useCallback(() => {
     if (hasPagination) {
@@ -228,28 +235,31 @@ export function useListPage(config: EntityConfig) {
   const handleSearch = useCallback(
     (query: string) => {
       if (hasPagination) {
-        setCurrentPage(1);
+        setUrlState({ page: 1 });
         loadData(query || undefined, false, 1);
       } else {
         loadData(query || undefined, false);
       }
     },
-    [loadData, hasPagination]
+    [loadData, hasPagination, setUrlState]
   );
 
   useDebouncedSearch(searchQuery, handleSearch, { skipInitial: true });
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setUrlState({ search: e.target.value });
+    },
+    [setUrlState]
+  );
 
   const totalPages = hasPagination ? Math.ceil(totalCount / pageSize) : 1;
   const goToPage = useCallback(
     (page: number) => {
-      setCurrentPage(page);
+      setUrlState({ page });
       loadData(searchQuery, false, page);
     },
-    [loadData, searchQuery]
+    [loadData, searchQuery, setUrlState]
   );
 
   const pagination: ListPagePagination | undefined = hasPagination
@@ -285,17 +295,40 @@ export function useListPage(config: EntityConfig) {
     return count;
   })();
 
+  const setFiltersAndUrl = useCallback(
+    (newFilters: Filters) => {
+      setUrlState({
+        ...filtersToUrlState(newFilters, initialFilters),
+        ...(hasPagination ? { page: 1 } : {}),
+      });
+    },
+    [setUrlState, initialFilters, hasPagination]
+  );
+
+  const setSortAndUrl = useCallback(
+    (newSort: EntitySortOption) => {
+      const { sortBy, sortDirection } = getEntitySortParams(newSort);
+      setUrlState({ sortBy, sortDirection, ...(hasPagination ? { page: 1 } : {}) });
+    },
+    [setUrlState, hasPagination]
+  );
+
+  const resetFilters = useCallback(() => {
+    setFiltersAndUrl(initialFilters);
+  }, [setFiltersAndUrl, initialFilters]);
+
   const baseReturn = {
     data,
     isLoading,
     error,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: (q: string) => setUrlState({ search: q }),
     handleSearchChange,
     sort,
-    setSort,
+    setSort: setSortAndUrl,
     filters,
-    setFilters,
+    setFilters: setFiltersAndUrl,
+    resetFilters,
     isFiltersOpen,
     setIsFiltersOpen,
     resultsCount,

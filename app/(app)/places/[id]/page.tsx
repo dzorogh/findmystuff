@@ -19,6 +19,7 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { placesEntityConfig } from "@/lib/entities/places/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
@@ -186,6 +187,14 @@ export default function PlaceDetailPage() {
         ]}
         actions={headerActions}
       />
+      {place && (
+        <EntityRelatedLinks
+          links={[
+            { href: `/items?placeId=${place.id}`, label: "Вещи" },
+            { href: `/containers?placeId=${place.id}`, label: "Контейнеры" },
+          ]}
+        />
+      )}
       {isPageLoading ? (
         <EntityDetailSkeleton />
       ) : place ? (

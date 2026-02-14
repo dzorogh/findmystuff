@@ -101,6 +101,7 @@ export interface Room extends BaseEntity {
   items_count?: number;
   places_count?: number;
   containers_count?: number;
+  furniture_count?: number;
 }
 
 export interface Furniture extends BaseEntity {

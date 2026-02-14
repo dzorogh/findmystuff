@@ -42,6 +42,7 @@ export function ListPageContent({
         onSortChange={listPage.setSort}
         filters={listPage.filters}
         onFiltersChange={listPage.setFilters}
+        onResetFilters={listPage.resetFilters}
         isFiltersOpen={listPage.isFiltersOpen}
         onFiltersOpenChange={listPage.setIsFiltersOpen}
         activeFiltersCount={listPage.activeFiltersCount}

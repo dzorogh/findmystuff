@@ -25,6 +25,7 @@ export function getContainersWithLocationRpc(
     p_entity_type_id?: number | null;
     p_has_items?: boolean | null;
     p_destination_type?: string | null;
+    p_place_id?: number | null;
   }
 ) {
   return supabase.rpc("get_containers_with_location", params);
@@ -39,6 +40,7 @@ class ContainersApiClient extends HttpClient {
     entityTypeId?: number | null;
     hasItems?: boolean | null;
     locationType?: string | null;
+    placeId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -48,6 +50,7 @@ class ContainersApiClient extends HttpClient {
     if (params?.hasItems != null) searchParams.set("hasItems", String(params.hasItems));
     if (params?.locationType != null && params.locationType !== "all")
       searchParams.set("locationType", params.locationType);
+    if (params?.placeId != null) searchParams.set("placeId", String(params.placeId));
     const queryString = searchParams.toString();
     return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`);
   }

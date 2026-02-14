@@ -17,6 +17,7 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { containersEntityConfig } from "@/lib/entities/containers/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
@@ -185,14 +186,19 @@ export default function ContainerDetailPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        isLoading={isPageLoading}
+        isLoading={isLoading}
         title={container?.name ?? (container ? `Контейнер #${container.id}` : "Контейнер")}
         ancestors={[
           { label: "Контейнеры", href: "/containers" },
         ]}
         actions={headerActions}
       />
-      {isPageLoading ? (
+      {container && (
+        <EntityRelatedLinks
+          links={[{ href: `/items?containerId=${container.id}`, label: "Вещи" }]}
+        />
+      )}
+      {isLoading ? (
         <EntityDetailSkeleton />
       ) : container ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

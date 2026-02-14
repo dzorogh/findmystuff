@@ -100,6 +100,7 @@ export const placesEntityConfig: EntityConfig = {
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
     { key: "room", label: "Мебель" },
+    { key: "counts", label: "Содержимое" },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchPlaces,

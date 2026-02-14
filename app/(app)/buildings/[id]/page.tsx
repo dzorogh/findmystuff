@@ -18,6 +18,7 @@ import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-s
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -182,6 +183,11 @@ export default function BuildingDetailPage() {
         ]}
         actions={headerActions}
       />
+      {building && (
+        <EntityRelatedLinks
+          links={[{ href: `/rooms?buildingId=${building.id}`, label: "Помещения" }]}
+        />
+      )}
       {isLoading ? (
         <EntityDetailSkeleton />
       ) : building ? (

@@ -16,6 +16,8 @@ export interface ItemsFilters extends Filters {
   locationType: "all" | "room" | "place" | "container" | null;
   hasPhoto: boolean | null;
   roomId: number | null;
+  placeId: number | null;
+  containerId: number | null;
 }
 
 export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
@@ -23,6 +25,8 @@ export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
   locationType: null,
   hasPhoto: null,
   roomId: null,
+  placeId: null,
+  containerId: null,
 };
 
 const ITEMS_PAGE_SIZE = 20;
@@ -36,7 +40,9 @@ async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
     page,
     limit: ITEMS_PAGE_SIZE,
     locationType: filters.locationType,
-    roomId: filters.roomId,
+    roomId: filters.roomId ?? undefined,
+    placeId: filters.placeId ?? undefined,
+    containerId: filters.containerId ?? undefined,
     hasPhoto: filters.hasPhoto,
     sortBy,
     sortDirection,

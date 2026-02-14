@@ -36,6 +36,7 @@ export interface EntityListProps {
   onSortChange: (sort: EntitySortOption) => void;
   filters: Filters;
   onFiltersChange: (filters: Filters) => void;
+  onResetFilters?: () => void;
   isFiltersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
   activeFiltersCount: number;
@@ -66,6 +67,7 @@ export function EntityList({
   onSortChange,
   filters,
   onFiltersChange,
+  onResetFilters,
   isFiltersOpen,
   onFiltersOpenChange,
   activeFiltersCount,
@@ -94,6 +96,7 @@ export function EntityList({
         onSortChange={onSortChange}
         activeFiltersCount={activeFiltersCount}
         onOpenFilters={() => onFiltersOpenChange(true)}
+        onResetFilters={onResetFilters}
       />
 
       <ListShell
@@ -150,6 +153,7 @@ export function EntityList({
         onOpenChange={onFiltersOpenChange}
         title="Фильтры"
         activeFiltersCount={activeFiltersCount}
+        onResetFilters={onResetFilters}
       >
         <EntityFiltersPanel
           fields={filterFields}

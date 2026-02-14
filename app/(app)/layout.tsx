@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans';
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "@/app/globals.css";
 import NativeAppMarker from "@/components/common/native-app-marker";
 import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
@@ -64,6 +65,7 @@ export default async function RootLayout({
       <body
         className={`${GeistSans.variable} antialiased h-full`}
       >
+        <NuqsAdapter>
         <NativeAppMarker />
         <ThemeProvider
           attribute="class"
@@ -97,6 +99,7 @@ export default async function RootLayout({
             </SettingsProvider>
           </UserProvider>
         </ThemeProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

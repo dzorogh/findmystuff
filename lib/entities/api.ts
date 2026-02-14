@@ -25,6 +25,8 @@ export function getItemsWithRoomRpc(
     page_offset: number;
     location_type: string | null;
     room_id: number | null;
+    place_id: number | null;
+    container_id: number | null;
     has_photo: boolean | null;
     sort_by: SortBy;
     sort_direction: SortDirection;
@@ -41,6 +43,8 @@ class EntitiesApiClient extends HttpClient {
     limit?: number;
     locationType?: string | null;
     roomId?: number | null;
+    placeId?: number | null;
+    containerId?: number | null;
     hasPhoto?: boolean | null;
     sortBy?: SortBy;
     sortDirection?: SortDirection;
@@ -52,6 +56,8 @@ class EntitiesApiClient extends HttpClient {
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.locationType) searchParams.set("locationType", params.locationType);
     if (params?.roomId) searchParams.set("roomId", params.roomId.toString());
+    if (params?.placeId) searchParams.set("placeId", params.placeId.toString());
+    if (params?.containerId) searchParams.set("containerId", params.containerId.toString());
     if (params?.hasPhoto !== undefined && params.hasPhoto !== null) {
       searchParams.set("hasPhoto", params.hasPhoto ? "true" : "false");
     }

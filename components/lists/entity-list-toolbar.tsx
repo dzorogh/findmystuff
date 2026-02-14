@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Filter, SortAsc } from "lucide-react";
+import { Filter, RotateCcw, SortAsc } from "lucide-react";
 import { SearchField } from "@/components/fields/search";
+import { cn } from "@/lib/utils";
 import {
   ENTITY_SORT_OPTIONS,
   type EntitySortOption,
 } from "@/lib/entities/helpers/sort";
+import { ButtonGroup } from "../ui/button-group";
 
 export interface EntityListToolbarProps {
   placeholder?: string;
@@ -24,6 +26,7 @@ export interface EntityListToolbarProps {
   onSortChange: (sort: EntitySortOption) => void;
   activeFiltersCount?: number;
   onOpenFilters: () => void;
+  onResetFilters?: () => void;
 }
 
 export function EntityListToolbar({
@@ -34,6 +37,7 @@ export function EntityListToolbar({
   onSortChange,
   activeFiltersCount = 0,
   onOpenFilters,
+  onResetFilters,
 }: EntityListToolbarProps) {
   return (
     <div className="flex items-center gap-2">
@@ -60,23 +64,29 @@ export function EntityListToolbar({
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          size="default"
-          onClick={onOpenFilters}
-          className={activeFiltersCount > 0 ? "border-primary" : ""}
-        >
-          <Filter className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Фильтры</span>
+        <ButtonGroup>
+          <Button
+            variant="outline"
+            size="default"
+            onClick={onOpenFilters}
+          >
+            <Filter data-icon="inline-start" />
+            <span className="hidden sm:inline">Фильтры</span>
+            {activeFiltersCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="group-hover:hidden w-6"
+              >
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
           {activeFiltersCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-2 h-5 min-w-5 px-1.5 text-xs"
-            >
-              {activeFiltersCount}
-            </Badge>
+            <Button onClick={onResetFilters} variant="outline">
+              <RotateCcw data-icon="inline-start" />
+            </Button>
           )}
-        </Button>
+        </ButtonGroup>
       </div>
     </div>
   );

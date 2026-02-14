@@ -17,6 +17,7 @@ export interface ContainersFilters extends Filters {
   entityTypeId: number | null;
   hasItems: boolean | null;
   locationType: "all" | "room" | "place" | "container" | null;
+  placeId: number | null;
 }
 
 export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
@@ -24,6 +25,7 @@ export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
   entityTypeId: null,
   hasItems: null,
   locationType: null,
+  placeId: null,
 };
 
 const CONTAINERS_PAGE_SIZE = 20;
@@ -39,6 +41,7 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
     entityTypeId: filters.entityTypeId ?? undefined,
     hasItems: filters.hasItems ?? undefined,
     locationType: filters.locationType ?? undefined,
+    placeId: filters.placeId ?? undefined,
   });
   let list = Array.isArray(response?.data) ? response.data : [];
   const hasClientFilters =

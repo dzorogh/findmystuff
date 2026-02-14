@@ -14,6 +14,7 @@ import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-s
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { PageHeader } from "@/components/layout/page-header";
 import { EditFurnitureForm } from "@/components/forms/edit-furniture-form";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
@@ -164,6 +165,11 @@ export default function FurnitureDetailPage() {
         ]}
         actions={headerActions}
       />
+      {furniture && (
+        <EntityRelatedLinks
+          links={[{ href: `/places?furnitureId=${furniture.id}`, label: "Места" }]}
+        />
+      )}
       {isLoading ? (
         <EntityDetailSkeleton />
       ) : furniture ? (

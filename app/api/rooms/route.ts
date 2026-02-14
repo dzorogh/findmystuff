@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
       items_count: number;
       places_count: number;
       containers_count: number;
+      furniture_count: number;
       total_count?: number;
     };
 
@@ -109,6 +110,7 @@ export async function GET(request: NextRequest) {
       items_count: room.items_count ?? 0,
       places_count: room.places_count ?? 0,
       containers_count: room.containers_count ?? 0,
+      furniture_count: room.furniture_count ?? 0,
     }));
 
     return NextResponse.json({

@@ -25,6 +25,17 @@ export const getEntitySortParams = (value: EntitySortOption) => {
     : { sortBy: "created_at" as const, sortDirection: "desc" as const };
 };
 
+/** Convert sortBy/sortDirection to EntitySortOption. */
+export function sortParamsToOption(
+  sortBy: "name" | "created_at",
+  sortDirection: "asc" | "desc"
+): EntitySortOption {
+  const match = ENTITY_SORT_OPTIONS.find(
+    (opt) => opt.sortBy === sortBy && opt.direction === sortDirection
+  );
+  return match?.value ?? DEFAULT_ENTITY_SORT;
+}
+
 const collator = new Intl.Collator("ru", { numeric: true, sensitivity: "base" });
 
 export const sortEntities = <T extends { name?: string | null; created_at?: string | null }>(

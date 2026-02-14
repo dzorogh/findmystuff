@@ -203,38 +203,66 @@ function renderNameCell(
         )}
         {isRoomWithCounts(entity) && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <span className="flex items-center gap-1">
+            <Link
+              href={`/furniture?roomId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Sofa className="h-3 w-3" />
+              {entity.furniture_count ?? 0} меб.
+            </Link>
+            <Link
+              href={`/items?roomId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Package className="h-3 w-3" />
               {entity.items_count ?? 0} вещ.
-            </span>
-            <span className="flex items-center gap-1">
-              <LayoutGrid className="h-3 w-3" />
-              {entity.places_count ?? 0} мест
-            </span>
-            <span className="flex items-center gap-1">
-              <ContainerIcon className="h-3 w-3" />
-              {entity.containers_count ?? 0} конт.
-            </span>
+            </Link>
           </div>
         )}
         {isBuildingWithCounts(entity) && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <span className="flex items-center gap-1">
+            <Link
+              href={`/rooms?buildingId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
               <DoorOpen className="h-3 w-3" />
               {entity.rooms_count ?? 0} пом.
-            </span>
+            </Link>
+          </div>
+        )}
+        {isFurnitureEntity(entity) && (
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
+            <Link
+              href={`/places?furnitureId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LayoutGrid className="h-3 w-3" />
+              {entity.places_count ?? 0} мест
+            </Link>
           </div>
         )}
         {isPlaceWithCounts(entity) && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <span className="flex items-center gap-1">
+            <Link
+              href={`/items?placeId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Package className="h-3 w-3" />
               {entity.items_count ?? 0} вещ.
-            </span>
-            <span className="flex items-center gap-1">
+            </Link>
+            <Link
+              href={`/containers?placeId=${entity.id}`}
+              className="flex items-center gap-1 transition-colors hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
               <ContainerIcon className="h-3 w-3" />
               {entity.containers_count ?? 0} конт.
-            </span>
+            </Link>
             {(entity.furniture_name || entity.room?.room_name) && (
               <span className="flex items-center gap-1">
                 <Sofa className="h-3 w-3" />
@@ -331,38 +359,72 @@ function renderCountsCell(entity: ListEntity): ReactNode {
   if (isRoomWithCounts(entity)) {
     return (
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <div className="flex items-center gap-1">
+        <Link
+          href={`/furniture?roomId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Sofa className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.furniture_count ?? 0} меб.</span>
+        </Link>
+        <Link
+          href={`/items?roomId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.items_count ?? 0}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <LayoutGrid className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.places_count ?? 0}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <ContainerIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.containers_count ?? 0}</span>
-        </div>
+          <span>{entity.items_count ?? 0} вещ.</span>
+        </Link>
       </div>
     );
   }
   if (isBuildingWithCounts(entity)) {
     return (
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <div className="flex items-center gap-1">
+        <Link
+          href={`/rooms?buildingId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
           <DoorOpen className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span>{entity.rooms_count ?? 0} помещений</span>
-        </div>
+        </Link>
       </div>
     );
   }
   if (isFurnitureEntity(entity)) {
     return (
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <div className="flex items-center gap-1">
+        <Link
+          href={`/places?furnitureId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
           <LayoutGrid className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <span>{entity.places_count ?? 0} мест</span>
-        </div>
+        </Link>
+      </div>
+    );
+  }
+  if (isPlaceWithCounts(entity)) {
+    return (
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+        <Link
+          href={`/items?placeId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.items_count ?? 0} вещ.</span>
+        </Link>
+        <Link
+          href={`/containers?placeId=${entity.id}`}
+          className="flex items-center gap-1 transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ContainerIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <span>{entity.containers_count ?? 0} конт.</span>
+        </Link>
       </div>
     );
   }
