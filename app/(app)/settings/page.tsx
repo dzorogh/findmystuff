@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const itemTypesManagerRef = useRef<EntityTypesManagerRef>(null);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader title="Настройки" />
 
       {error && (

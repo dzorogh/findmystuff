@@ -11,12 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Filter, RotateCcw, SortAsc } from "lucide-react";
 import { SearchField } from "@/components/fields/search";
-import { cn } from "@/lib/utils";
 import {
   ENTITY_SORT_OPTIONS,
   type EntitySortOption,
 } from "@/lib/entities/helpers/sort";
-import { ButtonGroup } from "../ui/button-group";
+import { ButtonGroup, ButtonGroupSeparator } from "../ui/button-group";
 
 export interface EntityListToolbarProps {
   placeholder?: string;
@@ -82,9 +81,12 @@ export function EntityListToolbar({
             )}
           </Button>
           {activeFiltersCount > 0 && (
-            <Button onClick={onResetFilters} variant="outline">
-              <RotateCcw data-icon="inline-start" />
-            </Button>
+            <>
+              <ButtonGroupSeparator />
+              <Button onClick={onResetFilters} variant="destructive">
+                <RotateCcw data-icon="inline-start" />
+              </Button>
+            </>
           )}
         </ButtonGroup>
       </div>

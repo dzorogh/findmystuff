@@ -27,7 +27,6 @@ export const PrimaryMenu = () => {
                     <TooltipTrigger render={
                         <SidebarMenuItem>
                             <SidebarMenuButton
-                                size="sm"
                                 isActive={pathname.startsWith(item.href)}
                                 render={<Link href={item.href} />}
                             >

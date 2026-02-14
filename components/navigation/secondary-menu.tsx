@@ -58,7 +58,6 @@ export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) 
                     <TooltipTrigger render={
                         <SidebarMenuItem>
                             <SidebarMenuButton
-                                size="sm"
                                 render={item.href ? <Link href={item.href} /> : undefined}
                                 onClick={item.onClick}
                                 isActive={item.href ? pathname.startsWith(item.href) : false}

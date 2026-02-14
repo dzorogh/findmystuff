@@ -147,17 +147,17 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="pl-6">Название</TableHead>
-              <TableHead className="pr-6 text-right">Действия</TableHead>
+              <TableHead className="pl-4">Название</TableHead>
+              <TableHead className="pr-4 text-right">Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {[1, 2, 3].map((i) => (
               <TableRow key={i}>
-                <TableCell className="pl-6">
+                <TableCell className="pl-4">
                   <Skeleton className="h-5 w-24" />
                 </TableCell>
-                <TableCell className="pr-6 text-right">
+                <TableCell className="pr-4 text-right">
                   <div className="flex justify-end gap-2">
                     <Skeleton className="h-8 w-8 rounded-md" />
                     <Skeleton className="h-8 w-8 rounded-md" />
@@ -214,20 +214,20 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
       </Dialog>
 
       {!isLoading && !error && types.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Типы не найдены</p>
+        <p className="text-sm text-muted-foreground px-4">Типы не найдены</p>
       ) : !isLoading && !error && (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="pl-6">Название</TableHead>
-              <TableHead className="pr-6 text-right">Действия</TableHead>
+              <TableHead className="pl-4">Название</TableHead>
+              <TableHead className="pr-4 text-right">Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {types.map((type) => (
               <TableRow key={type.id}>
-                <TableCell className="pl-6">{type.name}</TableCell>
-                <TableCell className="pr-6 text-right">
+                <TableCell className="pl-4">{type.name}</TableCell>
+                <TableCell className="pr-4 text-right">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"

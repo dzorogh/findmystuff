@@ -26,7 +26,7 @@ const AppSidebar = () => {
   const { toggleSidebar, open, state } = useSidebar();
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
         <SidebarMenu>
           <Tooltip disabled={state !== "collapsed"}>
@@ -44,7 +44,6 @@ const AppSidebar = () => {
           </Tooltip>
           <SidebarMenuItem>
             <SidebarMenuButton
-              size="sm"
               variant="outline"
               onClick={() => setQuickMoveOpen(true)}
               tooltip="Перемещение"
