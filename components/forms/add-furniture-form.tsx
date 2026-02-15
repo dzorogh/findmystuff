@@ -20,6 +20,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EntityTypeSelect } from "../fields/entity-type-select";
@@ -105,102 +106,105 @@ const AddFurnitureForm = ({ open, onOpenChange, onSuccess, initialRoomId }: AddF
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Добавить мебель</SheetTitle>
-          <SheetDescription>
-            Введите название мебели и выберите помещение
-          </SheetDescription>
-        </SheetHeader>
-        <form onSubmit={handleSubmit} className="px-6">
-          {isLoading || isLoadingTypes ? (
-            <div className="flex flex-col gap-2 py-2">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-10 w-full" />
+    <form onSubmit={handleSubmit}>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="h-full flex flex-col overflow-y-auto no-scrollbar">
+          <SheetHeader>
+            <SheetTitle>Добавить мебель</SheetTitle>
+            <SheetDescription>
+              Введите название мебели и выберите помещение
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="px-4">
+            {isLoading || isLoadingTypes ? (
+              <div className="flex flex-col gap-2 py-2">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </div>
-          ) : (
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="furniture-name">Название мебели</FieldLabel>
-                <FieldDescription>
-                  Поле необязательное. Например: Шкаф 1, Стеллаж, Полка
-                </FieldDescription>
-                <Input
-                  id="furniture-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Введите название мебели"
+            ) : (
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="furniture-name">Название мебели</FieldLabel>
+                  <FieldDescription>
+                    Поле необязательное. Например: Шкаф 1, Стеллаж, Полка
+                  </FieldDescription>
+                  <Input
+                    id="furniture-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Введите название мебели"
+                    disabled={isSubmitting}
+                  />
+                </Field>
+
+                <RoomCombobox
+                  selectedRoomId={roomId}
+                  onRoomIdChange={setRoomId}
+                  disabled={isSubmitting}
+                  label="Помещение"
+                  id="furniture-room-select"
+                  required
+                />
+
+                <EntityTypeSelect
+                  type="furniture"
+                  value={furnitureTypeId ? parseInt(furnitureTypeId) : null}
+                  onValueChange={(v) => setFurnitureTypeId(v ?? "")}
+                />
+
+                <PriceInput
+                  value={price}
+                  onChange={setPrice}
+                  disabled={isSubmitting}
+                  label="Стоимость покупки (необязательно)"
+                />
+
+                <PriceInput
+                  value={currentValue}
+                  onChange={setCurrentValue}
+                  id="add-furniture-current-value"
+                  label="Текущая оценочная стоимость (необязательно)"
                   disabled={isSubmitting}
                 />
-              </Field>
 
-              <RoomCombobox
-                selectedRoomId={roomId}
-                onRoomIdChange={setRoomId}
-                disabled={isSubmitting}
-                label="Помещение"
-                id="furniture-room-select"
-                required
-              />
+                <DatePicker
+                  value={purchaseDate}
+                  onChange={setPurchaseDate}
+                  id="add-furniture-purchase-date"
+                  label="Дата покупки"
+                  placeholder="Выберите дату"
+                  disabled={isSubmitting}
+                />
 
-              <EntityTypeSelect
-                type="furniture"
-                value={furnitureTypeId ? parseInt(furnitureTypeId) : null}
-                onValueChange={(v) => setFurnitureTypeId(v ?? "")}
-              />
+                <ImageUpload
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  disabled={isSubmitting}
+                  label="Фотография мебели (необязательно)"
+                />
 
-              <PriceInput
-                value={price}
-                onChange={setPrice}
-                disabled={isSubmitting}
-                label="Стоимость покупки (необязательно)"
-              />
+                <ErrorMessage message={error || ""} />
+              </FieldGroup>
+            )}
+          </div>
+          <FormFooter
+            isSubmitting={isSubmitting}
+            onCancel={() => onOpenChange(false)}
+            submitLabel="Добавить мебель"
+            submitIcon={Plus}
+          />
+        </SheetContent>
+      </Sheet>
+    </form>
 
-              <PriceInput
-                value={currentValue}
-                onChange={setCurrentValue}
-                id="add-furniture-current-value"
-                label="Текущая оценочная стоимость (необязательно)"
-                disabled={isSubmitting}
-              />
-
-              <DatePicker
-                value={purchaseDate}
-                onChange={setPurchaseDate}
-                id="add-furniture-purchase-date"
-                label="Дата покупки"
-                placeholder="Выберите дату"
-                disabled={isSubmitting}
-              />
-
-              <ImageUpload
-                value={photoUrl}
-                onChange={setPhotoUrl}
-                disabled={isSubmitting}
-                label="Фотография мебели (необязательно)"
-              />
-
-              <ErrorMessage message={error || ""} />
-
-              <FormFooter
-                isSubmitting={isSubmitting}
-                onCancel={() => onOpenChange(false)}
-                submitLabel="Добавить мебель"
-                submitIcon={Plus}
-              />
-            </FieldGroup>
-          )}
-        </form>
-      </SheetContent>
-    </Sheet>
   );
 };
 
