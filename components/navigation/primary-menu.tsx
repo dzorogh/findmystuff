@@ -9,7 +9,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export const PrimaryMenu = () => {
     const pathname = usePathname();
 
-    const { state } = useSidebar();
+    const { state, isMobile, setOpenMobile } = useSidebar();
+
+    const closeMobileSidebar = () => {
+        if (isMobile) setOpenMobile(false);
+    };
 
     const menuItems = [
         { href: "/buildings", label: "Здания", icon: Home },
@@ -29,6 +33,7 @@ export const PrimaryMenu = () => {
                             <SidebarMenuButton
                                 isActive={pathname.startsWith(item.href)}
                                 render={<Link href={item.href} />}
+                                onClick={closeMobileSidebar}
                             >
                                 <item.icon data-icon="inline-start" /> {item.label}
                             </SidebarMenuButton>

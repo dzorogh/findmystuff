@@ -78,7 +78,7 @@ export function ItemsListPageContent({
                 onClick={() => setBarcodeScannerOpen(true)}
                 disabled={isBarcodeLookupLoading}
               >
-                <Barcode data-icon="inline-start" /> Добавить по штрихкоду
+                <Barcode data-icon="inline-start" /> Сканировать
               </Button>
               <Button
                 variant="default"

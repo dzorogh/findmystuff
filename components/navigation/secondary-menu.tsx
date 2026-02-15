@@ -9,10 +9,14 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 
-export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
+export const SecondaryMenu = () => {
     const pathname = usePathname();
 
-    const { state } = useSidebar();
+    const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+
+    const closeMobileSidebar = () => {
+        if (isMobile) setOpenMobile(false);
+    };
 
     const handleSignOut = async () => {
         try {
@@ -41,7 +45,7 @@ export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) 
         },
         {
             label: "Выйти",
-            onClick: handleSignOut,
+            onClick: () => { closeMobileSidebar(); handleSignOut(); },
             icon: LogOut,
         },
         {
@@ -59,7 +63,7 @@ export const SecondaryMenu = ({ toggleSidebar }: { toggleSidebar: () => void }) 
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 render={item.href ? <Link href={item.href} /> : undefined}
-                                onClick={item.onClick}
+                                onClick={item.href ? closeMobileSidebar : item.onClick}
                                 isActive={item.href ? pathname.startsWith(item.href) : false}
                             >
                                 <item.icon data-icon="inline-start" />

@@ -23,7 +23,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const AppSidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const { toggleSidebar, open, state } = useSidebar();
+  const { open, state, isMobile, setOpenMobile } = useSidebar();
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -32,7 +36,7 @@ const AppSidebar = () => {
           <Tooltip disabled={state !== "collapsed"}>
             <TooltipTrigger render={
               <SidebarMenuItem className="h-12 flex items-center">
-                <SidebarMenuButton render={<Link href="/" />}>
+                <SidebarMenuButton render={<Link href="/" />} onClick={closeMobileSidebar}>
                   <Logo data-icon="inline-start" size="sm" showText={false} />
                   {open ? <span className="text-sm font-bold">FindMyStuff</span> : null}
                 </SidebarMenuButton>
@@ -45,7 +49,10 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               variant="default"
-              onClick={() => setQuickMoveOpen(true)}
+              onClick={() => {
+                closeMobileSidebar();
+                setQuickMoveOpen(true);
+              }}
               tooltip="Перемещение"
             >
               <QrCodeIcon data-icon="inline-start" />
@@ -62,7 +69,7 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SecondaryMenu toggleSidebar={toggleSidebar} />
+        <SecondaryMenu />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -1,6 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumb } from "./page-breadcrumb";
 import { PageTitle } from "./page-title";
+import { SidebarTrigger } from "../ui/sidebar";
+import { Separator } from "../ui/separator";
 
 interface PageHeaderProps {
   isLoading?: boolean;
@@ -37,9 +39,14 @@ export const PageHeader = ({
   const headerActions = actions ?? null;
 
   return (
-    <div className="flex justify-between items-end gap-2">
+    <div className="flex justify-between items-end gap-2 flex-wrap">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-vertical:h-4 data-vertical:self-center"
+          />
           <PageBreadcrumb path={breadcrumb} />
         </div>
         <div className="flex justify-between items-center">
