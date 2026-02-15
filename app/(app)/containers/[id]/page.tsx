@@ -21,8 +21,7 @@ import AddItemForm from "@/components/forms/add-item-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { containersEntityConfig } from "@/lib/entities/containers/entity-config";
-import ImageUpload from "@/components/fields/image-upload";
-import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -64,7 +63,6 @@ export default function ContainerDetailPage() {
   const { types: _containerTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -124,7 +122,6 @@ export default function ContainerDetailPage() {
     if (container) {
       setName(container.name ?? "");
       setContainerTypeId(container.entity_type_id?.toString() ?? "");
-      setPhotoUrl(container.photo_url ?? null);
     }
   }, [container]);
 
@@ -149,7 +146,6 @@ export default function ContainerDetailPage() {
       const response = await updateContainer(container.id, {
         name: name.trim() || undefined,
         entity_type_id: containerTypeId ? parseInt(containerTypeId, 10) : null,
-        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Контейнер успешно обновлен");
@@ -201,7 +197,7 @@ export default function ContainerDetailPage() {
         <EntityDetailSkeleton />
       ) : container ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
+          <div className="flex flex-col gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>Редактирование контейнера</CardTitle>
@@ -236,31 +232,11 @@ export default function ContainerDetailPage() {
                       onValueChange={(v) => setContainerTypeId(v ?? "")}
                     />
 
-                    <ImageUpload
-                      value={photoUrl}
-                      onChange={setPhotoUrl}
-                      disabled={isSubmitting}
-                      label="Фотография контейнера (необязательно)"
-                    />
-
                     <ErrorMessage message={formError ?? ""} />
                   </FieldGroup>
                 </form>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <GenerateImageButton
-                  entityName={name}
-                  entityType="container"
-                  onSuccess={async (url) => {
-                    setPhotoUrl(url);
-                    if (!container) return;
-                    const res = await updateContainer(container.id, { photo_url: url });
-                    if (res.error) return;
-                    toast.success("Изображение сгенерировано и сохранено");
-                    loadContainerData({ silent: true });
-                  }}
-                  disabled={isSubmitting}
-                />
                 <Button type="submit" form={`container-form-${container.id}`} disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
@@ -273,6 +249,18 @@ export default function ContainerDetailPage() {
                 </Button>
               </CardFooter>
             </Card>
+
+            <EntityImageCard
+              entityType="container"
+              entityId={container.id}
+              entityName={name}
+              photoUrl={container.photo_url ?? null}
+              onPhotoChange={async (url) => {
+                const res = await updateContainer(container.id, { photo_url: url });
+                if (res.error) throw new Error(res.error);
+                await loadContainerData({ silent: true });
+              }}
+            />
           </div>
 
           <div className="flex flex-col gap-6">

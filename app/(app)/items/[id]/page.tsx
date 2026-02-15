@@ -14,8 +14,7 @@ import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
-import ImageUpload from "@/components/fields/image-upload";
-import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
 import { useItemDetail } from "@/lib/entities/hooks/use-item-detail";
 import { updateItem } from "@/lib/entities/api";
@@ -41,7 +40,6 @@ export default function ItemDetailPage() {
 
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);
   const [currentValue, setCurrentValue] = useState<PriceValue | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
@@ -53,7 +51,6 @@ export default function ItemDetailPage() {
     if (item) {
       setName(item.name ?? "");
       setItemTypeId(item.item_type_id?.toString() ?? "");
-      setPhotoUrl(item.photo_url ?? null);
       setPrice(
         item.price?.amount != null && item.price?.currency
           ? { amount: item.price.amount, currency: item.price.currency }
@@ -79,7 +76,6 @@ export default function ItemDetailPage() {
       const response = await updateItem(item.id, {
         name: name.trim() || undefined,
         item_type_id: itemTypeId ? parseInt(itemTypeId) : null,
-        photo_url: (photoUrl ?? "") || null,
         price_amount: price?.amount ?? null,
         price_currency: price?.currency ?? null,
         current_value_amount: currentValue?.amount ?? null,
@@ -125,6 +121,7 @@ export default function ItemDetailPage() {
         <EntityDetailSkeleton />
       ) : item ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Редактирование вещи</CardTitle>
@@ -187,31 +184,11 @@ export default function ItemDetailPage() {
                     disabled={isSubmitting}
                   />
 
-                  <ImageUpload
-                    value={photoUrl}
-                    onChange={setPhotoUrl}
-                    disabled={isSubmitting}
-                    label="Фотография вещи (необязательно)"
-                  />
-
                   <ErrorMessage message={formError ?? ""} />
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <GenerateImageButton
-                entityName={name}
-                entityType="item"
-                onSuccess={async (url) => {
-                  setPhotoUrl(url);
-                  if (!item) return;
-                  const res = await updateItem(item.id, { photo_url: url });
-                  if (res.error) return;
-                  toast.success("Изображение сгенерировано и сохранено");
-                  handleEditSuccess();
-                }}
-                disabled={isSubmitting}
-              />
               <Button type="submit" form={`item-form-${item.id}`} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -224,6 +201,19 @@ export default function ItemDetailPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          <EntityImageCard
+            entityType="item"
+            entityId={item.id}
+            entityName={name}
+            photoUrl={item.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updateItem(item.id, { photo_url: url });
+              if (res.error) throw new Error(res.error);
+              handleEditSuccess();
+            }}
+          />
+          </div>
 
           <div className="flex flex-col gap-2">
             <Card>

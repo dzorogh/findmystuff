@@ -20,8 +20,7 @@ import { EntityDetailError } from "@/components/entity-detail/entity-detail-erro
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
-import ImageUpload from "@/components/fields/image-upload";
-import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
 import type { RoomEntity } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
@@ -66,7 +65,6 @@ export default function RoomDetailPage() {
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState("");
   const [buildingId, setBuildingId] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [addFurnitureOpen, setAddFurnitureOpen] = useState(false);
@@ -137,7 +135,6 @@ export default function RoomDetailPage() {
       setName(room.name ?? "");
       setRoomTypeId(room.room_type_id?.toString() ?? "");
       setBuildingId(room.building_id?.toString() ?? "");
-      setPhotoUrl(room.photo_url ?? null);
     }
   }, [room]);
 
@@ -163,7 +160,6 @@ export default function RoomDetailPage() {
         name: name.trim() || undefined,
         room_type_id: roomTypeId ? parseInt(roomTypeId) : null,
         building_id: buildingId ? parseInt(buildingId) : null,
-        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Помещение успешно обновлено");
@@ -227,6 +223,7 @@ export default function RoomDetailPage() {
         <EntityDetailSkeleton />
       ) : room ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Редактирование помещения</CardTitle>
@@ -268,31 +265,11 @@ export default function RoomDetailPage() {
                     onValueChange={(v) => setRoomTypeId(v ?? "")}
                   />
 
-                  <ImageUpload
-                    value={photoUrl}
-                    onChange={setPhotoUrl}
-                    disabled={isSubmitting}
-                    label="Фотография помещения (необязательно)"
-                  />
-
                   <ErrorMessage message={formError ?? ""} />
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <GenerateImageButton
-                entityName={name}
-                entityType="room"
-                onSuccess={async (url) => {
-                  setPhotoUrl(url);
-                  if (!room) return;
-                  const res = await updateRoom(room.id, { photo_url: url });
-                  if (res.error) return;
-                  toast.success("Изображение сгенерировано и сохранено");
-                  await loadRoomData({ silent: true });
-                }}
-                disabled={isSubmitting}
-              />
               <Button type="submit" form={`room-form-${room.id}`} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -305,6 +282,19 @@ export default function RoomDetailPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          <EntityImageCard
+            entityType="room"
+            entityId={room.id}
+            entityName={name}
+            photoUrl={room.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updateRoom(room.id, { photo_url: url });
+              if (res.error) throw new Error(res.error);
+              await loadRoomData({ silent: true });
+            }}
+          />
+          </div>
 
           <div className="flex flex-col gap-6">
             <EntityContentBlock

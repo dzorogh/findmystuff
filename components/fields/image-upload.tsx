@@ -103,10 +103,6 @@ const ImageUpload = ({
 
   return (
     <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <FieldDescription>
-        Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 10MB
-      </FieldDescription>
       <div className="space-y-3">
         {preview ? (
           <div className="relative w-full aspect-square max-w-md rounded-lg overflow-hidden border border-border bg-muted">
@@ -143,13 +139,12 @@ const ImageUpload = ({
         )}
 
         {!disabled && (
-          <div className="flex gap-2">
+          <div className="">
             <Button
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex-1"
             >
               {isUploading ? (
                 <Skeleton className="h-4 w-24" aria-hidden />
@@ -160,16 +155,6 @@ const ImageUpload = ({
                 </>
               )}
             </Button>
-            {preview && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleRemove}
-                disabled={isUploading}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         )}
 

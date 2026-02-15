@@ -21,8 +21,7 @@ import { EntityContentBlock } from "@/components/entity-detail/entity-content-bl
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { placesEntityConfig } from "@/lib/entities/places/entity-config";
-import ImageUpload from "@/components/fields/image-upload";
-import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
 import AddItemForm from "@/components/forms/add-item-form";
 import AddContainerForm from "@/components/forms/add-container-form";
@@ -57,7 +56,6 @@ export default function PlaceDetailPage() {
 
   const [name, setName] = useState("");
   const [placeTypeId, setPlaceTypeId] = useState<number | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [addItemOpen, setAddItemOpen] = useState(false);
@@ -118,7 +116,6 @@ export default function PlaceDetailPage() {
     if (place) {
       setName(place.name ?? "");
       setPlaceTypeId(place.entity_type_id ?? null);
-      setPhotoUrl(place.photo_url ?? null);
     }
   }, [place]);
 
@@ -138,7 +135,6 @@ export default function PlaceDetailPage() {
     try {
       const response = await updatePlace(place.id, {
         name: name.trim() || undefined,
-        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Место успешно обновлено");
@@ -202,6 +198,7 @@ export default function PlaceDetailPage() {
         <EntityDetailSkeleton />
       ) : place ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Редактирование места</CardTitle>
@@ -236,31 +233,11 @@ export default function PlaceDetailPage() {
                     onValueChange={(v) => setPlaceTypeId(v ? parseInt(v) : null)}
                   />
 
-                  <ImageUpload
-                    value={photoUrl}
-                    onChange={setPhotoUrl}
-                    disabled={isSubmitting}
-                    label="Фотография места (необязательно)"
-                  />
-
                   <ErrorMessage message={formError ?? ""} />
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <GenerateImageButton
-                entityName={name}
-                entityType="place"
-                onSuccess={async (url) => {
-                  setPhotoUrl(url);
-                  if (!place) return;
-                  const res = await updatePlace(place.id, { photo_url: url });
-                  if (res.error) return;
-                  toast.success("Изображение сгенерировано и сохранено");
-                  loadPlaceData({ silent: true });
-                }}
-                disabled={isSubmitting}
-              />
               <Button type="submit" form={`place-form-${place.id}`} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -273,6 +250,19 @@ export default function PlaceDetailPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          <EntityImageCard
+            entityType="place"
+            entityId={place.id}
+            entityName={name}
+            photoUrl={place.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updatePlace(place.id, { photo_url: url });
+              if (res.error) throw new Error(res.error);
+              await loadPlaceData({ silent: true });
+            }}
+          />
+          </div>
 
           <div className="flex flex-col gap-6">
             {place.furniture_id && (

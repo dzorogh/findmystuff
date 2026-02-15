@@ -20,8 +20,7 @@ import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
-import ImageUpload from "@/components/fields/image-upload";
-import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
 import { PageHeader } from "@/components/layout/page-header";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
@@ -44,7 +43,6 @@ export default function BuildingDetailPage() {
 
   const [name, setName] = useState("");
   const [buildingTypeId, setBuildingTypeId] = useState("");
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [addRoomOpen, setAddRoomOpen] = useState(false);
@@ -118,7 +116,6 @@ export default function BuildingDetailPage() {
     if (building) {
       setName(building.name ?? "");
       setBuildingTypeId(building.building_type_id?.toString() ?? "");
-      setPhotoUrl(building.photo_url ?? null);
     }
   }, [building]);
 
@@ -143,7 +140,6 @@ export default function BuildingDetailPage() {
       const response = await updateBuilding(building.id, {
         name: name.trim() || undefined,
         building_type_id: buildingTypeId ? parseInt(buildingTypeId) : null,
-        photo_url: (photoUrl ?? "") || null,
       });
       if (response.error) throw new Error(response.error);
       toast.success("Здание успешно обновлено");
@@ -194,6 +190,7 @@ export default function BuildingDetailPage() {
         <EntityDetailSkeleton />
       ) : building ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Редактирование здания</CardTitle>
@@ -228,30 +225,11 @@ export default function BuildingDetailPage() {
                     onValueChange={(v) => setBuildingTypeId(v ?? "")}
                   />
 
-                  <ImageUpload
-                    value={photoUrl}
-                    onChange={setPhotoUrl}
-                    disabled={isSubmitting}
-                    label="Фотография здания (необязательно)"
-                  />
-
                   <ErrorMessage message={formError ?? ""} />
                 </FieldGroup>
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <GenerateImageButton
-                entityName={name}
-                entityType="building"
-                onSuccess={async (url) => {
-                  if (!building) return;
-                  const res = await updateBuilding(building.id, { photo_url: url });
-                  if (res.error) return;
-                  toast.success("Изображение сгенерировано и сохранено");
-                  await loadBuildingData({ silent: true });
-                }}
-                disabled={isSubmitting}
-              />
               <Button type="submit" form={`building-form-${building.id}`} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -264,6 +242,19 @@ export default function BuildingDetailPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          <EntityImageCard
+            entityType="building"
+            entityId={building.id}
+            entityName={name}
+            photoUrl={building.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updateBuilding(building.id, { photo_url: url });
+              if (res.error) throw new Error(res.error);
+              await loadBuildingData({ silent: true });
+            }}
+          />
+          </div>
 
           <div>
             <EntityContentBlock
