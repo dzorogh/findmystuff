@@ -47,7 +47,7 @@ export function ListFiltersSheet({
             </Button>
           )}
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4">{children}</div>
       </SheetContent>
     </Sheet>
   );

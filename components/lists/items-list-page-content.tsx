@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { EntityList } from "./entity-list";
 import { Plus, Barcode } from "lucide-react";
 import { ListPagination } from "./list-pagination";
-import BarcodeScanner from "@/components/common/barcode-scanner";
+import { BarcodeScanner } from "@/components/common/scanner";
 import AddItemForm from "@/components/forms/add-item-form";
 import { toast } from "sonner";
 import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";

@@ -145,7 +145,7 @@ const AddItemForm = ({
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit}>
-          <div className="px-6">
+          <div className="px-4">
             <FieldGroup>
               <EntityTypeSelect
                 type="item"

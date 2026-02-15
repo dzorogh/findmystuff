@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import QRScanner from "@/components/common/qr-scanner";
+import { QRScanner } from "@/components/common/scanner";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 

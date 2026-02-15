@@ -85,7 +85,7 @@ const AddBuildingForm = ({ open, onOpenChange, onSuccess }: AddBuildingFormProps
             Введите название здания
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="px-6">
+        <form onSubmit={handleSubmit} className="px-4">
           {isLoading || isLoadingTypes ? (
             <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">

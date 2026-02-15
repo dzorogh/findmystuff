@@ -24,7 +24,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import QRScanner from "@/components/common/qr-scanner";
+import { QRScanner } from "@/components/common/scanner";
 
 export type TransitionPayload = {
   destination_type: string;
@@ -190,7 +190,7 @@ function MoveEntityFormBody({
         <SheetDescription>{entityDisplayName}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit}>
-        <div className="px-6">
+        <div className="px-4">
           <FieldGroup>
             <Button
               type="button"

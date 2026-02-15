@@ -93,7 +93,7 @@ function MoveRoomFormBody({
         <SheetDescription>{entityDisplayName}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit}>
-        <div className="px-6">
+        <div className="px-4">
           <FieldGroup>
             <BuildingCombobox
               selectedBuildingId={selectedBuildingId}
@@ -132,7 +132,7 @@ export default function MoveRoomForm({
   const isControlled = controlledOpen !== undefined && controlledOnOpenChange !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = useMemo(
-    () => (isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen),
+    () => (isControlled ? (controlledOnOpenChange ?? (() => { })) : setInternalOpen),
     [isControlled, controlledOnOpenChange]
   );
 

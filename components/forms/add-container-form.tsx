@@ -10,7 +10,7 @@ import { useUser } from "@/lib/users/context";
 import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
-import { Combobox } from "@/components/ui/combobox";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { ErrorMessage } from "@/components/common/error-message";
 import { FormFooter } from "@/components/forms/form-footer";
 import {
@@ -40,7 +40,7 @@ const AddContainerForm = ({
   initialDestinationId,
 }: AddContainerFormProps) => {
   const { isLoading } = useUser();
-  const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
+  const { isLoading: isLoadingTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState<string>("");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
@@ -88,7 +88,7 @@ const AddContainerForm = ({
       }
 
       setName("");
-      setContainerTypeId(containerTypes[0]?.id.toString() || "");
+      setContainerTypeId("");
       setDestinationType(null);
       setSelectedDestinationId("");
       setPhotoUrl(null);
@@ -127,7 +127,7 @@ const AddContainerForm = ({
             Введите название контейнера и при необходимости укажите местоположение
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="px-6">
+        <form onSubmit={handleSubmit} className="px-4">
           {isLoading || isLoadingTypes ? (
             <div className="flex flex-col gap-2 py-2">
               <div className="space-y-2">
@@ -150,14 +150,10 @@ const AddContainerForm = ({
                 <FieldDescription>
                   Маркировка будет сгенерирована автоматически (например, КОР-001)
                 </FieldDescription>
-                <Combobox
-                  items={containerTypes.map((type) => ({
-                    value: type.id.toString(),
-                    label: type.name,
-                  }))}
-                  value={containerTypeId}
+                <EntityTypeSelect
+                  type="container"
+                  value={containerTypeId ? parseInt(containerTypeId) : null}
                   onValueChange={(v) => setContainerTypeId(v ?? "")}
-                  disabled={isSubmitting}
                 />
               </Field>
 
