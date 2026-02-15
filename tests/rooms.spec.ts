@@ -15,7 +15,7 @@ test.describe('rooms list', () => {
 
     const row = getFirstActiveRoomRow(page);
     await expect(row).toBeVisible();
-    await expect(row.getByRole('link')).toBeVisible();
+    await expect(row.getByRole('link').first()).toBeVisible();
     await expect(row.getByTitle('Редактировать')).toBeVisible();
     await expect(row.getByTitle('Печать этикетки')).toBeVisible();
     await expect(row.getByTitle('Дублировать')).toBeVisible();

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { parseEntityQrPayload, type EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 import { Capacitor } from "@capacitor/core";

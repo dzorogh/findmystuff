@@ -1,12 +1,12 @@
 "use client";
 
 import type { RefObject } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
 
-export type EntityCategory = "container" | "place" | "room" | "item" | "building";
+export type EntityCategory = "container" | "place" | "room" | "item" | "building" | "furniture";
 
 interface EntitySectionProps {
   title: string;

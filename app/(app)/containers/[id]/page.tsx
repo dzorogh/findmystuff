@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getContainer, updateContainer } from "@/lib/containers/api";
@@ -45,7 +45,6 @@ function parseContainerId(id: unknown): number | null {
 
 export default function ContainerDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const containerId = parseContainerId(params?.id) ?? NaN;
   const isInvalidId = Number.isNaN(containerId);
   const [container, setContainer] = useState<Container | null>(null);
@@ -60,7 +59,7 @@ export default function ContainerDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
 
-  const { types: containerTypes } = useEntityTypes("container");
+  const { types: _containerTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -161,8 +160,6 @@ export default function ContainerDetailPage() {
       setIsSubmitting(false);
     }
   };
-
-  const isPageLoading = isLoading;
 
   const headerActions =
     container != null ? (

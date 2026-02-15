@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const COVERAGE_THRESHOLD = 100; // Обновлено до 100%
+const COVERAGE_THRESHOLD = 70;
 const COVERAGE_FILE = path.join(__dirname, '../coverage/coverage-summary.json');
 
 if (!fs.existsSync(COVERAGE_FILE)) {

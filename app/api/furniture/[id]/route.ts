@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
+import { getPlacesWithRoomRpc } from "@/lib/furniture/api";
 import type { Furniture } from "@/types/entity";
 
 export async function GET(
@@ -73,7 +74,7 @@ export async function GET(
       purchaseDate: furnitureData.purchase_date ?? null,
     };
 
-    const { data: placesData } = await supabase.rpc("get_places_with_room", {
+    const { data: placesData } = await getPlacesWithRoomRpc(supabase, {
       search_query: null,
       show_deleted: false,
       page_limit: 500,

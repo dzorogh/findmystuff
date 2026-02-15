@@ -39,7 +39,7 @@ const EditItemForm = ({
   onSuccess,
 }: EditItemFormProps) => {
   const { isLoading } = useUser();
-  const { types: itemTypes } = useEntityTypes("item");
+  const { types: _itemTypes } = useEntityTypes("item");
   const [name, setName] = useState(itemName || "");
   const [itemTypeId, setItemTypeId] = useState<string>(initialItemTypeId?.toString() || "");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);

@@ -1,5 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
+
+jest.mock("nuqs");
 import type { EntityConfig, FetchListResult } from "@/lib/app/types/entity-config";
 
 function createMinimalConfig(

@@ -29,7 +29,7 @@ interface AddBuildingFormProps {
 
 const AddBuildingForm = ({ open, onOpenChange, onSuccess }: AddBuildingFormProps) => {
   const { isLoading } = useUser();
-  const { types: buildingTypes, isLoading: isLoadingTypes } = useEntityTypes("building");
+  const { types: _buildingTypes, isLoading: isLoadingTypes } = useEntityTypes("building");
   const [name, setName] = useState("");
   const [buildingTypeId, setBuildingTypeId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);

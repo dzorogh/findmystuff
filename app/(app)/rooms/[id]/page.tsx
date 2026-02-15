@@ -67,7 +67,7 @@ export default function RoomDetailPage() {
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { types: roomTypes } = useEntityTypes("room");
+  const { types: _roomTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState("");
   const [buildingId, setBuildingId] = useState("");
@@ -329,6 +329,7 @@ export default function RoomDetailPage() {
                       >
                         {f.photo_url ? (
                           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded border">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={f.photo_url}
                               alt={f.name ?? ""}

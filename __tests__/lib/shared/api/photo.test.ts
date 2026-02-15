@@ -66,3 +66,72 @@ describe("photoApi", () => {
     );
   });
 });
+
+describe("photoApi.findEntityImage", () => {
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    global.fetch = jest.fn();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it("возвращает url при успешном поиске", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ url: "https://example.com/icon.png" }),
+    });
+
+    const result = await photoApi.findEntityImage({ name: "Стол" });
+
+    expect(result.data?.url).toBe("https://example.com/icon.png");
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("find-entity-image"),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Стол", entityType: undefined }),
+      })
+    );
+  });
+
+  it("передаёт entityType в body", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ url: "https://x.com/i.png" }),
+    });
+
+    await photoApi.findEntityImage({ name: "Шкаф", entityType: "furniture" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({ name: "Шкаф", entityType: "furniture" }),
+      })
+    );
+  });
+
+  it("выбрасывает ошибку при !response.ok с json error", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: "Not found" }),
+    });
+
+    await expect(
+      photoApi.findEntityImage({ name: "X" })
+    ).rejects.toThrow("Not found");
+  });
+
+  it("выбрасывает ошибку если сервер не вернул url", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+
+    await expect(photoApi.findEntityImage({ name: "X" })).rejects.toThrow(
+      "Сервер не вернул URL изображения"
+    );
+  });
+});

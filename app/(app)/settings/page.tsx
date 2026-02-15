@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const { error } = useSettings();
   const buildingTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const containerTypesManagerRef = useRef<EntityTypesManagerRef>(null);
+  const furnitureTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const placeTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const roomTypesManagerRef = useRef<EntityTypesManagerRef>(null);
   const itemTypesManagerRef = useRef<EntityTypesManagerRef>(null);
@@ -39,6 +40,13 @@ export default function SettingsPage() {
         cardTitle="Типы контейнеров"
         category="container"
         managerRef={containerTypesManagerRef}
+      />
+
+      <EntitySection
+        title="Мебель"
+        cardTitle="Типы мебели"
+        category="furniture"
+        managerRef={furnitureTypesManagerRef}
       />
 
       <EntitySection

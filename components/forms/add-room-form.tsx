@@ -4,7 +4,6 @@ import { useState } from "react";
 import { createRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Combobox } from "@/components/ui/combobox";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
@@ -31,7 +30,7 @@ interface AddRoomFormProps {
 
 const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
   const { isLoading } = useUser();
-  const { types: roomTypes, isLoading: isLoadingTypes } = useEntityTypes("room");
+  const { types: _roomTypes, isLoading: isLoadingTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState<string>("");
   const [buildingId, setBuildingId] = useState<string>("");

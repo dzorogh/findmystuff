@@ -90,7 +90,7 @@ export async function GET(
 
     const allTransitionsData = transitionsResult.data ?? [];
     const placeIdsFromMv = (placesInRoomMv.data ?? []).map((r: { place_id: number }) => r.place_id);
-    const placeTransitionsMap = new Map<number, Transition>();
+    const _placeTransitionsMap = new Map<number, Transition>();
     const containerTransitionsMap = new Map<number, Transition>();
     allTransitionsData.forEach((t) => {
       if (t.container_id && !containerTransitionsMap.has(t.container_id)) {

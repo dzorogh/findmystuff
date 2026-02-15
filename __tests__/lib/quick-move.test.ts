@@ -4,10 +4,12 @@ import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 describe("quick-move", () => {
   describe("ENTITY_LEVEL", () => {
     it("room has lowest level (destination), item has highest (source)", () => {
+      expect(ENTITY_LEVEL.building).toBe(-1);
       expect(ENTITY_LEVEL.room).toBe(0);
-      expect(ENTITY_LEVEL.place).toBe(1);
-      expect(ENTITY_LEVEL.container).toBe(2);
-      expect(ENTITY_LEVEL.item).toBe(3);
+      expect(ENTITY_LEVEL.furniture).toBe(1);
+      expect(ENTITY_LEVEL.place).toBe(2);
+      expect(ENTITY_LEVEL.container).toBe(3);
+      expect(ENTITY_LEVEL.item).toBe(4);
     });
   });
 

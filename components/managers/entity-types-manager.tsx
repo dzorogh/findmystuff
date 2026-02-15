@@ -30,7 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface EntityTypesManagerProps {
-  category: "place" | "container" | "room" | "item" | "building";
+  category: "place" | "container" | "room" | "item" | "building" | "furniture";
 }
 
 export interface EntityTypesManagerRef {

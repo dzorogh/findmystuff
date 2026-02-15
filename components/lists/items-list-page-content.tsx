@@ -9,6 +9,7 @@ import { ListPagination } from "./list-pagination";
 import BarcodeScanner from "@/components/common/barcode-scanner";
 import AddItemForm from "@/components/forms/add-item-form";
 import { toast } from "sonner";
+import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import type { EntityDisplay } from "@/lib/app/types/entity-config";
 
@@ -30,8 +31,7 @@ export function ItemsListPageContent({
       setIsBarcodeLookupLoading(true);
 
       try {
-        const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(barcode)}`);
-        const data = (await res.json()) as { productName?: string | null; error?: string };
+        const data = await barcodeLookupApi(barcode);
 
         if (data.error) {
           toast.error(data.error);
