@@ -27,7 +27,8 @@ export function ListPageContent({
               variant="default"
               onClick={() => listPage.handleAddFormOpenChange?.(true)}
             >
-              <Plus data-icon="inline-start" /> {addForm.title}
+              <Plus data-icon="inline-start" />
+              <span className="hidden sm:inline">{addForm.title}</span>
             </Button>
           ) : null
         }
