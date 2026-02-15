@@ -66,39 +66,39 @@ export default async function RootLayout({
         className={`${GeistSans.variable} antialiased h-full`}
       >
         <NuqsAdapter>
-        <NativeAppMarker />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <UserProvider>
-            <SettingsProvider>
-              <CurrentPageProvider>
-                <SidebarProvider defaultOpen={defaultOpen}>
-                  <CapacitorAuthListener />
-                  <QuickMoveProvider>
-                    <TooltipProvider>
-                      <AppSidebar />
+          <NativeAppMarker />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <UserProvider>
+              <SettingsProvider>
+                <CurrentPageProvider>
+                  <SidebarProvider defaultOpen={defaultOpen}>
+                    <CapacitorAuthListener />
+                    <QuickMoveProvider>
+                      <TooltipProvider>
+                        <AppSidebar />
 
-                      <SidebarInset>
-                        <main className="flex flex-col flex-1 overflow-hidden h-full">
-                          <div className="flex-1 overflow-y-auto">
-                            <div className="mx-auto md:p-6 p-4">
-                              {children}
+                        <SidebarInset>
+                          <main className="flex flex-col flex-1 overflow-hidden h-full">
+                            <div className="flex-1 overflow-y-auto">
+                              <div className="mx-auto p-4">
+                                {children}
+                              </div>
                             </div>
-                          </div>
-                        </main>
-                      </SidebarInset>
-                    </TooltipProvider>
-                  </QuickMoveProvider>
-                  <Toaster />
-                </SidebarProvider>
-              </CurrentPageProvider>
-            </SettingsProvider>
-          </UserProvider>
-        </ThemeProvider>
+                          </main>
+                        </SidebarInset>
+                      </TooltipProvider>
+                    </QuickMoveProvider>
+                    <Toaster />
+                  </SidebarProvider>
+                </CurrentPageProvider>
+              </SettingsProvider>
+            </UserProvider>
+          </ThemeProvider>
         </NuqsAdapter>
       </body>
     </html>

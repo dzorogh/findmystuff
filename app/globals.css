@@ -125,9 +125,9 @@
     @apply bg-background text-foreground;
   }
 
-  html {
+  /* html {
     @apply bg-sidebar;
-  }
+  } */
 
   button:not(:disabled),
   [role="button"]:not(:disabled) {

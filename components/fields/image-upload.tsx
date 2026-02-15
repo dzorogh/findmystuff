@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { photoApi } from "@/lib/shared/api/photo";
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
