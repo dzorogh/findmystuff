@@ -4,12 +4,15 @@ import { useState, useCallback } from "react";
 import { PageHeader } from "../layout/page-header";
 import { Button } from "../ui/button";
 import { EntityList } from "./entity-list";
-import { Plus, Barcode } from "lucide-react";
+import { Plus, Barcode, Camera } from "lucide-react";
 import { ListPagination } from "./list-pagination";
 import { BarcodeScanner } from "@/components/common/scanner";
+import { CameraCaptureDialog } from "@/components/common/camera-capture-dialog";
 import AddItemForm from "@/components/forms/add-item-form";
 import { toast } from "sonner";
 import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";
+import { photoApi } from "@/lib/shared/api/photo";
+import { recognizeItemPhotoApi } from "@/lib/shared/api/recognize-item-photo";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import type { EntityDisplay } from "@/lib/app/types/entity-config";
 
@@ -22,8 +25,11 @@ export function ItemsListPageContent({
 }) {
   const addForm = listPage.addForm;
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
+  const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [addFormInitialName, setAddFormInitialName] = useState<string | null>(null);
+  const [addFormInitialPhotoUrl, setAddFormInitialPhotoUrl] = useState<string | null>(null);
   const [isBarcodeLookupLoading, setIsBarcodeLookupLoading] = useState(false);
+  const [isRecognizeLoading, setIsRecognizeLoading] = useState(false);
 
   const handleBarcodeScanSuccess = useCallback(
     async (barcode: string) => {
@@ -56,10 +62,54 @@ export function ItemsListPageContent({
     [listPage]
   );
 
+  const handleCameraCapture = useCallback(
+    async (blob: Blob) => {
+      setCameraDialogOpen(false);
+      setIsRecognizeLoading(true);
+      const toastId = toast.loading("Распознавание предмета...");
+
+      const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+
+      try {
+        const [uploadResult, recognizeResult] = await Promise.all([
+          photoApi.uploadPhoto(file),
+          recognizeItemPhotoApi(file),
+        ]);
+
+        const url = uploadResult.data?.url ?? null;
+        const itemName = recognizeResult.itemName?.trim() ?? null;
+
+        setAddFormInitialPhotoUrl(url);
+        setAddFormInitialName(itemName);
+        listPage.handleAddFormOpenChange?.(true);
+
+        if (recognizeResult.error) {
+          toast.error(recognizeResult.error);
+        }
+        if (!itemName) {
+          toast.info("Название не распознано. Введите название вручную.");
+        }
+      } catch (err) {
+        console.error("Photo capture/recognize error:", err);
+        toast.error(
+          err instanceof Error ? err.message : "Не удалось обработать фотографию"
+        );
+        setAddFormInitialPhotoUrl(null);
+        setAddFormInitialName(null);
+        listPage.handleAddFormOpenChange?.(true);
+      } finally {
+        toast.dismiss(toastId);
+        setIsRecognizeLoading(false);
+      }
+    },
+    [listPage]
+  );
+
   const handleAddFormOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
         setAddFormInitialName(null);
+        setAddFormInitialPhotoUrl(null);
       }
       listPage.handleAddFormOpenChange?.(open);
     },
@@ -73,6 +123,13 @@ export function ItemsListPageContent({
         actions={
           addForm ? (
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setCameraDialogOpen(true)}
+                disabled={isRecognizeLoading}
+              >
+                <Camera data-icon="inline-start" /> Сфотографировать
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => setBarcodeScannerOpen(true)}
@@ -122,6 +179,12 @@ export function ItemsListPageContent({
           />
         )}
 
+      <CameraCaptureDialog
+        open={cameraDialogOpen}
+        onClose={() => setCameraDialogOpen(false)}
+        onCapture={handleCameraCapture}
+      />
+
       <BarcodeScanner
         open={barcodeScannerOpen}
         onClose={() => setBarcodeScannerOpen(false)}
@@ -133,6 +196,7 @@ export function ItemsListPageContent({
         onOpenChange={handleAddFormOpenChange}
         onSuccess={listPage.handleEntityAdded}
         initialName={addFormInitialName}
+        initialPhotoUrl={addFormInitialPhotoUrl}
       />
     </div>
   );

@@ -191,7 +191,7 @@ export function EntityActions({
           <Button
             key={item.key}
             variant={item.variant}
-            size="icon-sm"
+            size="icon"
             title={item.label}
             aria-label={item.label}
             disabled={disabled}

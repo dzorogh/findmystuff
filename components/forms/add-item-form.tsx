@@ -29,6 +29,7 @@ interface AddItemFormProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   initialName?: string | null;
+  initialPhotoUrl?: string | null;
   initialDestinationType?: DestinationType | null;
   initialDestinationId?: number | null;
 }
@@ -38,6 +39,7 @@ const AddItemForm = ({
   onOpenChange,
   onSuccess,
   initialName,
+  initialPhotoUrl,
   initialDestinationType,
   initialDestinationId,
 }: AddItemFormProps) => {
@@ -56,17 +58,17 @@ const AddItemForm = ({
   useEffect(() => {
     if (open) {
       setName(initialName?.trim() ?? "");
+      setPhotoUrl(initialPhotoUrl ?? null);
       setItemTypeId(null);
       setDestinationType(initialDestinationType ?? null);
       setSelectedDestinationId(initialDestinationId?.toString() ?? "");
-      setPhotoUrl(null);
       setPrice(null);
       setCurrentValue(null);
       setQuantity(1);
       setPurchaseDate("");
       setError(null);
     }
-  }, [open, initialName, initialDestinationType, initialDestinationId]);
+  }, [open, initialName, initialPhotoUrl, initialDestinationType, initialDestinationId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
