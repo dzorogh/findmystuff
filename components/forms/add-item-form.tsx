@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -26,9 +26,10 @@ interface AddItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialName?: string | null;
 }
 
-const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
+const AddItemForm = ({ open, onOpenChange, onSuccess, initialName }: AddItemFormProps) => {
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState<number | null>(null);
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
@@ -40,6 +41,21 @@ const AddItemForm = ({ open, onOpenChange, onSuccess }: AddItemFormProps) => {
   const [purchaseDate, setPurchaseDate] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName(initialName?.trim() ?? "");
+      setItemTypeId(null);
+      setDestinationType(null);
+      setSelectedDestinationId("");
+      setPhotoUrl(null);
+      setPrice(null);
+      setCurrentValue(null);
+      setQuantity(1);
+      setPurchaseDate("");
+      setError(null);
+    }
+  }, [open, initialName]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

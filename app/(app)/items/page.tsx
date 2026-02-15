@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ListPageContent } from "@/components/lists/list-page-content";
+import { ItemsListPageContent } from "@/components/lists/items-list-page-content";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 
@@ -11,7 +11,7 @@ export default function ItemsPage() {
 
   return (
     <Suspense fallback={null}>
-      <ListPageContent listPage={listPage} getRowActions={getRowActions} />
+      <ItemsListPageContent listPage={listPage} getRowActions={getRowActions} />
     </Suspense>
   );
 }
