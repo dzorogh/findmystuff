@@ -47,7 +47,7 @@ test.describe('items list', () => {
     await expect(page).toHaveURL(/\/items\/\d+$/, { timeout: NAVIGATION_TIMEOUT });
     await expect(page.getByText('Редактирование вещи')).toBeVisible();
     await expect(page.getByLabel('Название вещи')).toBeVisible();
-    await expect(page.getByText('История перемещений')).toBeVisible();
+    await expect(page.getByText('История перемещений', { exact: true })).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/\/items$/);
