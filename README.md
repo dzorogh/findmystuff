@@ -40,6 +40,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon-key>
 
 # База данных (для серверной логики при необходимости)
 DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+
+# Определение товара по штрихкоду (опционально)
+BARCODES_API_KEY=<ключ API barcodes.olegon.ru>
 ```
 
 **DATABASE_URL:** Supabase Dashboard → Settings → Database → Connection string → вкладка **URI**. Подставьте реальный пароль; специальные символы в пароле кодируйте (`@` → `%40`, `#` → `%23`, `%` → `%25`).
