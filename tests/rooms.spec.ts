@@ -33,7 +33,7 @@ test.describe('rooms list', () => {
     await expect(page).toHaveURL(/\/rooms\/\d+$/);
     await expect(page.getByText('Редактирование помещения')).toBeVisible();
     await expect(page.getByLabel('Название помещения')).toBeVisible();
-    await expect(page.getByText('Содержимое помещения')).toBeVisible();
+    await expect(page.getByText('Мебель в этом помещении')).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/\/rooms$/);

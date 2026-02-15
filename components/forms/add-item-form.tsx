@@ -22,14 +22,25 @@ import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 import { DatePicker } from "@/components/fields/date-picker";
 
+type DestinationType = "room" | "place" | "container";
+
 interface AddItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   initialName?: string | null;
+  initialDestinationType?: DestinationType | null;
+  initialDestinationId?: number | null;
 }
 
-const AddItemForm = ({ open, onOpenChange, onSuccess, initialName }: AddItemFormProps) => {
+const AddItemForm = ({
+  open,
+  onOpenChange,
+  onSuccess,
+  initialName,
+  initialDestinationType,
+  initialDestinationId,
+}: AddItemFormProps) => {
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState<number | null>(null);
   const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
@@ -46,8 +57,8 @@ const AddItemForm = ({ open, onOpenChange, onSuccess, initialName }: AddItemForm
     if (open) {
       setName(initialName?.trim() ?? "");
       setItemTypeId(null);
-      setDestinationType(null);
-      setSelectedDestinationId("");
+      setDestinationType(initialDestinationType ?? null);
+      setSelectedDestinationId(initialDestinationId?.toString() ?? "");
       setPhotoUrl(null);
       setPrice(null);
       setCurrentValue(null);
@@ -55,7 +66,7 @@ const AddItemForm = ({ open, onOpenChange, onSuccess, initialName }: AddItemForm
       setPurchaseDate("");
       setError(null);
     }
-  }, [open, initialName]);
+  }, [open, initialName, initialDestinationType, initialDestinationId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

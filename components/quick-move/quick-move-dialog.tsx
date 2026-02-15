@@ -6,6 +6,7 @@ import { getItem, createTransition } from "@/lib/entities/api";
 import { getContainer } from "@/lib/containers/api";
 import { getPlace } from "@/lib/places/api";
 import { getRoom } from "@/lib/rooms/api";
+import { getFurnitureItem } from "@/lib/furniture/api";
 import { resolveQuickMove, type QuickMoveResult } from "@/lib/entities/helpers/quick-move";
 import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
@@ -66,6 +67,14 @@ const fetchEntityName = async (
         return getEntityDisplayName(entityType, entityId, null);
       }
       const name = res.data.room?.name ?? null;
+      return getEntityDisplayName(entityType, entityId, name);
+    }
+    if (entityType === "furniture") {
+      const res = await getFurnitureItem(entityId);
+      if (res.error || !res.data?.furniture) {
+        return getEntityDisplayName(entityType, entityId, null);
+      }
+      const name = res.data.furniture.name ?? null;
       return getEntityDisplayName(entityType, entityId, name);
     }
   } catch {

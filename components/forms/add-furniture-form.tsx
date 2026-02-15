@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFurniture } from "@/lib/furniture/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -28,13 +28,20 @@ interface AddFurnitureFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialRoomId?: number;
 }
 
-const AddFurnitureForm = ({ open, onOpenChange, onSuccess }: AddFurnitureFormProps) => {
+const AddFurnitureForm = ({ open, onOpenChange, onSuccess, initialRoomId }: AddFurnitureFormProps) => {
   const { isLoading } = useUser();
   const { types: _furnitureTypes, isLoading: isLoadingTypes } = useEntityTypes("furniture");
   const [name, setName] = useState("");
   const [roomId, setRoomId] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setRoomId(initialRoomId?.toString() ?? "");
+    }
+  }, [open, initialRoomId]);
   const [furnitureTypeId, setFurnitureTypeId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);

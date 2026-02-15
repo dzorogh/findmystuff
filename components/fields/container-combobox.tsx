@@ -1,23 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { Container } from "@/types/entity";
@@ -41,21 +34,29 @@ const ContainerCombobox = ({
   required = false,
   excludeContainerId,
 }: ContainerComboboxProps) => {
-  const { containers } = useContainers();
-  const [open, setOpen] = React.useState(false);
+  const { containers, isLoading } = useContainers();
 
-  const availableContainers = excludeContainerId
-    ? containers.filter((c) => c.id !== excludeContainerId)
-    : containers;
+  const availableContainers =
+    excludeContainerId != null
+      ? containers.filter((c) => c.id !== excludeContainerId)
+      : containers;
 
-  const selectedContainer = availableContainers.find(
-    (container) => container.id.toString() === selectedContainerId
-  );
+  const items = React.useMemo(() => {
+    const getDisplayName = (c: Container) => {
+      const displayName = getEntityDisplayName("container", c.id, c.name);
+      const typeName = c.entity_type?.name;
+      return typeName ? `${displayName} (${typeName})` : displayName;
+    };
+    return availableContainers.map((c) => ({
+      value: c.id.toString(),
+      label: getDisplayName(c),
+    }));
+  }, [availableContainers]);
 
-  const getDisplayName = (container: Container) => {
-    const displayName = getEntityDisplayName("container", container.id, container.name);
-    const typeName = container.entity_type?.name;
-    return typeName ? `${displayName} (${typeName})` : displayName;
+  const selectedItem = items.find((i) => i.value === selectedContainerId) ?? null;
+
+  const handleValueChange = (item: { value: string; label: string } | null) => {
+    onContainerIdChange(item?.value ?? "");
   };
 
   return (
@@ -64,67 +65,33 @@ const ContainerCombobox = ({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          render={
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between"
-              disabled={disabled || availableContainers.length === 0}
-              id={`${id}-combobox`}
-            >
-              {selectedContainer
-                ? getDisplayName(selectedContainer)
-                : "-- Выберите контейнер --"}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          }
-          nativeButton={true}
-        />
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Поиск контейнера..." />
-            <CommandList>
-              <CommandEmpty>Контейнеры не найдены</CommandEmpty>
-              <CommandGroup>
-                {availableContainers.map((container) => {
-                  const displayName = getDisplayName(container);
-                  const isSelected = container.id.toString() === selectedContainerId;
-                  const itemValue = `${container.id}-${displayName}`;
-                  return (
-                    <CommandItem
-                      key={container.id}
-                      value={itemValue}
-                      keywords={[
-                        container.id.toString(),
-                        displayName,
-                        container.name || "",
-                        container.entity_type?.name || "",
-                      ]}
-                      onSelect={() => {
-                        onContainerIdChange(container.id.toString());
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {displayName}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-      {availableContainers.length === 0 && (
-        <p className="text-xs text-destructive">
+      <Combobox
+        value={selectedItem}
+        items={items}
+        onValueChange={handleValueChange}
+        disabled={disabled || (isLoading ? false : items.length === 0)}
+      >
+        {isLoading ? (
+          <Skeleton className="h-9 w-full" />
+        ) : (
+          <ComboboxInput
+            id={`${id}-combobox`}
+            placeholder="Поиск контейнера..."
+          />
+        )}
+        <ComboboxContent>
+          <ComboboxEmpty>Контейнеры не найдены</ComboboxEmpty>
+          <ComboboxList>
+            {(item: { value: string; label: string }) => (
+              <ComboboxItem key={item.value} value={item}>
+                {item.label}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      {!isLoading && items.length === 0 && (
+        <p className="text-xs text-muted-foreground">
           Контейнеры не найдены. Сначала создайте контейнер.
         </p>
       )}

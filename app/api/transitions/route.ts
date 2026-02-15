@@ -28,6 +28,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Места привязываются только к мебели, не к помещениям напрямую
+    if (place_id && destination_type !== "furniture") {
+      return NextResponse.json(
+        { error: "Места можно привязывать только к мебели" },
+        { status: 400 }
+      );
+    }
+
     const transitionData: {
       destination_type: DestinationType;
       destination_id: number;

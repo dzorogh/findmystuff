@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getPlace, updatePlace } from "@/lib/places/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,13 +17,15 @@ import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-s
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
-import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { placesEntityConfig } from "@/lib/entities/places/entity-config";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
 import { ErrorMessage } from "@/components/common/error-message";
+import AddItemForm from "@/components/forms/add-item-form";
+import AddContainerForm from "@/components/forms/add-container-form";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import type { Transition, PlaceEntity } from "@/types/entity";
@@ -58,6 +60,8 @@ export default function PlaceDetailPage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addContainerOpen, setAddContainerOpen] = useState(false);
 
   const loadPlaceData = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -212,7 +216,7 @@ export default function PlaceDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleEditSubmit}>
+              <form id={`place-form-${place.id}`} onSubmit={handleEditSubmit}>
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor={`place-name-${place.id}`}>Название места</FieldLabel>
@@ -238,37 +242,36 @@ export default function PlaceDetailPage() {
                     disabled={isSubmitting}
                     label="Фотография места (необязательно)"
                   />
-                  <GenerateImageButton
-                    entityName={name}
-                    entityType="place"
-                    onSuccess={async (url) => {
-                      setPhotoUrl(url);
-                      if (!place) return;
-                      const res = await updatePlace(place.id, { photo_url: url });
-                      if (res.error) return;
-                      toast.success("Изображение сгенерировано и сохранено");
-                      loadPlaceData({ silent: true });
-                    }}
-                    disabled={isSubmitting}
-                  />
 
                   <ErrorMessage message={formError ?? ""} />
-
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Сохранение...
-                        </>
-                      ) : (
-                        "Сохранить"
-                      )}
-                    </Button>
-                  </div>
                 </FieldGroup>
               </form>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <GenerateImageButton
+                entityName={name}
+                entityType="place"
+                onSuccess={async (url) => {
+                  setPhotoUrl(url);
+                  if (!place) return;
+                  const res = await updatePlace(place.id, { photo_url: url });
+                  if (res.error) return;
+                  toast.success("Изображение сгенерировано и сохранено");
+                  loadPlaceData({ silent: true });
+                }}
+                disabled={isSubmitting}
+              />
+              <Button type="submit" form={`place-form-${place.id}`} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <div className="flex flex-col gap-6">
@@ -300,41 +303,28 @@ export default function PlaceDetailPage() {
                 </CardContent>
               </Card>
             )}
-            <Card>
-              <CardHeader>
-                <CardTitle>Содержимое места</CardTitle>
-                <CardDescription>
-                  Вещи и контейнеры, которые находятся в этом месте
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {placeItems.length === 0 && placeContainers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Место пусто
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {placeItems.length > 0 && (
-                      <EntityContentGrid
-                        items={placeItems}
-                        emptyMessage=""
-                        entityType="items"
-                        title="Вещи"
-                      />
-                    )}
-                    {placeContainers.length > 0 && (
-                      <EntityContentGrid
-                        items={placeContainers}
-                        emptyMessage=""
-                        entityType="containers"
-                        title="Контейнеры"
-                      />
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
+            <EntityContentBlock
+              title="Вещи"
+              description="Вещи, которые находятся в этом месте"
+              items={placeItems}
+              entityType="items"
+              emptyMessage="Нет вещей"
+              addButton={{
+                label: "Добавить вещь",
+                onClick: () => setAddItemOpen(true),
+              }}
+            />
+            <EntityContentBlock
+              title="Контейнеры"
+              description="Контейнеры, которые находятся в этом месте"
+              items={placeContainers}
+              entityType="containers"
+              emptyMessage="Нет контейнеров"
+              addButton={{
+                label: "Добавить контейнер",
+                onClick: () => setAddContainerOpen(true),
+              }}
+            />
             <Card>
               <CardHeader>
                 <CardTitle>История перемещений</CardTitle>
@@ -350,6 +340,21 @@ export default function PlaceDetailPage() {
 
         </div>
       ) : null}
+
+      <AddItemForm
+        open={addItemOpen}
+        onOpenChange={setAddItemOpen}
+        onSuccess={() => loadPlaceData({ silent: true })}
+        initialDestinationType="place"
+        initialDestinationId={place?.id ?? undefined}
+      />
+      <AddContainerForm
+        open={addContainerOpen}
+        onOpenChange={setAddContainerOpen}
+        onSuccess={() => loadPlaceData({ silent: true })}
+        initialDestinationType="place"
+        initialDestinationId={place?.id ?? undefined}
+      />
     </div>
   );
 }

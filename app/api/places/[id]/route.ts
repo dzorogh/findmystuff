@@ -62,25 +62,16 @@ export async function GET(
       );
     }
 
-    const roomIds = (transitionsData || [])
-      .filter((t) => t.destination_type === "room" && t.destination_id)
-      .map((t) => t.destination_id);
+    // Места могут быть только в мебели
     const furnitureIds = (transitionsData || [])
       .filter((t) => t.destination_type === "furniture" && t.destination_id)
       .map((t) => t.destination_id);
 
-    const [roomsResult, furnitureResult] = await Promise.all([
-      roomIds.length > 0
-        ? supabase.from("rooms").select("id, name").in("id", roomIds).is("deleted_at", null)
-        : Promise.resolve({ data: [] }),
+    const furnitureResult =
       furnitureIds.length > 0
-        ? supabase.from("furniture").select("id, name, room_id").in("id", furnitureIds).is("deleted_at", null)
-        : Promise.resolve({ data: [] }),
-    ]);
+        ? await supabase.from("furniture").select("id, name, room_id").in("id", furnitureIds).is("deleted_at", null)
+        : { data: [] };
 
-    const roomsMap = new Map(
-      (roomsResult.data || []).map((r: { id: number; name: string }) => [r.id, r.name])
-    );
     const furnitureMap = new Map(
       (furnitureResult.data || []).map((f: { id: number; name: string | null }) => [f.id, f.name ?? null])
     );
@@ -103,9 +94,6 @@ export async function GET(
         destination_id: t.destination_id,
       };
 
-      if (t.destination_type === "room" && t.destination_id) {
-        transition.destination_name = roomsMap.get(t.destination_id) || null;
-      }
       if (t.destination_type === "furniture" && t.destination_id) {
         transition.destination_name = furnitureMap.get(t.destination_id) || null;
       }
@@ -148,9 +136,6 @@ export async function GET(
         room_id = furnitureRow.room_id;
         room_name = roomNameByRoomId.get(furnitureRow.room_id) || null;
       }
-    } else if (lastTransition?.destination_type === "room" && lastTransition.destination_id) {
-      room_id = lastTransition.destination_id;
-      room_name = roomsMap.get(room_id) || null;
     }
 
     const place = {

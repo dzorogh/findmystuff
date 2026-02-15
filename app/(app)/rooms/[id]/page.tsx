@@ -6,9 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getRoom, updateRoom } from "@/lib/rooms/api";
-import Link from "next/link";
-import { Sofa } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +18,7 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
@@ -31,6 +29,9 @@ import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import BuildingCombobox from "@/components/fields/building-combobox";
+import AddFurnitureForm from "@/components/forms/add-furniture-form";
+import AddItemForm from "@/components/forms/add-item-form";
+import AddContainerForm from "@/components/forms/add-container-form";
 
 type Room = RoomEntity;
 
@@ -41,12 +42,6 @@ export default function RoomDetailPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [roomItems, setRoomItems] = useState<Array<{
-    id: number;
-    name: string | null;
-    photo_url: string | null;
-    created_at: string;
-  }>>([]);
-  const [roomPlaces, setRoomPlaces] = useState<Array<{
     id: number;
     name: string | null;
     photo_url: string | null;
@@ -74,6 +69,9 @@ export default function RoomDetailPage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [addFurnitureOpen, setAddFurnitureOpen] = useState(false);
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addContainerOpen, setAddContainerOpen] = useState(false);
 
   const loadRoomData = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -90,7 +88,7 @@ export default function RoomDetailPage() {
           return;
         }
 
-        const { room: roomData, items, places, containers, furniture } = response.data;
+        const { room: roomData, items, containers, furniture } = response.data;
 
         if (!roomData) {
           setError("Помещение не найдено");
@@ -108,7 +106,6 @@ export default function RoomDetailPage() {
         });
 
         setRoomItems(items || []);
-        setRoomPlaces(places || []);
         setRoomFurniture(furniture || []);
         setRoomContainers(containers || []);
       } catch (err) {
@@ -243,8 +240,8 @@ export default function RoomDetailPage() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="">
-              <form onSubmit={handleEditSubmit}>
+            <CardContent>
+              <form id={`room-form-${room.id}`} onSubmit={handleEditSubmit}>
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor={`room-name-${room.id}`}>Название помещения</FieldLabel>
@@ -277,126 +274,96 @@ export default function RoomDetailPage() {
                     disabled={isSubmitting}
                     label="Фотография помещения (необязательно)"
                   />
-                  <GenerateImageButton
-                    entityName={name}
-                    entityType="room"
-                    onSuccess={async (url) => {
-                      setPhotoUrl(url);
-                      if (!room) return;
-                      const res = await updateRoom(room.id, { photo_url: url });
-                      if (res.error) return;
-                      toast.success("Изображение сгенерировано и сохранено");
-                      await loadRoomData({ silent: true });
-                    }}
-                    disabled={isSubmitting}
-                  />
 
                   <ErrorMessage message={formError ?? ""} />
-
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Сохранение...
-                        </>
-                      ) : (
-                        "Сохранить"
-                      )}
-                    </Button>
-                  </div>
                 </FieldGroup>
               </form>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <GenerateImageButton
+                entityName={name}
+                entityType="room"
+                onSuccess={async (url) => {
+                  setPhotoUrl(url);
+                  if (!room) return;
+                  const res = await updateRoom(room.id, { photo_url: url });
+                  if (res.error) return;
+                  toast.success("Изображение сгенерировано и сохранено");
+                  await loadRoomData({ silent: true });
+                }}
+                disabled={isSubmitting}
+              />
+              <Button type="submit" form={`room-form-${room.id}`} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <div className="flex flex-col gap-6">
-            {roomFurniture.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Мебель</CardTitle>
-                  <CardDescription>
-                    Мебель в этом помещении
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {roomFurniture.map((f) => (
-                      <Link
-                        key={f.id}
-                        href={`/furniture/${f.id}`}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                      >
-                        {f.photo_url ? (
-                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={f.photo_url}
-                              alt={f.name ?? ""}
-                              className="h-full w-full object-cover"
-                              width={48}
-                              height={48}
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded border bg-muted">
-                            <Sofa className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <span className="font-medium truncate block">{f.name ?? `Мебель #${f.id}`}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            <Card>
-              <CardHeader>
-                <CardTitle>Содержимое помещения</CardTitle>
-                <CardDescription>
-                  Вещи, места и контейнеры, которые находятся в этом помещении
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {roomItems.length === 0 && roomPlaces.length === 0 && roomContainers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Помещение пусто
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {roomItems.length > 0 && (
-                      <EntityContentGrid
-                        items={roomItems}
-                        emptyMessage=""
-                        entityType="items"
-                        title="Вещи"
-                      />
-                    )}
-                    {roomPlaces.length > 0 && (
-                      <EntityContentGrid
-                        items={roomPlaces}
-                        emptyMessage=""
-                        entityType="places"
-                        title="Места"
-                      />
-                    )}
-                    {roomContainers.length > 0 && (
-                      <EntityContentGrid
-                        items={roomContainers}
-                        emptyMessage=""
-                        entityType="containers"
-                        title="Контейнеры"
-                      />
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <EntityContentBlock
+              title="Мебель"
+              description="Мебель в этом помещении"
+              items={roomFurniture}
+              entityType="furniture"
+              emptyMessage="Нет мебели"
+              addButton={{
+                label: "Добавить мебель",
+                onClick: () => setAddFurnitureOpen(true),
+              }}
+            />
+            <EntityContentBlock
+              title="Вещи"
+              description="Вещи, которые находятся в этом помещении"
+              items={roomItems}
+              entityType="items"
+              emptyMessage="Нет вещей"
+              addButton={{
+                label: "Добавить вещь",
+                onClick: () => setAddItemOpen(true),
+              }}
+            />
+            <EntityContentBlock
+              title="Контейнеры"
+              description="Контейнеры, которые находятся в этом помещении"
+              items={roomContainers}
+              entityType="containers"
+              emptyMessage="Нет контейнеров"
+              addButton={{
+                label: "Добавить контейнер",
+                onClick: () => setAddContainerOpen(true),
+              }}
+            />
           </div>
         </div>
       ) : null}
+
+      <AddFurnitureForm
+        open={addFurnitureOpen}
+        onOpenChange={setAddFurnitureOpen}
+        onSuccess={() => loadRoomData({ silent: true })}
+        initialRoomId={room?.id ?? undefined}
+      />
+      <AddItemForm
+        open={addItemOpen}
+        onOpenChange={setAddItemOpen}
+        onSuccess={() => loadRoomData({ silent: true })}
+        initialDestinationType="room"
+        initialDestinationId={room?.id ?? undefined}
+      />
+      <AddContainerForm
+        open={addContainerOpen}
+        onOpenChange={setAddContainerOpen}
+        onSuccess={() => loadRoomData({ silent: true })}
+        initialDestinationType="room"
+        initialDestinationId={room?.id ?? undefined}
+      />
     </div>
   );
 }

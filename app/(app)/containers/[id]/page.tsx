@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getContainer, updateContainer } from "@/lib/containers/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,8 @@ import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-s
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
-import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
+import AddItemForm from "@/components/forms/add-item-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import MoveEntityForm from "@/components/forms/move-entity-form";
 import { containersEntityConfig } from "@/lib/entities/containers/entity-config";
@@ -58,6 +59,7 @@ export default function ContainerDetailPage() {
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [addItemOpen, setAddItemOpen] = useState(false);
 
   const { types: _containerTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
@@ -214,7 +216,7 @@ export default function ContainerDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleEditSubmit}>
+                <form id={`container-form-${container.id}`} onSubmit={handleEditSubmit}>
                   <FieldGroup>
                     <Field>
                       <FieldLabel htmlFor={`container-name-${container.id}`}>Название контейнера</FieldLabel>
@@ -240,37 +242,36 @@ export default function ContainerDetailPage() {
                       disabled={isSubmitting}
                       label="Фотография контейнера (необязательно)"
                     />
-                    <GenerateImageButton
-                      entityName={name}
-                      entityType="container"
-                      onSuccess={async (url) => {
-                        setPhotoUrl(url);
-                        if (!container) return;
-                        const res = await updateContainer(container.id, { photo_url: url });
-                        if (res.error) return;
-                        toast.success("Изображение сгенерировано и сохранено");
-                        loadContainerData({ silent: true });
-                      }}
-                      disabled={isSubmitting}
-                    />
 
                     <ErrorMessage message={formError ?? ""} />
-
-                    <div className="flex justify-end">
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Сохранение...
-                          </>
-                        ) : (
-                          "Сохранить"
-                        )}
-                      </Button>
-                    </div>
                   </FieldGroup>
                 </form>
               </CardContent>
+              <CardFooter className="flex justify-between">
+                <GenerateImageButton
+                  entityName={name}
+                  entityType="container"
+                  onSuccess={async (url) => {
+                    setPhotoUrl(url);
+                    if (!container) return;
+                    const res = await updateContainer(container.id, { photo_url: url });
+                    if (res.error) return;
+                    toast.success("Изображение сгенерировано и сохранено");
+                    loadContainerData({ silent: true });
+                  }}
+                  disabled={isSubmitting}
+                />
+                <Button type="submit" form={`container-form-${container.id}`} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Сохранение...
+                    </>
+                  ) : (
+                    "Сохранить"
+                  )}
+                </Button>
+              </CardFooter>
             </Card>
           </div>
 
@@ -287,22 +288,26 @@ export default function ContainerDetailPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Содержимое контейнера</CardTitle>
-                <CardDescription>
-                  Вещи, которые находятся в этом контейнере
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <EntityContentGrid
-                  items={containerItems}
-                  emptyMessage="Контейнер пуст"
-                  entityType="items"
-                />
-              </CardContent>
-            </Card>
+            <EntityContentBlock
+              title="Содержимое контейнера"
+              description="Вещи, которые находятся в этом контейнере"
+              items={containerItems}
+              entityType="items"
+              emptyMessage="Контейнер пуст"
+              addButton={{
+                label: "Добавить вещь",
+                onClick: () => setAddItemOpen(true),
+              }}
+            />
           </div>
+
+          <AddItemForm
+            open={addItemOpen}
+            onOpenChange={setAddItemOpen}
+            onSuccess={() => loadContainerData({ silent: true })}
+            initialDestinationType="container"
+            initialDestinationId={container?.id ?? undefined}
+          />
 
           {isMoving && container && (
             <MoveEntityForm

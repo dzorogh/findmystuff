@@ -16,7 +16,7 @@ export const EntityDetailSkeleton = () => {
             <Skeleton className="h-4 w-32 mt-5" />
             <Skeleton className="h-9 w-full mt-1" />
             <Skeleton className="h-4 w-48 mt-5" />
-            <Skeleton className="aspect-video w-full mt-1" />
+            <Skeleton className="aspect-square w-full max-w-md mt-1" />
           </CardContent>
         </Card>
       </div>

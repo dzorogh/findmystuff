@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -131,7 +131,7 @@ export default function ItemDetailPage() {
               <CardDescription>ID: #{item.id}</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit}>
+              <form id={`item-form-${item.id}`} onSubmit={handleSubmit}>
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor={`item-name-${item.id}`}>Название вещи</FieldLabel>
@@ -193,37 +193,36 @@ export default function ItemDetailPage() {
                     disabled={isSubmitting}
                     label="Фотография вещи (необязательно)"
                   />
-                  <GenerateImageButton
-                    entityName={name}
-                    entityType="item"
-                    onSuccess={async (url) => {
-                      setPhotoUrl(url);
-                      if (!item) return;
-                      const res = await updateItem(item.id, { photo_url: url });
-                      if (res.error) return;
-                      toast.success("Изображение сгенерировано и сохранено");
-                      handleEditSuccess();
-                    }}
-                    disabled={isSubmitting}
-                  />
 
                   <ErrorMessage message={formError ?? ""} />
-
-                  <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Сохранение...
-                        </>
-                      ) : (
-                        "Сохранить"
-                      )}
-                    </Button>
-                  </div>
                 </FieldGroup>
               </form>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <GenerateImageButton
+                entityName={name}
+                entityType="item"
+                onSuccess={async (url) => {
+                  setPhotoUrl(url);
+                  if (!item) return;
+                  const res = await updateItem(item.id, { photo_url: url });
+                  if (res.error) return;
+                  toast.success("Изображение сгенерировано и сохранено");
+                  handleEditSuccess();
+                }}
+                disabled={isSubmitting}
+              />
+              <Button type="submit" form={`item-form-${item.id}`} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <div className="flex flex-col gap-2">

@@ -319,6 +319,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
+    // Места привязываются только к мебели, не к помещениям напрямую
+    if (destination_type && destination_type !== "furniture") {
+      return NextResponse.json(
+        { error: "Места можно привязывать только к мебели" },
+        { status: 400 }
+      );
+    }
+
     const insertData: {
       name: string | null;
       entity_type_id: number | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPlace } from "@/lib/places/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -26,14 +26,21 @@ interface AddPlaceFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialFurnitureId?: number;
 }
 
-const AddPlaceForm = ({ open, onOpenChange, onSuccess }: AddPlaceFormProps) => {
+const AddPlaceForm = ({ open, onOpenChange, onSuccess, initialFurnitureId }: AddPlaceFormProps) => {
   const { isLoading } = useUser();
   const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const [name, setName] = useState("");
   const [placeTypeId, setPlaceTypeId] = useState<string>("");
   const [selectedFurnitureId, setSelectedFurnitureId] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setSelectedFurnitureId(initialFurnitureId?.toString() ?? "");
+    }
+  }, [open, initialFurnitureId]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

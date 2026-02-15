@@ -44,7 +44,7 @@ const AppSidebar = () => {
           </Tooltip>
           <SidebarMenuItem>
             <SidebarMenuButton
-              variant="outline"
+              variant="default"
               onClick={() => setQuickMoveOpen(true)}
               tooltip="Перемещение"
             >

@@ -55,20 +55,27 @@ describe("quick-move", () => {
       });
     });
 
-    it("place + room → move place to room", () => {
+    it("place + room → null (места можно только в мебель)", () => {
       const a: EntityQrPayload = { type: "place", id: 3 };
       const b: EntityQrPayload = { type: "room", id: 1 };
+      expect(resolveQuickMove(a, b)).toBeNull();
+      expect(resolveQuickMove(b, a)).toBeNull();
+    });
+
+    it("place + furniture → move place to furniture", () => {
+      const a: EntityQrPayload = { type: "place", id: 3 };
+      const b: EntityQrPayload = { type: "furniture", id: 5 };
       expect(resolveQuickMove(a, b)).toEqual({
         sourceType: "place",
         sourceId: 3,
-        destType: "room",
-        destId: 1,
+        destType: "furniture",
+        destId: 5,
       });
       expect(resolveQuickMove(b, a)).toEqual({
         sourceType: "place",
         sourceId: 3,
-        destType: "room",
-        destId: 1,
+        destType: "furniture",
+        destId: 5,
       });
     });
 

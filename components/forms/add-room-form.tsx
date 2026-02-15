@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createRoom } from "@/lib/rooms/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -26,14 +26,21 @@ interface AddRoomFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialBuildingId?: number;
 }
 
-const AddRoomForm = ({ open, onOpenChange, onSuccess }: AddRoomFormProps) => {
+const AddRoomForm = ({ open, onOpenChange, onSuccess, initialBuildingId }: AddRoomFormProps) => {
   const { isLoading } = useUser();
   const { types: _roomTypes, isLoading: isLoadingTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState<string>("");
   const [buildingId, setBuildingId] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setBuildingId(initialBuildingId?.toString() ?? "");
+    }
+  }, [open, initialBuildingId]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

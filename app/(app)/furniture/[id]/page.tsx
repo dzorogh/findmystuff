@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 import { getFurnitureItem, updateFurniture } from "@/lib/furniture/api";
 import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
@@ -13,11 +13,14 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
+import AddPlaceForm from "@/components/forms/add-place-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { PageHeader } from "@/components/layout/page-header";
 import { EditFurnitureForm } from "@/components/forms/edit-furniture-form";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Furniture } from "@/types/entity";
 
@@ -35,6 +38,7 @@ export default function FurnitureDetailPage() {
   }>>([]);
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addPlaceOpen, setAddPlaceOpen] = useState(false);
 
   const loadFurnitureData = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -187,50 +191,60 @@ export default function FurnitureDetailPage() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <EditFurnitureForm furniture={furniture} onSuccess={() => loadFurnitureData({ silent: true })} />
-              <div className="mt-4">
-                <GenerateImageButton
-                  entityName={furniture.name ?? ""}
-                  entityType="furniture"
-                  onSuccess={async (url) => {
-                    if (!furniture) return;
-                    const res = await updateFurniture(furniture.id, { photo_url: url });
-                    if (res.error) return;
-                    toast.success("Изображение сгенерировано и сохранено");
-                    await loadFurnitureData({ silent: true });
-                  }}
-                />
-              </div>
-            </CardContent>
+            <EditFurnitureForm
+              furniture={furniture}
+              onSuccess={() => loadFurnitureData({ silent: true })}
+              renderFooter={({ isSubmitting }) => (
+                <>
+                  <GenerateImageButton
+                    entityName={furniture.name ?? ""}
+                    entityType="furniture"
+                    onSuccess={async (url) => {
+                      if (!furniture) return;
+                      const res = await updateFurniture(furniture.id, { photo_url: url });
+                      if (res.error) return;
+                      toast.success("Изображение сгенерировано и сохранено");
+                      await loadFurnitureData({ silent: true });
+                    }}
+                    disabled={isSubmitting}
+                  />
+                  <Button type="submit" form={`furniture-form-${furniture.id}`} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      "Сохранить"
+                    )}
+                  </Button>
+                </>
+              )}
+            />
           </Card>
 
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Места в мебели</CardTitle>
-                <CardDescription>
-                  Места размещения, которые находятся в этой мебели
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {furniturePlaces.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    В мебели пока нет мест
-                  </p>
-                ) : (
-                  <EntityContentGrid
-                    items={furniturePlaces}
-                    emptyMessage=""
-                    entityType="places"
-                    title="Места"
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <EntityContentBlock
+              title="Места в мебели"
+              description="Места размещения, которые находятся в этой мебели"
+              items={furniturePlaces}
+              entityType="places"
+              emptyMessage="В мебели пока нет мест"
+              addButton={{
+                label: "Добавить место",
+                onClick: () => setAddPlaceOpen(true),
+              }}
+            />
           </div>
         </div>
       ) : null}
+
+      <AddPlaceForm
+        open={addPlaceOpen}
+        onOpenChange={setAddPlaceOpen}
+        onSuccess={() => loadFurnitureData({ silent: true })}
+        initialFurnitureId={furniture?.id ?? undefined}
+      />
     </div>
   );
 }

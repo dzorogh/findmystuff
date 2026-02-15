@@ -29,7 +29,7 @@ export function usePlacesActions({
   const singularLower = labels.singular.toLowerCase();
   const moveEnabled = move?.enabled ?? false;
   const destinationTypes = useMemo<MoveDestinationType[]>(
-    () => move?.destinationTypes ?? ["room", "container"],
+    () => move?.destinationTypes ?? ["furniture"],
     [move?.destinationTypes]
   );
 

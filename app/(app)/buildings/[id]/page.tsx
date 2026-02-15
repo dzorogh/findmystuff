@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getBuilding, updateBuilding } from "@/lib/buildings/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,8 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { EntityContentGrid } from "@/components/entity-detail/entity-content-grid";
+import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
+import AddRoomForm from "@/components/forms/add-room-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import ImageUpload from "@/components/fields/image-upload";
 import { GenerateImageButton } from "@/components/fields/generate-image-button";
@@ -46,6 +47,7 @@ export default function BuildingDetailPage() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
 
   const loadBuildingData = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -206,7 +208,7 @@ export default function BuildingDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleEditSubmit}>
+              <form id={`building-form-${building.id}`} onSubmit={handleEditSubmit}>
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor={`building-name-${building.id}`}>Название здания</FieldLabel>
@@ -232,64 +234,59 @@ export default function BuildingDetailPage() {
                     disabled={isSubmitting}
                     label="Фотография здания (необязательно)"
                   />
-                  <GenerateImageButton
-                    entityName={name}
-                    entityType="building"
-                    onSuccess={async (url) => {
-                      if (!building) return;
-                      const res = await updateBuilding(building.id, { photo_url: url });
-                      if (res.error) return;
-                      toast.success("Изображение сгенерировано и сохранено");
-                      await loadBuildingData({ silent: true });
-                    }}
-                    disabled={isSubmitting}
-                  />
 
                   <ErrorMessage message={formError ?? ""} />
-
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Сохранение...
-                        </>
-                      ) : (
-                        "Сохранить"
-                      )}
-                    </Button>
-                  </div>
                 </FieldGroup>
               </form>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <GenerateImageButton
+                entityName={name}
+                entityType="building"
+                onSuccess={async (url) => {
+                  if (!building) return;
+                  const res = await updateBuilding(building.id, { photo_url: url });
+                  if (res.error) return;
+                  toast.success("Изображение сгенерировано и сохранено");
+                  await loadBuildingData({ silent: true });
+                }}
+                disabled={isSubmitting}
+              />
+              <Button type="submit" form={`building-form-${building.id}`} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
           </Card>
 
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Помещения в здании</CardTitle>
-                <CardDescription>
-                  Помещения, которые находятся в этом здании
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {buildingRooms.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    В здании пока нет помещений
-                  </p>
-                ) : (
-                  <EntityContentGrid
-                    items={buildingRooms}
-                    emptyMessage=""
-                    entityType="rooms"
-                    title="Помещения"
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <EntityContentBlock
+              title="Помещения в здании"
+              description="Помещения, которые находятся в этом здании"
+              items={buildingRooms}
+              entityType="rooms"
+              emptyMessage="В здании пока нет помещений"
+              addButton={{
+                label: "Добавить помещение",
+                onClick: () => setAddRoomOpen(true),
+              }}
+            />
           </div>
         </div>
       ) : null}
+
+      <AddRoomForm
+        open={addRoomOpen}
+        onOpenChange={setAddRoomOpen}
+        onSuccess={() => loadBuildingData({ silent: true })}
+        initialBuildingId={building?.id ?? undefined}
+      />
     </div>
   );
 }

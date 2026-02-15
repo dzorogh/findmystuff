@@ -34,7 +34,6 @@ test.describe('places list', () => {
     await expect(page).toHaveURL(/\/places\/\d+$/);
     await expect(page.getByText('Редактирование места')).toBeVisible();
     await expect(page.getByLabel('Название места')).toBeVisible();
-    await expect(page.getByText('Содержимое места')).toBeVisible();
     await expect(page.getByText('История перемещений')).toBeVisible();
 
     await page.goBack();

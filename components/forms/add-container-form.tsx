@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createContainer } from "@/lib/containers/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -22,19 +22,36 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type DestinationType = "room" | "place" | "container";
+
 interface AddContainerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialDestinationType?: DestinationType | null;
+  initialDestinationId?: number | null;
 }
 
-const AddContainerForm = ({ open, onOpenChange, onSuccess }: AddContainerFormProps) => {
+const AddContainerForm = ({
+  open,
+  onOpenChange,
+  onSuccess,
+  initialDestinationType,
+  initialDestinationId,
+}: AddContainerFormProps) => {
   const { isLoading } = useUser();
   const { types: containerTypes, isLoading: isLoadingTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState<string>("");
   const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
+
+  useEffect(() => {
+    if (open) {
+      setDestinationType(initialDestinationType ?? null);
+      setSelectedDestinationId(initialDestinationId?.toString() ?? "");
+    }
+  }, [open, initialDestinationType, initialDestinationId]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

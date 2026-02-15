@@ -109,7 +109,7 @@ const ImageUpload = ({
       </FieldDescription>
       <div className="space-y-3">
         {preview ? (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+          <div className="relative w-full aspect-square max-w-md rounded-lg overflow-hidden border border-border bg-muted">
             <Image
               src={preview}
               alt="Превью"
@@ -132,7 +132,7 @@ const ImageUpload = ({
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center w-full aspect-video rounded-2xl border-2 border-dashed border-border bg-muted/50">
+          <div className="flex items-center justify-center w-full aspect-square max-w-md rounded-2xl border-2 border-dashed border-border bg-muted/50">
             <div className="text-center space-y-2">
               <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">

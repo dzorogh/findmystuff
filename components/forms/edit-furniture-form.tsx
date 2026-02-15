@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { updateFurniture } from "@/lib/furniture/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,9 +19,10 @@ import type { Furniture } from "@/types/entity";
 interface EditFurnitureFormProps {
   furniture: Furniture;
   onSuccess?: () => void;
+  renderFooter?: (props: { isSubmitting: boolean }) => React.ReactNode;
 }
 
-export function EditFurnitureForm({ furniture, onSuccess }: EditFurnitureFormProps) {
+export function EditFurnitureForm({ furniture, onSuccess, renderFooter }: EditFurnitureFormProps) {
   const [name, setName] = useState(furniture.name ?? "");
   const [roomId, setRoomId] = useState(furniture.room_id?.toString() ?? "");
   const [furnitureTypeId, setFurnitureTypeId] = useState(
@@ -88,7 +90,8 @@ export function EditFurnitureForm({ furniture, onSuccess }: EditFurnitureFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form id={`furniture-form-${furniture.id}`} onSubmit={handleSubmit}>
+      <CardContent>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor={`furniture-name-${furniture.id}`}>Название мебели</FieldLabel>
@@ -150,20 +153,27 @@ export function EditFurnitureForm({ furniture, onSuccess }: EditFurnitureFormPro
         />
 
         <ErrorMessage message={error ?? ""} />
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Сохранение...
-              </>
-            ) : (
-              "Сохранить"
-            )}
-          </Button>
-        </div>
       </FieldGroup>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        {renderFooter ? (
+          renderFooter({ isSubmitting })
+        ) : (
+          <>
+            <span />
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Сохранение...
+                </>
+              ) : (
+                "Сохранить"
+              )}
+            </Button>
+          </>
+        )}
+      </CardFooter>
     </form>
   );
 }

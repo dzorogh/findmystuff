@@ -175,7 +175,10 @@ export async function POST(
       }
 
       const transition = lastTransition as LastTransitionRow | null;
-      if (transition?.destination_type && transition.destination_id) {
+      // Места могут быть только в мебели — пропускаем устаревшие room-переходы
+      const skipTransition =
+        table === "places" && transition?.destination_type === "room";
+      if (transition?.destination_type && transition.destination_id && !skipTransition) {
         const { error: transitionInsertError } = await supabase
           .from("transitions")
           .insert({

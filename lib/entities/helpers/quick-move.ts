@@ -35,10 +35,13 @@ export const resolveQuickMove = (
   // Building не поддерживается как назначение при быстром перемещении
   if (a.type === "building" || b.type === "building") return null;
 
+  // Места можно перемещать только в мебель, не в помещения
   if (a.type === "room") {
+    if (b.type === "place") return null;
     return { sourceType: b.type, sourceId: b.id, destType: "room", destId: a.id };
   }
   if (b.type === "room") {
+    if (a.type === "place") return null;
     return { sourceType: a.type, sourceId: a.id, destType: "room", destId: b.id };
   }
   if (a.type === "furniture") {
