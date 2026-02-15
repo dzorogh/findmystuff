@@ -20,7 +20,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EntityTypeSelect } from "../fields/entity-type-select";
@@ -106,9 +105,10 @@ const AddFurnitureForm = ({ open, onOpenChange, onSuccess, initialRoomId }: AddF
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="h-full flex flex-col overflow-y-auto no-scrollbar">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="h-full flex flex-col overflow-y-auto no-scrollbar">
+        <form onSubmit={handleSubmit}>
+
           <SheetHeader>
             <SheetTitle>Добавить мебель</SheetTitle>
             <SheetDescription>
@@ -201,10 +201,9 @@ const AddFurnitureForm = ({ open, onOpenChange, onSuccess, initialRoomId }: AddF
             submitLabel="Добавить мебель"
             submitIcon={Plus}
           />
-        </SheetContent>
-      </Sheet>
-    </form>
-
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 };
 
