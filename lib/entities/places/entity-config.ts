@@ -111,4 +111,10 @@ export const placesEntityConfig: EntityConfig = {
       { path: "/containers", field: "containers_count", icon: ContainerIcon, label: "конт." },
     ],
   },
+  groupBy: (entity) => {
+    const place = entity as Place;
+    const name = place.furniture_name?.trim();
+    return name && name.length > 0 ? name : null;
+  },
+  groupByEmptyLabel: "Без мебели",
 };

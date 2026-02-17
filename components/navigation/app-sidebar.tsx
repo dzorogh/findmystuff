@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { SecondaryMenu } from "./secondary-menu";
@@ -64,9 +65,7 @@ const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <PrimaryMenu />
-        </SidebarGroup>
+        <PrimaryMenu />
       </SidebarContent>
       <SidebarFooter>
         <SecondaryMenu />

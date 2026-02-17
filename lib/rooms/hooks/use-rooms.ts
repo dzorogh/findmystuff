@@ -7,17 +7,27 @@ import type { Room } from "@/types/entity";
 
 const roomsCache = createSimpleListCache<Room>();
 
+function sortRoomsByName(list: Room[]) {
+  return [...list].sort((a, b) => {
+    const nameA = (a.name ?? "").trim().toLowerCase();
+    const nameB = (b.name ?? "").trim().toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+}
+
 export const useRooms = (includeDeleted = false) => {
   const key = String(includeDeleted);
   const cached = roomsCache.get(key);
 
-  const [rooms, setRooms] = useState<Room[]>(cached?.data ?? []);
+  const [rooms, setRooms] = useState<Room[]>(
+    cached ? sortRoomsByName(cached.data ?? []) : []
+  );
   const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<Error | null>(cached?.error ?? null);
 
   useEffect(() => {
     const notify = (data: Room[], err: Error | null) => {
-      setRooms(data);
+      setRooms(sortRoomsByName(data ?? []));
       setError(err);
       setIsLoading(false);
     };
