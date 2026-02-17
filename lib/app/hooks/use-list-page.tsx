@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQueryStates } from "nuqs";
 import { deepEqual } from "@/lib/app/helpers/deep-equal";
 import {
@@ -9,7 +9,7 @@ import {
   type EntitySortOption,
 } from "@/lib/entities/helpers/sort";
 import {
-  listPageUrlParsers,
+  createListPageParsers,
   urlStateToFilters,
   filtersToUrlState,
 } from "@/lib/app/hooks/list-page-url-state";
@@ -120,7 +120,11 @@ export function useListPage(config: EntityConfig) {
 
   const pageSize = hasPagination ? paginationConfig.pageSize : 20;
 
-  const [urlState, setUrlState] = useQueryStates(listPageUrlParsers);
+  const parsers = useMemo(
+    () => createListPageParsers(config.defaultSort),
+    [config.defaultSort]
+  );
+  const [urlState, setUrlState] = useQueryStates(parsers);
   const searchQuery = urlState.search;
   const sort = sortParamsToOption(urlState.sortBy, urlState.sortDirection);
   const filters = urlStateToFilters(urlState, initialFilters);
@@ -346,6 +350,8 @@ export function useListPage(config: EntityConfig) {
     basePath,
     apiTable,
     counts,
+    groupBy: config.groupBy,
+    groupByEmptyLabel: config.groupByEmptyLabel,
     refreshList,
   };
 

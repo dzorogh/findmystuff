@@ -56,6 +56,8 @@ export function ListPageContent({
         getName={listPage.getName}
         getRowActions={getRowActions}
         counts={listPage.counts}
+        groupBy={listPage.groupBy}
+        groupByEmptyLabel={listPage.groupByEmptyLabel}
       />
       {listPage.pagination &&
         listPage.pagination.totalCount > listPage.pagination.pageSize && (

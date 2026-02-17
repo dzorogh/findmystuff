@@ -95,4 +95,10 @@ export const furnitureEntityConfig: EntityConfig = {
       { path: "/places", field: "places_count", icon: LayoutGrid, label: "мест" },
     ],
   },
+  groupBy: (entity) => {
+    const furniture = entity as Furniture;
+    const name = furniture.room_name?.trim();
+    return name && name.length > 0 ? name : null;
+  },
+  groupByEmptyLabel: "Без помещения",
 };

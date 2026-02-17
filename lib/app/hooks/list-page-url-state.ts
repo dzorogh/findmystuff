@@ -15,12 +15,15 @@ const yesNoAllParser = createParser<boolean | null>({
   serialize: (v) => (v === true ? "true" : v === false ? "false" : ""),
 });
 
+const SORT_VALUES = ["name", "created_at"] as const;
+const DIRECTION_VALUES = ["asc", "desc"] as const;
+
 /** URL param parsers for list pages. Shared param names across entities. */
 export const listPageUrlParsers = {
   search: parseAsString.withDefault(""),
   page: parseAsInteger.withDefault(1),
-  sortBy: parseAsStringLiteral(["name", "created_at"] as const).withDefault("created_at"),
-  sortDirection: parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc"),
+  sortBy: parseAsStringLiteral(SORT_VALUES).withDefault("created_at"),
+  sortDirection: parseAsStringLiteral(DIRECTION_VALUES).withDefault("desc"),
   showDeleted: parseAsBoolean.withDefault(false),
   buildingId: parseAsInteger,
   roomId: parseAsInteger,
@@ -34,6 +37,19 @@ export const listPageUrlParsers = {
   hasContainers: yesNoAllParser,
   hasPlaces: yesNoAllParser,
 } as const;
+
+/** Создаёт парсеры с переопределённой сортировкой по умолчанию (для конкретной сущности). */
+export function createListPageParsers(defaultSort?: {
+  sortBy: (typeof SORT_VALUES)[number];
+  sortDirection: (typeof DIRECTION_VALUES)[number];
+}) {
+  if (!defaultSort) return listPageUrlParsers;
+  return {
+    ...listPageUrlParsers,
+    sortBy: parseAsStringLiteral(SORT_VALUES).withDefault(defaultSort.sortBy),
+    sortDirection: parseAsStringLiteral(DIRECTION_VALUES).withDefault(defaultSort.sortDirection),
+  };
+}
 
 /** Build filters from URL state, only including keys from initialFilters. */
 export function urlStateToFilters(

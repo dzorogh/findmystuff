@@ -112,4 +112,10 @@ export const roomsEntityConfig: EntityConfig = {
       { path: "/items", field: "items_count", icon: Package, label: "вещ." },
     ],
   },
+  defaultSort: { sortBy: "name", sortDirection: "asc" },
+  groupBy: (entity) => {
+    const room = entity as Room;
+    const name = room.building_name?.trim();
+    return name && name.length > 0 ? name : null;
+  },
 };

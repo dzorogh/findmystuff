@@ -71,7 +71,7 @@ const BuildingCombobox = ({
             placeholder="Поиск здания..."
           />
         )}
-        <ComboboxContent>
+        <ComboboxContent keepMounted>
           <ComboboxEmpty>Здания не найдены</ComboboxEmpty>
           <ComboboxList>
             {(item: { value: string; label: string }) => (

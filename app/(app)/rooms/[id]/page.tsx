@@ -28,6 +28,7 @@ import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import BuildingCombobox from "@/components/fields/building-combobox";
+import { useBuildings } from "@/lib/buildings/hooks/use-buildings";
 import AddFurnitureForm from "@/components/forms/add-furniture-form";
 import AddItemForm from "@/components/forms/add-item-form";
 import AddContainerForm from "@/components/forms/add-container-form";
@@ -62,6 +63,7 @@ export default function RoomDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { types: _roomTypes } = useEntityTypes("room");
+  useBuildings();
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState("");
   const [buildingId, setBuildingId] = useState("");
@@ -101,6 +103,9 @@ export default function RoomDetailPage() {
           created_at: roomData.created_at,
           deleted_at: roomData.deleted_at,
           room_type_id: roomData.room_type_id ?? null,
+          room_type: roomData.room_type ?? null,
+          building_id: roomData.building_id ?? null,
+          building_name: roomData.building_name ?? null,
         });
 
         setRoomItems(items || []);
@@ -224,76 +229,76 @@ export default function RoomDetailPage() {
       ) : room ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Редактирование помещения</CardTitle>
-              <CardDescription className="flex items-center gap-2 flex-wrap">
-                ID: #{room.id}
-                {room.deleted_at && (
-                  <>
-                    <span className="text-muted-foreground">•</span>
-                    <Badge variant="destructive">Удалено</Badge>
-                  </>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form id={`room-form-${room.id}`} onSubmit={handleEditSubmit}>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor={`room-name-${room.id}`}>Название помещения</FieldLabel>
-                    <Input
-                      id={`room-name-${room.id}`}
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Введите название помещения"
+            <Card>
+              <CardHeader>
+                <CardTitle>Редактирование помещения</CardTitle>
+                <CardDescription className="flex items-center gap-2 flex-wrap">
+                  ID: #{room.id}
+                  {room.deleted_at && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      <Badge variant="destructive">Удалено</Badge>
+                    </>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form id={`room-form-${room.id}`} onSubmit={handleEditSubmit}>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor={`room-name-${room.id}`}>Название помещения</FieldLabel>
+                      <Input
+                        id={`room-name-${room.id}`}
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Введите название помещения"
+                        disabled={isSubmitting}
+                      />
+                    </Field>
+
+                    <BuildingCombobox
+                      selectedBuildingId={buildingId}
+                      onBuildingIdChange={setBuildingId}
                       disabled={isSubmitting}
+                      label="Здание (необязательно)"
                     />
-                  </Field>
 
-                  <BuildingCombobox
-                    selectedBuildingId={buildingId}
-                    onBuildingIdChange={setBuildingId}
-                    disabled={isSubmitting}
-                    label="Здание (необязательно)"
-                  />
+                    <EntityTypeSelect
+                      type="room"
+                      value={roomTypeId ? parseInt(roomTypeId) : null}
+                      onValueChange={(v) => setRoomTypeId(v ?? "")}
+                    />
 
-                  <EntityTypeSelect
-                    type="room"
-                    value={roomTypeId ? parseInt(roomTypeId) : null}
-                    onValueChange={(v) => setRoomTypeId(v ?? "")}
-                  />
+                    <ErrorMessage message={formError ?? ""} />
+                  </FieldGroup>
+                </form>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button type="submit" form={`room-form-${room.id}`} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Сохранение...
+                    </>
+                  ) : (
+                    "Сохранить"
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
 
-                  <ErrorMessage message={formError ?? ""} />
-                </FieldGroup>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button type="submit" form={`room-form-${room.id}`} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Сохранение...
-                  </>
-                ) : (
-                  "Сохранить"
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <EntityImageCard
-            entityType="room"
-            entityId={room.id}
-            entityName={name}
-            photoUrl={room.photo_url ?? null}
-            onPhotoChange={async (url) => {
-              const res = await updateRoom(room.id, { photo_url: url });
-              if (res.error) throw new Error(res.error);
-              await loadRoomData({ silent: true });
-            }}
-          />
+            <EntityImageCard
+              entityType="room"
+              entityId={room.id}
+              entityName={name}
+              photoUrl={room.photo_url ?? null}
+              onPhotoChange={async (url) => {
+                const res = await updateRoom(room.id, { photo_url: url });
+                if (res.error) throw new Error(res.error);
+                await loadRoomData({ silent: true });
+              }}
+            />
           </div>
 
           <div className="flex flex-col gap-6">

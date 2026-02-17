@@ -92,6 +92,12 @@ export interface FetchListResult {
   totalCount?: number;
 }
 
+/** Начальная сортировка при первой загрузке страницы (если не задано — created_at desc). */
+export interface DefaultSortConfig {
+  sortBy: "name" | "created_at";
+  sortDirection: "asc" | "desc";
+}
+
 /** Optional pagination: when present, useListPage manages currentPage and passes page to fetch. */
 export interface PaginationConfig {
   pageSize: number;
@@ -131,4 +137,9 @@ export interface EntityConfig {
   fetch: (params: FetchListParams) => Promise<FetchListResult>;
   pagination?: PaginationConfig;
   counts?: CountsConfig;
+  defaultSort?: DefaultSortConfig;
+  /** Когда задано, список группируется по ключу (например, по зданиям для помещений). */
+  groupBy?: (entity: EntityDisplay) => string | null;
+  /** Метка для группы без привязки (когда groupBy возвращает null). По умолчанию «Без здания». */
+  groupByEmptyLabel?: string;
 }

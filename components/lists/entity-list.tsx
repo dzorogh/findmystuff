@@ -26,6 +26,7 @@ import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { Card } from "@/components/ui/card";
+import { Fragment } from "react";
 
 export interface EntityListProps {
   data: EntityDisplay[];
@@ -50,6 +51,8 @@ export interface EntityListProps {
   getName?: (entity: { id: number; name: string | null }) => string;
   getRowActions: (entity: EntityDisplay) => EntityActionsCallbacks;
   counts?: CountsConfig;
+  groupBy?: (entity: EntityDisplay) => string | null;
+  groupByEmptyLabel?: string;
 }
 
 /** Подпись помещения для строки: только у сущностей с last_location (items). */
@@ -82,9 +85,32 @@ export function EntityList({
   getName,
   getRowActions,
   counts,
+  groupBy,
+  groupByEmptyLabel = "Без здания",
 }: EntityListProps) {
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
+
+  const groupedEntries: Array<{ key: string; entities: EntityDisplay[] }> = groupBy
+    ? (() => {
+        const groups = new Map<string, EntityDisplay[]>();
+        for (const entity of list) {
+          const key = groupBy(entity) ?? groupByEmptyLabel;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key)!.push(entity);
+        }
+        const result: Array<{ key: string; entities: EntityDisplay[] }> = [];
+        for (const [key, entities] of groups) {
+          result.push({ key, entities });
+        }
+        result.sort((a, b) => {
+          if (a.key === groupByEmptyLabel) return 1;
+          if (b.key === groupByEmptyLabel) return -1;
+          return a.key.localeCompare(b.key);
+        });
+        return result;
+      })()
+    : [{ key: "", entities: list }];
   const emptyTitle =
     resultsCount === 0
       ? `По вашему запросу ничего не найдено`
@@ -127,24 +153,38 @@ export function EntityList({
               <EntityListSkeleton columnsConfig={columns} />
             ) : (
               <TableBody>
-                {list.map((entity) => {
-                  const row = entity as Item | Room | Place | Container;
-                  const rowActions = getRowActions(row);
-                  const roomLabel = getRoomLabelForRow(row);
-                  return (
-                    <EntityRow
-                      key={row.id}
-                      entity={row}
-                      columnsConfig={columns}
-                      actions={actions}
-                      icon={icon}
-                      getName={getName}
-                      actionCallbacks={rowActions}
-                      roomLabel={roomLabel}
-                      counts={counts}
-                    />
-                  );
-                })}
+                {groupedEntries.map(({ key: groupKey, entities }, groupIndex) => (
+                  <Fragment key={groupBy ? `${groupKey}-${groupIndex}` : "single"}>
+                    {groupBy && (
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <td
+                          colSpan={columns.length}
+                          className="px-4 py-2 font-medium text-sm"
+                        >
+                          {groupKey}
+                        </td>
+                      </TableRow>
+                    )}
+                    {entities.map((entity) => {
+                      const row = entity as Item | Room | Place | Container;
+                      const rowActions = getRowActions(row);
+                      const roomLabel = getRoomLabelForRow(row);
+                      return (
+                        <EntityRow
+                          key={row.id}
+                          entity={row}
+                          columnsConfig={columns}
+                          actions={actions}
+                          icon={icon}
+                          getName={getName}
+                          actionCallbacks={rowActions}
+                          roomLabel={roomLabel}
+                          counts={counts}
+                        />
+                      );
+                    })}
+                  </Fragment>
+                ))}
               </TableBody>
             )}
 
