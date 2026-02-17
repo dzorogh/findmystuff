@@ -109,6 +109,7 @@ export function useListPage(config: EntityConfig) {
     kind,
     basePath,
     apiTable,
+    counts,
   } = config;
 
   const filterFields = filtersConfig.fields;
@@ -344,6 +345,7 @@ export function useListPage(config: EntityConfig) {
     kind,
     basePath,
     apiTable,
+    counts,
     refreshList,
   };
 

@@ -14,6 +14,7 @@ import { EntityListSkeleton } from "@/components/lists/entity-list-skeleton";
 import { EntityRow, getRoomLabel, ROOM_EMPTY_LABEL } from "@/components/lists/entity-row";
 import { EntityFiltersPanel } from "@/components/filters/entity-filters-panel";
 import type {
+  CountsConfig,
   EntityDisplay,
   ListColumnConfig,
   ActionsConfig,
@@ -48,6 +49,7 @@ export interface EntityListProps {
   icon?: React.ComponentType<{ className?: string }>;
   getName?: (entity: { id: number; name: string | null }) => string;
   getRowActions: (entity: EntityDisplay) => EntityActionsCallbacks;
+  counts?: CountsConfig;
 }
 
 /** Подпись помещения для строки: только у сущностей с last_location (items). */
@@ -79,6 +81,7 @@ export function EntityList({
   icon,
   getName,
   getRowActions,
+  counts,
 }: EntityListProps) {
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
@@ -138,6 +141,7 @@ export function EntityList({
                       getName={getName}
                       actionCallbacks={rowActions}
                       roomLabel={roomLabel}
+                      counts={counts}
                     />
                   );
                 })}

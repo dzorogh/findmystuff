@@ -9,6 +9,7 @@ import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight } fr
 import type { SearchResult } from "@/types/entity";
 import Link from "next/link";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { PageHeader } from "@/components/layout/page-header";
 
 const ENTITY_CONFIG = {
   item: { Icon: Package, label: "Вещи" },
@@ -116,6 +117,9 @@ export default function Home() {
   ];
   return (
     <div className="flex flex-col gap-4">
+
+      <PageHeader title="Поиск" />
+
       {/* Поиск */}
       <InputGroup>
         <InputGroupInput

@@ -1,4 +1,4 @@
-import { Sofa } from "lucide-react";
+import { LayoutGrid, Sofa } from "lucide-react";
 import AddFurnitureForm from "@/components/forms/add-furniture-form";
 import { getFurniture } from "@/lib/furniture/api";
 import type {
@@ -89,4 +89,10 @@ export const furnitureEntityConfig: EntityConfig = {
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchFurniture,
+  counts: {
+    filterParam: "furnitureId",
+    links: [
+      { path: "/places", field: "places_count", icon: LayoutGrid, label: "мест" },
+    ],
+  },
 };

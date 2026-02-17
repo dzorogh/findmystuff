@@ -1,4 +1,4 @@
-import { LayoutGrid } from "lucide-react";
+import { Container as ContainerIcon, LayoutGrid, Package } from "lucide-react";
 import AddPlaceForm from "@/components/forms/add-place-form";
 import { getPlaces } from "@/lib/places/api";
 import type {
@@ -104,4 +104,11 @@ export const placesEntityConfig: EntityConfig = {
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchPlaces,
+  counts: {
+    filterParam: "placeId",
+    links: [
+      { path: "/items", field: "items_count", icon: Package, label: "вещ." },
+      { path: "/containers", field: "containers_count", icon: ContainerIcon, label: "конт." },
+    ],
+  },
 };

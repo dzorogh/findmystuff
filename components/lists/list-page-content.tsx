@@ -55,6 +55,7 @@ export function ListPageContent({
         icon={listPage.icon}
         getName={listPage.getName}
         getRowActions={getRowActions}
+        counts={listPage.counts}
       />
       {listPage.pagination &&
         listPage.pagination.totalCount > listPage.pagination.pageSize && (

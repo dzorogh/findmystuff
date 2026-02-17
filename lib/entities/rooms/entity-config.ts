@@ -1,4 +1,4 @@
-import { DoorOpen } from "lucide-react";
+import { DoorOpen, Package, Sofa } from "lucide-react";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { getRooms } from "@/lib/rooms/api";
 import type {
@@ -105,4 +105,11 @@ export const roomsEntityConfig: EntityConfig = {
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchRooms,
+  counts: {
+    filterParam: "roomId",
+    links: [
+      { path: "/furniture", field: "furniture_count", icon: Sofa, label: "меб." },
+      { path: "/items", field: "items_count", icon: Package, label: "вещ." },
+    ],
+  },
 };

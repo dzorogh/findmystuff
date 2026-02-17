@@ -97,6 +97,12 @@ export interface PaginationConfig {
   pageSize: number;
 }
 
+/** Config for count links in list rows (Room, Building, Furniture, Place). */
+export interface CountsConfig {
+  filterParam: string;
+  links: Array<{ path: string; field: string; icon: LucideIcon; label: string }>;
+}
+
 /** Pagination state and handlers returned by useListPage when config.pagination is set. */
 export interface ListPagePagination {
   totalCount: number;
@@ -124,4 +130,5 @@ export interface EntityConfig {
   columns: ListColumnConfig[];
   fetch: (params: FetchListParams) => Promise<FetchListResult>;
   pagination?: PaginationConfig;
+  counts?: CountsConfig;
 }

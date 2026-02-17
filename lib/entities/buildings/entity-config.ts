@@ -1,4 +1,4 @@
-import { Home } from "lucide-react";
+import { DoorOpen, Home } from "lucide-react";
 import AddBuildingForm from "@/components/forms/add-building-form";
 import { getBuildings } from "@/lib/buildings/api";
 import type {
@@ -82,4 +82,10 @@ export const buildingsEntityConfig: EntityConfig = {
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchBuildings,
+  counts: {
+    filterParam: "buildingId",
+    links: [
+      { path: "/rooms", field: "rooms_count", icon: DoorOpen, label: "пом." },
+    ],
+  },
 };

@@ -12,6 +12,7 @@ import {
 } from "@/components/entity-detail/entity-actions";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type {
+  CountsConfig,
   ListColumnConfig,
   ActionsConfig,
 } from "@/lib/app/types/entity-config";
@@ -56,6 +57,8 @@ interface EntityRowProps {
   actionCallbacks: EntityActionsCallbacks;
   /** Подпись помещения (для колонки room и под имени). */
   roomLabel?: string;
+  /** Конфиг счётчиков (room, building, furniture, place). */
+  counts?: CountsConfig;
 }
 
 const MD_HIDDEN_COLUMNS = new Set(["room", "counts"]);
@@ -67,14 +70,6 @@ function getDisplayNameFallback(entity: { id: number; name: string | null }): st
   return name !== undefined && name !== "" ? name : `#${entity.id}`;
 }
 
-function isRoomWithCounts(entity: ListEntity): entity is Room {
-  return "places_count" in entity && "containers_count" in entity;
-}
-
-function isBuildingWithCounts(entity: ListEntity): entity is Building {
-  return "rooms_count" in entity && !("places_count" in entity);
-}
-
 function isFurnitureEntity(entity: ListEntity): entity is Furniture {
   return "room_id" in entity && "places_count" in entity && !("containers_count" in entity);
 }
@@ -83,8 +78,42 @@ function isPlaceEntity(entity: ListEntity): entity is Place {
   return "room" in entity && !("places_count" in entity);
 }
 
-function isPlaceWithCounts(entity: ListEntity): entity is Place {
-  return isPlaceEntity(entity) && "items_count" in entity;
+function renderCountLinks(
+  entity: ListEntity,
+  counts: CountsConfig | undefined,
+  compact: boolean,
+  extraContent?: ReactNode | null
+): ReactNode {
+  if (!counts?.links?.length && !extraContent) return null;
+  const links = counts?.links?.filter((spec) => spec.field in entity) ?? [];
+  if (links.length === 0 && !extraContent) return null;
+  const iconClass = compact ? "h-3 w-3" : "h-4 w-4 flex-shrink-0 text-muted-foreground";
+  const wrapperClass = compact
+    ? "mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden"
+    : "flex flex-wrap gap-x-3 gap-y-1 text-sm";
+
+  return (
+    <div className={wrapperClass}>
+      {links.map((spec) => {
+        const Icon = spec.icon;
+        const rawCount = (entity as unknown as Record<string, unknown>)[spec.field];
+        const count = typeof rawCount === "number" ? rawCount : 0;
+        const href = `${spec.path}?${counts!.filterParam}=${entity.id}`;
+        return (
+          <Link
+            key={spec.field}
+            href={href}
+            className="flex items-center gap-1 transition-colors hover:text-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Icon className={iconClass} />
+            <span>{count} {spec.label}</span>
+          </Link>
+        );
+      })}
+      {extraContent != null ? extraContent : null}
+    </div>
+  );
 }
 
 function getEntitySubline(entity: ListEntity): string | null {
@@ -162,7 +191,8 @@ function renderNameCell(
   roomLabel: string | undefined,
   editHref: string | undefined,
   icon: IconComponent | undefined,
-  getName: ((entity: { id: number; name: string | null }) => string) | undefined
+  getName: ((entity: { id: number; name: string | null }) => string) | undefined,
+  counts: CountsConfig | undefined
 ): ReactNode {
   const Icon = icon ?? Package;
   const displayName = getName?.(entity) ?? getDisplayNameFallback(entity);
@@ -201,81 +231,30 @@ function renderNameCell(
             <span className="truncate">{roomLabel}</span>
           </div>
         )}
-        {isRoomWithCounts(entity) && (
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <Link
-              href={`/furniture?roomId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Sofa className="h-3 w-3" />
-              {entity.furniture_count ?? 0} меб.
-            </Link>
-            <Link
-              href={`/items?roomId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Package className="h-3 w-3" />
-              {entity.items_count ?? 0} вещ.
-            </Link>
-          </div>
-        )}
-        {isBuildingWithCounts(entity) && (
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <Link
-              href={`/rooms?buildingId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DoorOpen className="h-3 w-3" />
-              {entity.rooms_count ?? 0} пом.
-            </Link>
-          </div>
-        )}
-        {isFurnitureEntity(entity) && (
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <Link
-              href={`/places?furnitureId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <LayoutGrid className="h-3 w-3" />
-              {entity.places_count ?? 0} мест
-            </Link>
-          </div>
-        )}
-        {isPlaceWithCounts(entity) && (
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden">
-            <Link
-              href={`/items?placeId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Package className="h-3 w-3" />
-              {entity.items_count ?? 0} вещ.
-            </Link>
-            <Link
-              href={`/containers?placeId=${entity.id}`}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ContainerIcon className="h-3 w-3" />
-              {entity.containers_count ?? 0} конт.
-            </Link>
-            {(entity.furniture_name || entity.room?.room_name) && (
-              <span className="flex items-center gap-1">
-                <Sofa className="h-3 w-3" />
-                <span className="truncate">
-                  {entity.furniture_name
-                    ? entity.room?.room_name
-                      ? `${entity.furniture_name} (${entity.room.room_name})`
-                      : entity.furniture_name
-                    : entity.room?.room_name ?? ""}
+        {renderCountLinks(
+          entity,
+          counts,
+          true,
+          (() => {
+            if (
+              counts?.filterParam === "placeId" &&
+              ("furniture_name" in entity || ("room" in entity && entity.room))
+            ) {
+              return (
+                <span className="flex items-center gap-1">
+                  <Sofa className="h-3 w-3" />
+                  <span className="truncate">
+                    {"furniture_name" in entity && entity.furniture_name
+                      ? "room" in entity && entity.room?.room_name
+                        ? `${entity.furniture_name} (${entity.room.room_name})`
+                        : entity.furniture_name
+                      : "room" in entity ? entity.room?.room_name ?? "" : ""}
+                  </span>
                 </span>
-              </span>
-            )}
-          </div>
+              );
+            }
+            return undefined;
+          })()
         )}
         {locationInfo && (
           <div className="mt-1 text-xs text-muted-foreground lg:hidden">
@@ -355,80 +334,8 @@ function renderMovedAtCell(entity: ListEntity): ReactNode {
   return <span className="text-xs text-muted-foreground">{formatRuDate(movedAt)}</span>;
 }
 
-function renderCountsCell(entity: ListEntity): ReactNode {
-  if (isRoomWithCounts(entity)) {
-    return (
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link
-          href={`/furniture?roomId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Sofa className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.furniture_count ?? 0} меб.</span>
-        </Link>
-        <Link
-          href={`/items?roomId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.items_count ?? 0} вещ.</span>
-        </Link>
-      </div>
-    );
-  }
-  if (isBuildingWithCounts(entity)) {
-    return (
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link
-          href={`/rooms?buildingId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <DoorOpen className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.rooms_count ?? 0} помещений</span>
-        </Link>
-      </div>
-    );
-  }
-  if (isFurnitureEntity(entity)) {
-    return (
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link
-          href={`/places?furnitureId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <LayoutGrid className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.places_count ?? 0} мест</span>
-        </Link>
-      </div>
-    );
-  }
-  if (isPlaceWithCounts(entity)) {
-    return (
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
-        <Link
-          href={`/items?placeId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Package className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.items_count ?? 0} вещ.</span>
-        </Link>
-        <Link
-          href={`/containers?placeId=${entity.id}`}
-          className="flex items-center gap-1 transition-colors hover:text-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ContainerIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-          <span>{entity.containers_count ?? 0} конт.</span>
-        </Link>
-      </div>
-    );
-  }
-  return null;
+function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined): ReactNode {
+  return renderCountLinks(entity, counts, false);
 }
 
 function renderLocationCell(entity: ListEntity): ReactNode {
@@ -446,7 +353,8 @@ function renderCellContent(
   roomLabel: string | undefined,
   editHref: string | undefined,
   icon: IconComponent | undefined,
-  getName: ((entity: { id: number; name: string | null }) => string) | undefined
+  getName: ((entity: { id: number; name: string | null }) => string) | undefined,
+  counts: CountsConfig | undefined
 ): ReactNode {
   switch (columnKey) {
     case "id":
@@ -465,7 +373,7 @@ function renderCellContent(
       );
 
     case "name":
-      return renderNameCell(entity, roomLabel, editHref, icon, getName);
+      return renderNameCell(entity, roomLabel, editHref, icon, getName, counts);
 
     case "room":
       return renderRoomCell(entity, roomLabel);
@@ -474,7 +382,7 @@ function renderCellContent(
       return renderMovedAtCell(entity);
 
     case "counts":
-      return renderCountsCell(entity);
+      return renderCountsCell(entity, counts);
 
     case "location":
       return renderLocationCell(entity);
@@ -508,6 +416,7 @@ export const EntityRow = memo(function EntityRow({
   getName,
   actionCallbacks,
   roomLabel,
+  counts,
 }: EntityRowProps) {
   const isDeleted = !!entity.deleted_at;
   const router = useRouter();
@@ -548,7 +457,8 @@ export const EntityRow = memo(function EntityRow({
           roomLabel,
           actionCallbacks.editHref,
           icon,
-          getName
+          getName,
+          counts
         );
         const responsiveHidden = getResponsiveHiddenClass(col);
 
