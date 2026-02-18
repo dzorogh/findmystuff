@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { resolveActions } from "@/lib/entities/resolve-actions";
+import { buildingsEntityConfig } from "@/lib/entities/buildings/entity-config";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import AddRoomForm from "@/components/forms/add-room-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
@@ -153,22 +155,18 @@ export default function BuildingDetailPage() {
     }
   };
 
+  const buildingCtx = useMemo(
+    () => ({
+      refreshList: () => loadBuildingData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadBuildingData, printLabel, handleDelete, handleRestore]
+  );
   const headerActions =
     building != null ? (
-      <EntityActions
-        actions={{
-          actions: ["printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          onPrintLabel: () => printLabel(building.id, building.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!building.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
+      <EntityActions actions={resolveActions(buildingsEntityConfig.actions, building, buildingCtx)} />
     ) : null;
 
   return (

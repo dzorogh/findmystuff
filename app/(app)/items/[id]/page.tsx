@@ -234,7 +234,7 @@ export default function ItemDetailPage() {
             <MoveEntityForm
               title={itemsEntityConfig.labels.moveTitle}
               entityDisplayName={getEntityDisplayName("item", item.id, item.name)}
-              destinationTypes={itemsEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
+              destinationTypes={itemsEntityConfig.move?.destinationTypes ?? ["room", "place", "container"]}
               buildPayload={(destinationType, destinationId) => ({
                 item_id: item.id,
                 destination_type: destinationType,

@@ -1,6 +1,7 @@
-import { DoorOpen, Home } from "lucide-react";
+import { Copy, DoorOpen, Home, Pencil, Printer, RotateCcw, Trash2 } from "lucide-react";
 import AddBuildingForm from "@/components/forms/add-building-form";
 import { getBuildings } from "@/lib/buildings/api";
+import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -8,8 +9,6 @@ import type {
   FetchListResult,
   Filters,
 } from "@/lib/app/types/entity-config";
-import type { Building } from "@/types/entity";
-import { useBuildingsActions } from "@/lib/entities/buildings/use-buildings-actions";
 
 export interface BuildingsFilters extends Filters {
   showDeleted: boolean;
@@ -33,46 +32,45 @@ async function fetchBuildings(params: FetchListParams): Promise<FetchListResult>
   return { data: list, totalCount };
 }
 
-function useBuildingsConfigActions(params: { refreshList: () => void }) {
-  const getRowActions = useBuildingsActions({
-    refreshList: params.refreshList,
-    basePath: buildingsEntityConfig.basePath,
-    apiTable: buildingsEntityConfig.apiTable,
-    labels: buildingsEntityConfig.labels,
-  });
-  return (entity: EntityDisplay) => getRowActions(entity as Building);
+function createBuildingsActionsConfig(config: { basePath: string }): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
+  return {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
+      { key: "printLabel", label: "Печать этикетки", icon: Printer, getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name) },
+      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
+      { key: "delete", label: "Удалить", icon: Trash2, variant: "destructive", getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id) },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  };
 }
 
-export const buildingsEntityConfig: EntityConfig = {
-  kind: "building",
+const buildingsConfigBase = {
+  kind: "building" as const,
   basePath: "/buildings",
-  apiTable: "buildings",
+  apiTable: "buildings" as const,
   labels: {
     singular: "Здание",
     plural: "Здания",
     results: { one: "здание", few: "здания", many: "зданий" },
     moveTitle: "Переместить здание",
-    moveSuccess: (destinationName) => `Здание успешно перемещено в ${destinationName}`,
+    moveSuccess: (destinationName: string) => `Здание успешно перемещено в ${destinationName}`,
     moveError: "Произошла ошибка при перемещении здания",
     deleteConfirm: "Вы уверены, что хотите удалить это здание?",
     deleteSuccess: "Здание успешно удалено",
     restoreSuccess: "Здание успешно восстановлено",
     duplicateSuccess: "Здание успешно дублировано",
   },
-  actions: {
-    actions: ["edit", "printLabel", "duplicate", "delete"],
-    showRestoreWhenDeleted: true,
-  },
-  useActions: useBuildingsConfigActions,
   addForm: {
     title: "Добавить здание",
     form: AddBuildingForm,
   },
-  getName: (entity) =>
+  getName: (entity: EntityDisplay) =>
     entity.name != null && entity.name.trim() !== "" ? entity.name : `Здание #${entity.id}`,
   icon: Home,
   filters: {
-    fields: [{ type: "showDeleted", label: "Показывать удалённые здания" }],
+    fields: [{ type: "showDeleted" as const, label: "Показывать удалённые здания" }],
     initial: DEFAULT_BUILDINGS_FILTERS,
   },
   columns: [
@@ -88,4 +86,9 @@ export const buildingsEntityConfig: EntityConfig = {
       { path: "/rooms", field: "rooms_count", icon: DoorOpen, label: "пом." },
     ],
   },
+};
+
+export const buildingsEntityConfig: EntityConfig = {
+  ...buildingsConfigBase,
+  actions: createBuildingsActionsConfig(buildingsConfigBase),
 };

@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash2, Loader2, Pencil, TriangleAlertIcon } from "lucide-react";
+import { Trash2, Loader2, Pencil, TriangleAlertIcon, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
@@ -29,6 +29,12 @@ import { getUsers, deleteUser } from "@/lib/users/api";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function PageUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -157,23 +163,53 @@ export default function PageUsers() {
                     <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditClick(user)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Редактировать пользователя</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(user)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Удалить пользователя</span>
-                        </Button>
+                        <div className="hidden sm:flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditClick(user)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Редактировать пользователя</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(user)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Удалить пользователя</span>
+                          </Button>
+                        </div>
+                        <div className="flex sm:hidden">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Действия"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(user)}>
+                              <Pencil className="h-4 w-4" />
+                              Редактировать
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => handleDeleteClick(user)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Удалить
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>

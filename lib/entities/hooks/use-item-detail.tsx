@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
+import { ArrowRightLeft, Printer, RotateCcw, Trash2 } from "lucide-react";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { fetchItemById, fetchItemTransitions } from "@/lib/entities/services/item-detail";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import type { Action } from "@/lib/app/types/entity-action";
 import type { Item, Transition } from "@/types/entity";
 
 const ENTITY_LABEL = "Вещь";
@@ -86,24 +88,17 @@ export const useItemDetail = (): UseItemDetailReturn => {
     loadItemData();
   }, [loadItemData]);
 
-  const headerActions =
-    item != null ? (
-      <EntityActions
-        actions={{
-          actions: ["move", "printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          onMove: () => setIsMoveDialogOpen(true),
-          onPrintLabel: () => printLabel(item.id, item.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!item.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
-    ) : null;
+  const headerActions = useMemo(() => {
+    if (item == null) return null;
+    const actions: Action[] = item.deleted_at
+      ? [{ key: "restore", label: "Восстановить", icon: RotateCcw, onClick: handleRestore }]
+      : [
+          { key: "move", label: "Переместить", icon: ArrowRightLeft, variant: "default", onClick: () => setIsMoveDialogOpen(true) },
+          { key: "printLabel", label: "Печать этикетки", icon: Printer, variant: "default", onClick: () => printLabel(item.id, item.name) },
+          { key: "delete", label: "Удалить", icon: Trash2, variant: "destructive", onClick: handleDelete },
+        ];
+    return <EntityActions actions={actions} />;
+  }, [item, handleDelete, handleRestore, printLabel]);
 
   return {
     itemId,

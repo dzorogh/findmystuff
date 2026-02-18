@@ -1,15 +1,16 @@
-import { LayoutGrid, Sofa } from "lucide-react";
+import { Copy, LayoutGrid, Pencil, Printer, RotateCcw, Sofa, Trash2 } from "lucide-react";
 import AddFurnitureForm from "@/components/forms/add-furniture-form";
 import { getFurniture } from "@/lib/furniture/api";
+import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
   FetchListParams,
   FetchListResult,
+  FilterFieldConfig,
   Filters,
 } from "@/lib/app/types/entity-config";
 import type { Furniture } from "@/types/entity";
-import { useFurnitureActions } from "@/lib/entities/furniture/use-furniture-actions";
 
 export interface FurnitureFilters extends Filters {
   showDeleted: boolean;
@@ -36,49 +37,51 @@ async function fetchFurniture(params: FetchListParams): Promise<FetchListResult>
   return { data: list, totalCount };
 }
 
-function useFurnitureConfigActions(params: { refreshList: () => void }) {
-  const getRowActions = useFurnitureActions({
-    refreshList: params.refreshList,
-    basePath: furnitureEntityConfig.basePath,
-    apiTable: furnitureEntityConfig.apiTable,
-    labels: furnitureEntityConfig.labels,
-  });
-  return (entity: EntityDisplay) => getRowActions(entity as Furniture);
+function createFurnitureActionsConfig(config: { basePath: string }): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
+  return {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
+      { key: "printLabel", label: "Печать этикетки", icon: Printer, getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name) },
+      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
+      { key: "delete", label: "Удалить", icon: Trash2, variant: "destructive", getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id) },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  };
 }
 
-export const furnitureEntityConfig: EntityConfig = {
-  kind: "furniture",
+const furnitureConfigBase = {
+  kind: "furniture" as const,
   basePath: "/furniture",
-  apiTable: "furniture",
+  apiTable: "furniture" as const,
   labels: {
     singular: "Мебель",
     plural: "Мебель",
     results: { one: "мебель", few: "мебели", many: "мебели" },
     moveTitle: "Переместить мебель",
-    moveSuccess: (destinationName) => `Мебель успешно перемещена в ${destinationName}`,
+    moveSuccess: (destinationName: string) =>
+        `Мебель успешно перемещена в ${destinationName}`,
     moveError: "Произошла ошибка при перемещении мебели",
     deleteConfirm: "Вы уверены, что хотите удалить эту мебель?",
     deleteSuccess: "Мебель успешно удалена",
     restoreSuccess: "Мебель успешно восстановлена",
     duplicateSuccess: "Мебель успешно дублирована",
   },
-  actions: {
-    actions: ["edit", "printLabel", "duplicate", "delete"],
-    showRestoreWhenDeleted: true,
-  },
-  useActions: useFurnitureConfigActions,
   addForm: {
     title: "Добавить мебель",
     form: AddFurnitureForm,
   },
-  getName: (entity) =>
-    entity.name != null && entity.name.trim() !== "" ? entity.name : `Мебель #${entity.id}`,
+  getName: (entity: EntityDisplay) =>
+    entity.name != null && entity.name.trim() !== ""
+      ? entity.name
+      : `Мебель #${entity.id}`,
   icon: Sofa,
   filters: {
     fields: [
       { type: "showDeleted", label: "Показывать удалённую мебель" },
       { type: "room", key: "roomId" },
-    ],
+    ] satisfies FilterFieldConfig[],
     initial: DEFAULT_FURNITURE_FILTERS,
   },
   columns: [
@@ -95,10 +98,15 @@ export const furnitureEntityConfig: EntityConfig = {
       { path: "/places", field: "places_count", icon: LayoutGrid, label: "мест" },
     ],
   },
-  groupBy: (entity) => {
+  groupBy: (entity: EntityDisplay) => {
     const furniture = entity as Furniture;
     const name = furniture.room_name?.trim();
     return name && name.length > 0 ? name : null;
   },
   groupByEmptyLabel: "Без помещения",
+};
+
+export const furnitureEntityConfig: EntityConfig = {
+  ...furnitureConfigBase,
+  actions: createFurnitureActionsConfig(furnitureConfigBase),
 };

@@ -1,16 +1,26 @@
-import { Container as ContainerIcon } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Container as ContainerIcon,
+  Copy,
+  Pencil,
+  Printer,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import AddContainerForm from "@/components/forms/add-container-form";
+import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getContainers } from "@/lib/containers/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
+import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
   FetchListParams,
   FetchListResult,
+  FilterFieldConfig,
   Filters,
 } from "@/lib/app/types/entity-config";
 import type { Container } from "@/types/entity";
-import { useContainersActions } from "@/lib/entities/containers/use-containers-actions";
 
 export interface ContainersFilters extends Filters {
   showDeleted: boolean;
@@ -67,47 +77,78 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
   return { data: list };
 }
 
-function useContainersConfigActions(params: { refreshList: () => void }) {
-  const getRowActions = useContainersActions({
-    refreshList: params.refreshList,
-    basePath: containersEntityConfig.basePath,
-    apiTable: containersEntityConfig.apiTable,
-    labels: containersEntityConfig.labels,
-    move: containersEntityConfig.actions.move,
-  });
-  return (entity: EntityDisplay) => getRowActions(entity as Container);
+function createContainersActionsConfig(config: {
+  basePath: string;
+  labels: { moveTitle: string; moveSuccess: (n: string) => string; moveError: string };
+}): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
+  const destTypes = ["room", "place", "container"] as const;
+  return {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
+      {
+        key: "move",
+        label: "Переместить",
+        icon: ArrowRightLeft,
+        Form: MoveEntityForm as unknown as React.ComponentType<Record<string, unknown>>,
+        getFormProps: (e, ctx) => ({
+          title: config.labels.moveTitle,
+          entityDisplayName: getEntityDisplayName("container", e.id, e.name),
+          destinationTypes: destTypes,
+          buildPayload: (destType: string, destId: number) => ({
+            container_id: e.id,
+            destination_type: destType,
+            destination_id: destId,
+          }),
+          getSuccessMessage: config.labels.moveSuccess,
+          getErrorMessage: () => config.labels.moveError,
+          excludeContainerId: e.id,
+          onSuccess: ctx.refreshList,
+        }),
+      },
+      {
+        key: "printLabel",
+        label: "Печать этикетки",
+        icon: Printer,
+        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
+      },
+      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
+      {
+        key: "delete",
+        label: "Удалить",
+        icon: Trash2,
+        variant: "destructive",
+        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
+      },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  };
 }
 
-export const containersEntityConfig: EntityConfig = {
-  kind: "container",
+const containersConfigBase = {
+  kind: "container" as const,
   basePath: "/containers",
-  apiTable: "containers",
+  apiTable: "containers" as const,
   labels: {
     singular: "Контейнер",
     plural: "Контейнеры",
     results: { one: "контейнер", few: "контейнера", many: "контейнеров" },
     moveTitle: "Переместить контейнер",
-    moveSuccess: (destinationName) => `Контейнер успешно перемещён в ${destinationName}`,
+    moveSuccess: (destinationName: string) =>
+      `Контейнер успешно перемещён в ${destinationName}`,
     moveError: "Произошла ошибка при перемещении контейнера",
     deleteConfirm: "Вы уверены, что хотите удалить этот контейнер?",
     deleteSuccess: "Контейнер успешно удалён",
     restoreSuccess: "Контейнер успешно восстановлен",
     duplicateSuccess: "Контейнер успешно дублирован",
   },
-  actions: {
-    actions: ["edit", "move", "printLabel", "duplicate", "delete"],
-    showRestoreWhenDeleted: true,
-    move: {
-      enabled: true,
-      destinationTypes: ["room", "place", "container"],
-    },
-  },
-  useActions: useContainersConfigActions,
   addForm: {
     title: "Добавить контейнер",
     form: AddContainerForm,
   },
-  getName: (entity) => getEntityDisplayName("container", entity.id, entity.name),
+  getName: (entity: EntityDisplay) =>
+      getEntityDisplayName("container", entity.id, entity.name),
   icon: ContainerIcon,
   filters: {
     fields: [
@@ -115,7 +156,7 @@ export const containersEntityConfig: EntityConfig = {
       { type: "entityType", key: "entityTypeId", entityKind: "container" },
       { type: "yesNoAll", key: "hasItems", label: "Есть вещи внутри" },
       { type: "locationType", key: "locationType" },
-    ],
+    ] satisfies FilterFieldConfig[],
     initial: DEFAULT_CONTAINERS_FILTERS,
   },
   columns: [
@@ -126,4 +167,10 @@ export const containersEntityConfig: EntityConfig = {
   ],
   fetch: fetchContainers,
   pagination: { pageSize: CONTAINERS_PAGE_SIZE },
+};
+
+export const containersEntityConfig: EntityConfig = {
+  ...containersConfigBase,
+  actions: createContainersActionsConfig(containersConfigBase),
+  move: { enabled: true, destinationTypes: ["room", "place", "container"] },
 };

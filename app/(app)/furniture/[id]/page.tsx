@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 
 import { getFurnitureItem, updateFurniture } from "@/lib/furniture/api";
@@ -16,6 +16,8 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { resolveActions } from "@/lib/entities/resolve-actions";
+import { furnitureEntityConfig } from "@/lib/entities/furniture/entity-config";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import AddPlaceForm from "@/components/forms/add-place-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
@@ -194,23 +196,19 @@ export default function FurnitureDetailPage() {
     }
   };
 
+  const furnitureCtx = useMemo(
+    () => ({
+      refreshList: () => loadFurnitureData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleDuplicate,
+      handleRestore,
+    }),
+    [loadFurnitureData, printLabel, handleDelete, handleDuplicate, handleRestore]
+  );
   const headerActions =
     furniture != null ? (
-      <EntityActions
-        actions={{
-          actions: ["printLabel", "duplicate", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          onPrintLabel: () => printLabel(furniture.id, furniture.name),
-          onDuplicate: handleDuplicate,
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!furniture.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
+      <EntityActions actions={resolveActions(furnitureEntityConfig.actions, furniture, furnitureCtx)} />
     ) : null;
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useMemo } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { EntityList } from "@/components/lists/entity-list";
@@ -14,11 +14,29 @@ import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";
 import { photoApi } from "@/lib/shared/api/photo";
 import { recognizeItemPhotoApi } from "@/lib/shared/api/recognize-item-photo";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
+import { resolveActions } from "@/lib/entities/resolve-actions";
+import type { ActionsContext } from "@/lib/app/types/entity-action";
+import type { EntityDisplay } from "@/lib/app/types/entity-config";
+import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 
 export default function ItemsPage() {
   const listPage = useListPage(itemsEntityConfig);
-  const getRowActions = itemsEntityConfig.useActions({ refreshList: listPage.refreshList });
+  const itemListActions = useItemListActions({ refreshList: listPage.refreshList });
+  const ctx: ActionsContext = useMemo(
+    () => ({
+      refreshList: listPage.refreshList,
+      printLabel: (id: number, name?: string | null) => itemListActions.handlePrintLabel(id, name ?? null),
+      handleDelete: itemListActions.handleDeleteItem,
+      handleDuplicate: itemListActions.handleDuplicateItem,
+      handleRestore: itemListActions.handleRestoreItem,
+    }),
+    [listPage.refreshList, itemListActions]
+  );
+  const getRowActions = useCallback(
+    (entity: EntityDisplay) => resolveActions(itemsEntityConfig.actions, entity, ctx),
+    [ctx]
+  );
 
   const addForm = listPage.addForm;
   const [barcodeScannerOpen, setBarcodeScannerOpen] = useState(false);
@@ -166,7 +184,6 @@ export default function ItemsPage() {
           results={listPage.results}
           filterFields={listPage.filterFields}
           columns={listPage.columns}
-          actions={listPage.actions}
           icon={listPage.icon}
           getName={listPage.getName}
           getRowActions={getRowActions}

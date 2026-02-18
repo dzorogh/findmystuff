@@ -13,17 +13,16 @@ import { ListShell } from "@/components/lists/list-shell";
 import { EntityListSkeleton } from "@/components/lists/entity-list-skeleton";
 import { EntityRow, getRoomLabel, ROOM_EMPTY_LABEL } from "@/components/lists/entity-row";
 import { EntityFiltersPanel } from "@/components/filters/entity-filters-panel";
+import type { Action } from "@/lib/app/types/entity-action";
 import type {
   CountsConfig,
   EntityDisplay,
   ListColumnConfig,
-  ActionsConfig,
   FilterFieldConfig,
   Filters,
   Results,
 } from "@/lib/app/types/entity-config";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
-import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { Card } from "@/components/ui/card";
 import { Fragment } from "react";
@@ -46,10 +45,9 @@ export interface EntityListProps {
   results: Results;
   filterFields: FilterFieldConfig[];
   columns: ListColumnConfig[];
-  actions: ActionsConfig;
   icon?: React.ComponentType<{ className?: string }>;
   getName?: (entity: { id: number; name: string | null }) => string;
-  getRowActions: (entity: EntityDisplay) => EntityActionsCallbacks;
+  getRowActions: (entity: EntityDisplay) => Action[];
   counts?: CountsConfig;
   groupBy?: (entity: EntityDisplay) => string | null;
   groupByEmptyLabel?: string;
@@ -80,7 +78,6 @@ export function EntityList({
   results,
   filterFields,
   columns,
-  actions,
   icon,
   getName,
   getRowActions,
@@ -174,10 +171,9 @@ export function EntityList({
                           key={row.id}
                           entity={row}
                           columnsConfig={columns}
-                          actions={actions}
                           icon={icon}
                           getName={getName}
-                          actionCallbacks={rowActions}
+                          actions={rowActions}
                           roomLabel={roomLabel}
                           counts={counts}
                         />

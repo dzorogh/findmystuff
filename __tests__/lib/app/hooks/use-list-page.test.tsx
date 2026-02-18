@@ -1,8 +1,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { Pencil } from "lucide-react";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
 
 jest.mock("nuqs");
-import type { EntityConfig, FetchListResult } from "@/lib/app/types/entity-config";
+import type { EntityConfig } from "@/lib/app/types/entity-config";
 
 function createMinimalConfig(
   overrides: Partial<{
@@ -24,8 +25,16 @@ function createMinimalConfig(
       moveSuccess: () => "",
       moveError: "",
     },
-    actions: { actions: ["edit"] },
-    useActions: () => () => ({}),
+    actions: {
+      whenActive: [
+        {
+          key: "edit",
+          label: "Редактировать",
+          icon: Pencil,
+          getHref: (e) => `/items/${e.id}`,
+        },
+      ],
+    },
     filters: {
       fields: [{ type: "showDeleted", label: "Удалённые" }],
       initial: { showDeleted: false },

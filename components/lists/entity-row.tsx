@@ -6,16 +6,10 @@ import Link from "next/link";
 import { DoorOpen, Package, LayoutGrid, Container as ContainerIcon, Sofa } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
-import {
-  EntityActions,
-  type EntityActionsCallbacks,
-} from "@/components/entity-detail/entity-actions";
+import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import type {
-  CountsConfig,
-  ListColumnConfig,
-  ActionsConfig,
-} from "@/lib/app/types/entity-config";
+import type { Action } from "@/lib/app/types/entity-action";
+import type { CountsConfig, ListColumnConfig } from "@/lib/app/types/entity-config";
 import type {
   Item,
   Room,
@@ -49,12 +43,12 @@ type IconComponent = ComponentType<{ className?: string }>;
 interface EntityRowProps {
   entity: ListEntity;
   columnsConfig: ListColumnConfig[];
-  actions: ActionsConfig;
+  /** Разрешённые действия для строки. */
+  actions: Action[];
   /** Иконка из конфига списка (колонка «Название»). */
   icon?: IconComponent;
   /** Форматирование имени из конфига списка. */
   getName?: (entity: { id: number; name: string | null }) => string;
-  actionCallbacks: EntityActionsCallbacks;
   /** Подпись помещения (для колонки room и под имени). */
   roomLabel?: string;
   /** Конфиг счётчиков (room, building, furniture, place). */
@@ -344,12 +338,15 @@ function renderLocationCell(entity: ListEntity): ReactNode {
   return renderLocationLabel(locationInfo, false);
 }
 
+function getEditHref(actions: Action[]): string | undefined {
+  const edit = actions.find((a) => a.key === "edit" && "href" in a);
+  return edit && "href" in edit ? edit.href : undefined;
+}
+
 function renderCellContent(
   columnKey: string,
   entity: ListEntity,
-  actions: ActionsConfig,
-  actionCallbacks: EntityActionsCallbacks,
-  isDeleted: boolean,
+  actions: Action[],
   roomLabel: string | undefined,
   editHref: string | undefined,
   icon: IconComponent | undefined,
@@ -388,13 +385,7 @@ function renderCellContent(
       return renderLocationCell(entity);
 
     case "actions":
-      return (
-        <EntityActions
-          actions={actions}
-          callbacks={actionCallbacks}
-          isDeleted={isDeleted}
-        />
-      );
+      return <EntityActions actions={actions} />;
 
     default:
       return null;
@@ -414,13 +405,12 @@ export const EntityRow = memo(function EntityRow({
   actions,
   icon,
   getName,
-  actionCallbacks,
   roomLabel,
   counts,
 }: EntityRowProps) {
-  const isDeleted = !!entity.deleted_at;
   const router = useRouter();
   const pointerStartedOnRowRef = useRef(false);
+  const editHref = getEditHref(actions);
 
   const isInteractiveTarget = (target: HTMLElement) =>
     Boolean(target.closest(INTERACTIVE_SELECTOR));
@@ -435,7 +425,7 @@ export const EntityRow = memo(function EntityRow({
     const canNavigate = pointerStartedOnRowRef.current && !isInteractiveTarget(target);
     pointerStartedOnRowRef.current = false;
     if (!canNavigate) return;
-    if (actionCallbacks.editHref) router.push(actionCallbacks.editHref);
+    if (editHref) router.push(editHref);
   };
 
   return (
@@ -452,10 +442,8 @@ export const EntityRow = memo(function EntityRow({
           col.key,
           entity,
           actions,
-          actionCallbacks,
-          isDeleted,
           roomLabel,
-          actionCallbacks.editHref,
+          editHref,
           icon,
           getName,
           counts

@@ -1,10 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
-import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
+import type { ActionConfig } from "./entity-action";
 
 export type TableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
 export type EntityKind = "item" | "place" | "container" | "room" | "building" | "furniture";
-export type ActionKey = "edit" | "move" | "printLabel" | "duplicate" | "delete";
+export type ActionKey = "edit" | "move" | "printLabel" | "duplicate" | "delete" | "restore";
 export type MoveDestinationType = "room" | "place" | "container" | "building" | "furniture";
 
 export interface Results {
@@ -46,9 +46,8 @@ export interface MoveConfig {
 }
 
 export interface ActionsConfig {
-  actions: ActionKey[];
-  showRestoreWhenDeleted?: boolean;
-  move?: MoveConfig;
+  whenActive: ActionConfig[];
+  whenDeleted?: ActionConfig[];
 }
 
 /** Filter field config for EntityFiltersPanel (discriminated by type). */
@@ -125,7 +124,7 @@ export interface EntityConfig {
   apiTable: TableName;
   labels: EntityLabels;
   actions: ActionsConfig;
-  useActions: (params: { refreshList: () => void }) => (entity: EntityDisplay) => EntityActionsCallbacks;
+  move?: MoveConfig;
   addForm?: AddFormConfig;
   getName?: (entity: EntityDisplay) => string;
   icon?: LucideIcon;

@@ -1,15 +1,28 @@
-import { Container as ContainerIcon, LayoutGrid, Package } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Container as ContainerIcon,
+  Copy,
+  LayoutGrid,
+  Package,
+  Pencil,
+  Printer,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import AddPlaceForm from "@/components/forms/add-place-form";
+import MovePlaceForm from "@/components/forms/move-place-form";
 import { getPlaces } from "@/lib/places/api";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
+import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
   FetchListParams,
   FetchListResult,
+  FilterFieldConfig,
   Filters,
 } from "@/lib/app/types/entity-config";
 import type { Place } from "@/types/entity";
-import { usePlacesActions } from "@/lib/entities/places/use-places-actions";
 
 export interface PlacesFilters extends Filters {
   showDeleted: boolean;
@@ -41,51 +54,78 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
   return { data: list };
 }
 
-function usePlacesConfigActions(
-  config: EntityConfig,
-  params: { refreshList: () => void }
-) {
-  const getRowActions = usePlacesActions({
-    refreshList: params.refreshList,
-    basePath: config.basePath,
-    apiTable: config.apiTable,
-    labels: config.labels,
-    move: config.actions.move,
-  });
-  return (entity: EntityDisplay) => getRowActions(entity as Place);
+function createPlacesActionsConfig(config: {
+  basePath: string;
+  labels: { moveTitle: string; moveSuccess: (n: string) => string; moveError: string };
+}): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
+  return {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
+      {
+        key: "move",
+        label: "Переместить",
+        icon: ArrowRightLeft,
+        Form: MovePlaceForm as unknown as React.ComponentType<Record<string, unknown>>,
+        getFormProps: (e, ctx) => ({
+          title: config.labels.moveTitle,
+          entityDisplayName: getEntityDisplayName("place", e.id, e.name),
+          placeId: e.id,
+          getSuccessMessage: config.labels.moveSuccess,
+          getErrorMessage: () => config.labels.moveError,
+          onSuccess: ctx.refreshList,
+        }),
+      },
+      {
+        key: "printLabel",
+        label: "Печать этикетки",
+        icon: Printer,
+        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
+      },
+      {
+        key: "duplicate",
+        label: "Дублировать",
+        icon: Copy,
+        getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id),
+      },
+      {
+        key: "delete",
+        label: "Удалить",
+        icon: Trash2,
+        variant: "destructive",
+        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
+      },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  };
 }
 
-export const placesEntityConfig: EntityConfig = {
-  kind: "place",
+const placesConfigBase = {
+  kind: "place" as const,
   basePath: "/places",
-  apiTable: "places",
+  apiTable: "places" as const,
   labels: {
     singular: "Место",
     plural: "Места",
     results: { one: "место", few: "места", many: "мест" },
     moveTitle: "Переместить место",
-    moveSuccess: (destinationName) => `Место успешно перемещено в ${destinationName}`,
+    moveSuccess: (destinationName: string) =>
+        `Место успешно перемещено в ${destinationName}`,
     moveError: "Произошла ошибка при перемещении места",
     deleteConfirm: "Вы уверены, что хотите удалить это место?",
     deleteSuccess: "Место успешно удалено",
     restoreSuccess: "Место успешно восстановлено",
     duplicateSuccess: "Место успешно дублировано",
   },
-  actions: {
-    actions: ["edit", "move", "printLabel", "duplicate", "delete"],
-    showRestoreWhenDeleted: true,
-    move: {
-      enabled: true,
-      destinationTypes: ["furniture"],
-    },
-  },
-  useActions: (params) => usePlacesConfigActions(placesEntityConfig, params),
   addForm: {
     title: "Добавить место",
     form: AddPlaceForm,
   },
-  getName: (entity) =>
-    entity.name != null && entity.name.trim() !== "" ? entity.name : `Место #${entity.id}`,
+  getName: (entity: EntityDisplay) =>
+    entity.name != null && entity.name.trim() !== ""
+      ? entity.name
+      : `Место #${entity.id}`,
   icon: LayoutGrid,
   filters: {
     fields: [
@@ -93,7 +133,7 @@ export const placesEntityConfig: EntityConfig = {
       { type: "entityType", key: "entityTypeId", entityKind: "place" },
       { type: "room", key: "roomId" },
       { type: "furniture", key: "furnitureId" },
-    ],
+    ] satisfies FilterFieldConfig[],
     initial: DEFAULT_PLACES_FILTERS,
   },
   columns: [
@@ -111,10 +151,15 @@ export const placesEntityConfig: EntityConfig = {
       { path: "/containers", field: "containers_count", icon: ContainerIcon, label: "конт." },
     ],
   },
-  groupBy: (entity) => {
+  groupBy: (entity: EntityDisplay) => {
     const place = entity as Place;
     const name = place.furniture_name?.trim();
     return name && name.length > 0 ? name : null;
   },
   groupByEmptyLabel: "Без мебели",
+};
+
+export const placesEntityConfig: EntityConfig = {
+  ...placesConfigBase,
+  actions: createPlacesActionsConfig(placesConfigBase),
 };

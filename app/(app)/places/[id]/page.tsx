@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -16,6 +16,7 @@ import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { resolveActions } from "@/lib/entities/resolve-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
@@ -150,30 +151,18 @@ export default function PlaceDetailPage() {
 
   const isPageLoading = isLoading;
 
+  const placeCtx = useMemo(
+    () => ({
+      refreshList: () => loadPlaceData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadPlaceData, printLabel, handleDelete, handleRestore]
+  );
   const headerActions =
     place != null ? (
-      <EntityActions
-        actions={{
-          actions: ["move", "printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          movePlaceForm: {
-            title: placesEntityConfig.labels.moveTitle,
-            entityDisplayName: place.name ?? `Место #${place.id}`,
-            placeId: place.id,
-            getSuccessMessage: placesEntityConfig.labels.moveSuccess,
-            getErrorMessage: () => placesEntityConfig.labels.moveError,
-            onSuccess: () => loadPlaceData({ silent: true }),
-          },
-          onPrintLabel: () => printLabel(place.id, place.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!place.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
+      <EntityActions actions={resolveActions(placesEntityConfig.actions, place, placeCtx)} />
     ) : null;
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { resolveActions } from "@/lib/entities/resolve-actions";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
@@ -180,30 +181,18 @@ export default function RoomDetailPage() {
 
   const isPageLoading = isLoading;
 
+  const roomCtx = useMemo(
+    () => ({
+      refreshList: () => loadRoomData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadRoomData, printLabel, handleDelete, handleRestore]
+  );
   const headerActions =
     room != null ? (
-      <EntityActions
-        actions={{
-          actions: ["move", "printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          moveRoomForm: {
-            title: roomsEntityConfig.labels.moveTitle,
-            entityDisplayName: getEntityDisplayName("room", room.id, room.name),
-            roomId: room.id,
-            getSuccessMessage: roomsEntityConfig.labels.moveSuccess,
-            getErrorMessage: () => roomsEntityConfig.labels.moveError,
-            onSuccess: () => loadRoomData({ silent: true }),
-          },
-          onPrintLabel: () => printLabel(room.id, room.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!room.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
+      <EntityActions actions={resolveActions(roomsEntityConfig.actions, room, roomCtx)} />
     ) : null;
 
   return (

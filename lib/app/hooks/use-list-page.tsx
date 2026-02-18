@@ -99,7 +99,6 @@ export function useListPage(config: EntityConfig) {
   const {
     filters: filtersConfig,
     columns,
-    actions,
     addForm,
     labels,
     icon,
@@ -341,7 +340,6 @@ export function useListPage(config: EntityConfig) {
     activeFiltersCount,
     filterFields,
     columns,
-    actions,
     addForm,
     icon,
     getName,

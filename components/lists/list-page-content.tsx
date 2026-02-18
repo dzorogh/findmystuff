@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { EntityList } from "./entity-list";
 import { Plus } from "lucide-react";
 import { ListPagination } from "./list-pagination";
-import type { EntityActionsCallbacks } from "@/components/entity-detail/entity-actions";
+import type { Action } from "@/lib/app/types/entity-action";
 import type { EntityDisplay } from "@/lib/app/types/entity-config";
 
 export function ListPageContent({
@@ -12,7 +12,7 @@ export function ListPageContent({
   getRowActions,
 }: {
   listPage: ReturnType<typeof useListPage>;
-  getRowActions: (entity: EntityDisplay) => EntityActionsCallbacks;
+  getRowActions: (entity: EntityDisplay) => Action[];
 }) {
   const addForm = listPage.addForm;
   const AddForm = addForm?.form ?? null;
@@ -51,7 +51,6 @@ export function ListPageContent({
         results={listPage.results}
         filterFields={listPage.filterFields}
         columns={listPage.columns}
-        actions={listPage.actions}
         icon={listPage.icon}
         getName={listPage.getName}
         getRowActions={getRowActions}

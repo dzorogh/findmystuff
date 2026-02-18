@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
 import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
+import { resolveActions } from "@/lib/entities/resolve-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import AddItemForm from "@/components/forms/add-item-form";
@@ -159,23 +160,18 @@ export default function ContainerDetailPage() {
     }
   };
 
+  const containerCtx = useMemo(
+    () => ({
+      refreshList: () => loadContainerData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadContainerData, printLabel, handleDelete, handleRestore]
+  );
   const headerActions =
     container != null ? (
-      <EntityActions
-        actions={{
-          actions: ["move", "printLabel", "delete"],
-          showRestoreWhenDeleted: true,
-        }}
-        callbacks={{
-          onMove: () => setIsMoving(true),
-          onPrintLabel: () => printLabel(container.id, container.name),
-          onDelete: handleDelete,
-          onRestore: handleRestore,
-        }}
-        isDeleted={!!container.deleted_at}
-        disabled={isDeleting || isRestoring}
-        buttonVariant="default"
-      />
+      <EntityActions actions={resolveActions(containersEntityConfig.actions, container, containerCtx)} />
     ) : null;
 
   return (
@@ -301,7 +297,7 @@ export default function ContainerDetailPage() {
             <MoveEntityForm
               title={containersEntityConfig.labels.moveTitle}
               entityDisplayName={getEntityDisplayName("container", container.id, container.name)}
-              destinationTypes={containersEntityConfig.actions.move?.destinationTypes ?? ["room", "place", "container"]}
+              destinationTypes={containersEntityConfig.move?.destinationTypes ?? ["room", "place", "container"]}
               buildPayload={(destinationType, destinationId) => ({
                 container_id: container.id,
                 destination_type: destinationType,
