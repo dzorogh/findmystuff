@@ -55,15 +55,6 @@ interface EntityRowProps {
   counts?: CountsConfig;
 }
 
-const MD_HIDDEN_COLUMNS = new Set(["room", "counts"]);
-const LG_HIDDEN_COLUMNS = new Set(["movedAt", "location"]);
-
-/** Нейтральный fallback имени, если getName не передан из конфига. */
-function getDisplayNameFallback(entity: { id: number; name: string | null }): string {
-  const name = entity.name?.trim();
-  return name !== undefined && name !== "" ? name : `#${entity.id}`;
-}
-
 function isFurnitureEntity(entity: ListEntity): entity is Furniture {
   return "room_id" in entity && "places_count" in entity && !("containers_count" in entity);
 }
@@ -182,17 +173,13 @@ function formatRuDate(date: string): string {
 
 function renderNameCell(
   entity: ListEntity,
-  roomLabel: string | undefined,
   editHref: string | undefined,
   icon: IconComponent | undefined,
   getName: ((entity: { id: number; name: string | null }) => string) | undefined,
-  counts: CountsConfig | undefined
 ): ReactNode {
   const Icon = icon ?? Package;
-  const displayName = getName?.(entity) ?? getDisplayNameFallback(entity);
+  const displayName = getName?.(entity);
   const subline = getEntitySubline(entity);
-  const locationInfo = getLocationInfo(entity.last_location);
-  const hasRoomInName = roomLabel !== undefined && entity.last_location != null;
 
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -200,7 +187,7 @@ function renderNameCell(
         <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded border border-border bg-muted">
           <Image
             src={entity.photo_url}
-            alt={displayName}
+            alt={displayName ?? ""}
             fill
             className="object-cover"
             sizes="40px"
@@ -219,42 +206,6 @@ function renderNameCell(
           {displayName}
         </Link>
         {subline && <p className="mt-0.5 text-xs text-muted-foreground">{subline}</p>}
-        {hasRoomInName && (
-          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground md:hidden">
-            <DoorOpen className="h-3 w-3 shrink-0" />
-            <span className="truncate">{roomLabel}</span>
-          </div>
-        )}
-        {renderCountLinks(
-          entity,
-          counts,
-          true,
-          (() => {
-            if (
-              counts?.filterParam === "placeId" &&
-              ("furniture_name" in entity || ("room" in entity && entity.room))
-            ) {
-              return (
-                <span className="flex items-center gap-1">
-                  <Sofa className="h-3 w-3" />
-                  <span className="truncate">
-                    {"furniture_name" in entity && entity.furniture_name
-                      ? "room" in entity && entity.room?.room_name
-                        ? `${entity.furniture_name} (${entity.room.room_name})`
-                        : entity.furniture_name
-                      : "room" in entity ? entity.room?.room_name ?? "" : ""}
-                  </span>
-                </span>
-              );
-            }
-            return undefined;
-          })()
-        )}
-        {locationInfo && (
-          <div className="mt-1 text-xs text-muted-foreground lg:hidden">
-            {renderLocationLabel(locationInfo, true)}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -370,7 +321,7 @@ function renderCellContent(
       );
 
     case "name":
-      return renderNameCell(entity, roomLabel, editHref, icon, getName, counts);
+      return renderNameCell(entity, editHref, icon, getName);
 
     case "room":
       return renderRoomCell(entity, roomLabel);
@@ -393,8 +344,6 @@ function renderCellContent(
 }
 
 function getResponsiveHiddenClass(column: ListColumnConfig): string {
-  if (MD_HIDDEN_COLUMNS.has(column.key)) return "hidden md:table-cell";
-  if (LG_HIDDEN_COLUMNS.has(column.key)) return "hidden lg:table-cell";
   if (column.hideOnMobile) return "hidden sm:table-cell";
   return "";
 }

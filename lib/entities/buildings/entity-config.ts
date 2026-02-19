@@ -1,7 +1,6 @@
 import { Copy, DoorOpen, Home, Pencil, Printer, RotateCcw, Trash2 } from "lucide-react";
 import AddBuildingForm from "@/components/forms/add-building-form";
 import { getBuildings } from "@/lib/buildings/api";
-import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -32,23 +31,11 @@ async function fetchBuildings(params: FetchListParams): Promise<FetchListResult>
   return { data: list, totalCount };
 }
 
-function createBuildingsActionsConfig(config: { basePath: string }): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
-  return {
-    whenActive: [
-      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
-      { key: "printLabel", label: "Печать этикетки", icon: Printer, getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name) },
-      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
-      { key: "delete", label: "Удалить", icon: Trash2, variant: "destructive", getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id) },
-    ],
-    whenDeleted: [
-      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
-    ],
-  };
-}
+const BASE_PATH = "/buildings";
 
-const buildingsConfigBase = {
+export const buildingsEntityConfig: EntityConfig = {
   kind: "building" as const,
-  basePath: "/buildings",
+  basePath: BASE_PATH,
   apiTable: "buildings" as const,
   labels: {
     singular: "Здание",
@@ -76,7 +63,7 @@ const buildingsConfigBase = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "counts", label: "Содержимое" },
+    { key: "counts", label: "Содержимое", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchBuildings,
@@ -86,9 +73,15 @@ const buildingsConfigBase = {
       { path: "/rooms", field: "rooms_count", icon: DoorOpen, label: "пом." },
     ],
   },
-};
-
-export const buildingsEntityConfig: EntityConfig = {
-  ...buildingsConfigBase,
-  actions: createBuildingsActionsConfig(buildingsConfigBase),
+  actions: {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },
+      { key: "printLabel", label: "Печать этикетки", icon: Printer, getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name) },
+      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
+      { key: "delete", label: "Удалить", icon: Trash2, variant: "destructive", getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id) },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  },
 };

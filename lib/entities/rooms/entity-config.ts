@@ -1,10 +1,9 @@
-import type React from "react";
+import type { ComponentType } from "react";
 import { ArrowRightLeft, Copy, DoorOpen, Package, Pencil, Printer, RotateCcw, Sofa, Trash2 } from "lucide-react";
 import AddRoomForm from "@/components/forms/add-room-form";
 import MoveRoomForm from "@/components/forms/move-room-form";
 import { getRooms } from "@/lib/rooms/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import type { ActionConfig } from "@/lib/app/types/entity-action";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -49,60 +48,25 @@ async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
   return { data: list, totalCount };
 }
 
-function createRoomsActionsConfig(config: {
-  basePath: string;
-  labels: { moveTitle: string; moveSuccess: (n: string) => string; moveError: string };
-}): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
-  return {
-    whenActive: [
-      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
-      {
-        key: "move",
-        label: "Переместить",
-        icon: ArrowRightLeft,
-        Form: MoveRoomForm as unknown as React.ComponentType<Record<string, unknown>>,
-        getFormProps: (e, ctx) => ({
-          title: config.labels.moveTitle,
-          entityDisplayName: getEntityDisplayName("room", e.id, e.name),
-          roomId: e.id,
-          getSuccessMessage: config.labels.moveSuccess,
-          getErrorMessage: () => config.labels.moveError,
-          onSuccess: ctx.refreshList,
-        }),
-      },
-      {
-        key: "printLabel",
-        label: "Печать этикетки",
-        icon: Printer,
-        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
-      },
-      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
-      {
-        key: "delete",
-        label: "Удалить",
-        icon: Trash2,
-        variant: "destructive",
-        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
-      },
-    ],
-    whenDeleted: [
-      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
-    ],
-  };
-}
+const BASE_PATH = "/rooms";
+const ROOMS_MOVE_LABELS = {
+  moveTitle: "Переместить помещение",
+  moveSuccess: (destinationName: string) =>
+    `Помещение успешно перемещено в ${destinationName}`,
+  moveError: "Произошла ошибка при перемещении помещения",
+};
 
-const roomsConfigBase = {
+export const roomsEntityConfig: EntityConfig = {
   kind: "room" as const,
-  basePath: "/rooms",
+  basePath: BASE_PATH,
   apiTable: "rooms" as const,
   labels: {
     singular: "Помещение",
     plural: "Помещения",
     results: { one: "помещение", few: "помещения", many: "помещений" },
-    moveTitle: "Переместить помещение",
-    moveSuccess: (destinationName: string) =>
-        `Помещение успешно перемещено в ${destinationName}`,
-    moveError: "Произошла ошибка при перемещении помещения",
+    moveTitle: ROOMS_MOVE_LABELS.moveTitle,
+    moveSuccess: ROOMS_MOVE_LABELS.moveSuccess,
+    moveError: ROOMS_MOVE_LABELS.moveError,
     deleteConfirm: "Вы уверены, что хотите удалить это помещение?",
     deleteSuccess: "Помещение успешно удалено",
     restoreSuccess: "Помещение успешно восстановлено",
@@ -128,7 +92,7 @@ const roomsConfigBase = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "counts", label: "Содержимое" },
+    { key: "counts", label: "Содержимое", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchRooms,
@@ -145,9 +109,40 @@ const roomsConfigBase = {
     const name = room.building_name?.trim();
     return name && name.length > 0 ? name : null;
   },
-};
-
-export const roomsEntityConfig: EntityConfig = {
-  ...roomsConfigBase,
-  actions: createRoomsActionsConfig(roomsConfigBase),
+  actions: {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },
+      {
+        key: "move",
+        label: "Переместить",
+        icon: ArrowRightLeft,
+        Form: MoveRoomForm as unknown as ComponentType<Record<string, unknown>>,
+        getFormProps: (e, ctx) => ({
+          title: ROOMS_MOVE_LABELS.moveTitle,
+          entityDisplayName: getEntityDisplayName("room", e.id, e.name),
+          roomId: e.id,
+          getSuccessMessage: ROOMS_MOVE_LABELS.moveSuccess,
+          getErrorMessage: () => ROOMS_MOVE_LABELS.moveError,
+          onSuccess: ctx.refreshList,
+        }),
+      },
+      {
+        key: "printLabel",
+        label: "Печать этикетки",
+        icon: Printer,
+        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
+      },
+      { key: "duplicate", label: "Дублировать", icon: Copy, getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id) },
+      {
+        key: "delete",
+        label: "Удалить",
+        icon: Trash2,
+        variant: "destructive",
+        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
+      },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  },
 };

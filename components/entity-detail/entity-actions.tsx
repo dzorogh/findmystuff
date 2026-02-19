@@ -49,10 +49,10 @@ function EntityActionsItem({ action, mode }: EntityActionsItemProps) {
     const buttonProps =
       "href" in action
         ? {
-            render: <Link href={action.href} />,
-            nativeButton: false,
-            onClickCapture: (e: MouseEvent) => e.stopPropagation(),
-          }
+          render: <Link href={action.href} />,
+          nativeButton: false,
+          onClickCapture: (e: MouseEvent) => e.stopPropagation(),
+        }
         : { onClick: handleTrigger };
 
     const buttonEl = (
@@ -122,7 +122,7 @@ export function EntityActions({ actions, className }: EntityActionsProps) {
               </Button>
             }
           />
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-48">
             {actions.map((action) => (
               <EntityActionsItem key={action.key} action={action} mode="dropdown" />
             ))}

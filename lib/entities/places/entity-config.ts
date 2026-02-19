@@ -13,7 +13,7 @@ import AddPlaceForm from "@/components/forms/add-place-form";
 import MovePlaceForm from "@/components/forms/move-place-form";
 import { getPlaces } from "@/lib/places/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import type { ActionConfig } from "@/lib/app/types/entity-action";
+import type { ComponentType } from "react";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -54,65 +54,24 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
   return { data: list };
 }
 
-function createPlacesActionsConfig(config: {
-  basePath: string;
-  labels: { moveTitle: string; moveSuccess: (n: string) => string; moveError: string };
-}): { whenActive: ActionConfig[]; whenDeleted: ActionConfig[] } {
-  return {
-    whenActive: [
-      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${config.basePath}/${e.id}` },
-      {
-        key: "move",
-        label: "Переместить",
-        icon: ArrowRightLeft,
-        Form: MovePlaceForm as unknown as React.ComponentType<Record<string, unknown>>,
-        getFormProps: (e, ctx) => ({
-          title: config.labels.moveTitle,
-          entityDisplayName: getEntityDisplayName("place", e.id, e.name),
-          placeId: e.id,
-          getSuccessMessage: config.labels.moveSuccess,
-          getErrorMessage: () => config.labels.moveError,
-          onSuccess: ctx.refreshList,
-        }),
-      },
-      {
-        key: "printLabel",
-        label: "Печать этикетки",
-        icon: Printer,
-        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
-      },
-      {
-        key: "duplicate",
-        label: "Дублировать",
-        icon: Copy,
-        getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id),
-      },
-      {
-        key: "delete",
-        label: "Удалить",
-        icon: Trash2,
-        variant: "destructive",
-        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
-      },
-    ],
-    whenDeleted: [
-      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
-    ],
-  };
-}
+const BASE_PATH = "/places";
+const PLACES_MOVE_LABELS = {
+  moveTitle: "Переместить место",
+  moveSuccess: (destinationName: string) => `Место успешно перемещено в ${destinationName}`,
+  moveError: "Произошла ошибка при перемещении места",
+};
 
-const placesConfigBase = {
+export const placesEntityConfig: EntityConfig = {
   kind: "place" as const,
-  basePath: "/places",
+  basePath: BASE_PATH,
   apiTable: "places" as const,
   labels: {
     singular: "Место",
     plural: "Места",
     results: { one: "место", few: "места", many: "мест" },
-    moveTitle: "Переместить место",
-    moveSuccess: (destinationName: string) =>
-        `Место успешно перемещено в ${destinationName}`,
-    moveError: "Произошла ошибка при перемещении места",
+    moveTitle: PLACES_MOVE_LABELS.moveTitle,
+    moveSuccess: PLACES_MOVE_LABELS.moveSuccess,
+    moveError: PLACES_MOVE_LABELS.moveError,
     deleteConfirm: "Вы уверены, что хотите удалить это место?",
     deleteSuccess: "Место успешно удалено",
     restoreSuccess: "Место успешно восстановлено",
@@ -139,8 +98,8 @@ const placesConfigBase = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "room", label: "Мебель" },
-    { key: "counts", label: "Содержимое" },
+    { key: "room", label: "Мебель", hideOnMobile: true },
+    { key: "counts", label: "Содержимое", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchPlaces,
@@ -157,9 +116,45 @@ const placesConfigBase = {
     return name && name.length > 0 ? name : null;
   },
   groupByEmptyLabel: "Без мебели",
-};
-
-export const placesEntityConfig: EntityConfig = {
-  ...placesConfigBase,
-  actions: createPlacesActionsConfig(placesConfigBase),
+  actions: {
+    whenActive: [
+      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },
+      {
+        key: "move",
+        label: "Переместить",
+        icon: ArrowRightLeft,
+        Form: MovePlaceForm as unknown as ComponentType<Record<string, unknown>>,
+        getFormProps: (e, ctx) => ({
+          title: PLACES_MOVE_LABELS.moveTitle,
+          entityDisplayName: getEntityDisplayName("place", e.id, e.name),
+          placeId: e.id,
+          getSuccessMessage: PLACES_MOVE_LABELS.moveSuccess,
+          getErrorMessage: () => PLACES_MOVE_LABELS.moveError,
+          onSuccess: ctx.refreshList,
+        }),
+      },
+      {
+        key: "printLabel",
+        label: "Печать этикетки",
+        icon: Printer,
+        getOnClick: (e, ctx) => () => ctx.printLabel?.(e.id, e.name),
+      },
+      {
+        key: "duplicate",
+        label: "Дублировать",
+        icon: Copy,
+        getOnClick: (e, ctx) => () => ctx.handleDuplicate?.(e.id),
+      },
+      {
+        key: "delete",
+        label: "Удалить",
+        icon: Trash2,
+        variant: "destructive",
+        getOnClick: (e, ctx) => () => ctx.handleDelete?.(e.id),
+      },
+    ],
+    whenDeleted: [
+      { key: "restore", label: "Восстановить", icon: RotateCcw, getOnClick: (e, ctx) => () => ctx.handleRestore?.(e.id) },
+    ],
+  },
 };
