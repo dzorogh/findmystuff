@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,14 +25,11 @@ function EntityActionsItem({ action, mode }: EntityActionsItemProps) {
   const Icon = action.icon;
   const variant = action.variant ?? "ghost";
 
-  const handleClick = () => {
-    if ("href" in action) {
-      router.push(action.href);
-    } else if ("onClick" in action) {
-      action.onClick();
-    } else if ("Form" in action) {
-      setFormOpen(true);
-    }
+  const isFormAction = "Form" in action;
+  const handleTrigger = () => {
+    if ("href" in action) router.push(action.href);
+    else if ("onClick" in action) action.onClick();
+    else if (isFormAction) setFormOpen(true);
   };
 
   const content = (
@@ -42,77 +39,57 @@ function EntityActionsItem({ action, mode }: EntityActionsItemProps) {
     </>
   );
 
-  if ("Form" in action) {
-    const { Form, formProps } = action;
-    const formPropsWithState = { ...formProps, open: formOpen, onOpenChange: setFormOpen };
-    const FormWithState = <Form {...(formPropsWithState as object)} />;
-
-    if (mode === "button") {
-      return (
-        <span className="inline-flex">
-          <Button
-            variant={variant}
-            size="icon"
-            title={action.label}
-            aria-label={action.label}
-            onClick={() => setFormOpen(true)}
-          >
-            <Icon data-icon="inline-start" />
-          </Button>
-          {FormWithState}
-        </span>
-      );
-    }
-
-    return (
-      <>
-        <DropdownMenuItem onClick={() => setFormOpen(true)}>
-          {content}
-        </DropdownMenuItem>
-        {FormWithState}
-      </>
-    );
-  }
+  const triggerProps = {
+    variant,
+    title: action.label,
+    "aria-label": action.label,
+  };
 
   if (mode === "button") {
-    if ("href" in action) {
-      return (
-        <Button
-          key={action.key}
-          variant={variant}
-          size="icon"
-          title={action.label}
-          aria-label={action.label}
-          onClickCapture={(e) => e.stopPropagation()}
-          render={<Link href={action.href} />}
-          nativeButton={false}
-        >
-          <Icon data-icon="inline-start" />
-        </Button>
-      );
-    }
-    return (
-      <Button
-        key={action.key}
-        variant={variant}
-        size="icon"
-        title={action.label}
-        aria-label={action.label}
-        onClick={handleClick}
-      >
+    const buttonProps =
+      "href" in action
+        ? {
+            render: <Link href={action.href} />,
+            nativeButton: false,
+            onClickCapture: (e: MouseEvent) => e.stopPropagation(),
+          }
+        : { onClick: handleTrigger };
+
+    const buttonEl = (
+      <Button key={action.key} size="icon" {...triggerProps} {...buttonProps}>
         <Icon data-icon="inline-start" />
       </Button>
     );
+
+    const formEl =
+      isFormAction && (
+        <action.Form
+          {...(action.formProps as object)}
+          open={formOpen}
+          onOpenChange={setFormOpen}
+        />
+      );
+
+    return formEl ? <span className="inline-flex">{buttonEl}{formEl}</span> : buttonEl;
   }
 
   return (
-    <DropdownMenuItem
-      key={action.key}
-      variant={"destructive" in action && action.variant === "destructive" ? "destructive" : undefined}
-      onClick={handleClick}
-    >
-      {content}
-    </DropdownMenuItem>
+    <>
+      <DropdownMenuItem
+        key={action.key}
+        variant={action.variant === "destructive" ? "destructive" : undefined}
+        onClick={handleTrigger}
+      >
+        {content}
+      </DropdownMenuItem>
+      {isFormAction && (
+        <action.Form
+          {...(action.formProps as object)}
+          open={formOpen}
+          onOpenChange={setFormOpen}
+        />
+      )}
+    </>
   );
 }
 
