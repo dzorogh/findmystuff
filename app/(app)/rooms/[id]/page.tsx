@@ -26,7 +26,6 @@ import { ErrorMessage } from "@/components/common/error-message";
 import type { RoomEntity } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
 import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
-import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import BuildingCombobox from "@/components/fields/building-combobox";
 import { useBuildings } from "@/lib/buildings/hooks/use-buildings";
@@ -127,7 +126,7 @@ export default function RoomDetailPage() {
     loadData: loadRoomData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "rooms",
     entityId: roomId,
     entityName: "Помещение",
@@ -143,6 +142,16 @@ export default function RoomDetailPage() {
       setBuildingId(room.building_id?.toString() ?? "");
     }
   }, [room]);
+
+  const roomCtx = useMemo(
+    () => ({
+      refreshList: () => loadRoomData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadRoomData, printLabel, handleDelete, handleRestore]
+  );
 
   if (isInvalidId) {
     return <EntityDetailError error="Некорректный ID помещения" entityName="Помещение" />;
@@ -181,15 +190,6 @@ export default function RoomDetailPage() {
 
   const isPageLoading = isLoading;
 
-  const roomCtx = useMemo(
-    () => ({
-      refreshList: () => loadRoomData({ silent: true }),
-      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
-      handleDelete,
-      handleRestore,
-    }),
-    [loadRoomData, printLabel, handleDelete, handleRestore]
-  );
   const headerActions =
     room != null ? (
       <EntityActions actions={resolveActions(roomsEntityConfig.actions, room, roomCtx)} />

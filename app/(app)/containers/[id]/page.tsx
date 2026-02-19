@@ -110,7 +110,7 @@ export default function ContainerDetailPage() {
     loadData: loadContainerData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "containers",
     entityId: containerId,
     entityName: "Контейнер",
@@ -125,6 +125,16 @@ export default function ContainerDetailPage() {
       setContainerTypeId(container.entity_type_id?.toString() ?? "");
     }
   }, [container]);
+
+  const containerCtx = useMemo(
+    () => ({
+      refreshList: () => loadContainerData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadContainerData, printLabel, handleDelete, handleRestore]
+  );
 
   if (isInvalidId) {
     return <EntityDetailError error="Некорректный ID контейнера" entityName="Контейнер" />;
@@ -160,15 +170,6 @@ export default function ContainerDetailPage() {
     }
   };
 
-  const containerCtx = useMemo(
-    () => ({
-      refreshList: () => loadContainerData({ silent: true }),
-      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
-      handleDelete,
-      handleRestore,
-    }),
-    [loadContainerData, printLabel, handleDelete, handleRestore]
-  );
   const headerActions =
     container != null ? (
       <EntityActions actions={resolveActions(containersEntityConfig.actions, container, containerCtx)} />

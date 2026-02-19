@@ -19,7 +19,7 @@ const ImageUpload = ({
   value,
   onChange,
   disabled = false,
-  label = "Фотография",
+  label: _label = "Фотография",
 }: ImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);

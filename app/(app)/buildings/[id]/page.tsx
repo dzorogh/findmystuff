@@ -105,7 +105,7 @@ export default function BuildingDetailPage() {
     loadData: loadBuildingData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "buildings",
     entityId: buildingId,
     entityName: "Здание",
@@ -120,6 +120,16 @@ export default function BuildingDetailPage() {
       setBuildingTypeId(building.building_type_id?.toString() ?? "");
     }
   }, [building]);
+
+  const buildingCtx = useMemo(
+    () => ({
+      refreshList: () => loadBuildingData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadBuildingData, printLabel, handleDelete, handleRestore]
+  );
 
   if (isInvalidId) {
     return <EntityDetailError error="Некорректный ID здания" entityName="Здание" />;
@@ -155,15 +165,6 @@ export default function BuildingDetailPage() {
     }
   };
 
-  const buildingCtx = useMemo(
-    () => ({
-      refreshList: () => loadBuildingData({ silent: true }),
-      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
-      handleDelete,
-      handleRestore,
-    }),
-    [loadBuildingData, printLabel, handleDelete, handleRestore]
-  );
   const headerActions =
     building != null ? (
       <EntityActions actions={resolveActions(buildingsEntityConfig.actions, building, buildingCtx)} />

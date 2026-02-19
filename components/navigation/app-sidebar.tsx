@@ -5,13 +5,11 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { SecondaryMenu } from "./secondary-menu";

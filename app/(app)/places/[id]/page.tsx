@@ -104,7 +104,7 @@ export default function PlaceDetailPage() {
     loadData: loadPlaceData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "places",
     entityId: placeId,
     entityName: "Место",
@@ -119,6 +119,16 @@ export default function PlaceDetailPage() {
       setPlaceTypeId(place.entity_type_id ?? null);
     }
   }, [place]);
+
+  const placeCtx = useMemo(
+    () => ({
+      refreshList: () => loadPlaceData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleRestore,
+    }),
+    [loadPlaceData, printLabel, handleDelete, handleRestore]
+  );
 
   if (error && !isLoading) {
     return <EntityDetailError error={error} entityName="Место" />;
@@ -151,15 +161,6 @@ export default function PlaceDetailPage() {
 
   const isPageLoading = isLoading;
 
-  const placeCtx = useMemo(
-    () => ({
-      refreshList: () => loadPlaceData({ silent: true }),
-      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
-      handleDelete,
-      handleRestore,
-    }),
-    [loadPlaceData, printLabel, handleDelete, handleRestore]
-  );
   const headerActions =
     place != null ? (
       <EntityActions actions={resolveActions(placesEntityConfig.actions, place, placeCtx)} />

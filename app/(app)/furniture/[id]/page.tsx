@@ -119,7 +119,7 @@ export default function FurnitureDetailPage() {
     loadData: loadFurnitureData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "furniture",
     entityId: furnitureId,
     entityName: "Мебель",
@@ -146,6 +146,26 @@ export default function FurnitureDetailPage() {
       setPurchaseDate(furniture.purchaseDate ?? "");
     }
   }, [furniture]);
+
+  const handleDuplicate = useCallback(async () => {
+    const res = await duplicateEntityApi.duplicate("furniture", furnitureId);
+    if (res.error) toast.error(res.error);
+    else {
+      toast.success("Мебель успешно дублирована");
+      loadFurnitureData({ silent: true });
+    }
+  }, [furnitureId, loadFurnitureData]);
+
+  const furnitureCtx = useMemo(
+    () => ({
+      refreshList: () => loadFurnitureData({ silent: true }),
+      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
+      handleDelete,
+      handleDuplicate,
+      handleRestore,
+    }),
+    [loadFurnitureData, printLabel, handleDelete, handleDuplicate, handleRestore]
+  );
 
   if (isInvalidId) {
     return <EntityDetailError error="Некорректный ID мебели" entityName="Мебель" />;
@@ -187,25 +207,6 @@ export default function FurnitureDetailPage() {
     }
   };
 
-  const handleDuplicate = async () => {
-    const res = await duplicateEntityApi.duplicate("furniture", furniture!.id);
-    if (res.error) toast.error(res.error);
-    else {
-      toast.success("Мебель успешно дублирована");
-      loadFurnitureData({ silent: true });
-    }
-  };
-
-  const furnitureCtx = useMemo(
-    () => ({
-      refreshList: () => loadFurnitureData({ silent: true }),
-      printLabel: (id: number, name?: string | null) => printLabel(id, name ?? null),
-      handleDelete,
-      handleDuplicate,
-      handleRestore,
-    }),
-    [loadFurnitureData, printLabel, handleDelete, handleDuplicate, handleRestore]
-  );
   const headerActions =
     furniture != null ? (
       <EntityActions actions={resolveActions(furnitureEntityConfig.actions, furniture, furnitureCtx)} />

@@ -70,7 +70,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
     loadData: loadItemData,
   });
 
-  const { isDeleting, isRestoring, handleDelete, handleRestore } = useEntityActions({
+  const { handleDelete, handleRestore } = useEntityActions({
     entityType: "items",
     entityId: itemId,
     entityName: ENTITY_LABEL,
