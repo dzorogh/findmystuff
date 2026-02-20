@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { getItemIdsInRoomRpc } from "@/lib/rooms/api";
 import { getServerUser } from "@/lib/users/server";
 import { getActiveTenantId } from "@/lib/tenants/server";
@@ -22,6 +23,7 @@ export async function GET(
       );
     }
     const supabase = await createClient();
+    const admin = getSupabaseAdmin();
     const resolvedParams = await Promise.resolve(params);
     const roomId = parseInt(resolvedParams.id, 10);
 
@@ -29,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: "Неверный ID помещения" }, { status: 400 });
     }
 
-    // Волна 1: загружаем комнату, id вещей, transitions контейнеров в комнату, места через mv, мебель
+    // Волна 1: загружаем комнату, id вещей, transitions контейнеров в комнату, места через mv, мебель (MV — через admin, т.к. не выдаём anon/authenticated)
     const [roomResult, itemIdsResult, transitionsResult, placesInRoomMv, furnitureResult] = await Promise.all([
       supabase
         .from("rooms")
@@ -43,7 +45,7 @@ export async function GET(
         .eq("destination_type", "room")
         .eq("destination_id", roomId)
         .order("created_at", { ascending: false }),
-      supabase
+      admin
         .from("mv_place_last_room_transition")
         .select("place_id")
         .eq("room_id", roomId),

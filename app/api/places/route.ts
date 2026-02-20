@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import { getPlacesWithRoomRpc } from "@/lib/places/api";
 import { getServerUser } from "@/lib/users/server";
@@ -86,6 +87,7 @@ const parseOptionalInt = (value: string | null): number | null => {
 
 const fetchPlacesFallback = async (
   supabase: SupabaseClient,
+  admin: ReturnType<typeof getSupabaseAdmin>,
   query: string | null,
   showDeleted: boolean,
   sortBy: SortBy,
@@ -108,7 +110,7 @@ const fetchPlacesFallback = async (
   }
 
   if (roomId != null) {
-    const { data: placeIdsInRoom } = await supabase
+    const { data: placeIdsInRoom } = await admin
       .from("mv_place_last_room_transition")
       .select("place_id")
       .eq("room_id", roomId);
@@ -141,16 +143,16 @@ const fetchPlacesFallback = async (
   const placeIds = filteredRows.map((place) => place.id);
   const [placeTransitionsResult, itemTransitionsResult, containerTransitionsResult] =
     await Promise.all([
-      supabase
+      admin
         .from("mv_place_last_room_transition")
         .select("place_id, room_id")
         .in("place_id", placeIds),
-      supabase
+      admin
         .from("mv_item_last_transition")
         .select("destination_id")
         .eq("destination_type", "place")
         .in("destination_id", placeIds),
-      supabase
+      admin
         .from("mv_container_last_transition")
         .select("destination_id")
         .eq("destination_type", "place")
@@ -273,7 +275,7 @@ export async function GET(request: NextRequest) {
     if (fetchError) {
       if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
         const { data: fallbackPlaces, error: fallbackError } =
-          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection, entityTypeId, roomId);
+          await fetchPlacesFallback(supabase, getSupabaseAdmin(), query, showDeleted, sortBy, sortDirection, entityTypeId, roomId);
 
         if (fallbackError) {
           return NextResponse.json(
