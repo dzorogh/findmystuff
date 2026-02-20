@@ -3,9 +3,19 @@ import { test, expect, type Page } from '@playwright/test';
 const getFirstActiveRoomRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
+/** Дождаться загрузки страницы списка помещений. */
+async function waitForRoomsListReady(page: Page) {
+  await expect(
+    page.getByRole('columnheader', { name: 'Название' }).or(
+      page.getByText(/по вашему запросу ничего не найдено|помещений не найдены/i)
+    )
+  ).toBeVisible({ timeout: 5000 });
+}
+
 test.describe('rooms list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/rooms');
+    await waitForRoomsListReady(page);
   });
 
   test('shows list, headers, filters and action buttons', async ({ page }) => {

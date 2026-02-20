@@ -2,18 +2,18 @@ import { test, expect, type Page } from '@playwright/test';
 
 const ROW_VISIBILITY_TIMEOUT = 10000;
 /** Таймаут навигации на страницу сущности (Next.js может компилировать маршрут при первом заходе). */
-const NAVIGATION_TIMEOUT = 15000;
+const NAVIGATION_TIMEOUT = 10000;
 
 const getFirstActiveItemRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
-/** Дождаться окончания загрузки списка: либо таблица с данными, либо пустое состояние. */
+/** Дождаться окончания загрузки списка: либо таблица, либо пустое состояние (текст в <p>, не heading). */
 async function waitForItemsListReady(page: Page) {
   await expect(
     page.getByRole('columnheader', { name: 'Название' }).or(
-      page.getByRole('heading', { name: /вещи не найдены|ничего не найдено/i })
+      page.getByText(/по вашему запросу ничего не найдено|вещей не найдены/i)
     )
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: 5000 });
 }
 
 test.describe('items list', () => {

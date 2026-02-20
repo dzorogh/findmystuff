@@ -4,7 +4,16 @@
  * Implemented in T011.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Tenant } from "./types";
+
+/** RPC create_tenant_for_current_user (вызывать из app/api). */
+export function createTenantRpc(
+  supabase: SupabaseClient,
+  params: { p_name: string }
+) {
+  return supabase.rpc("create_tenant_for_current_user", params);
+}
 
 export async function getTenants(): Promise<Tenant[]> {
   const res = await fetch("/api/tenants");

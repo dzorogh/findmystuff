@@ -25,17 +25,14 @@ export function getItemsWithRoomRpc(
     page_offset: number;
     location_type: string | null;
     room_id: number | null;
-    place_id: number | null;
-    container_id: number | null;
     has_photo: boolean | null;
     sort_by: SortBy;
     sort_direction: SortDirection;
     filter_tenant_id?: number | null;
   }
 ) {
-  const { place_id, container_id, ...rpcParams } = params;
   return supabase.rpc("get_items_with_room", {
-    ...rpcParams,
+    ...params,
     filter_tenant_id: params.filter_tenant_id ?? null,
   });
 }

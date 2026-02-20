@@ -4,6 +4,7 @@ import {
   getRoomsSimple,
   createRoom,
   updateRoom,
+  getRoomsWithCountsRpc,
 } from "@/lib/rooms/api";
 
 describe("rooms/api", () => {
@@ -142,5 +143,33 @@ describe("rooms/api", () => {
     });
     await getRoomsSimple(false);
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("showDeleted=false");
+  });
+
+  it("getRooms с buildingId добавляет buildingId в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+    await getRooms({ buildingId: 2 });
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("buildingId=2");
+  });
+
+  it("getRoomsWithCountsRpc передаёт filter_tenant_id и filter_building_id", () => {
+    const rpc = jest.fn().mockReturnValue({});
+    const supabase = { rpc } as never;
+    getRoomsWithCountsRpc(supabase, {
+      search_query: "",
+      show_deleted: false,
+      page_limit: 10,
+      page_offset: 0,
+      sort_by: "created_at",
+      sort_direction: "desc",
+      filter_tenant_id: 1,
+      filter_building_id: 5,
+    });
+    expect(rpc).toHaveBeenCalledWith(
+      "get_rooms_with_counts",
+      expect.objectContaining({ filter_tenant_id: 1, filter_building_id: 5 })
+    );
   });
 });

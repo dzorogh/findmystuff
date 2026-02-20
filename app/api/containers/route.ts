@@ -45,9 +45,6 @@ export async function GET(request: NextRequest) {
       locationTypeParam !== null && locationTypeParam !== "" && locationTypeParam !== "all"
         ? locationTypeParam
         : null;
-    const placeIdParam = searchParams.get("placeId");
-    const placeId =
-      placeIdParam !== null && placeIdParam !== "" ? parseInt(placeIdParam, 10) : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -63,7 +60,6 @@ export async function GET(request: NextRequest) {
       p_entity_type_id: Number.isNaN(entityTypeId) ? null : entityTypeId,
       p_has_items: hasItems,
       p_destination_type: locationType,
-      p_place_id: placeId != null && !Number.isNaN(placeId) ? placeId : null,
       filter_tenant_id: tenantId,
     });
 

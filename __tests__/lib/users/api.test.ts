@@ -4,6 +4,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getAuthUser,
 } from "@/lib/users/api";
 
 describe("users/api", () => {
@@ -116,6 +117,27 @@ describe("users/api", () => {
     });
 
     const result = await getClientUser();
+
+    expect(result).toBeNull();
+  });
+
+  it("getAuthUser возвращает user из supabase.auth.getUser", async () => {
+    const user = { id: "u1", email: "u@b.com" } as never;
+    const supabase = {
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user } }) },
+    } as never;
+
+    const result = await getAuthUser(supabase);
+
+    expect(result).toEqual(user);
+  });
+
+  it("getAuthUser возвращает null при отсутствии user", async () => {
+    const supabase = {
+      auth: { getUser: jest.fn().mockResolvedValue({ data: { user: null } }) },
+    } as never;
+
+    const result = await getAuthUser(supabase);
 
     expect(result).toBeNull();
   });

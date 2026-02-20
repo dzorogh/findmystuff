@@ -37,8 +37,6 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const locationType = searchParams.get("locationType") || null;
     const roomId = searchParams.get("roomId") ? parseInt(searchParams.get("roomId")!, 10) : null;
-    const placeId = searchParams.get("placeId") ? parseInt(searchParams.get("placeId")!, 10) : null;
-    const containerId = searchParams.get("containerId") ? parseInt(searchParams.get("containerId")!, 10) : null;
     const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
@@ -54,8 +52,6 @@ export async function GET(request: NextRequest) {
       page_offset: from,
       location_type: locationType,
       room_id: roomId,
-      place_id: placeId,
-      container_id: containerId,
       has_photo: hasPhoto,
       sort_by: sortBy,
       sort_direction: sortDirection,

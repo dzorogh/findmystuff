@@ -243,6 +243,8 @@ export function useListPage(config: EntityConfig) {
     } else {
       loadData(searchQuery, true);
     }
+    // loadData не в deps: зависит от filters (новый объект каждый рендер) → лишние запуски и мерцание списка
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey, sortBy, sortDirection, currentPage, activeTenantId]);
 
   const refreshList = useCallback(() => {

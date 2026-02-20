@@ -4,6 +4,7 @@ import {
   getContainersSimple,
   createContainer,
   updateContainer,
+  getContainersWithLocationRpc,
 } from "@/lib/containers/api";
 
 describe("containers/api", () => {
@@ -50,6 +51,28 @@ describe("containers/api", () => {
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("showDeleted=true");
   });
 
+  it("getContainers с locationType не all добавляет locationType в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getContainers({ locationType: "room" });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("locationType=room");
+  });
+
+  it("getContainers с placeId добавляет placeId в URL", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [] }),
+    });
+
+    await getContainers({ placeId: 5 });
+
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("placeId=5");
+  });
+
   it("getContainer вызывает /containers/:id", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -94,5 +117,44 @@ describe("containers/api", () => {
 
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/api/containers/1");
     expect((global.fetch as jest.Mock).mock.calls[0][1].method).toBe("PUT");
+  });
+
+  it("getContainersWithLocationRpc передаёт filter_tenant_id в RPC", () => {
+    const rpc = jest.fn().mockReturnValue({});
+    const supabase = { rpc } as never;
+
+    getContainersWithLocationRpc(supabase, {
+      search_query: "",
+      show_deleted: false,
+      page_limit: 10,
+      page_offset: 0,
+      sort_by: "created_at",
+      sort_direction: "desc",
+      filter_tenant_id: 1,
+    });
+
+    expect(rpc).toHaveBeenCalledWith(
+      "get_containers_with_location",
+      expect.objectContaining({ filter_tenant_id: 1 })
+    );
+  });
+
+  it("getContainersWithLocationRpc передаёт filter_tenant_id null при отсутствии", () => {
+    const rpc = jest.fn().mockReturnValue({});
+    const supabase = { rpc } as never;
+
+    getContainersWithLocationRpc(supabase, {
+      search_query: "",
+      show_deleted: false,
+      page_limit: 10,
+      page_offset: 0,
+      sort_by: "created_at",
+      sort_direction: "desc",
+    });
+
+    expect(rpc).toHaveBeenCalledWith(
+      "get_containers_with_location",
+      expect.objectContaining({ filter_tenant_id: null })
+    );
   });
 });

@@ -115,4 +115,18 @@ describe("resolveActions", () => {
       expect(handleDelete).toHaveBeenCalledWith(1);
     }
   });
+
+  it("бросает при невалидном ActionConfig без getHref/getOnClick/Form", () => {
+    expect(() =>
+      resolveActions(
+        {
+          whenActive: [
+            { key: "invalid", label: "Invalid", icon: Pencil } as never,
+          ],
+        },
+        baseEntity,
+        baseCtx
+      )
+    ).toThrow("Invalid ActionConfig");
+  });
 });

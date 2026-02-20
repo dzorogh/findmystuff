@@ -25,13 +25,11 @@ export function getContainersWithLocationRpc(
     p_entity_type_id?: number | null;
     p_has_items?: boolean | null;
     p_destination_type?: string | null;
-    p_place_id?: number | null;
     filter_tenant_id?: number | null;
   }
 ) {
-  const { p_place_id, ...rpcParams } = params;
   return supabase.rpc("get_containers_with_location", {
-    ...rpcParams,
+    ...params,
     filter_tenant_id: params.filter_tenant_id ?? null,
   });
 }

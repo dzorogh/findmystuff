@@ -58,6 +58,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           nextId = list[0].id;
           setTenantCookie(list[0].id);
         }
+      } else if (list.length > 0) {
+        // Нет cookie или первый заход — выбираем первый тенант, иначе списки не загрузятся (activeTenantId остаётся null).
+        nextId = list[0].id;
+        setTenantCookie(list[0].id);
       }
       setActiveTenantIdState(nextId);
     } catch (err) {
@@ -71,7 +75,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshTenants();
-  }, []);
+  }, [refreshTenants]);
 
   const setActiveTenant = useCallback(async (tenantId: number) => {
     await switchTenant(tenantId);

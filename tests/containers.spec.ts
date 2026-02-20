@@ -3,15 +3,19 @@ import { test, expect, type Page } from '@playwright/test';
 const getFirstActiveContainerRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
-/** Ждём загрузки списка контейнеров (таблица с данными, не скелетон). */
-async function waitForContainersList(page: Page) {
-  await page.getByRole('table').getByTitle('Редактировать').first().waitFor({ state: 'visible' });
+/** Ждём загрузки страницы списка (таблица или пустое состояние). Дальше тесты требуют наличие строк. */
+async function waitForContainersListReady(page: Page) {
+  await expect(
+    page.getByRole('columnheader', { name: 'Название' }).or(
+      page.getByText(/по вашему запросу ничего не найдено|контейнеров не найдены/i)
+    )
+  ).toBeVisible({ timeout: 5000 });
 }
 
 test.describe('containers list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/containers');
-    await waitForContainersList(page);
+    await waitForContainersListReady(page);
   });
 
   test('shows list, headers, filters and action buttons', async ({ page }) => {
@@ -54,6 +58,7 @@ test.describe('containers list', () => {
 
   test('opens move sheet and cancels', async ({ page }) => {
     const row = getFirstActiveContainerRow(page);
+    await expect(row).toBeVisible();
     const dialog = page.getByRole('dialog', { name: 'Переместить контейнер' });
 
     await row.getByRole('button', { name: 'Переместить' }).click();

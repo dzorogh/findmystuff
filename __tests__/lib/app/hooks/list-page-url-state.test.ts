@@ -1,5 +1,6 @@
 import {
   listPageUrlParsers,
+  createListPageParsers,
   urlStateToFilters,
   filtersToUrlState,
 } from "@/lib/app/hooks/list-page-url-state";
@@ -53,6 +54,15 @@ describe("list-page-url-state", () => {
 
       expect(result).toEqual({ showDeleted: true });
     });
+
+    it("не включает ключ из initialFilters, которого нет в filters", () => {
+      const initial = { showDeleted: false, roomId: null as number | null };
+      const filters = { showDeleted: true };
+
+      const result = filtersToUrlState(filters, initial);
+
+      expect(result).toEqual({ showDeleted: true });
+    });
   });
 
   describe("listPageUrlParsers", () => {
@@ -63,6 +73,38 @@ describe("list-page-url-state", () => {
       expect(listPageUrlParsers).toHaveProperty("showDeleted");
       expect(listPageUrlParsers).toHaveProperty("roomId");
       expect(listPageUrlParsers).toHaveProperty("furnitureId");
+    });
+
+    it("hasPhoto парсит true/false/пусто/другое", () => {
+      const p = listPageUrlParsers.hasPhoto as { parse: (v: string) => boolean | null; serialize: (v: boolean | null) => string };
+      expect(p.parse("true")).toBe(true);
+      expect(p.parse("false")).toBe(false);
+      expect(p.parse("")).toBeNull();
+      expect(p.parse("other")).toBeNull();
+    });
+
+    it("hasPhoto сериализует true/false", () => {
+      const p = listPageUrlParsers.hasPhoto as { serialize: (v: boolean | null) => string };
+      expect(p.serialize(true)).toBe("true");
+      expect(p.serialize(false)).toBe("false");
+      expect(p.serialize(null)).toBe("");
+    });
+  });
+
+  describe("createListPageParsers", () => {
+    it("без defaultSort возвращает listPageUrlParsers", () => {
+      const parsers = createListPageParsers();
+      expect(parsers).toBe(listPageUrlParsers);
+    });
+
+    it("с defaultSort подставляет sortBy и sortDirection по умолчанию", () => {
+      const parsers = createListPageParsers({
+        sortBy: "name",
+        sortDirection: "asc",
+      });
+      expect(parsers.sortBy).not.toBe(listPageUrlParsers.sortBy);
+      expect(parsers.sortBy.parse("name")).toBe("name");
+      expect(parsers.sortDirection.parse("asc")).toBe("asc");
     });
   });
 });

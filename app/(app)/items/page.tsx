@@ -22,7 +22,7 @@ export default function ItemsPage() {
   useEffect(() => {
     addItem.setOnSuccess(listPage.refreshList);
     return () => addItem.setOnSuccess(null);
-  }, [addItem.setOnSuccess, listPage.refreshList]);
+  }, [addItem, listPage.refreshList]);
 
   const ctx: ActionsContext = useMemo(
     () => ({

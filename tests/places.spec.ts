@@ -3,9 +3,19 @@ import { test, expect, type Page } from '@playwright/test';
 const getFirstActivePlaceRow = (page: Page) =>
   page.getByRole('row').filter({ has: page.getByTitle('Редактировать') }).first();
 
+/** Дождаться загрузки страницы списка мест. */
+async function waitForPlacesListReady(page: Page) {
+  await expect(
+    page.getByRole('columnheader', { name: 'Название' }).or(
+      page.getByText(/по вашему запросу ничего не найдено|мест не найдены/i)
+    )
+  ).toBeVisible({ timeout: 5000 });
+}
+
 test.describe('places list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/places');
+    await waitForPlacesListReady(page);
   });
 
   test('shows list, headers, filters and action buttons', async ({ page }) => {
