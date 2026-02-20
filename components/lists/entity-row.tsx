@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation";
 export const ROOM_EMPTY_LABEL = "Помещение не указано";
 const LOCATION_EMPTY_LABEL = "Не указано";
 const INTERACTIVE_SELECTOR = "a, button, [role='button'], input, textarea, select, label";
+/** Оверлеи (sheet, dialog) — клик по ним не должен вызывать переход по строке */
+const OVERLAY_SELECTOR = "[data-slot='sheet-overlay'], [data-base-ui-inert]";
 
 export function getRoomLabel(location: Item["last_location"]): string | null {
   if (!location) return null;
@@ -362,7 +364,8 @@ export const EntityRow = memo(function EntityRow({
   const editHref = getEditHref(actions);
 
   const isInteractiveTarget = (target: HTMLElement) =>
-    Boolean(target.closest(INTERACTIVE_SELECTOR));
+    Boolean(target.closest(INTERACTIVE_SELECTOR)) ||
+    Boolean(target.closest(OVERLAY_SELECTOR));
 
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;

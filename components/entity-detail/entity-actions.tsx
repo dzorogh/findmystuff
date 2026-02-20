@@ -26,7 +26,8 @@ function EntityActionsItem({ action, mode }: EntityActionsItemProps) {
   const variant = action.variant ?? "ghost";
 
   const isFormAction = "Form" in action;
-  const handleTrigger = () => {
+  const handleTrigger = (e?: MouseEvent) => {
+    e?.stopPropagation();
     if ("href" in action) router.push(action.href);
     else if ("onClick" in action) action.onClick();
     else if (isFormAction) setFormOpen(true);
@@ -49,9 +50,8 @@ function EntityActionsItem({ action, mode }: EntityActionsItemProps) {
     const buttonProps =
       "href" in action
         ? {
-          render: <Link href={action.href} />,
+          render: <Link href={action.href} onClick={(e: MouseEvent) => e.stopPropagation()} />,
           nativeButton: false,
-          onClickCapture: (e: MouseEvent) => e.stopPropagation(),
         }
         : { onClick: handleTrigger };
 
@@ -104,7 +104,6 @@ export function EntityActions({ actions, className }: EntityActionsProps) {
   return (
     <div
       className={cn("flex items-center justify-end gap-2", className)}
-      onClick={(e) => e.stopPropagation()}
     >
       {/* Десктоп: кнопки */}
       <div className="hidden sm:flex items-center gap-2">
@@ -117,7 +116,12 @@ export function EntityActions({ actions, className }: EntityActionsProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="icon" aria-label="Действия">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Действия"
+                onClick={(e: MouseEvent) => e.stopPropagation()}
+              >
                 <MoreVertical data-icon="inline-start" />
               </Button>
             }
