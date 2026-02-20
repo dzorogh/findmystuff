@@ -11,6 +11,8 @@ import { SettingsProvider } from "@/lib/settings/context";
 import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
 import AppSidebar from "@/components/navigation/app-sidebar";
 import { QuickMoveProvider } from "@/lib/app/contexts/quick-move-context";
+import { AddItemProvider } from "@/lib/app/contexts/add-item-context";
+import { MobileBottomBar } from "@/components/navigation/mobile-bottom-bar";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/users/server";
@@ -79,19 +81,22 @@ export default async function RootLayout({
                   <SidebarProvider defaultOpen={defaultOpen}>
                     <CapacitorAuthListener />
                     <QuickMoveProvider>
-                      <TooltipProvider>
-                        <AppSidebar />
+                      <AddItemProvider>
+                        <TooltipProvider>
+                          <AppSidebar />
 
-                        <SidebarInset>
-                          <main className="flex flex-col flex-1 overflow-hidden h-full">
-                            <div className="flex-1 overflow-y-auto">
-                              <div className="mx-auto p-4">
-                                {children}
+                          <SidebarInset>
+                            <main className="flex flex-col flex-1 overflow-hidden h-full">
+                              <div className="flex-1 overflow-y-auto">
+                                <div className="mx-auto p-4 pb-20 md:pb-4">
+                                  {children}
+                                </div>
                               </div>
-                            </div>
-                          </main>
-                        </SidebarInset>
-                      </TooltipProvider>
+                            </main>
+                            <MobileBottomBar />
+                          </SidebarInset>
+                        </TooltipProvider>
+                      </AddItemProvider>
                     </QuickMoveProvider>
                     <Toaster />
                   </SidebarProvider>
