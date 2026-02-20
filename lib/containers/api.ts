@@ -26,9 +26,14 @@ export function getContainersWithLocationRpc(
     p_has_items?: boolean | null;
     p_destination_type?: string | null;
     p_place_id?: number | null;
+    filter_tenant_id?: number | null;
   }
 ) {
-  return supabase.rpc("get_containers_with_location", params);
+  const { p_place_id, ...rpcParams } = params;
+  return supabase.rpc("get_containers_with_location", {
+    ...rpcParams,
+    filter_tenant_id: params.filter_tenant_id ?? null,
+  });
 }
 
 class ContainersApiClient extends HttpClient {
@@ -41,6 +46,7 @@ class ContainersApiClient extends HttpClient {
     hasItems?: boolean | null;
     locationType?: string | null;
     placeId?: number | null;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -52,19 +58,23 @@ class ContainersApiClient extends HttpClient {
       searchParams.set("locationType", params.locationType);
     if (params?.placeId != null) searchParams.set("placeId", String(params.placeId));
     const queryString = searchParams.toString();
-    return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`);
+    return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getContainer(id: number) {
+  async getContainer(id: number, tenantId?: number | null) {
     return this.request<{
       container: Container;
       transitions: Transition[];
       items: Item[];
-    }>(`/containers/${id}`);
+    }>(`/containers/${id}`, { tenantId });
   }
 
-  async getContainersSimple(includeDeleted = false) {
-    return this.request<Container[]>(`/containers?showDeleted=${includeDeleted}`);
+  async getContainersSimple(includeDeleted = false, tenantId?: number | null) {
+    return this.request<Container[]>(`/containers?showDeleted=${includeDeleted}`, {
+      tenantId,
+    });
   }
 
   async createContainer(data: {
@@ -73,20 +83,23 @@ class ContainersApiClient extends HttpClient {
     photo_url?: string;
     destination_type?: string;
     destination_id?: number;
-  }) {
+  }, tenantId?: number | null) {
     return this.request<CreateContainerResponse>("/containers", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
   async updateContainer(
     id: number,
-    data: { name?: string; entity_type_id?: number | null; photo_url?: string | null }
+    data: { name?: string; entity_type_id?: number | null; photo_url?: string | null },
+    tenantId?: number | null
   ) {
     return this.request<Container>(`/containers/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 }

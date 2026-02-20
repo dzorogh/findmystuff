@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTenant } from "@/contexts/tenant-context";
 import { createUser } from "@/lib/users/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -23,6 +24,7 @@ interface AddUserFormProps {
 }
 
 const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
+  const { activeTenantId } = useTenant();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,18 +41,26 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await createUser({
-        email: email.trim(),
-        email_confirm: true,
-      });
+      const response = await createUser(
+        { email: email.trim(), email_confirm: true },
+        activeTenantId
+      );
 
       if (response.error) {
         throw new Error(response.error);
       }
 
-      toast.success("Пользователь успешно создан", {
-        description: response.data?.password ? `Пароль: ${response.data.password}` : undefined,
-      });
+      const invited = response.data?.invited;
+      toast.success(
+        invited ? "Пользователь добавлен в склад" : "Пользователь успешно создан",
+        {
+          description: !invited && response.data?.password
+            ? `Пароль: ${response.data.password}`
+            : invited
+              ? "Он сможет переключаться между складами в меню"
+              : undefined,
+        }
+      );
       setEmail("");
 
       if (onSuccess) {
@@ -73,9 +83,9 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Добавить нового пользователя</SheetTitle>
+          <SheetTitle>Добавить пользователя</SheetTitle>
           <SheetDescription>
-            Создайте нового пользователя. Пароль будет сгенерирован автоматически.
+            Введите email — если пользователь уже зарегистрирован, он получит доступ к складу и сможет переключаться между складами. Если нет — будет создан новый аккаунт.
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="px-4">
@@ -86,7 +96,7 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
                 <span className="text-destructive ml-1">*</span>
               </FieldLabel>
               <FieldDescription>
-                Пароль будет автоматически сгенерирован и показан после создания
+                Существующий пользователь получит доступ к текущему складу. Новому будет сгенерирован пароль.
               </FieldDescription>
               <Input
                 id="user-email"

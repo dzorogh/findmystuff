@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import { getPlacesWithRoomRpc } from "@/lib/places/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Place } from "@/types/entity";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -237,6 +238,13 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
@@ -259,6 +267,7 @@ export async function GET(request: NextRequest) {
       filter_entity_type_id: entityTypeId ?? undefined,
       filter_room_id: roomId ?? undefined,
       filter_furniture_id: furnitureId ?? undefined,
+      filter_tenant_id: tenantId,
     });
 
     if (fetchError) {
@@ -315,6 +324,13 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
@@ -331,10 +347,12 @@ export async function POST(request: NextRequest) {
       name: string | null;
       entity_type_id: number | null;
       photo_url: string | null;
+      tenant_id: number;
     } = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
       photo_url: photo_url || null,
+      tenant_id: tenantId,
     };
 
     const { data: newPlace, error: insertError } = await supabase
@@ -358,6 +376,7 @@ export async function POST(request: NextRequest) {
           place_id: newPlace.id,
           destination_type,
           destination_id: parseInt(destination_id),
+          tenant_id: tenantId,
         });
 
       if (transitionError) {

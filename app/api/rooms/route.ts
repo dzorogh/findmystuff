@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getRoomsWithCountsRpc } from "@/lib/rooms/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Room } from "@/types/entity";
 
 /**
@@ -16,6 +17,14 @@ export async function GET(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
@@ -60,6 +69,7 @@ export async function GET(request: NextRequest) {
       has_containers: hasContainers,
       has_places: hasPlaces,
       filter_building_id: filterBuildingId,
+      filter_tenant_id: tenantId,
     });
 
     if (fetchError) {
@@ -137,8 +147,16 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
-    const supabase = await createClient();
 
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = await createClient();
     const body = await request.json();
     const { name, photo_url, room_type_id, building_id } = body;
 
@@ -147,11 +165,13 @@ export async function POST(request: NextRequest) {
       photo_url: string | null;
       room_type_id: number | null;
       building_id: number | null;
+      tenant_id: number;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       room_type_id: room_type_id != null ? (Number(room_type_id) || null) : null,
       building_id: building_id != null ? (Number(building_id) || null) : null,
+      tenant_id: tenantId,
     };
 
     const { data: newRoom, error: insertError } = await supabase

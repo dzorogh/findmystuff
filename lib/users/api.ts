@@ -21,10 +21,14 @@ class UsersApiClient extends HttpClient {
     return { data: { users } };
   }
 
-  async createUser(data: { email: string; email_confirm?: boolean }) {
-    return this.request<{ user: User; password: string }>("/users", {
+  async createUser(
+    data: { email: string; email_confirm?: boolean },
+    tenantId?: number | null
+  ) {
+    return this.request<{ user: User; password?: string; invited?: boolean }>("/users", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
@@ -54,8 +58,10 @@ const usersApiClient = new UsersApiClient();
 export const getUsers = () => usersApiClient.getUsers();
 /** Получить текущего пользователя на клиенте через API (для контекста). */
 export const getClientUser = () => usersApiClient.getCurrentUser();
-export const createUser = (data: { email: string; email_confirm?: boolean }) =>
-  usersApiClient.createUser(data);
+export const createUser = (
+  data: { email: string; email_confirm?: boolean },
+  tenantId?: number | null
+) => usersApiClient.createUser(data, tenantId);
 export const updateUser = (data: { id: string; email: string }) =>
   usersApiClient.updateUser(data);
 export const deleteUser = (userId: string) => usersApiClient.deleteUser(userId);

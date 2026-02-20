@@ -30,9 +30,14 @@ export function getItemsWithRoomRpc(
     has_photo: boolean | null;
     sort_by: SortBy;
     sort_direction: SortDirection;
+    filter_tenant_id?: number | null;
   }
 ) {
-  return supabase.rpc("get_items_with_room", params);
+  const { place_id, container_id, ...rpcParams } = params;
+  return supabase.rpc("get_items_with_room", {
+    ...rpcParams,
+    filter_tenant_id: params.filter_tenant_id ?? null,
+  });
 }
 
 class EntitiesApiClient extends HttpClient {
@@ -48,6 +53,7 @@ class EntitiesApiClient extends HttpClient {
     hasPhoto?: boolean | null;
     sortBy?: SortBy;
     sortDirection?: SortDirection;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -63,16 +69,18 @@ class EntitiesApiClient extends HttpClient {
     }
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Item[]>(`/items${queryString ? `?${queryString}` : ""}`);
+    return this.request<Item[]>(`/items${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getItem(id: number, includeTransitions = true) {
+  async getItem(id: number, includeTransitions = true, tenantId?: number | null) {
     const url = includeTransitions ? `/items/${id}` : `/items/${id}?includeTransitions=false`;
-    return this.request<{ item: Item; transitions?: Transition[] }>(url);
+    return this.request<{ item: Item; transitions?: Transition[] }>(url, { tenantId });
   }
 
-  async getItemTransitions(id: number) {
-    return this.request<Transition[]>(`/items/${id}/transitions`);
+  async getItemTransitions(id: number, tenantId?: number | null) {
+    return this.request<Transition[]>(`/items/${id}/transitions`, { tenantId });
   }
 
   async createItem(data: {
@@ -114,28 +122,34 @@ class EntitiesApiClient extends HttpClient {
     });
   }
 
-  async getEntityTypes(category?: string) {
+  async getEntityTypes(category?: string, tenantId?: number | null) {
     const url = category ? `/entity-types?category=${category}` : "/entity-types";
-    return this.request<EntityType[]>(url);
+    return this.request<EntityType[]>(url, { tenantId });
   }
 
-  async createEntityType(data: { entity_category: "place" | "container" | "room" | "item" | "building" | "furniture"; name: string }) {
+  async createEntityType(
+    data: { entity_category: "place" | "container" | "room" | "item" | "building" | "furniture"; name: string },
+    tenantId?: number | null
+  ) {
     return this.request<CreateEntityTypeResponse>("/entity-types", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
-  async updateEntityType(data: { id: number; name?: string }) {
+  async updateEntityType(data: { id: number; name?: string }, tenantId?: number | null) {
     return this.request<UpdateEntityTypeResponse>("/entity-types", {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
-  async deleteEntityType(id: number) {
+  async deleteEntityType(id: number, tenantId?: number | null) {
     return this.request<{ success: boolean }>(`/entity-types?id=${id}`, {
       method: "DELETE",
+      tenantId,
     });
   }
 
@@ -164,11 +178,17 @@ export const createItem = (data: Parameters<EntitiesApiClient["createItem"]>[0])
   entitiesApiClient.createItem(data);
 export const updateItem = (id: number, data: Parameters<EntitiesApiClient["updateItem"]>[1]) =>
   entitiesApiClient.updateItem(id, data);
-export const getEntityTypes = (category?: string) => entitiesApiClient.getEntityTypes(category);
-export const createEntityType = (data: Parameters<EntitiesApiClient["createEntityType"]>[0]) =>
-  entitiesApiClient.createEntityType(data);
-export const updateEntityType = (data: Parameters<EntitiesApiClient["updateEntityType"]>[0]) =>
-  entitiesApiClient.updateEntityType(data);
-export const deleteEntityType = (id: number) => entitiesApiClient.deleteEntityType(id);
+export const getEntityTypes = (category?: string, tenantId?: number | null) =>
+  entitiesApiClient.getEntityTypes(category, tenantId);
+export const createEntityType = (
+  data: Parameters<EntitiesApiClient["createEntityType"]>[0],
+  tenantId?: number | null
+) => entitiesApiClient.createEntityType(data, tenantId);
+export const updateEntityType = (
+  data: Parameters<EntitiesApiClient["updateEntityType"]>[0],
+  tenantId?: number | null
+) => entitiesApiClient.updateEntityType(data, tenantId);
+export const deleteEntityType = (id: number, tenantId?: number | null) =>
+  entitiesApiClient.deleteEntityType(id, tenantId);
 export const createTransition = (data: Parameters<EntitiesApiClient["createTransition"]>[0]) =>
   entitiesApiClient.createTransition(data);

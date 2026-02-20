@@ -1,8 +1,14 @@
+import React from 'react'
 import { renderHook, waitFor } from '@testing-library/react'
+import { TenantProvider } from '@/contexts/tenant-context'
 import { useEntityTypes, clearEntityTypesCache } from '@/lib/entities/hooks/use-entity-types'
 import { getEntityTypes } from '@/lib/entities/api'
 
 jest.mock('@/lib/entities/api')
+jest.mock('@/lib/tenants/api', () => ({
+  getTenants: jest.fn().mockResolvedValue([{ id: 1, name: 'Test', created_at: '' }]),
+  switchTenant: jest.fn().mockResolvedValue(undefined),
+}))
 
 describe('useEntityTypes', () => {
   beforeEach(() => {
@@ -17,29 +23,33 @@ describe('useEntityTypes', () => {
     ]
     ;(getEntityTypes as jest.Mock).mockResolvedValue({ data: mockTypes })
 
-    const { result } = renderHook(() => useEntityTypes())
-
-    expect(result.current.isLoading).toBe(true)
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <TenantProvider>{children}</TenantProvider>
+    )
+    const { result } = renderHook(() => useEntityTypes(), { wrapper })
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false)
+      expect(result.current.types).toEqual(mockTypes)
     })
 
-    expect(result.current.types).toEqual(mockTypes)
+    expect(result.current.isLoading).toBe(false)
     expect(result.current.error).toBeNull()
-    expect(getEntityTypes).toHaveBeenCalledWith(undefined)
+    expect(getEntityTypes).toHaveBeenCalledWith(undefined, 1)
   })
 
   it('передаёт category в getEntityTypes', async () => {
     ;(getEntityTypes as jest.Mock).mockResolvedValue({ data: [] })
 
-    const { result } = renderHook(() => useEntityTypes('container'))
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <TenantProvider>{children}</TenantProvider>
+    )
+    const { result } = renderHook(() => useEntityTypes('container'), { wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    expect(getEntityTypes).toHaveBeenCalledWith('container')
+    expect(getEntityTypes).toHaveBeenCalledWith('container', 1)
   })
 
   it('устанавливает error при ошибке API', async () => {
@@ -47,7 +57,10 @@ describe('useEntityTypes', () => {
       error: 'Ошибка загрузки типов',
     })
 
-    const { result } = renderHook(() => useEntityTypes())
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <TenantProvider>{children}</TenantProvider>
+    )
+    const { result } = renderHook(() => useEntityTypes(), { wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
@@ -62,7 +75,10 @@ describe('useEntityTypes', () => {
       .mockResolvedValueOnce({ data: [{ id: 1, name: 'A' }] })
       .mockResolvedValueOnce({ data: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }] })
 
-    const { result } = renderHook(() => useEntityTypes())
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <TenantProvider>{children}</TenantProvider>
+    )
+    const { result } = renderHook(() => useEntityTypes(), { wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)

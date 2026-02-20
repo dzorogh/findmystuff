@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import GoogleSignIn from "@/components/auth/google-signin";
@@ -41,6 +42,15 @@ const LoginPage = () => {
             <div className="flex justify-center">
               <GoogleSignIn />
             </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Нет аккаунта?{" "}
+              <Link
+                href="/auth/signup"
+                className="text-primary underline underline-offset-2 hover:no-underline"
+              >
+                Зарегистрироваться
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>

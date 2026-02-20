@@ -39,7 +39,7 @@ export const DEFAULT_PLACES_FILTERS: PlacesFilters = {
 };
 
 async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection } = params;
+  const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as PlacesFilters;
   const response = await getPlaces({
     query: query?.trim(),
@@ -49,6 +49,7 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
     entityTypeId: filters.entityTypeId ?? undefined,
     roomId: filters.roomId ?? undefined,
     furnitureId: filters.furnitureId ?? undefined,
+    tenantId,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   return { data: list };

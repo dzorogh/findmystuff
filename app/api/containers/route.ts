@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getContainersWithLocationRpc } from "@/lib/containers/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Container } from "@/types/entity";
 
 /**
@@ -17,6 +18,13 @@ export async function GET(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
@@ -56,6 +64,7 @@ export async function GET(request: NextRequest) {
       p_has_items: hasItems,
       p_destination_type: locationType,
       p_place_id: placeId != null && !Number.isNaN(placeId) ? placeId : null,
+      filter_tenant_id: tenantId,
     });
 
     if (fetchError) {
@@ -128,6 +137,13 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
@@ -136,10 +152,12 @@ export async function POST(request: NextRequest) {
       name: string | null;
       entity_type_id: number | null;
       photo_url: string | null;
+      tenant_id: number;
     } = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
       photo_url: photo_url || null,
+      tenant_id: tenantId,
     };
 
     const { data: newContainer, error: insertError } = await supabase
@@ -163,6 +181,7 @@ export async function POST(request: NextRequest) {
           container_id: newContainer.id,
           destination_type,
           destination_id: parseInt(destination_id),
+          tenant_id: tenantId,
         });
 
       if (transitionError) {

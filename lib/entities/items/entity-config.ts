@@ -34,7 +34,7 @@ export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
 const ITEMS_PAGE_SIZE = 20;
 
 async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection, page = 1 } = params;
+  const { query, filterValues, sortBy, sortDirection, page = 1, tenantId } = params;
   const filters = filterValues as ItemsFilters;
   const response = await getItems({
     query: query?.trim(),
@@ -48,6 +48,7 @@ async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
     hasPhoto: filters.hasPhoto,
     sortBy,
     sortDirection,
+    tenantId,
   });
   const data = Array.isArray(response?.data) ? response.data : [];
   return { data, totalCount: response?.totalCount ?? 0 };

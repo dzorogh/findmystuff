@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 
 const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings", "furniture"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
@@ -56,13 +57,20 @@ const getDuplicateName = (name: string | null): string | null => {
 };
 
 export async function POST(
-  _: Request,
+  request: NextRequest,
   context: DuplicateParams
 ) {
   try {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(context.params);
@@ -104,6 +112,7 @@ export async function POST(
     let insertData: Record<string, unknown> = {
       name: duplicateName,
       photo_url: source.photo_url || null,
+      tenant_id: tenantId,
     };
 
     if (table === "items") {
@@ -185,6 +194,7 @@ export async function POST(
             [transitionIdColumn]: duplicatedEntity.id,
             destination_type: transition.destination_type,
             destination_id: transition.destination_id,
+            tenant_id: tenantId,
           });
 
         if (transitionInsertError) {

@@ -18,13 +18,14 @@ export const DEFAULT_BUILDINGS_FILTERS: BuildingsFilters = {
 };
 
 async function fetchBuildings(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection } = params;
+  const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as BuildingsFilters;
   const response = await getBuildings({
     query: query?.trim(),
     showDeleted: filters.showDeleted,
     sortBy,
     sortDirection,
+    tenantId,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   const totalCount = response?.totalCount ?? list.length;

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getItemsWithRoomRpc } from "@/lib/entities/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Item } from "@/types/entity";
 
 /**
@@ -20,6 +21,13 @@ export async function GET(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
@@ -51,6 +59,7 @@ export async function GET(request: NextRequest) {
       has_photo: hasPhoto,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      filter_tenant_id: tenantId,
     });
 
     if (itemsError) {
@@ -148,6 +157,13 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
     const body = await request.json();
     const {
@@ -192,6 +208,7 @@ export async function POST(request: NextRequest) {
       current_value_currency: string | null;
       quantity: number | null;
       purchase_date: string | null;
+      tenant_id: number;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
@@ -202,6 +219,7 @@ export async function POST(request: NextRequest) {
       current_value_currency: hasCurrentValueCurrency ? String(current_value_currency).trim() : null,
       quantity: quantity != null && quantity !== "" ? Number(quantity) : 1,
       purchase_date: purchase_date && purchase_date.trim() ? purchase_date.trim() : null,
+      tenant_id: tenantId,
     };
 
     if (
@@ -255,6 +273,7 @@ export async function POST(request: NextRequest) {
           item_id: newItem.id,
           destination_type,
           destination_id: parseInt(destination_id),
+          tenant_id: tenantId,
         });
 
       if (transitionError) {
