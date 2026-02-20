@@ -3,6 +3,7 @@
  */
 
 const API_BASE_URL = "/api";
+const TENANT_HEADER = "x-tenant-id";
 
 export interface ApiResponse<T> {
   data?: T;
@@ -10,18 +11,27 @@ export interface ApiResponse<T> {
   totalCount?: number;
 }
 
+export interface RequestOptions extends RequestInit {
+  tenantId?: number | null;
+}
+
 export class HttpClient {
   protected async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<ApiResponse<T>> {
+    const { tenantId, ...restOptions } = options;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(restOptions.headers as Record<string, string>),
+    };
+    if (tenantId != null && !Number.isNaN(tenantId)) {
+      headers[TENANT_HEADER] = String(tenantId);
+    }
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
+        ...restOptions,
+        headers,
       });
 
       const jsonData = await response.json();

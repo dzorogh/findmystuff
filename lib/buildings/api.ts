@@ -17,6 +17,7 @@ export function getBuildingsWithCountsRpc(
     page_offset: number;
     sort_by: SortBy;
     sort_direction: SortDirection;
+    filter_tenant_id?: number | null;
   }
 ) {
   return supabase.rpc("get_buildings_with_counts", {
@@ -26,6 +27,7 @@ export function getBuildingsWithCountsRpc(
     page_offset: params.page_offset,
     sort_by: params.sort_by,
     sort_direction: params.sort_direction,
+    filter_tenant_id: params.filter_tenant_id ?? null,
   });
 }
 
@@ -35,44 +37,52 @@ class BuildingsApiClient extends HttpClient {
     showDeleted?: boolean;
     sortBy?: SortBy;
     sortDirection?: SortDirection;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Building[]>(`/buildings${queryString ? `?${queryString}` : ""}`);
+    return this.request<Building[]>(`/buildings${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getBuilding(id: number) {
+  async getBuilding(id: number, tenantId?: number | null) {
     return this.request<{
       building: Building;
       rooms: Array<{ id: number; name: string | null; room_type_id: number | null }>;
-    }>(`/buildings/${id}`);
+    }>(`/buildings/${id}`, { tenantId });
   }
 
-  async getBuildingsSimple(includeDeleted = false) {
-    return this.request<Building[]>(`/buildings?showDeleted=${includeDeleted}`);
+  async getBuildingsSimple(includeDeleted = false, tenantId?: number | null) {
+    return this.request<Building[]>(`/buildings?showDeleted=${includeDeleted}`, {
+      tenantId,
+    });
   }
 
   async createBuilding(data: {
     name?: string;
     photo_url?: string;
     building_type_id?: number | null;
-  }) {
+  }, tenantId?: number | null) {
     return this.request<CreateBuildingResponse>("/buildings", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
   async updateBuilding(
     id: number,
-    data: { name?: string; photo_url?: string | null; building_type_id?: number | null }
+    data: { name?: string; photo_url?: string | null; building_type_id?: number | null },
+    tenantId?: number | null
   ) {
     return this.request<Building>(`/buildings/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getEntityTypes } from "@/lib/entities/api";
+import { useTenant } from "@/contexts/tenant-context";
 import type { EntityType } from "@/types/entity";
 
 const loadingRequests = new Map<string, Promise<{ types: EntityType[]; error: string | null }>>();
@@ -13,11 +14,12 @@ export const clearEntityTypesCache = () => {
 };
 
 export const useEntityTypes = (category?: "place" | "container" | "room" | "item" | "building" | "furniture") => {
+  const { activeTenantId } = useTenant();
   const [types, setTypes] = useState<EntityType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const requestKey = category || "all";
+  const requestKey = `${activeTenantId ?? 0}-${category || "all"}`;
 
   const refetch = useCallback(() => {
     requestResults.delete(requestKey);
@@ -27,6 +29,11 @@ export const useEntityTypes = (category?: "place" | "container" | "room" | "item
 
   useEffect(() => {
     const loadTypes = async () => {
+      if (!activeTenantId) {
+        setTypes([]);
+        setIsLoading(false);
+        return;
+      }
       if (requestResults.has(requestKey)) {
         const cached = requestResults.get(requestKey)!;
         setTypes(cached.types);
@@ -54,7 +61,7 @@ export const useEntityTypes = (category?: "place" | "container" | "room" | "item
 
       const requestPromise = (async () => {
         try {
-          const response = await getEntityTypes(category);
+          const response = await getEntityTypes(category, activeTenantId);
           if (response.error) throw new Error(response.error);
           const loadedTypes = (response.data as EntityType[]) || [];
           const result = { types: loadedTypes, error: null };
@@ -84,7 +91,7 @@ export const useEntityTypes = (category?: "place" | "container" | "room" | "item
     };
 
     loadTypes();
-  }, [category, requestKey, refreshTrigger]);
+  }, [category, requestKey, refreshTrigger, activeTenantId]);
 
   return { types, isLoading, error, refetch };
 };

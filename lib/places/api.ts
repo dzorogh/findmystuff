@@ -26,9 +26,13 @@ export function getPlacesWithRoomRpc(
     filter_entity_type_id?: number | null;
     filter_room_id?: number | null;
     filter_furniture_id?: number | null;
+    filter_tenant_id?: number | null;
   }
 ) {
-  return supabase.rpc("get_places_with_room", params);
+  return supabase.rpc("get_places_with_room", {
+    ...params,
+    filter_tenant_id: params.filter_tenant_id ?? null,
+  });
 }
 
 class PlacesApiClient extends HttpClient {
@@ -40,6 +44,7 @@ class PlacesApiClient extends HttpClient {
     entityTypeId?: number | null;
     roomId?: number | null;
     furnitureId?: number | null;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -49,20 +54,24 @@ class PlacesApiClient extends HttpClient {
     if (params?.furnitureId != null) searchParams.set("furnitureId", String(params.furnitureId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Place[]>(`/places${queryString ? `?${queryString}` : ""}`);
+    return this.request<Place[]>(`/places${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getPlace(id: number) {
+  async getPlace(id: number, tenantId?: number | null) {
     return this.request<{
       place: Place;
       transitions: Transition[];
       items: Item[];
       containers: Container[];
-    }>(`/places/${id}`);
+    }>(`/places/${id}`, { tenantId });
   }
 
-  async getPlacesSimple(includeDeleted = false) {
-    return this.request<Place[]>(`/places?showDeleted=${includeDeleted}`);
+  async getPlacesSimple(includeDeleted = false, tenantId?: number | null) {
+    return this.request<Place[]>(`/places?showDeleted=${includeDeleted}`, {
+      tenantId,
+    });
   }
 
   async createPlace(data: {
@@ -71,20 +80,23 @@ class PlacesApiClient extends HttpClient {
     photo_url?: string;
     destination_type?: string;
     destination_id?: number;
-  }) {
+  }, tenantId?: number | null) {
     return this.request<CreatePlaceResponse>("/places", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
   async updatePlace(
     id: number,
-    data: { name?: string; entity_type_id?: number; photo_url?: string | null }
+    data: { name?: string; entity_type_id?: number; photo_url?: string | null },
+    tenantId?: number | null
   ) {
     return this.request<Place>(`/places/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 }

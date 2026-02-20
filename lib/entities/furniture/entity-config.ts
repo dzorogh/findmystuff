@@ -22,7 +22,7 @@ export const DEFAULT_FURNITURE_FILTERS: FurnitureFilters = {
 };
 
 async function fetchFurniture(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection } = params;
+  const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as FurnitureFilters;
   const response = await getFurniture({
     query: query?.trim(),
@@ -30,6 +30,7 @@ async function fetchFurniture(params: FetchListParams): Promise<FetchListResult>
     sortBy,
     sortDirection,
     roomId: filters.roomId ?? undefined,
+    tenantId,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   const totalCount = response?.totalCount ?? list.length;

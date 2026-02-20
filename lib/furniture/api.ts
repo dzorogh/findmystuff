@@ -36,6 +36,7 @@ export function getFurnitureWithCountsRpc(
     sort_by: SortBy;
     sort_direction: SortDirection;
     filter_room_id?: number | null;
+    filter_tenant_id?: number | null;
   }
 ) {
   return supabase.rpc("get_furniture_with_counts", {
@@ -46,6 +47,7 @@ export function getFurnitureWithCountsRpc(
     sort_by: params.sort_by,
     sort_direction: params.sort_direction,
     filter_room_id: params.filter_room_id ?? null,
+    filter_tenant_id: params.filter_tenant_id ?? null,
   });
 }
 
@@ -56,6 +58,7 @@ class FurnitureApiClient extends HttpClient {
     sortBy?: SortBy;
     sortDirection?: SortDirection;
     roomId?: number | null;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -63,18 +66,22 @@ class FurnitureApiClient extends HttpClient {
     if (params?.roomId != null) searchParams.set("roomId", String(params.roomId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Furniture[]>(`/furniture${queryString ? `?${queryString}` : ""}`);
+    return this.request<Furniture[]>(`/furniture${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getFurnitureItem(id: number) {
+  async getFurnitureItem(id: number, tenantId?: number | null) {
     return this.request<{
       furniture: Furniture;
       places: Array<{ id: number; name: string | null; entity_type_id: number | null }>;
-    }>(`/furniture/${id}`);
+    }>(`/furniture/${id}`, { tenantId });
   }
 
-  async getFurnitureSimple(includeDeleted = false) {
-    return this.request<Furniture[]>(`/furniture?showDeleted=${includeDeleted}`);
+  async getFurnitureSimple(includeDeleted = false, tenantId?: number | null) {
+    return this.request<Furniture[]>(`/furniture?showDeleted=${includeDeleted}`, {
+      tenantId,
+    });
   }
 
   async createFurniture(data: {
@@ -87,10 +94,11 @@ class FurnitureApiClient extends HttpClient {
     current_value_amount?: number | null;
     current_value_currency?: string | null;
     purchase_date?: string | null;
-  }) {
+  }, tenantId?: number | null) {
     return this.request<CreateFurnitureResponse>("/furniture", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
@@ -106,11 +114,13 @@ class FurnitureApiClient extends HttpClient {
       current_value_amount?: number | null;
       current_value_currency?: string | null;
       purchase_date?: string | null;
-    }
+    },
+    tenantId?: number | null
   ) {
     return this.request<Furniture>(`/furniture/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 }

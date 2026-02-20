@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getFurnitureWithCountsRpc } from "@/lib/furniture/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Furniture } from "@/types/entity";
 
 const parseOptionalInt = (value: string | null): number | null => {
@@ -16,6 +17,13 @@ export async function GET(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
@@ -36,6 +44,7 @@ export async function GET(request: NextRequest) {
       sort_by: sortBy,
       sort_direction: sortDirection,
       filter_room_id: roomId,
+      filter_tenant_id: tenantId,
     });
 
     if (fetchError) {
@@ -107,6 +116,13 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
 
     const body = await request.json();
@@ -139,6 +155,7 @@ export async function POST(request: NextRequest) {
       room_id: number;
       furniture_type_id: number | null;
       photo_url: string | null;
+      tenant_id: number;
       price_amount?: number | null;
       price_currency?: string | null;
       current_value_amount?: number | null;
@@ -147,6 +164,7 @@ export async function POST(request: NextRequest) {
     } = {
       name: name?.trim() || null,
       room_id: Number(room_id),
+      tenant_id: tenantId,
       furniture_type_id: furniture_type_id != null ? (Number(furniture_type_id) || null) : null,
       photo_url: photo_url || null,
       price_amount: hasPriceAmount ? Number(price_amount) : null,

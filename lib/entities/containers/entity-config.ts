@@ -41,7 +41,7 @@ export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
 const CONTAINERS_PAGE_SIZE = 20;
 
 async function fetchContainers(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection } = params;
+  const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as ContainersFilters;
   const response = await getContainers({
     query: query?.trim(),
@@ -52,6 +52,7 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
     hasItems: filters.hasItems ?? undefined,
     locationType: filters.locationType ?? undefined,
     placeId: filters.placeId ?? undefined,
+    tenantId,
   });
   let list = Array.isArray(response?.data) ? response.data : [];
   const hasClientFilters =

@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Tenant API
+  description: Multi-tenant management endpoints
+  version: 1.0.0
+
+paths:
+  /api/tenants:
+    get:
+      summary: List user's tenants
+      responses:
+        '200':
+          description: List of tenants the user belongs to
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
+    post:
+      summary: Create new tenant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        '201':
+          description: Tenant created
+        '400':
+          description: Validation error
+
+  /api/tenants/[id]:
+    get:
+      summary: Get tenant by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Tenant details
+        '404':
+          description: Tenant not found or not a member
+
+  /api/tenants/switch:
+    post:
+      summary: Set active tenant (persist to cookie/session)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId]
+              properties:
+                tenantId: { type: integer }
+      responses:
+        '200':
+          description: Active tenant updated
+
+  /api/tenants/[id]/members:
+    get:
+      summary: List tenant members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of members
+        '403':
+          description: Not a member of this tenant
+
+    post:
+      summary: Invite user to tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '201':
+          description: Invitation created
+        '403':
+          description: Not a member of this tenant
+
+  /api/tenants/[id]/members/[userId]:
+    delete:
+      summary: Revoke member access
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Member removed
+        '403':
+          description: Not a member or cannot remove self
+
+  /api/invitations/accept:
+    post:
+      summary: Accept invitation by token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: Invitation accepted, membership created
+        '400':
+          description: Invalid or expired token
+
+  /api/invitations/decline:
+    post:
+      summary: Decline invitation by token (FR-005)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: Invitation declined
+        '400':
+          description: Invalid or expired token
+
+components:
+  schemas:
+    Tenant:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        created_at: { type: string, format: date-time }

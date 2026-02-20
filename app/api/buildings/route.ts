@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getBuildingsWithCountsRpc } from "@/lib/buildings/api";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { Building } from "@/types/entity";
 
 /**
@@ -13,6 +14,13 @@ export async function GET(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
@@ -31,6 +39,7 @@ export async function GET(request: NextRequest) {
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
+      filter_tenant_id: tenantId,
     });
 
     if (fetchError) {
@@ -98,6 +107,13 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
     const supabase = await createClient();
 
     const body = await request.json();
@@ -107,10 +123,12 @@ export async function POST(request: NextRequest) {
       name: string | null;
       photo_url: string | null;
       building_type_id: number | null;
+      tenant_id: number;
     } = {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       building_type_id: building_type_id != null ? (Number(building_type_id) || null) : null,
+      tenant_id: tenantId,
     };
 
     const { data: newBuilding, error: insertError } = await supabase

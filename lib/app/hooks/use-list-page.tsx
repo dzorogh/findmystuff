@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQueryStates } from "nuqs";
+import { useTenant } from "@/contexts/tenant-context";
 import { deepEqual } from "@/lib/app/helpers/deep-equal";
 import {
   getEntitySortParams,
@@ -96,6 +97,7 @@ export interface EntityListState<T> {
 }
 
 export function useListPage(config: EntityConfig) {
+  const { activeTenantId } = useTenant();
   const {
     filters: filtersConfig,
     columns,
@@ -170,6 +172,7 @@ export function useListPage(config: EntityConfig) {
         filters,
         sortBy,
         sortDirection,
+        tenantId: activeTenantId,
         ...(hasPagination ? { page } : {}),
       });
 
@@ -183,14 +186,22 @@ export function useListPage(config: EntityConfig) {
           filterValues: filters,
           sortBy,
           sortDirection,
+          tenantId: activeTenantId,
           ...(hasPagination ? { page } : {}),
         };
         const result = await fetchData(params);
         if (!isMountedRef.current || !isLatest(requestKey)) return;
-        const list = Array.isArray(result?.data) ? result.data : [];
-        setData(list);
-        if (hasPagination && result?.totalCount != null) {
-          setTotalCount(result.totalCount);
+        if (result?.error) {
+          setError(result.error);
+          setData([]);
+          if (hasPagination) setTotalCount(0);
+        } else {
+          setError(null);
+          const list = Array.isArray(result?.data) ? result.data : [];
+          setData(list);
+          if (hasPagination && result?.totalCount != null) {
+            setTotalCount(result.totalCount);
+          }
         }
         finishLoading(isInitialLoad);
       } catch (err) {
@@ -208,6 +219,7 @@ export function useListPage(config: EntityConfig) {
       sortBy,
       sortDirection,
       hasPagination,
+      activeTenantId,
       fetchData,
       shouldStart,
       isLatest,
@@ -220,13 +232,18 @@ export function useListPage(config: EntityConfig) {
 
   const filtersKey = JSON.stringify(filters);
   useEffect(() => {
+    if (activeTenantId == null) {
+      setData([]);
+      setTotalCount(0);
+      setIsLoading(false);
+      return;
+    }
     if (hasPagination) {
       loadData(searchQuery, true, currentPage);
     } else {
       loadData(searchQuery, true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersKey, sortBy, sortDirection, currentPage]);
+  }, [filtersKey, sortBy, sortDirection, currentPage, activeTenantId]);
 
   const refreshList = useCallback(() => {
     if (hasPagination) {

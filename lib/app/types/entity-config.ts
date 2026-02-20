@@ -83,6 +83,8 @@ export interface FetchListParams {
   sortBy: "name" | "created_at";
   sortDirection: "asc" | "desc";
   page?: number;
+  /** Active tenant ID for multi-tenant isolation. Cookie is fallback. */
+  tenantId?: number | null;
 }
 
 /** Result of config.fetch (data + optional totalCount for pagination). */

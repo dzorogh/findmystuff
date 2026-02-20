@@ -7,6 +7,7 @@ import CapacitorAuthListener from "@/components/auth/capacitor-auth-listener";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UserProvider } from "@/lib/users/context";
+import { TenantProvider } from "@/contexts/tenant-context";
 import { SettingsProvider } from "@/lib/settings/context";
 import { CurrentPageProvider } from "@/lib/app/contexts/current-page-context";
 import AppSidebar from "@/components/navigation/app-sidebar";
@@ -16,6 +17,7 @@ import { MobileBottomBar } from "@/components/navigation/mobile-bottom-bar";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/users/server";
+import { getServerTenantCount } from "@/lib/tenants/server-queries";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -55,6 +57,11 @@ export default async function RootLayout({
     redirect("/auth/login");
   }
 
+  const tenantCount = await getServerTenantCount(user.id);
+  if (tenantCount === 0) {
+    redirect("/onboarding");
+  }
+
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
@@ -76,6 +83,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <UserProvider>
+              <TenantProvider>
               <SettingsProvider>
                 <CurrentPageProvider>
                   <SidebarProvider defaultOpen={defaultOpen}>
@@ -102,6 +110,7 @@ export default async function RootLayout({
                   </SidebarProvider>
                 </CurrentPageProvider>
               </SettingsProvider>
+              </TenantProvider>
             </UserProvider>
           </ThemeProvider>
         </NuqsAdapter>

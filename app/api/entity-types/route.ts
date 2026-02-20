@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 
 export async function GET(request: NextRequest) {
   try {
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -10,6 +19,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("entity_types")
       .select("*")
+      .eq("tenant_id", tenantId)
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
@@ -34,6 +44,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
     const body = await request.json();
     const { entity_category, name } = body;
@@ -54,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("entity_types")
-      .insert({ entity_category, name })
+      .insert({ tenant_id: tenantId, entity_category, name })
       .select()
       .single();
 
@@ -73,6 +91,14 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
     const body = await request.json();
     const { id, name } = body;
@@ -88,6 +114,7 @@ export async function PUT(request: NextRequest) {
       .from("entity_types")
       .update(updateData)
       .eq("id", id)
+      .eq("tenant_id", tenantId)
       .select()
       .single();
 
@@ -106,6 +133,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -117,7 +152,8 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase
       .from("entity_types")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

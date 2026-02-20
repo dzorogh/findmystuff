@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
+import { getActiveTenantId } from "@/lib/tenants/server";
 import type { DestinationType } from "@/types/entity";
 
 export async function POST(request: NextRequest) {
@@ -8,6 +9,13 @@ export async function POST(request: NextRequest) {
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+    const tenantId = await getActiveTenantId(request.headers);
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Выберите тенант или создайте склад" },
+        { status: 400 }
+      );
     }
     const supabase = await createClient();
     const body = await request.json();
@@ -39,12 +47,14 @@ export async function POST(request: NextRequest) {
     const transitionData: {
       destination_type: DestinationType;
       destination_id: number;
+      tenant_id: number;
       item_id?: number;
       place_id?: number;
       container_id?: number;
     } = {
       destination_type: destination_type as DestinationType,
       destination_id: parseInt(destination_id),
+      tenant_id: tenantId,
     };
 
     if (item_id) transitionData.item_id = parseInt(item_id);

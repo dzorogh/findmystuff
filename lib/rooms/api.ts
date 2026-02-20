@@ -28,6 +28,7 @@ export function getRoomsWithCountsRpc(
     has_containers?: boolean | null;
     has_places?: boolean | null;
     filter_building_id?: number | null;
+    filter_tenant_id?: number | null;
   }
 ) {
   return supabase.rpc("get_rooms_with_counts", {
@@ -41,6 +42,7 @@ export function getRoomsWithCountsRpc(
     has_containers: params.has_containers ?? null,
     has_places: params.has_places ?? null,
     filter_building_id: params.filter_building_id ?? null,
+    filter_tenant_id: params.filter_tenant_id ?? null,
   });
 }
 
@@ -59,6 +61,7 @@ class RoomsApiClient extends HttpClient {
     hasContainers?: boolean | null;
     hasPlaces?: boolean | null;
     buildingId?: number | null;
+    tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.set("query", params.query);
@@ -73,21 +76,25 @@ class RoomsApiClient extends HttpClient {
       searchParams.set("buildingId", String(params.buildingId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Room[]>(`/rooms${queryString ? `?${queryString}` : ""}`);
+    return this.request<Room[]>(`/rooms${queryString ? `?${queryString}` : ""}`, {
+      tenantId: params?.tenantId,
+    });
   }
 
-  async getRoom(id: number) {
+  async getRoom(id: number, tenantId?: number | null) {
     return this.request<{
       room: Room;
       items: Item[];
       places: Place[];
       containers: Container[];
       furniture?: Furniture[];
-    }>(`/rooms/${id}`);
+    }>(`/rooms/${id}`, { tenantId });
   }
 
-  async getRoomsSimple(includeDeleted = false) {
-    return this.request<Room[]>(`/rooms?showDeleted=${includeDeleted}`);
+  async getRoomsSimple(includeDeleted = false, tenantId?: number | null) {
+    return this.request<Room[]>(`/rooms?showDeleted=${includeDeleted}`, {
+      tenantId,
+    });
   }
 
   async createRoom(data: {
@@ -95,10 +102,11 @@ class RoomsApiClient extends HttpClient {
     photo_url?: string;
     room_type_id?: number | null;
     building_id?: number | null;
-  }) {
+  }, tenantId?: number | null) {
     return this.request<CreateRoomResponse>("/rooms", {
       method: "POST",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 
@@ -109,11 +117,13 @@ class RoomsApiClient extends HttpClient {
       photo_url?: string | null;
       room_type_id?: number | null;
       building_id?: number | null;
-    }
+    },
+    tenantId?: number | null
   ) {
     return this.request<Room>(`/rooms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      tenantId,
     });
   }
 }

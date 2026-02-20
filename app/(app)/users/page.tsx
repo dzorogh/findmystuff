@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTenant } from "@/contexts/tenant-context";
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function PageUsers() {
+  const { activeTenantId } = useTenant();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -70,8 +72,8 @@ export default function PageUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (activeTenantId) fetchUsers();
+  }, [activeTenantId]);
 
   useEffect(() => {
     if (shouldOpenCreateForm) {

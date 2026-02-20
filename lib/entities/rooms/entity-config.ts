@@ -31,7 +31,7 @@ export const DEFAULT_ROOMS_FILTERS: RoomsFilters = {
 };
 
 async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
-  const { query, filterValues, sortBy, sortDirection } = params;
+  const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as RoomsFilters;
   const response = await getRooms({
     query: query?.trim(),
@@ -42,6 +42,7 @@ async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
     hasContainers: filters.hasContainers ?? undefined,
     hasPlaces: filters.hasPlaces ?? undefined,
     buildingId: filters.buildingId ?? undefined,
+    tenantId,
   });
   const list = Array.isArray(response?.data) ? response.data : [];
   const totalCount = response?.totalCount ?? list.length;

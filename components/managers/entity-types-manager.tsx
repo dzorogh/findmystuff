@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, forwardRef, useImperativeHandle } from "react";
+import { useTenant } from "@/contexts/tenant-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +47,7 @@ export interface EntityTypesManagerRef {
 export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesManagerProps>(({
   category,
 }, ref) => {
+  const { activeTenantId } = useTenant();
   const { types, isLoading, error, refetch } = useEntityTypes(category);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<number | null>(null);
@@ -60,10 +62,10 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
 
     setIsAdding(true);
     try {
-      const response = await createEntityType({
-        entity_category: category,
-        name: newName.trim(),
-      });
+      const response = await createEntityType(
+        { entity_category: category, name: newName.trim() },
+        activeTenantId
+      );
 
       if (response.error) {
         throw new Error(response.error);
@@ -93,10 +95,10 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await updateEntityType({
-        id: isEditing,
-        name: newName.trim(),
-      });
+      const response = await updateEntityType(
+        { id: isEditing, name: newName.trim() },
+        activeTenantId
+      );
 
       if (response.error) {
         throw new Error(response.error);
@@ -120,7 +122,7 @@ export const EntityTypesManager = forwardRef<EntityTypesManagerRef, EntityTypesM
     }
 
     try {
-      const response = await deleteEntityType(id);
+      const response = await deleteEntityType(id, activeTenantId);
 
       if (response.error) {
         throw new Error(response.error);
