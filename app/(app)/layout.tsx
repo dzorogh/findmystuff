@@ -100,7 +100,7 @@ export default async function RootLayout({
                             <SidebarInset>
                               <main className="flex flex-col flex-1 overflow-hidden h-full">
                                 <div className="flex-1 overflow-y-auto">
-                                  <div className="mx-auto p-4 pb-20 md:pb-4">
+                                  <div className="mx-auto p-4 pb-28 md:pb-4">
                                     {children}
                                   </div>
                                 </div>
