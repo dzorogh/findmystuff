@@ -44,7 +44,7 @@ export async function GET(
         .eq("destination_id", roomId)
         .order("created_at", { ascending: false }),
       supabase
-        .from("mv_place_last_room_transition")
+        .from("v_place_last_room_transition")
         .select("place_id")
         .eq("room_id", roomId),
       supabase

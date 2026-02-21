@@ -109,7 +109,7 @@ const fetchPlacesFallback = async (
 
   if (roomId != null) {
     const { data: placeIdsInRoom } = await supabase
-      .from("mv_place_last_room_transition")
+      .from("v_place_last_room_transition")
       .select("place_id")
       .eq("room_id", roomId);
     const ids = (placeIdsInRoom ?? []).map((r: { place_id: number }) => r.place_id);
@@ -142,7 +142,7 @@ const fetchPlacesFallback = async (
   const [placeTransitionsResult, itemTransitionsResult, containerTransitionsResult] =
     await Promise.all([
       supabase
-        .from("mv_place_last_room_transition")
+        .from("v_place_last_room_transition")
         .select("place_id, room_id")
         .in("place_id", placeIds),
       supabase
