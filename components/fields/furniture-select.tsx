@@ -35,7 +35,7 @@ export function FurnitureSelect({ value, onValueChange }: FurnitureSelectProps) 
         onValueChange={handleValueChange}
       >
         {isLoadingFurniture ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput id="furniture" placeholder="Выберите мебель..." />
         )}

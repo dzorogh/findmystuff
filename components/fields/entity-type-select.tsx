@@ -40,7 +40,7 @@ export function EntityTypeSelect({ type, value, onValueChange }: EntityTypeSelec
         onValueChange={handleValueChange}
       >
         {isLoadingEntityTypes ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput id="entity-type" placeholder="Выберите тип..." />
         )}

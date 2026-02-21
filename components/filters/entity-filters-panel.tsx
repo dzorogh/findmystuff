@@ -199,7 +199,7 @@ function EntityTypeFilterField({
     <Field>
       <FieldLabel>{label}</FieldLabel>
       {isLoading ? (
-        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-8 w-full" />
       ) : (
         <Combobox
           items={options}

@@ -64,7 +64,7 @@ const BuildingCombobox = ({
         disabled={disabled || (isLoading ? false : isEmpty)}
       >
         {isLoading ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput
             id={`${id}-combobox`}

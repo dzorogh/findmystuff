@@ -72,7 +72,7 @@ const ContainerCombobox = ({
         disabled={disabled || (isLoading ? false : items.length === 0)}
       >
         {isLoading ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput
             id={`${id}-combobox`}

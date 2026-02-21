@@ -35,7 +35,7 @@ export function RoomsSelect({ value, onValueChange }: RoomsSelectProps) {
         onValueChange={handleValueChange}
       >
         {isLoadingRooms ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput id="room" placeholder="Выберите помещение..." />
         )}

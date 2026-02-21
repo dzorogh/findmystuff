@@ -79,7 +79,7 @@ export default function AccountPage() {
         </CardHeader>
         <CardContent>
           {isUserLoading ? (
-            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-8 w-full" />
           ) : (
             <Input type="email" value={user?.email ?? ""} disabled />
           )}

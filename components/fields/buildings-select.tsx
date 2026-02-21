@@ -35,7 +35,7 @@ export function BuildingsSelect({ value, onValueChange }: BuildingsSelectProps) 
         onValueChange={handleValueChange}
       >
         {isLoadingBuildings ? (
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-8 w-full" />
         ) : (
           <ComboboxInput id="building" placeholder="Выберите здание..." />
         )}
