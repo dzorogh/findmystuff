@@ -374,7 +374,11 @@ export const EntityRow = memo(function EntityRow({
 
   const handleRowClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    const canNavigate = pointerStartedOnRowRef.current && !isInteractiveTarget(target);
+    const clickedInsideRow = e.currentTarget.contains(target as Node);
+    const canNavigate =
+      clickedInsideRow &&
+      pointerStartedOnRowRef.current &&
+      !isInteractiveTarget(target);
     pointerStartedOnRowRef.current = false;
     if (!canNavigate) return;
     if (editHref) router.push(editHref);
