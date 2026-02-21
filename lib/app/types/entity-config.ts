@@ -91,6 +91,8 @@ export interface FetchListParams {
 export interface FetchListResult {
   data: EntityDisplay[];
   totalCount?: number;
+  /** Optional error message; when set, list is shown empty and error state is displayed. */
+  error?: string;
 }
 
 /** Начальная сортировка при первой загрузке страницы (если не задано — created_at desc). */
