@@ -20,7 +20,6 @@ import { getServerUser } from "@/lib/users/server";
 import { getServerTenantCount } from "@/lib/tenants/server-queries";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { PWA_THEME_COLORS } from "@/lib/theme-pwa-colors";
 
 export const metadata: Metadata = {
   title: {
@@ -39,7 +38,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "FindMyStuff",
-    statusBarStyle: "default",
+    statusBarStyle: "black",
   },
 };
 
