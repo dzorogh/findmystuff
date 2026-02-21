@@ -20,6 +20,7 @@ import { getServerUser } from "@/lib/users/server";
 import { getServerTenantCount } from "@/lib/tenants/server-queries";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PWA_THEME_COLORS } from "@/lib/theme-pwa-colors";
 
 export const metadata: Metadata = {
   title: {
@@ -43,7 +44,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: PWA_THEME_COLORS.dark },
+    { media: "(prefers-color-scheme: light)", color: PWA_THEME_COLORS.light },
+  ],
 };
 
 export default async function RootLayout({

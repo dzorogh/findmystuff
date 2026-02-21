@@ -6,11 +6,15 @@
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "theme_color": "#ffffff",
+  "theme_color": "#1a1a2e",
+  "background_color": "#1a1a2e",
   "lang": "ru",
   "dir": "ltr",
-  "orientation": "any",
-  "categories": ["productivity", "utilities"],
+  "orientation": "portrait",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {
