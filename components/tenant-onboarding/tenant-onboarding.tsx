@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createTenant, switchTenant } from "@/lib/tenants/api";
+import type { Tenant } from "@/lib/tenants/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-export default function TenantOnboarding() {
+interface TenantOnboardingProps {
+  onSuccess?: (tenant: Tenant) => void;
+}
+
+export default function TenantOnboarding({ onSuccess }: TenantOnboardingProps) {
   const [name, setName] = useState("Мой склад");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +26,11 @@ export default function TenantOnboarding() {
     setIsLoading(true);
     try {
       const tenant = await createTenant(name.trim());
+      if (onSuccess) {
+        setIsLoading(false);
+        onSuccess(tenant);
+        return;
+      }
       await switchTenant(tenant.id);
       toast.success("Склад создан");
       router.push("/");

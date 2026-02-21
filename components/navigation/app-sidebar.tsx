@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +15,7 @@ import {
 import { SecondaryMenu } from "./secondary-menu";
 import { PrimaryMenu } from "./primary-menu";
 import Link from "next/link";
-import { QrCodeIcon, ArrowLeftRight, Warehouse, ChevronDown, Home, Check } from "lucide-react";
+import { QrCodeIcon, ArrowLeftRight, Warehouse, ChevronDown, Home, Check, Plus } from "lucide-react";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenant } from "@/contexts/tenant-context";
@@ -26,11 +27,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CreateTenantDialog } from "@/components/tenant-onboarding/create-tenant-dialog";
 
 const AppSidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
   const { open: _open, state, isMobile, setOpenMobile } = useSidebar();
   const { tenants, activeTenantId, isLoading, setActiveTenant } = useTenant();
+  const [createTenantDialogOpen, setCreateTenantDialogOpen] = useState(false);
 
   const activeTenant = tenants.find((t) => t.id === activeTenantId);
   const tenantName = activeTenant?.name ?? "Склад";
@@ -92,6 +95,11 @@ const AppSidebar = () => {
                   {tenant.id === activeTenantId ? <Check className="size-4 shrink-0" /> : null}
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setCreateTenantDialogOpen(true)}>
+                <Plus className="size-4" />
+                Создать склад
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <SidebarMenuItem>
@@ -118,6 +126,10 @@ const AppSidebar = () => {
         <SecondaryMenu />
       </SidebarFooter>
       <SidebarRail />
+      <CreateTenantDialog
+        open={createTenantDialogOpen}
+        onOpenChange={setCreateTenantDialogOpen}
+      />
     </Sidebar>
   )
 }
