@@ -31,7 +31,7 @@ export const PageHeader = ({
         <div>
           <Skeleton className="h-6 w-60" />
         </div>
-        <Skeleton className="h-8 w-80" />
+        <Skeleton className="h-8 w-60" />
       </div>
     );
   }
@@ -39,22 +39,22 @@ export const PageHeader = ({
   const headerActions = actions ?? null;
 
   return (
-    <div className="flex justify-between items-end gap-2 flex-wrap">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-vertical:h-4 data-vertical:self-center"
-          />
-          <PageBreadcrumb path={breadcrumb} />
-        </div>
-        <div className="flex justify-between items-center">
+    <div className="">
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="-ml-1" />
+        <Separator
+          orientation="vertical"
+          className="mr-2 data-vertical:h-4 data-vertical:self-center"
+        />
+        <PageBreadcrumb path={breadcrumb} />
+      </div>
+      <div className="flex flex-grow justify-between items-center">
+        <div className="truncate">
           <PageTitle title={title} />
         </div>
-      </div>
-      <div className="flex shrink-0 items-center">
-        {headerActions}
+        <div className="flex shrink-0 items-center">
+          {headerActions}
+        </div>
       </div>
     </div>
   );
