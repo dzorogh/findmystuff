@@ -29,7 +29,7 @@ export function getContainersWithLocationRpc(
     filter_tenant_id?: number | null;
   }
 ) {
-  const { p_place_id, ...rpcParams } = params;
+  const { p_place_id: _p_place_id, ...rpcParams } = params;
   return supabase.rpc("get_containers_with_location", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,

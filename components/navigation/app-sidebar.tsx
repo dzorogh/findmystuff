@@ -29,7 +29,7 @@ import {
 
 const AppSidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const { open, state, isMobile, setOpenMobile } = useSidebar();
+  const { open: _open, state, isMobile, setOpenMobile } = useSidebar();
   const { tenants, activeTenantId, isLoading, setActiveTenant } = useTenant();
 
   const activeTenant = tenants.find((t) => t.id === activeTenantId);

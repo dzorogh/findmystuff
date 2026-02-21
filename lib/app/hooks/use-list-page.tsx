@@ -230,6 +230,9 @@ export function useListPage(config: EntityConfig) {
     ]
   );
 
+  const loadDataRef = useRef(loadData);
+  loadDataRef.current = loadData;
+
   const filtersKey = JSON.stringify(filters);
   useEffect(() => {
     if (activeTenantId == null) {
@@ -238,12 +241,15 @@ export function useListPage(config: EntityConfig) {
       setIsLoading(false);
       return;
     }
+    const load = loadDataRef.current;
     if (hasPagination) {
-      loadData(searchQuery, true, currentPage);
+      load(searchQuery, true, currentPage);
     } else {
-      loadData(searchQuery, true);
+      load(searchQuery, true);
     }
-  }, [filtersKey, sortBy, sortDirection, currentPage, activeTenantId]);
+    // loadData не в deps: его ссылка меняется каждый рендер из-за filters (объект), что вызывало бесконечный цикл
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersKey, sortBy, sortDirection, currentPage, activeTenantId, hasPagination, searchQuery]);
 
   const refreshList = useCallback(() => {
     if (hasPagination) {

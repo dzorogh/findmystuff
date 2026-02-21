@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Home,
@@ -49,17 +49,8 @@ const ENTITY_ITEMS = [
   },
 ] as const;
 
-function getCurrentEntityLabel(pathname: string): string {
-  for (const group of ENTITY_ITEMS) {
-    const item = group.items.find((i) => pathname.startsWith(i.href));
-    if (item) return item.label;
-  }
-  return "Сущности";
-}
-
 export function MobileBottomBar() {
   const { isMobile } = useSidebar();
-  const pathname = usePathname();
   const router = useRouter();
   const { setOpen: setQuickMoveOpen } = useQuickMove();
   const {

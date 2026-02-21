@@ -1,9 +1,27 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { Pencil } from "lucide-react";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
+import { TenantContext } from "@/contexts/tenant-context";
+import type { Tenant } from "@/lib/tenants/types";
 
 jest.mock("nuqs");
 import type { EntityConfig } from "@/lib/app/types/entity-config";
+
+const mockTenantContextValue = {
+  tenants: [{ id: 1, name: "Test", created_at: "2024-01-01T00:00:00Z" }] as Tenant[],
+  activeTenantId: 1,
+  isLoading: false,
+  setActiveTenant: jest.fn().mockResolvedValue(undefined),
+  refreshTenants: jest.fn().mockResolvedValue(undefined),
+};
+
+function TenantWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <TenantContext.Provider value={mockTenantContextValue}>
+      {children}
+    </TenantContext.Provider>
+  );
+}
 
 function createMinimalConfig(
   overrides: Partial<{
@@ -47,20 +65,15 @@ function createMinimalConfig(
 }
 
 describe("useListPage", () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   it("загружает данные при монтировании", async () => {
     const fetchData = jest.fn().mockResolvedValue({
       data: [{ id: 1, name: "Item 1" }],
     });
     const config = createMinimalConfig({ fetch: fetchData });
 
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(fetchData).toHaveBeenCalled();
@@ -70,7 +83,9 @@ describe("useListPage", () => {
 
   it("возвращает базовые поля", async () => {
     const config = createMinimalConfig();
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -88,7 +103,9 @@ describe("useListPage", () => {
   it("обрабатывает ошибку загрузки", async () => {
     const fetchData = jest.fn().mockRejectedValue(new Error("Network error"));
     const config = createMinimalConfig({ fetch: fetchData });
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBe("Network error");
@@ -102,7 +119,7 @@ describe("useListPage", () => {
       fetch: fetchData,
       pagination: undefined,
     });
-    renderHook(() => useListPage(config));
+    renderHook(() => useListPage(config), { wrapper: TenantWrapper });
 
     await waitFor(() => {
       expect(fetchData).toHaveBeenCalledWith(
@@ -123,7 +140,9 @@ describe("useListPage", () => {
       fetch: fetchData,
       pagination: { pageSize: 10 },
     });
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.pagination).toBeDefined();
@@ -135,7 +154,9 @@ describe("useListPage", () => {
 
   it("handleSearchChange обновляет searchQuery", async () => {
     const config = createMinimalConfig();
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     act(() => {
       result.current.handleSearchChange({
@@ -153,7 +174,9 @@ describe("useListPage", () => {
         form: () => null,
       } as EntityConfig["addForm"],
     });
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -178,7 +201,9 @@ describe("useListPage", () => {
       fetch: fetchData,
       pagination: { pageSize: 10 },
     });
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.pagination?.totalPages).toBe(5);
@@ -198,7 +223,9 @@ describe("useListPage", () => {
 
   it("setSort и setFilters обновляют состояние", async () => {
     const config = createMinimalConfig();
-    const { result } = renderHook(() => useListPage(config));
+    const { result } = renderHook(() => useListPage(config), {
+      wrapper: TenantWrapper,
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

@@ -34,7 +34,7 @@ interface TenantContextType {
   refreshTenants: () => Promise<void>;
 }
 
-const TenantContext = createContext<TenantContextType | null>(null);
+export const TenantContext = createContext<TenantContextType | null>(null);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -71,7 +71,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshTenants();
-  }, []);
+  }, [refreshTenants]);
 
   const setActiveTenant = useCallback(async (tenantId: number) => {
     await switchTenant(tenantId);

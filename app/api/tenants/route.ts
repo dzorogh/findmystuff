@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
+import { createTenantForCurrentUserRpc } from "@/lib/tenants/api";
 import { seedDefaultEntityTypesForTenant } from "@/lib/tenants/seed-default-entity-types";
 import { getServerUser } from "@/lib/users/server";
 
@@ -57,18 +58,15 @@ export async function POST(request: NextRequest) {
     const name = body?.name?.trim() ?? "Мой склад";
 
     const supabase = await createClient();
-    const { data: tenant, error } = await supabase.rpc("create_tenant_for_current_user", {
-      p_name: name,
-    });
-
-    if (error || !tenant) {
+    let row: { id: number; name: string | null; created_at: string };
+    try {
+      row = await createTenantForCurrentUserRpc(supabase, name);
+    } catch (err) {
       return NextResponse.json(
-        { error: error?.message ?? "Ошибка создания тенанта" },
+        { error: err instanceof Error ? err.message : "Ошибка создания тенанта" },
         { status: 500 }
       );
     }
-
-    const row = tenant as { id: number; name: string | null; created_at: string };
 
     try {
       const admin = getSupabaseAdmin();

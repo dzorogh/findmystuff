@@ -33,7 +33,7 @@ export function getItemsWithRoomRpc(
     filter_tenant_id?: number | null;
   }
 ) {
-  const { place_id, container_id, ...rpcParams } = params;
+  const { place_id: _place_id, container_id: _container_id, ...rpcParams } = params;
   return supabase.rpc("get_items_with_room", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
