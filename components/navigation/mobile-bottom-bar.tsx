@@ -49,6 +49,23 @@ const ENTITY_ITEMS = [
   },
 ] as const;
 
+/** Кнопка действия в нижней панели — единый стиль для всех иконок. */
+function BarActionButton({
+  children,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-2xl"
+      className="rounded-full"
+      {...props}
+    >
+      {children}
+    </Button>
+  );
+}
+
 export function MobileBottomBar() {
   const { isMobile } = useSidebar();
   const router = useRouter();
@@ -68,21 +85,17 @@ export function MobileBottomBar() {
   return (
     <div
       className={cn(
-        "fixed bottom-2 left-1/2 -translate-x-1/2 rounded-2xl p-2 z-40 grid grid-cols-4",
-        "bg-background/95 backdrop-blur border",
+        "fixed bottom-2 left-1/2 -translate-x-1/2 rounded-full p-2 z-40 flex",
+        "bg-background/50 backdrop-blur border",
       )}
     >
       <div className="min-w-0 flex gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                aria-label="Выбрать сущность"
-              >
+              <BarActionButton aria-label="Выбрать сущность">
                 <LayoutGrid data-icon="inline-start" />
-              </Button>
+              </BarActionButton>
             }
           />
           <DropdownMenuContent side="top" align="start" className="w-48">
@@ -108,14 +121,9 @@ export function MobileBottomBar() {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                disabled={isAddDisabled}
-                aria-label="Создать вещь"
-              >
+              <BarActionButton disabled={isAddDisabled} aria-label="Создать вещь">
                 <Plus data-icon="inline-start" />
-              </Button>
+              </BarActionButton>
             }
           />
           <DropdownMenuContent side="top" align="center" className="w-48">
@@ -136,26 +144,22 @@ export function MobileBottomBar() {
       </div>
 
       <div className="min-w-0 flex">
-        <Button
-          variant="ghost"
-          size="icon-lg"
+        <BarActionButton
           nativeButton={false}
           render={<Link href="/" />}
           aria-label="Поиск"
         >
           <Search data-icon="inline-start" />
-        </Button>
+        </BarActionButton>
       </div>
 
       <div className="min-w-0 flex">
-        <Button
-          variant="ghost"
-          size="icon-lg"
+        <BarActionButton
           onClick={() => setQuickMoveOpen(true)}
           aria-label="Быстрое перемещение"
         >
           <ArrowLeftRight data-icon="inline-start" />
-        </Button>
+        </BarActionButton>
       </div>
     </div>
   );
