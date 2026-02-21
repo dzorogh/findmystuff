@@ -52,8 +52,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       if (list.length === 1) {
         nextId = list[0].id;
         setTenantCookie(list[0].id);
-      } else if (list.length > 0 && fromCookie) {
-        const isValid = list.some((t) => t.id === fromCookie);
+      } else if (list.length > 0) {
+        const isValid = fromCookie != null && list.some((t) => t.id === fromCookie);
         if (!isValid) {
           nextId = list[0].id;
           setTenantCookie(list[0].id);

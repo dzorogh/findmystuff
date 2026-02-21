@@ -12,6 +12,25 @@ describe("containers entity-config", () => {
     jest.clearAllMocks();
   });
 
+  it("конфиг имеет обязательные поля EntityConfig", () => {
+    expect(containersEntityConfig.kind).toBe("container");
+    expect(containersEntityConfig.basePath).toBe("/containers");
+    expect(containersEntityConfig.apiTable).toBe("containers");
+    expect(containersEntityConfig.filters.initial).toEqual(DEFAULT_CONTAINERS_FILTERS);
+    expect(containersEntityConfig.columns.length).toBeGreaterThan(0);
+    expect(containersEntityConfig.fetch).toBeDefined();
+    expect(containersEntityConfig.actions.whenActive.length).toBeGreaterThan(0);
+  });
+
+  it("filters.initial совпадает с DEFAULT_CONTAINERS_FILTERS", () => {
+    expect(containersEntityConfig.filters.initial).toEqual(DEFAULT_CONTAINERS_FILTERS);
+  });
+
+  it("getName использует getEntityDisplayName (контейнер)", () => {
+    const getName = containersEntityConfig.getName!;
+    expect(getName({ id: 1, name: "Ящик" } as { id: number; name: string | null })).toBe("Ящик");
+  });
+
   it("DEFAULT_CONTAINERS_FILTERS содержит ожидаемые поля", () => {
     expect(DEFAULT_CONTAINERS_FILTERS).toEqual({
       showDeleted: false,

@@ -18,7 +18,5 @@ setup('authenticate', async ({ page }) => {
   // Alternatively, you can wait until the page reaches a state where all cookies are set.
   await expect(page.getByRole('link', { name: 'Помещения', exact: true })).toBeVisible();
 
-  // End of authentication steps.
-
   await page.context().storageState({ path: authFile });
 });

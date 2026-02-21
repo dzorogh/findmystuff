@@ -63,7 +63,7 @@ export default async function RootLayout({
   }
 
   const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
     <html
@@ -84,32 +84,32 @@ export default async function RootLayout({
           >
             <UserProvider>
               <TenantProvider>
-              <SettingsProvider>
-                <CurrentPageProvider>
-                  <SidebarProvider defaultOpen={defaultOpen}>
-                    <CapacitorAuthListener />
-                    <QuickMoveProvider>
-                      <AddItemProvider>
-                        <TooltipProvider>
-                          <AppSidebar />
+                <SettingsProvider>
+                  <CurrentPageProvider>
+                    <SidebarProvider defaultOpen={defaultOpen}>
+                      <CapacitorAuthListener />
+                      <QuickMoveProvider>
+                        <AddItemProvider>
+                          <TooltipProvider>
+                            <AppSidebar />
 
-                          <SidebarInset>
-                            <main className="flex flex-col flex-1 overflow-hidden h-full">
-                              <div className="flex-1 overflow-y-auto">
-                                <div className="mx-auto p-4 pb-20 md:pb-4">
-                                  {children}
+                            <SidebarInset>
+                              <main className="flex flex-col flex-1 overflow-hidden h-full">
+                                <div className="flex-1 overflow-y-auto">
+                                  <div className="mx-auto p-4 pb-20 md:pb-4">
+                                    {children}
+                                  </div>
                                 </div>
-                              </div>
-                            </main>
-                            <MobileBottomBar />
-                          </SidebarInset>
-                        </TooltipProvider>
-                      </AddItemProvider>
-                    </QuickMoveProvider>
-                    <Toaster />
-                  </SidebarProvider>
-                </CurrentPageProvider>
-              </SettingsProvider>
+                              </main>
+                              <MobileBottomBar />
+                            </SidebarInset>
+                          </TooltipProvider>
+                        </AddItemProvider>
+                      </QuickMoveProvider>
+                      <Toaster />
+                    </SidebarProvider>
+                  </CurrentPageProvider>
+                </SettingsProvider>
               </TenantProvider>
             </UserProvider>
           </ThemeProvider>

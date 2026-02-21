@@ -12,6 +12,28 @@ describe("buildings entity-config", () => {
     jest.clearAllMocks();
   });
 
+  it("конфиг имеет обязательные поля EntityConfig", () => {
+    expect(buildingsEntityConfig.kind).toBe("building");
+    expect(buildingsEntityConfig.basePath).toBeDefined();
+    expect(buildingsEntityConfig.apiTable).toBe("buildings");
+    expect(buildingsEntityConfig.labels).toBeDefined();
+    expect(buildingsEntityConfig.filters.initial).toEqual(DEFAULT_BUILDINGS_FILTERS);
+    expect(buildingsEntityConfig.columns.length).toBeGreaterThan(0);
+    expect(buildingsEntityConfig.fetch).toBeDefined();
+    expect(buildingsEntityConfig.actions.whenActive.length).toBeGreaterThan(0);
+  });
+
+  it("filters.initial совпадает с DEFAULT_BUILDINGS_FILTERS", () => {
+    expect(buildingsEntityConfig.filters.initial).toEqual(DEFAULT_BUILDINGS_FILTERS);
+  });
+
+  it("counts задан с filterParam buildingId и ссылкой на rooms", () => {
+    expect(buildingsEntityConfig.counts?.filterParam).toBe("buildingId");
+    expect(buildingsEntityConfig.counts?.links).toContainEqual(
+      expect.objectContaining({ path: "/rooms", field: "rooms_count" })
+    );
+  });
+
   it("DEFAULT_BUILDINGS_FILTERS содержит showDeleted: false", () => {
     expect(DEFAULT_BUILDINGS_FILTERS).toEqual({ showDeleted: false });
   });
