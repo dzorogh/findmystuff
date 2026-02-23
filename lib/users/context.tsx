@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import type { User } from "@supabase/supabase-js";
+import type { User, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/shared/supabase/client";
 import { getClientUser } from "@/lib/users/api";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const supabase = createClient();
     let isActive = true;
+    let lastEvent: AuthChangeEvent | null = null;
 
     const refreshUser = async () => {
       try {
@@ -41,11 +42,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    void refreshUser();
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      // Supabase при восстановлении сессии шлёт пару SIGNED_IN → INITIAL_SESSION. Один запрос достаточен.
+      if (lastEvent === "SIGNED_IN" && event === "INITIAL_SESSION") {
+        lastEvent = event;
+        return;
+      }
+      lastEvent = event;
       setIsLoading(true);
       void refreshUser();
     });
