@@ -35,6 +35,19 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data });
   } catch (error) {
+    const isTimeout =
+      error instanceof Error &&
+      (error.cause as NodeJS.ErrnoException)?.code === "ETIMEDOUT";
+    const isAbort = error instanceof Error && error.name === "AbortError";
+    if (isTimeout || isAbort) {
+      return NextResponse.json(
+        {
+          error:
+            "Сервер данных не ответил вовремя. Проверьте подключение или попробуйте позже.",
+        },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Произошла ошибка" },
       { status: 500 }

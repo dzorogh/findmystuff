@@ -1,5 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import {
+  fetchWithTimeout,
+  DEFAULT_REQUEST_TIMEOUT_MS,
+} from '@/lib/shared/api/fetch-with-timeout'
+
+const supabaseFetch = (input: RequestInfo | URL, init?: RequestInit) =>
+  fetchWithTimeout(DEFAULT_REQUEST_TIMEOUT_MS, input, init)
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -8,6 +15,9 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      global: {
+        fetch: supabaseFetch,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll()
