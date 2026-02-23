@@ -78,9 +78,8 @@ class EntitiesApiClient extends HttpClient {
     });
   }
 
-  async getItem(id: number, includeTransitions = true, tenantId?: number | null) {
-    const url = includeTransitions ? `/items/${id}` : `/items/${id}?includeTransitions=false`;
-    return this.request<{ item: Item; transitions?: Transition[] }>(url, { tenantId });
+  async getItem(id: number, tenantId?: number | null) {
+    return this.request<{ item: Item }>(`/items/${id}`, { tenantId });
   }
 
   async getItemTransitions(id: number, tenantId?: number | null) {
@@ -175,8 +174,8 @@ const entitiesApiClient = new EntitiesApiClient();
 
 export const getItems = (params?: Parameters<EntitiesApiClient["getItems"]>[0]) =>
   entitiesApiClient.getItems(params);
-export const getItem = (id: number, includeTransitions?: boolean) =>
-  entitiesApiClient.getItem(id, includeTransitions);
+export const getItem = (id: number, tenantId?: number | null) =>
+  entitiesApiClient.getItem(id, tenantId);
 export const getItemTransitions = (id: number) => entitiesApiClient.getItemTransitions(id);
 export const createItem = (data: Parameters<EntitiesApiClient["createItem"]>[0]) =>
   entitiesApiClient.createItem(data);

@@ -13,7 +13,7 @@ const ITEM_NOT_FOUND_MESSAGE = "Вещь не найдена";
  * @throws Error при ошибке API или отсутствии данных
  */
 export const fetchItemById = async (itemId: number): Promise<Item> => {
-  const response = await getItem(itemId, false);
+  const response = await getItem(itemId);
 
   if (response.error) {
     throw new Error(response.error);

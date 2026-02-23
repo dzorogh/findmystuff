@@ -38,7 +38,7 @@ const fetchEntityName = async (
 ): Promise<string> => {
   try {
     if (entityType === "item") {
-      const res = await getItem(entityId, false);
+      const res = await getItem(entityId);
       if (res.error || !res.data) {
         return getEntityDisplayName(entityType, entityId, null);
       }

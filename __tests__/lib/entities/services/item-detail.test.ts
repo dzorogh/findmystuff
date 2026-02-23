@@ -21,7 +21,7 @@ describe("item-detail service", () => {
 
       const result = await fetchItemById(1);
 
-      expect(getItem).toHaveBeenCalledWith(1, false);
+      expect(getItem).toHaveBeenCalledWith(1);
       expect(result).toEqual({ id: 1, name: "Item 1" });
     });
 
