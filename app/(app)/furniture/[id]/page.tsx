@@ -90,7 +90,7 @@ export default function FurnitureDetailPage() {
           created_at: furnitureData.created_at,
           deleted_at: furnitureData.deleted_at,
           room_id: furnitureData.room_id,
-          room_name: furnitureData.room_name ?? null,
+          room: furnitureData.room ?? null,
           furniture_type_id: furnitureData.furniture_type_id ?? null,
           furniture_type: furnitureData.furniture_type ?? null,
           places_count: furnitureData.places_count ?? 0,
@@ -221,11 +221,11 @@ export default function FurnitureDetailPage() {
         title={furniture?.name ?? (furniture ? `Мебель #${furniture.id}` : "Мебель")}
         ancestors={[
           { label: "Мебель", href: "/furniture" },
-          ...(furniture?.room_id && furniture?.room_name
+          ...(furniture?.room && furniture.room.name
             ? [
               {
-                label: furniture.room_name,
-                href: `/rooms/${furniture.room_id}`,
+                label: furniture.room.name,
+                href: `/rooms/${furniture.room.id}`,
               },
             ]
             : []),

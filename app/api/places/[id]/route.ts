@@ -159,7 +159,7 @@ export async function GET(
       furniture_name,
       room_id,
       room_name,
-      room: room_id ? { room_id, room_name } : null,
+      room: room_id ? { id: room_id, name: room_name } : null,
     };
 
     // Загружаем вещи и контейнеры в этом месте

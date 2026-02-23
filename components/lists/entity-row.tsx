@@ -57,14 +57,6 @@ interface EntityRowProps {
   counts?: CountsConfig;
 }
 
-function isFurnitureEntity(entity: ListEntity): entity is Furniture {
-  return "room_id" in entity && "places_count" in entity && !("containers_count" in entity);
-}
-
-function isPlaceEntity(entity: ListEntity): entity is Place {
-  return "room" in entity && !("places_count" in entity);
-}
-
 function renderCountLinks(
   entity: ListEntity,
   counts: CountsConfig | undefined
@@ -198,32 +190,21 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
     );
   }
 
-  if (isPlaceEntity(entity)) {
+  if ("room" in entity && entity.room != null && entity.room.id != null) {
     const room = entity.room;
-    if (room?.room_name && room.room_id) {
-      return (
-        <Link
-          href={`/rooms/${room.room_id}`}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
-        >
-          <DoorOpen className="h-4 w-4 flex-shrink-0 text-primary" />
-          <span>{room.room_name}</span>
-        </Link>
-      );
-    }
-    return <span className="text-sm text-muted-foreground">—</span>;
-  }
-
-  if (isFurnitureEntity(entity) && entity.room_id && entity.room_name) {
     return (
       <Link
-        href={`/rooms/${entity.room_id}`}
+        href={`/rooms/${room.id}`}
         className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
       >
         <DoorOpen className="h-4 w-4 flex-shrink-0 text-primary" />
-        <span>{entity.room_name}</span>
+        <span>{room.name ?? "—"}</span>
       </Link>
     );
+  }
+
+  if ("room" in entity) {
+    return <span className="text-sm text-muted-foreground">—</span>;
   }
 
   return null;

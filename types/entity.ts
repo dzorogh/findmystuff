@@ -70,7 +70,7 @@ export interface Place extends BaseEntity {
   furniture_id?: number | null;
   furniture_name?: string | null;
   /** Данные о комнате (из API списка мест) */
-  room?: { room_id: number; room_name: string | null } | null;
+  room?: { id: number; name: string | null } | null;
   items_count?: number;
   containers_count?: number;
 }
@@ -106,7 +106,8 @@ export interface Room extends BaseEntity {
 
 export interface Furniture extends BaseEntity {
   room_id: number;
-  room_name?: string | null;
+  /** Данные о комнате (нормализованный вид для UI) */
+  room?: { id: number; name: string | null } | null;
   furniture_type_id?: number | null;
   furniture_type?: { name: string } | null;
   places_count?: number;

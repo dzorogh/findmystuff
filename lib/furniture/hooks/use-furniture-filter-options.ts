@@ -14,8 +14,8 @@ export function useFurnitureFilterOptions() {
         ALL_FURNITURE_OPTION,
         ...furniture.map((f) => ({
           value: f.id.toString(),
-          label: f.room_name
-            ? `${f.name || `Мебель #${f.id}`} (${f.room_name})`
+          label: f.room?.name
+            ? `${f.name || `Мебель #${f.id}`} (${f.room.name})`
             : f.name || `Мебель #${f.id}`,
         })),
       ];

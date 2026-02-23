@@ -88,7 +88,7 @@ export const furnitureEntityConfig: EntityConfig = {
   },
   groupBy: (entity: EntityDisplay) => {
     const furniture = entity as Furniture;
-    const name = furniture.room_name?.trim();
+    const name = furniture.room?.name?.trim();
     return name && name.length > 0 ? name : null;
   },
   groupByEmptyLabel: "Без помещения",

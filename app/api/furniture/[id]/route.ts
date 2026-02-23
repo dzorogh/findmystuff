@@ -68,7 +68,7 @@ export async function GET(
       created_at: furnitureData.created_at,
       deleted_at: furnitureData.deleted_at,
       room_id: furnitureData.room_id,
-      room_name: roomName,
+      room: furnitureData.room_id != null ? { id: furnitureData.room_id, name: roomName ?? null } : null,
       furniture_type_id: furnitureData.furniture_type_id ?? null,
       furniture_type: furnitureTypeName ? { name: furnitureTypeName } : null,
       price:

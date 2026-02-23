@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       id: f.id,
       name: f.name,
       room_id: f.room_id,
-      room_name: f.room_name ?? null,
+      room: f.room_id != null ? { id: f.room_id, name: f.room_name ?? null } : null,
       furniture_type_id: f.furniture_type_id ?? null,
       furniture_type: f.furniture_type_name ? { name: f.furniture_type_name } : null,
       created_at: f.created_at,

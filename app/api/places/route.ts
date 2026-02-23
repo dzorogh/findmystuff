@@ -60,10 +60,7 @@ const mapRpcPlaceToPlace = (place: RpcPlaceRow): Place => ({
   furniture_id: place.furniture_id ?? null,
   furniture_name: place.furniture_name ?? null,
   room: place.room_id
-    ? {
-        room_id: place.room_id,
-        room_name: place.room_name || null,
-      }
+    ? { id: place.room_id, name: place.room_name || null }
     : null,
   items_count: place.items_count ?? 0,
   containers_count: place.containers_count ?? 0,
@@ -207,10 +204,7 @@ const fetchPlacesFallback = async (
       deleted_at: place.deleted_at,
       photo_url: place.photo_url,
       room: roomId
-        ? {
-            room_id: roomId,
-            room_name: roomNameById.get(roomId) || null,
-          }
+        ? { id: roomId, name: roomNameById.get(roomId) || null }
         : null,
       items_count: itemCounts.get(place.id) ?? 0,
       containers_count: containerCounts.get(place.id) ?? 0,
