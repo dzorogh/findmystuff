@@ -1,0 +1,27 @@
+---
+description: 
+alwaysApply: true
+---
+
+# Supabase MCP
+
+При любой работе с Supabase используй **Supabase MCP** (сервер `plugin-supabase-supabase`), а не только локальный код или терминал.
+
+## Когда использовать
+
+- **SQL и миграции**: выполнение запросов, применение миграций, просмотр списка миграций и таблиц — через MCP (`execute_sql`, `apply_migration`, `list_migrations`, `list_tables`).
+- **Типы TypeScript**: генерация типов из схемы — через `generate_typescript_types`.
+- **Документация**: поиск по докам Supabase — через `search_docs`.
+- **Проект и настройки**: URL проекта, ключи, логи, Edge Functions — через соответствующие инструменты MCP.
+
+## Как вызывать
+
+Перед вызовом инструмента проверь схему в `mcps/plugin-supabase-supabase/tools/<tool-name>.json`. Вызов через `call_mcp_tool`:
+
+- `server`: `"plugin-supabase-supabase"`
+- `toolName`: имя инструмента (например, `execute_sql`, `apply_migration`)
+- `arguments`: параметры по схеме инструмента
+
+## Пример
+
+Вместо того чтобы только предлагать SQL или команды в терминале — по возможности выполни запрос или миграцию через MCP, чтобы результат был сразу проверен в контексте проекта.
