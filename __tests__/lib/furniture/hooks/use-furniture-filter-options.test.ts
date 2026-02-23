@@ -21,11 +21,11 @@ describe("useFurnitureFilterOptions", () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("возвращает мебель с room_name после загрузки", async () => {
+  it("возвращает мебель с названием помещения после загрузки", async () => {
     (useFurniture as jest.Mock).mockReturnValue({
       furniture: [
-        { id: 1, name: "Стол", room_name: "Кухня" },
-        { id: 2, name: null, room_name: null },
+        { id: 1, name: "Стол", room: { id: 10, name: "Кухня" } },
+        { id: 2, name: null, room: null },
       ],
       isLoading: false,
     });

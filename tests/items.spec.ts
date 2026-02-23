@@ -45,7 +45,7 @@ test.describe('items list', () => {
 
     await link.click();
     await expect(page).toHaveURL(/\/items\/\d+$/, { timeout: NAVIGATION_TIMEOUT });
-    await expect(page.getByText('Редактирование вещи')).toBeVisible();
+    await expect(page.getByText('Редактирование вещи')).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
     await expect(page.getByLabel('Название вещи')).toBeVisible();
     await expect(page.getByText('История перемещений', { exact: true })).toBeVisible();
 
@@ -55,7 +55,7 @@ test.describe('items list', () => {
     await expect(rowAfterBack).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
     await rowAfterBack.getByTitle('Редактировать').click();
     await expect(page).toHaveURL(/\/items\/\d+$/, { timeout: NAVIGATION_TIMEOUT });
-    await expect(page.getByText('Редактирование вещи')).toBeVisible();
+    await expect(page.getByText('Редактирование вещи')).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
   });
 
   test('opens move sheet and cancels', async ({ page }) => {

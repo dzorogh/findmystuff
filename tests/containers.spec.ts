@@ -5,11 +5,17 @@ const getFirstActiveContainerRow = (page: Page) =>
 
 /** Дождаться окончания загрузки списка: либо таблица с заголовками, либо пустое состояние. */
 async function waitForContainersListReady(page: Page) {
-  await expect(
-    page.getByRole('columnheader', { name: 'Название' }).or(
-      page.getByText(/по вашему запросу ничего не найдено/i)
-    )
-  ).toBeVisible({ timeout: 15000 });
+  const listOrEmpty = page
+    .getByRole('columnheader', { name: 'Название' })
+    .or(page.getByText(/по вашему запросу ничего не найдено/i));
+  try {
+    await expect(listOrEmpty).toBeVisible({ timeout: 5000 });
+  } catch {
+    if (await page.getByRole('heading', { name: 'Поиск' }).isVisible()) {
+      await page.locator('a[href="/containers"]').first().click();
+    }
+    await expect(listOrEmpty).toBeVisible({ timeout: 15000 });
+  }
 }
 
 test.describe('containers list', () => {

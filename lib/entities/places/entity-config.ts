@@ -101,7 +101,7 @@ export const placesEntityConfig: EntityConfig = {
     { key: "name", label: "Название", width: "w-80" },
     { key: "room", label: "Помещение", hideOnMobile: true },
     { key: "counts", label: "Содержимое", hideOnMobile: true },
-    { key: "actions", label: "Действия" },
+    { key: "actions", label: "Действия", width: "min-w-24" },
   ],
   fetch: fetchPlaces,
   counts: {
@@ -119,7 +119,12 @@ export const placesEntityConfig: EntityConfig = {
   groupByEmptyLabel: "Без мебели",
   actions: {
     whenActive: [
-      { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },
+      {
+        key: "edit",
+        label: "Редактировать",
+        icon: Pencil,
+        getHref: (e) => `${BASE_PATH}/${e.id}`
+      },
       {
         key: "move",
         label: "Переместить",

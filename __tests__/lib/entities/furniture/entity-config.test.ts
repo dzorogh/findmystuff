@@ -26,14 +26,14 @@ describe("furniture entity-config", () => {
     expect(furnitureEntityConfig.filters.initial).toEqual(DEFAULT_FURNITURE_FILTERS);
   });
 
-  it("groupBy возвращает room_name если не пустой", () => {
+  it("groupBy возвращает room.name если не пустой", () => {
     const groupBy = furnitureEntityConfig.groupBy!;
     expect(
       groupBy({
         id: 1,
         name: "X",
-        room_name: "Кухня",
-      } as { id: number; name: string | null; room_name?: string })
+        room: { id: 10, name: "Кухня" },
+      } as { id: number; name: string | null; room?: { id: number; name: string | null } })
     ).toBe("Кухня");
   });
 
