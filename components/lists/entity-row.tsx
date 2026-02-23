@@ -3,27 +3,18 @@
 import { memo, useRef, type ComponentType, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DoorOpen, Package, LayoutGrid, Container as ContainerIcon, Sofa } from "lucide-react";
+import { DoorOpen, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { Action } from "@/lib/app/types/entity-action";
 import type { CountsConfig, ListColumnConfig } from "@/lib/app/types/entity-config";
-import type {
-  Item,
-  Room,
-  Place,
-  Container,
-  Building,
-  Furniture,
-  DestinationType,
-} from "@/types/entity";
+import type { Item, Room, Place, Container, Building, Furniture } from "@/types/entity";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 export const ROOM_EMPTY_LABEL = "Помещение не указано";
-const LOCATION_EMPTY_LABEL = "Не указано";
 const INTERACTIVE_SELECTOR = "a, button, [role='button'], input, textarea, select, label";
 /** Оверлеи (sheet, dialog) — клик по ним не должен вызывать переход по строке */
 const OVERLAY_SELECTOR = "[data-slot='sheet-overlay'], [data-base-ui-inert]";
@@ -84,49 +75,6 @@ function renderCountLinks(
           </Link>
         );
       })}
-    </div>
-  );
-}
-
-function getLocationInfo(location: Item["last_location"]) {
-  if (!location?.destination_type) return null;
-  const fallback =
-    location.destination_name && location.destination_name.trim() !== ""
-      ? location.destination_name
-      : LOCATION_EMPTY_LABEL;
-
-  return {
-    destinationType: location.destination_type,
-    label:
-      location.destination_id != null
-        ? getEntityDisplayName(
-          location.destination_type,
-          location.destination_id,
-          location.destination_name
-        )
-        : fallback,
-  };
-}
-
-const LOCATION_META: Record<
-  DestinationType,
-  { icon: IconComponent; textClass: string }
-> = {
-  room: { icon: DoorOpen, textClass: "text-primary" },
-  place: { icon: LayoutGrid, textClass: "text-primary" },
-  container: { icon: ContainerIcon, textClass: "text-primary" },
-  furniture: { icon: Sofa, textClass: "text-primary" },
-};
-
-function renderLocationLabel(
-  locationInfo: { destinationType: DestinationType; label: string }
-) {
-  const meta = LOCATION_META[locationInfo.destinationType];
-  const Icon = meta.icon;
-  return (
-    <div className="flex items-center gap-2 text-sm">
-      <Icon className={cn("h-4 w-4 flex-shrink-0", meta.textClass)} />
-      <span>{locationInfo.label}</span>
     </div>
   );
 }
@@ -220,12 +168,6 @@ function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined):
   return renderCountLinks(entity, counts);
 }
 
-function renderLocationCell(entity: ListEntity): ReactNode {
-  const locationInfo = getLocationInfo(entity.last_location);
-  if (!locationInfo) return null;
-  return renderLocationLabel(locationInfo);
-}
-
 function getEditHref(actions: Action[]): string | undefined {
   const edit = actions.find((a) => a.key === "edit" && "href" in a);
   return edit && "href" in edit ? edit.href : undefined;
@@ -268,9 +210,6 @@ function renderCellContent(
 
     case "counts":
       return renderCountsCell(entity, counts);
-
-    case "location":
-      return renderLocationCell(entity);
 
     case "actions":
       return <EntityActions actions={actions} />;

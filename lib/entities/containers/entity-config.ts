@@ -126,7 +126,8 @@ export const containersEntityConfig: EntityConfig = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "location", label: "Расположение", hideOnMobile: true },
+    { key: "room", label: "Помещение", width: "w-40", hideOnMobile: true },
+    { key: "movedAt", label: "Дата перемещения", width: "w-40", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
   fetch: fetchContainers,

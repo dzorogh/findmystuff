@@ -1,6 +1,4 @@
--- Добавить фильтр по мебели в get_items_with_room (для привязки вещей к мебели)
-
-drop function if exists public.get_items_with_room(text, boolean, integer, integer, text, bigint, boolean, text, text, bigint);
+-- Для вещей в мебели (destination_type = furniture) заполнять room_id/room_name из furniture.room_id
 
 create or replace function public.get_items_with_room(
   search_query text default null,
@@ -119,5 +117,3 @@ select p.id, p.name, p.item_type_id, p.item_type_name, p.created_at, p.deleted_a
   p.destination_type, p.destination_id, p.moved_at, p.room_id, p.room_name, fc.total_count
 from paged_items p cross join filtered_count fc;
 $$;
-
-grant execute on function public.get_items_with_room(text, boolean, integer, integer, text, bigint, boolean, text, text, bigint, bigint) to anon, authenticated;

@@ -58,6 +58,9 @@ export async function GET(
     const roomIds = (transitionsData || [])
       .filter((t) => t.destination_type === "room" && t.destination_id)
       .map((t) => t.destination_id);
+    const furnitureIds = (transitionsData || [])
+      .filter((t) => t.destination_type === "furniture" && t.destination_id)
+      .map((t) => t.destination_id);
 
     // Сначала загружаем контейнеры, чтобы получить их transitions и узнать места
     const containersData = containerIds.length > 0
@@ -95,7 +98,7 @@ export async function GET(
       .map((t) => t.destination_id);
     const allPlaceIds = Array.from(new Set([...placeIds, ...containerPlaceIds]));
 
-    const [placesData, roomsData] = await Promise.all([
+    const [placesData, roomsData, furnitureData] = await Promise.all([
       allPlaceIds.length > 0
         ? supabase
             .from("places")
@@ -110,6 +113,13 @@ export async function GET(
             .in("id", roomIds)
             .is("deleted_at", null)
         : { data: [] },
+      furnitureIds.length > 0
+        ? supabase
+            .from("furniture")
+            .select("id, name")
+            .in("id", furnitureIds)
+            .is("deleted_at", null)
+        : { data: [] },
     ]);
 
     const placesMap = new Map(
@@ -117,6 +127,9 @@ export async function GET(
     );
     const roomsMap = new Map(
       (roomsData.data || []).map((r) => [r.id, r.name])
+    );
+    const furnitureMap = new Map(
+      (furnitureData.data || []).map((f) => [f.id, f.name])
     );
 
     // Для мест получаем их помещения
@@ -184,6 +197,8 @@ export async function GET(
         }
       } else if (t.destination_type === "room" && t.destination_id) {
         transition.destination_name = roomsMap.get(t.destination_id) || null;
+      } else if (t.destination_type === "furniture" && t.destination_id) {
+        transition.destination_name = furnitureMap.get(t.destination_id) || null;
       }
 
       return transition;

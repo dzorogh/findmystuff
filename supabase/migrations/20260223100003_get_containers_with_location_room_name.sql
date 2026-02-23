@@ -1,6 +1,6 @@
--- Добавить фильтр по мебели в get_containers_with_location (для привязки контейнеров к мебели)
+-- Возвращать room_id и room_name для колонки «Помещение» (для контейнеров в мебели/месте — комната, а не название мебели/места)
 
-drop function if exists public.get_containers_with_location(text, boolean, integer, integer, text, text, bigint, boolean, text, bigint);
+drop function if exists public.get_containers_with_location(text, boolean, integer, integer, text, text, bigint, boolean, text, bigint, bigint);
 
 create or replace function public.get_containers_with_location(
   search_query text default null,
@@ -107,5 +107,3 @@ begin
     p.created_at desc;
 end;
 $$;
-
-grant execute on function public.get_containers_with_location(text, boolean, integer, integer, text, text, bigint, boolean, text, bigint, bigint) to anon, authenticated;

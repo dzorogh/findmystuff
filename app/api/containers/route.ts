@@ -97,6 +97,8 @@ export async function GET(request: NextRequest) {
       destination_id: number | null;
       destination_name: string | null;
       moved_at: string | null;
+      room_id: number | null;
+      room_name: string | null;
     }) => ({
       id: container.id,
       name: container.name,
@@ -114,6 +116,7 @@ export async function GET(request: NextRequest) {
             destination_id: container.destination_id,
             destination_name: container.destination_name,
             moved_at: container.moved_at,
+            room_name: container.room_name ?? null,
           }
         : null,
     }));
