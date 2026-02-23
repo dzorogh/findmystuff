@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 
 import { getFurnitureItem, updateFurniture } from "@/lib/furniture/api";
@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import RoomCombobox from "@/components/fields/room-combobox";
+import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 import { DatePicker } from "@/components/fields/date-picker";
@@ -56,6 +57,8 @@ export default function FurnitureDetailPage() {
   const [purchaseDate, setPurchaseDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const { isLoading: isLoadingRooms } = useRooms();
 
   const loadFurnitureData = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -104,6 +107,24 @@ export default function FurnitureDetailPage() {
             created_at: "",
           }))
         );
+
+        setName(furnitureData.name ?? "");
+        setRoomId(furnitureData.room_id?.toString() ?? "");
+        setFurnitureTypeId(furnitureData.furniture_type_id?.toString() ?? "");
+        setPrice(
+          furnitureData.price?.amount != null && furnitureData.price?.currency
+            ? { amount: furnitureData.price.amount, currency: furnitureData.price.currency }
+            : null
+        );
+        setCurrentValue(
+          furnitureData.currentValue?.amount != null && furnitureData.currentValue?.currency
+            ? {
+                amount: furnitureData.currentValue.amount,
+                currency: furnitureData.currentValue.currency,
+              }
+            : null
+        );
+        setPurchaseDate(furnitureData.purchaseDate ?? "");
       } catch (err) {
         console.error("Ошибка загрузки данных мебели:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
@@ -127,25 +148,6 @@ export default function FurnitureDetailPage() {
   });
 
   const printLabel = usePrintEntityLabel("furniture");
-
-  useEffect(() => {
-    if (furniture) {
-      setName(furniture.name ?? "");
-      setRoomId(furniture.room_id?.toString() ?? "");
-      setFurnitureTypeId(furniture.furniture_type_id?.toString() ?? "");
-      setPrice(
-        furniture.price?.amount != null && furniture.price?.currency
-          ? { amount: furniture.price.amount, currency: furniture.price.currency }
-          : null
-      );
-      setCurrentValue(
-        furniture.currentValue?.amount != null && furniture.currentValue?.currency
-          ? { amount: furniture.currentValue.amount, currency: furniture.currentValue.currency }
-          : null
-      );
-      setPurchaseDate(furniture.purchaseDate ?? "");
-    }
-  }, [furniture]);
 
   const handleDuplicate = useCallback(async () => {
     const res = await duplicateEntityApi.duplicate("furniture", furnitureId);
@@ -215,7 +217,7 @@ export default function FurnitureDetailPage() {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        isLoading={isLoading}
+        isLoading={isLoading || isLoadingRooms}
         title={furniture?.name ?? (furniture ? `Мебель #${furniture.id}` : "Мебель")}
         ancestors={[
           { label: "Мебель", href: "/furniture" },
@@ -235,7 +237,7 @@ export default function FurnitureDetailPage() {
           links={[{ href: `/places?furnitureId=${furniture.id}`, label: "Места" }]}
         />
       )}
-      {isLoading ? (
+      {isLoading || isLoadingRooms ? (
         <EntityDetailSkeleton />
       ) : furniture ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
