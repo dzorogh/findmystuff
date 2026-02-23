@@ -27,6 +27,7 @@ export function getItemsWithRoomRpc(
     room_id: number | null;
     place_id: number | null;
     container_id: number | null;
+    furniture_id: number | null;
     has_photo: boolean | null;
     sort_by: SortBy;
     sort_direction: SortDirection;
@@ -37,6 +38,7 @@ export function getItemsWithRoomRpc(
   return supabase.rpc("get_items_with_room", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
+    furniture_id: params.furniture_id ?? null,
   });
 }
 
@@ -50,6 +52,7 @@ class EntitiesApiClient extends HttpClient {
     roomId?: number | null;
     placeId?: number | null;
     containerId?: number | null;
+    furnitureId?: number | null;
     hasPhoto?: boolean | null;
     sortBy?: SortBy;
     sortDirection?: SortDirection;
@@ -64,6 +67,7 @@ class EntitiesApiClient extends HttpClient {
     if (params?.roomId) searchParams.set("roomId", params.roomId.toString());
     if (params?.placeId) searchParams.set("placeId", params.placeId.toString());
     if (params?.containerId) searchParams.set("containerId", params.containerId.toString());
+    if (params?.furnitureId != null) searchParams.set("furnitureId", params.furnitureId.toString());
     if (params?.hasPhoto !== undefined && params.hasPhoto !== null) {
       searchParams.set("hasPhoto", params.hasPhoto ? "true" : "false");
     }

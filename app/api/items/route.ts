@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     const roomId = searchParams.get("roomId") ? parseInt(searchParams.get("roomId")!, 10) : null;
     const placeId = searchParams.get("placeId") ? parseInt(searchParams.get("placeId")!, 10) : null;
     const containerId = searchParams.get("containerId") ? parseInt(searchParams.get("containerId")!, 10) : null;
+    const furnitureId = searchParams.get("furnitureId") ? parseInt(searchParams.get("furnitureId")!, 10) : null;
     const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       room_id: roomId,
       place_id: placeId,
       container_id: containerId,
+      furniture_id: furnitureId,
       has_photo: hasPhoto,
       sort_by: sortBy,
       sort_direction: sortDirection,
@@ -124,7 +126,7 @@ export async function GET(request: NextRequest) {
         room_name: item.room_name ?? null,
         last_location: hasLocation
           ? {
-              destination_type: item.destination_type as "room" | "place" | "container" | null,
+              destination_type: item.destination_type as "room" | "place" | "container" | "furniture" | null,
               destination_id: item.destination_id,
               moved_at: item.moved_at || "",
               room_name: item.room_name ?? null,

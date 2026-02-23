@@ -10,6 +10,7 @@ import { useUser } from "@/lib/users/context";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
+import { useFurniture } from "@/lib/furniture/hooks/use-furniture";
 import LocationCombobox, { type DestinationType } from "@/components/fields/location-combobox";
 import type { MoveDestinationType } from "@/lib/app/types/entity-config";
 import { ErrorMessage } from "@/components/common/error-message";
@@ -38,12 +39,14 @@ const DESTINATION_TYPE_LABELS: Record<DestinationType, string> = {
   room: "Помещение",
   place: "Место",
   container: "Контейнер",
+  furniture: "Мебель",
 };
 
 const DESTINATION_TYPE_LABELS_LOWER: Record<DestinationType, string> = {
   room: "помещение",
   place: "место",
   container: "контейнер",
+  furniture: "мебель",
 };
 
 export interface MoveEntityFormProps {
@@ -89,6 +92,7 @@ function MoveEntityFormBody({
   const { rooms } = useRooms();
   const { places } = usePlaces();
   const { containers } = useContainers();
+  const { furniture } = useFurniture();
   const defaultType = destinationTypes[0] ?? "room";
   const [destinationType, setDestinationType] = useState<DestinationType | null>(defaultType);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
@@ -120,7 +124,7 @@ function MoveEntityFormBody({
       }
 
       const id = parseInt(selectedDestinationId);
-      const listByType = { container: containers, place: places, room: rooms };
+      const listByType = { container: containers, place: places, room: rooms, furniture };
       const destinationName = listByType[destinationType].find((d) => d.id === id)?.name ?? undefined;
       const typeLabel = DESTINATION_TYPE_LABELS[destinationType];
       const finalDestinationName = destinationName || `${typeLabel} #${selectedDestinationId}`;
@@ -139,7 +143,7 @@ function MoveEntityFormBody({
   };
 
   const handleQRScanSuccess = (result: EntityQrPayload) => {
-    const validTypes: DestinationType[] = ["room", "place", "container"];
+    const validTypes: DestinationType[] = ["room", "place", "container", "furniture"];
     if (!validTypes.includes(result.type as DestinationType)) {
       toast.error("Недопустимое местоположение");
       setIsQRScannerOpen(false);
@@ -156,7 +160,7 @@ function MoveEntityFormBody({
       return;
     }
 
-    const listByType = { container: containers, place: places, room: rooms };
+    const listByType = { container: containers, place: places, room: rooms, furniture };
     const isExcluded =
       result.type === "container" && excludeContainerId != null && result.id === excludeContainerId;
     const destinationExists =
@@ -275,7 +279,7 @@ export default function MoveEntityForm({
 
   const { isLoading } = useUser();
 
-  /** MoveEntityForm поддерживает только room/place/container; building — для MoveRoomForm. */
+  /** MoveEntityForm поддерживает room/place/container/furniture; building — для MoveRoomForm. */
   const locationTypes = useMemo(
     () => destinationTypes.filter((t): t is DestinationType => t !== "building"),
     [destinationTypes]

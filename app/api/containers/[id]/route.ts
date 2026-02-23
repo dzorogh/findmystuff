@@ -70,8 +70,11 @@ export async function GET(
     const roomIds = (transitionsData || [])
       .filter((t) => t.destination_type === "room" && t.destination_id)
       .map((t) => t.destination_id);
+    const furnitureIds = (transitionsData || [])
+      .filter((t) => t.destination_type === "furniture" && t.destination_id)
+      .map((t) => t.destination_id);
 
-    const [placesData, containersData, roomsData] = await Promise.all([
+    const [placesData, containersData, roomsData, furnitureData] = await Promise.all([
       placeIds.length > 0
         ? supabase
             .from("places")
@@ -93,7 +96,28 @@ export async function GET(
             .in("id", roomIds)
             .is("deleted_at", null)
         : { data: [] },
+      furnitureIds.length > 0
+        ? supabase
+            .from("furniture")
+            .select("id, name, room_id")
+            .in("id", furnitureIds)
+            .is("deleted_at", null)
+        : { data: [] },
     ]);
+
+    const furnitureRows = (furnitureData?.data || []) as { id: number; name: string | null; room_id: number | null }[];
+    const furnitureMap = new Map(furnitureRows.map((f) => [f.id, f.name ?? null]));
+    const furnitureRoomIds = furnitureRows.map((f) => f.room_id).filter((id): id is number => id != null);
+    const { data: furnitureRoomsData } = furnitureRoomIds.length > 0
+      ? await supabase
+          .from("rooms")
+          .select("id, name")
+          .in("id", furnitureRoomIds)
+          .is("deleted_at", null)
+      : { data: [] };
+    const furnitureRoomsMap = new Map(
+      ((furnitureRoomsData || []) as { id: number; name: string | null }[]).map((r) => [r.id, r.name ?? null])
+    );
 
     const placesMap = new Map(
       (placesData.data || []).map((p) => [p.id, p.name])
@@ -158,6 +182,12 @@ export async function GET(
         transition.destination_name = containersMap.get(t.destination_id) || null;
       } else if (t.destination_type === "room" && t.destination_id) {
         transition.destination_name = roomsMap.get(t.destination_id) || null;
+      } else if (t.destination_type === "furniture" && t.destination_id) {
+        transition.destination_name = furnitureMap.get(t.destination_id) || null;
+        const furnitureRow = furnitureRows.find((f) => f.id === t.destination_id);
+        if (furnitureRow?.room_id) {
+          transition.room_name = furnitureRoomsMap.get(furnitureRow.room_id) || null;
+        }
       }
 
       return transition;

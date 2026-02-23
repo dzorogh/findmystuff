@@ -197,6 +197,33 @@ export async function GET(
             place_name: placeName,
             room_name: roomName,
           };
+        } else if (destinationType === "furniture" && destinationId) {
+          const { data: furnitureData } = await supabase
+            .from("furniture")
+            .select("id, name, room_id")
+            .eq("id", destinationId)
+            .is("deleted_at", null)
+            .single();
+
+          let roomName: string | null = null;
+          if (furnitureData?.room_id) {
+            const { data: roomData } = await supabase
+              .from("rooms")
+              .select("id, name")
+              .eq("id", furnitureData.room_id)
+              .is("deleted_at", null)
+              .single();
+            roomName = roomData?.name || null;
+          }
+
+          lastLocation = {
+            destination_type: destinationType,
+            destination_id: destinationId,
+            destination_name: furnitureData?.name || null,
+            moved_at: lastTransitionData.created_at,
+            place_name: null,
+            room_name: roomName,
+          };
         }
       }
 

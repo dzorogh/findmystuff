@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
     const placeIdParam = searchParams.get("placeId");
     const placeId =
       placeIdParam !== null && placeIdParam !== "" ? parseInt(placeIdParam, 10) : null;
+    const furnitureIdParam = searchParams.get("furnitureId");
+    const furnitureId =
+      furnitureIdParam !== null && furnitureIdParam !== "" ? parseInt(furnitureIdParam, 10) : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -65,6 +68,7 @@ export async function GET(request: NextRequest) {
       p_destination_type: locationType,
       p_place_id: placeId != null && !Number.isNaN(placeId) ? placeId : null,
       filter_tenant_id: tenantId,
+      p_furniture_id: furnitureId != null && !Number.isNaN(furnitureId) ? furnitureId : null,
     });
 
     if (fetchError) {

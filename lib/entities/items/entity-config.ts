@@ -15,11 +15,12 @@ import type {
 
 export interface ItemsFilters extends Filters {
   showDeleted: boolean;
-  locationType: "all" | "room" | "place" | "container" | null;
+  locationType: "all" | "room" | "place" | "container" | "furniture" | null;
   hasPhoto: boolean | null;
   roomId: number | null;
   placeId: number | null;
   containerId: number | null;
+  furnitureId: number | null;
 }
 
 export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
@@ -29,6 +30,7 @@ export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
   roomId: null,
   placeId: null,
   containerId: null,
+  furnitureId: null,
 };
 
 const ITEMS_PAGE_SIZE = 20;
@@ -45,6 +47,7 @@ async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
     roomId: filters.roomId ?? undefined,
     placeId: filters.placeId ?? undefined,
     containerId: filters.containerId ?? undefined,
+    furnitureId: filters.furnitureId ?? undefined,
     hasPhoto: filters.hasPhoto,
     sortBy,
     sortDirection,
@@ -60,7 +63,7 @@ const ITEMS_MOVE_LABELS = {
   moveSuccess: (destinationName: string) => `Вещь успешно перемещена в ${destinationName}`,
   moveError: "Произошла ошибка при перемещении вещи",
 };
-const ITEMS_DEST_TYPES = ["room", "place", "container"] as const;
+const ITEMS_DEST_TYPES = ["room", "place", "container", "furniture"] as const;
 
 export const itemsEntityConfig: EntityConfig = {
   kind: "item" as const,
@@ -91,6 +94,7 @@ export const itemsEntityConfig: EntityConfig = {
       { type: "locationType", key: "locationType" },
       { type: "yesNoAll", key: "hasPhoto", label: "Есть фото" },
       { type: "room", key: "roomId" },
+      { type: "furniture", key: "furnitureId" },
     ] satisfies FilterFieldConfig[],
     initial: DEFAULT_ITEMS_FILTERS,
   },
@@ -103,7 +107,7 @@ export const itemsEntityConfig: EntityConfig = {
   ],
   fetch: fetchItems,
   pagination: { pageSize: ITEMS_PAGE_SIZE },
-  move: { enabled: true, destinationTypes: ["room", "place", "container"] },
+  move: { enabled: true, destinationTypes: ["room", "place", "container", "furniture"] },
   actions: {
     whenActive: [
       { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },

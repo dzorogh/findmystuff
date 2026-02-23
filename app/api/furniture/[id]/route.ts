@@ -3,6 +3,8 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
 import { getActiveTenantId } from "@/lib/tenants/server";
 import { getPlacesWithRoomRpc } from "@/lib/furniture/api";
+import { getItemsWithRoomRpc } from "@/lib/entities/api";
+import { getContainersWithLocationRpc } from "@/lib/containers/api";
 import type { Furniture } from "@/types/entity";
 
 export async function GET(
@@ -100,8 +102,52 @@ export async function GET(
       entity_type_id: p.entity_type_id ?? null,
     }));
 
+    const [{ data: itemsData }, { data: containersData }] = await Promise.all([
+      getItemsWithRoomRpc(supabase, {
+        search_query: null,
+        show_deleted: false,
+        page_limit: 100,
+        page_offset: 0,
+        location_type: "furniture",
+        room_id: null,
+        place_id: null,
+        container_id: null,
+        furniture_id: furnitureId,
+        has_photo: null,
+        sort_by: "created_at",
+        sort_direction: "desc",
+        filter_tenant_id: tenantId,
+      }),
+      getContainersWithLocationRpc(supabase, {
+        search_query: null,
+        show_deleted: false,
+        page_limit: 100,
+        page_offset: 0,
+        sort_by: "created_at",
+        sort_direction: "desc",
+        p_entity_type_id: null,
+        p_has_items: null,
+        p_destination_type: "furniture",
+        filter_tenant_id: tenantId,
+        p_furniture_id: furnitureId,
+      }),
+    ]);
+
+    const items = (itemsData ?? []).map((item: { id: number; name: string | null; photo_url: string | null; created_at: string }) => ({
+      id: item.id,
+      name: item.name,
+      photo_url: item.photo_url,
+      created_at: item.created_at,
+    }));
+    const containers = (containersData ?? []).map((c: { id: number; name: string | null; photo_url: string | null; created_at: string }) => ({
+      id: c.id,
+      name: c.name,
+      photo_url: c.photo_url,
+      created_at: c.created_at,
+    }));
+
     return NextResponse.json({
-      data: { furniture, places },
+      data: { furniture, places, items, containers },
     });
   } catch (error) {
     console.error("Ошибка загрузки данных мебели:", error);

@@ -7,7 +7,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
-import LocationCombobox from "@/components/fields/location-combobox";
+import LocationCombobox, { type DestinationType as LocationDestinationType } from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
@@ -22,14 +22,14 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type DestinationType = "room" | "place" | "container";
-
 interface AddContainerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  initialDestinationType?: DestinationType | null;
+  initialDestinationType?: LocationDestinationType | null;
   initialDestinationId?: number | null;
+  /** При открытии формы со страницы мебели — предзаполнить мебель как местоположение. */
+  initialFurnitureId?: number | null;
 }
 
 const AddContainerForm = ({
@@ -38,20 +38,23 @@ const AddContainerForm = ({
   onSuccess,
   initialDestinationType,
   initialDestinationId,
+  initialFurnitureId,
 }: AddContainerFormProps) => {
   const { isLoading } = useUser();
   const { isLoading: isLoadingTypes } = useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState<string>("");
-  const [destinationType, setDestinationType] = useState<"place" | "container" | "room" | null>(null);
+  const [destinationType, setDestinationType] = useState<LocationDestinationType | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
 
   useEffect(() => {
     if (open) {
-      setDestinationType(initialDestinationType ?? null);
-      setSelectedDestinationId(initialDestinationId?.toString() ?? "");
+      const destType = initialDestinationType ?? (initialFurnitureId != null ? "furniture" : null);
+      const destId = initialDestinationId ?? initialFurnitureId ?? null;
+      setDestinationType(destType);
+      setSelectedDestinationId(destId?.toString() ?? "");
     }
-  }, [open, initialDestinationType, initialDestinationId]);
+  }, [open, initialDestinationType, initialDestinationId, initialFurnitureId]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

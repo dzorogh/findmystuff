@@ -27,12 +27,14 @@ export function getContainersWithLocationRpc(
     p_destination_type?: string | null;
     p_place_id?: number | null;
     filter_tenant_id?: number | null;
+    p_furniture_id?: number | null;
   }
 ) {
   const { p_place_id: _p_place_id, ...rpcParams } = params;
   return supabase.rpc("get_containers_with_location", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
+    p_furniture_id: params.p_furniture_id ?? null,
   });
 }
 
@@ -46,6 +48,7 @@ class ContainersApiClient extends HttpClient {
     hasItems?: boolean | null;
     locationType?: string | null;
     placeId?: number | null;
+    furnitureId?: number | null;
     tenantId?: number | null;
   }) {
     const searchParams = new URLSearchParams();
@@ -57,6 +60,7 @@ class ContainersApiClient extends HttpClient {
     if (params?.locationType != null && params.locationType !== "all")
       searchParams.set("locationType", params.locationType);
     if (params?.placeId != null) searchParams.set("placeId", String(params.placeId));
+    if (params?.furnitureId != null) searchParams.set("furnitureId", String(params.furnitureId));
     const queryString = searchParams.toString();
     return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`, {
       tenantId: params?.tenantId,

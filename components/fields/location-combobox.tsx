@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { LayoutGrid, Container as ContainerIcon, DoorOpen } from "lucide-react";
+import { LayoutGrid, Container as ContainerIcon, DoorOpen, Sofa } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -16,9 +16,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
-import type { Container, Place, Room } from "@/types/entity";
+import { useFurniture } from "@/lib/furniture/hooks/use-furniture";
+import type { Container, Place, Room, Furniture } from "@/types/entity";
 
-export type DestinationType = "room" | "place" | "container";
+export type DestinationType = "room" | "place" | "container" | "furniture";
 
 interface LocationComboboxProps {
   destinationType: DestinationType | null;
@@ -48,18 +49,21 @@ const LocationCombobox = ({
   const { rooms, isLoading: isLoadingRooms } = useRooms();
   const { places, isLoading: isLoadingPlaces } = usePlaces();
   const { containers, isLoading: isLoadingContainers } = useContainers();
+  const { furniture, isLoading: isLoadingFurniture } = useFurniture();
 
   const loadingByType: Record<DestinationType, boolean> = {
     container: isLoadingContainers,
     place: isLoadingPlaces,
     room: isLoadingRooms,
+    furniture: isLoadingFurniture,
   };
   const isLoading = destinationType ? loadingByType[destinationType] : false;
 
-  const dataByType: Record<DestinationType, (Room | Place | Container)[]> = {
+  const dataByType: Record<DestinationType, (Room | Place | Container | Furniture)[]> = {
     container: containers,
     place: places,
     room: rooms,
+    furniture,
   };
   const rawDestinations = destinationType ? dataByType[destinationType] : [];
   const destinations =
@@ -71,6 +75,7 @@ const LocationCombobox = ({
     container: "контейнер",
     place: "местоположение",
     room: "помещение",
+    furniture: "мебель",
   };
   const destinationLabel = destinationType ? labelByType[destinationType] : "";
 
@@ -78,6 +83,7 @@ const LocationCombobox = ({
     { type: "room" as const, label: "Помещение", icon: DoorOpen },
     { type: "place" as const, label: "Место", icon: LayoutGrid },
     { type: "container" as const, label: "Контейнер", icon: ContainerIcon },
+    { type: "furniture" as const, label: "Мебель", icon: Sofa },
   ];
   const buttonOrder = allowedTypes?.length
     ? buttonOrderOptions.filter((b) => allowedTypes.includes(b.type))
@@ -88,6 +94,7 @@ const LocationCombobox = ({
       container: "Контейнер",
       place: "Место",
       room: "Помещение",
+      furniture: "Мебель",
     };
     const fallback = destinationType ? fallbackByType[destinationType] : "Объект";
     return destinations.map((dest) => {
@@ -95,7 +102,9 @@ const LocationCombobox = ({
       const typeName =
         destinationType === "container" || destinationType === "place"
           ? (dest as Container | Place).entity_type?.name
-          : null;
+          : destinationType === "furniture"
+            ? (dest as Furniture).furniture_type?.name
+            : null;
       const label = typeName ? `${displayName} (${typeName})` : displayName;
       return { value: dest.id.toString(), label };
     });
@@ -159,7 +168,9 @@ const LocationCombobox = ({
                   ? "Контейнеры не найдены"
                   : destinationType === "place"
                     ? "Местоположения не найдены"
-                    : "Помещения не найдены"}
+                    : destinationType === "furniture"
+                      ? "Мебель не найдена"
+                      : "Помещения не найдены"}
               </ComboboxEmpty>
               <ComboboxList>
                 {(item: { value: string; label: string }) => (
@@ -170,13 +181,15 @@ const LocationCombobox = ({
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
-          {!isLoading && destinations.length === 0 && (
+            {!isLoading && destinations.length === 0 && (
             <p className="text-xs text-muted-foreground">
               {destinationType === "container"
                 ? "Контейнеры не найдены"
                 : destinationType === "place"
                   ? "Местоположения не найдены"
-                  : "Помещения не найдены"}
+                  : destinationType === "furniture"
+                    ? "Мебель не найдена"
+                    : "Помещения не найдены"}
             </p>
           )}
         </Field>

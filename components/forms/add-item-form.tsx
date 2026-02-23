@@ -5,7 +5,7 @@ import { createItem } from "@/lib/entities/api";
 import { Input } from "@/components/ui/input";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
-import LocationCombobox from "@/components/fields/location-combobox";
+import LocationCombobox, { type DestinationType as LocationDestinationType } from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { ErrorMessage } from "@/components/common/error-message";
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,16 @@ import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 import { PriceInput, type PriceValue } from "@/components/fields/price-input";
 import { DatePicker } from "@/components/fields/date-picker";
 
-type DestinationType = "room" | "place" | "container";
-
 interface AddItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   initialName?: string | null;
   initialPhotoUrl?: string | null;
-  initialDestinationType?: DestinationType | null;
+  initialDestinationType?: LocationDestinationType | null;
   initialDestinationId?: number | null;
+  /** При открытии формы со страницы мебели — предзаполнить мебель как местоположение. */
+  initialFurnitureId?: number | null;
 }
 
 const AddItemForm = ({
@@ -42,10 +42,11 @@ const AddItemForm = ({
   initialPhotoUrl,
   initialDestinationType,
   initialDestinationId,
+  initialFurnitureId,
 }: AddItemFormProps) => {
   const [name, setName] = useState("");
   const [itemTypeId, setItemTypeId] = useState<number | null>(null);
-  const [destinationType, setDestinationType] = useState<"container" | "place" | "room" | null>(null);
+  const [destinationType, setDestinationType] = useState<LocationDestinationType | null>(null);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [price, setPrice] = useState<PriceValue | null>(null);
@@ -60,15 +61,17 @@ const AddItemForm = ({
       setName(initialName?.trim() ?? "");
       setPhotoUrl(initialPhotoUrl ?? null);
       setItemTypeId(null);
-      setDestinationType(initialDestinationType ?? null);
-      setSelectedDestinationId(initialDestinationId?.toString() ?? "");
+      const destType = initialDestinationType ?? (initialFurnitureId != null ? "furniture" : null);
+      const destId = initialDestinationId ?? initialFurnitureId ?? null;
+      setDestinationType(destType);
+      setSelectedDestinationId(destId?.toString() ?? "");
       setPrice(null);
       setCurrentValue(null);
       setQuantity(1);
       setPurchaseDate("");
       setError(null);
     }
-  }, [open, initialName, initialPhotoUrl, initialDestinationType, initialDestinationId]);
+  }, [open, initialName, initialPhotoUrl, initialDestinationType, initialDestinationId, initialFurnitureId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

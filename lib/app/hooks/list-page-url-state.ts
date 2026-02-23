@@ -31,7 +31,7 @@ export const listPageUrlParsers = {
   placeId: parseAsInteger,
   containerId: parseAsInteger,
   entityTypeId: parseAsInteger,
-  locationType: parseAsStringLiteral(["all", "room", "place", "container"] as const),
+  locationType: parseAsStringLiteral(["all", "room", "place", "container", "furniture"] as const),
   hasPhoto: yesNoAllParser,
   hasItems: yesNoAllParser,
   hasContainers: yesNoAllParser,
@@ -78,7 +78,7 @@ type ListPageUrlState = {
   placeId: number | null;
   containerId: number | null;
   entityTypeId: number | null;
-  locationType: "all" | "room" | "place" | "container" | null;
+  locationType: "all" | "room" | "place" | "container" | "furniture" | null;
   hasPhoto: boolean | null;
   hasItems: boolean | null;
   hasContainers: boolean | null;

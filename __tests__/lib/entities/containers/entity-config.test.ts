@@ -38,6 +38,7 @@ describe("containers entity-config", () => {
       hasItems: null,
       locationType: null,
       placeId: null,
+      furnitureId: null,
     });
   });
 
@@ -52,6 +53,7 @@ describe("containers entity-config", () => {
       hasItems: null,
       locationType: null,
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -76,6 +78,7 @@ describe("containers entity-config", () => {
       hasItems: null,
       locationType: null,
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -100,6 +103,7 @@ describe("containers entity-config", () => {
       hasItems: true,
       locationType: null,
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -124,6 +128,7 @@ describe("containers entity-config", () => {
       hasItems: false,
       locationType: null,
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -148,6 +153,7 @@ describe("containers entity-config", () => {
       hasItems: null,
       locationType: "room",
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -169,6 +175,7 @@ describe("containers entity-config", () => {
       hasItems: null,
       locationType: "all",
       placeId: null,
+      furnitureId: null,
     };
 
     const result = await containersEntityConfig.fetch!({
@@ -176,5 +183,10 @@ describe("containers entity-config", () => {
     });
 
     expect(result.data).toHaveLength(2);
+  });
+
+  it("move включён с destinationTypes room, place, container, furniture", () => {
+    expect(containersEntityConfig.move?.enabled).toBe(true);
+    expect(containersEntityConfig.move?.destinationTypes).toEqual(["room", "place", "container", "furniture"]);
   });
 });

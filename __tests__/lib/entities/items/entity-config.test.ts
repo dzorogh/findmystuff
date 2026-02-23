@@ -20,6 +20,7 @@ describe("items entity-config", () => {
       roomId: null,
       placeId: null,
       containerId: null,
+      furnitureId: null,
     });
   });
 
@@ -80,6 +81,7 @@ describe("items entity-config", () => {
       roomId: null,
       placeId: null,
       containerId: null,
+      furnitureId: null,
     };
 
     const result = await itemsEntityConfig.fetch({
@@ -102,17 +104,18 @@ describe("items entity-config", () => {
     );
   });
 
-  it("fetch передаёт locationType, roomId, placeId, containerId, hasPhoto в getItems", async () => {
+  it("fetch передаёт locationType, roomId, placeId, containerId, furnitureId, hasPhoto в getItems", async () => {
     (getItems as jest.Mock).mockResolvedValue({ data: [], totalCount: 0 });
 
     await itemsEntityConfig.fetch({
       filterValues: {
         showDeleted: false,
-        locationType: "room",
+        locationType: "furniture",
         hasPhoto: true,
         roomId: 1,
         placeId: 2,
         containerId: 3,
+        furnitureId: 5,
       } as ItemsFilters,
       sortBy: "name",
       sortDirection: "asc",
@@ -120,11 +123,12 @@ describe("items entity-config", () => {
 
     expect(getItems).toHaveBeenCalledWith(
       expect.objectContaining({
-        locationType: "room",
+        locationType: "furniture",
         hasPhoto: true,
         roomId: 1,
         placeId: 2,
         containerId: 3,
+        furnitureId: 5,
       })
     );
   });
@@ -146,8 +150,8 @@ describe("items entity-config", () => {
     expect(itemsEntityConfig.pagination).toEqual({ pageSize: 20 });
   });
 
-  it("move включён с destinationTypes room, place, container", () => {
+  it("move включён с destinationTypes room, place, container, furniture", () => {
     expect(itemsEntityConfig.move?.enabled).toBe(true);
-    expect(itemsEntityConfig.move?.destinationTypes).toEqual(["room", "place", "container"]);
+    expect(itemsEntityConfig.move?.destinationTypes).toEqual(["room", "place", "container", "furniture"]);
   });
 });

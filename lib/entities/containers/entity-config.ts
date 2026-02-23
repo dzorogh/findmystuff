@@ -26,8 +26,9 @@ export interface ContainersFilters extends Filters {
   showDeleted: boolean;
   entityTypeId: number | null;
   hasItems: boolean | null;
-  locationType: "all" | "room" | "place" | "container" | null;
+  locationType: "all" | "room" | "place" | "container" | "furniture" | null;
   placeId: number | null;
+  furnitureId: number | null;
 }
 
 export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
@@ -36,6 +37,7 @@ export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
   hasItems: null,
   locationType: null,
   placeId: null,
+  furnitureId: null,
 };
 
 const CONTAINERS_PAGE_SIZE = 20;
@@ -52,6 +54,7 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
     hasItems: filters.hasItems ?? undefined,
     locationType: filters.locationType ?? undefined,
     placeId: filters.placeId ?? undefined,
+    furnitureId: filters.furnitureId ?? undefined,
     tenantId,
   });
   let list = Array.isArray(response?.data) ? response.data : [];
@@ -85,7 +88,7 @@ const CONTAINERS_MOVE_LABELS = {
     `Контейнер успешно перемещён в ${destinationName}`,
   moveError: "Произошла ошибка при перемещении контейнера",
 };
-const CONTAINERS_DEST_TYPES = ["room", "place", "container"] as const;
+const CONTAINERS_DEST_TYPES = ["room", "place", "container", "furniture"] as const;
 
 export const containersEntityConfig: EntityConfig = {
   kind: "container" as const,
@@ -116,6 +119,7 @@ export const containersEntityConfig: EntityConfig = {
       { type: "entityType", key: "entityTypeId", entityKind: "container" },
       { type: "yesNoAll", key: "hasItems", label: "Есть вещи внутри" },
       { type: "locationType", key: "locationType" },
+      { type: "furniture", key: "furnitureId" },
     ] satisfies FilterFieldConfig[],
     initial: DEFAULT_CONTAINERS_FILTERS,
   },
@@ -127,7 +131,7 @@ export const containersEntityConfig: EntityConfig = {
   ],
   fetch: fetchContainers,
   pagination: { pageSize: CONTAINERS_PAGE_SIZE },
-  move: { enabled: true, destinationTypes: ["room", "place", "container"] },
+  move: { enabled: true, destinationTypes: ["room", "place", "container", "furniture"] },
   actions: {
     whenActive: [
       { key: "edit", label: "Редактировать", icon: Pencil, getHref: (e) => `${BASE_PATH}/${e.id}` },

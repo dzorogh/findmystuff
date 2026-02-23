@@ -20,6 +20,8 @@ import { resolveActions } from "@/lib/entities/resolve-actions";
 import { furnitureEntityConfig } from "@/lib/entities/furniture/entity-config";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
 import AddPlaceForm from "@/components/forms/add-place-form";
+import AddItemForm from "@/components/forms/add-item-form";
+import AddContainerForm from "@/components/forms/add-container-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { PageHeader } from "@/components/layout/page-header";
@@ -45,9 +47,23 @@ export default function FurnitureDetailPage() {
     photo_url: string | null;
     created_at: string;
   }>>([]);
+  const [furnitureItems, setFurnitureItems] = useState<Array<{
+    id: number;
+    name: string | null;
+    photo_url: string | null;
+    created_at: string;
+  }>>([]);
+  const [furnitureContainers, setFurnitureContainers] = useState<Array<{
+    id: number;
+    name: string | null;
+    photo_url: string | null;
+    created_at: string;
+  }>>([]);
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addPlaceOpen, setAddPlaceOpen] = useState(false);
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addContainerOpen, setAddContainerOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [roomId, setRoomId] = useState("");
@@ -75,7 +91,7 @@ export default function FurnitureDetailPage() {
           return;
         }
 
-        const { furniture: furnitureData, places } = response.data;
+        const { furniture: furnitureData, places, items: itemsData, containers: containersData } = response.data;
 
         if (!furnitureData) {
           setError("Мебель не найдена");
@@ -105,6 +121,22 @@ export default function FurnitureDetailPage() {
             name: p.name,
             photo_url: null,
             created_at: "",
+          }))
+        );
+        setFurnitureItems(
+          (itemsData || []).map((i) => ({
+            id: i.id,
+            name: i.name,
+            photo_url: i.photo_url ?? null,
+            created_at: i.created_at ?? "",
+          }))
+        );
+        setFurnitureContainers(
+          (containersData || []).map((c) => ({
+            id: c.id,
+            name: c.name,
+            photo_url: c.photo_url ?? null,
+            created_at: c.created_at ?? "",
           }))
         );
 
@@ -234,7 +266,11 @@ export default function FurnitureDetailPage() {
       />
       {furniture && (
         <EntityRelatedLinks
-          links={[{ href: `/places?furnitureId=${furniture.id}`, label: "Места" }]}
+          links={[
+            { href: `/places?furnitureId=${furniture.id}`, label: "Места" },
+            { href: `/items?locationType=furniture&furnitureId=${furniture.id}`, label: "Вещи" },
+            { href: `/containers?locationType=furniture&furnitureId=${furniture.id}`, label: "Контейнеры" },
+          ]}
         />
       )}
       {isLoading || isLoadingRooms ? (
@@ -341,7 +377,7 @@ export default function FurnitureDetailPage() {
             />
           </div>
 
-          <div>
+          <div className="flex flex-col gap-6">
             <EntityContentBlock
               title="Места в мебели"
               description="Места размещения, которые находятся в этой мебели"
@@ -353,6 +389,28 @@ export default function FurnitureDetailPage() {
                 onClick: () => setAddPlaceOpen(true),
               }}
             />
+            <EntityContentBlock
+              title="Вещи в мебели"
+              description="Вещи, привязанные напрямую к этой мебели"
+              items={furnitureItems}
+              entityType="items"
+              emptyMessage="В мебели пока нет вещей"
+              addButton={{
+                label: "Добавить вещь",
+                onClick: () => setAddItemOpen(true),
+              }}
+            />
+            <EntityContentBlock
+              title="Контейнеры в мебели"
+              description="Контейнеры, привязанные напрямую к этой мебели"
+              items={furnitureContainers}
+              entityType="containers"
+              emptyMessage="В мебели пока нет контейнеров"
+              addButton={{
+                label: "Добавить контейнер",
+                onClick: () => setAddContainerOpen(true),
+              }}
+            />
           </div>
         </div>
       ) : null}
@@ -360,6 +418,18 @@ export default function FurnitureDetailPage() {
       <AddPlaceForm
         open={addPlaceOpen}
         onOpenChange={setAddPlaceOpen}
+        onSuccess={() => loadFurnitureData({ silent: true })}
+        initialFurnitureId={furniture?.id ?? undefined}
+      />
+      <AddItemForm
+        open={addItemOpen}
+        onOpenChange={setAddItemOpen}
+        onSuccess={() => loadFurnitureData({ silent: true })}
+        initialFurnitureId={furniture?.id ?? undefined}
+      />
+      <AddContainerForm
+        open={addContainerOpen}
+        onOpenChange={setAddContainerOpen}
         onSuccess={() => loadFurnitureData({ silent: true })}
         initialFurnitureId={furniture?.id ?? undefined}
       />

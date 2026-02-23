@@ -75,6 +75,8 @@ class FurnitureApiClient extends HttpClient {
     return this.request<{
       furniture: Furniture;
       places: Array<{ id: number; name: string | null; entity_type_id: number | null }>;
+      items: Array<{ id: number; name: string | null; photo_url: string | null; created_at: string }>;
+      containers: Array<{ id: number; name: string | null; photo_url: string | null; created_at: string }>;
     }>(`/furniture/${id}`, { tenantId });
   }
 
