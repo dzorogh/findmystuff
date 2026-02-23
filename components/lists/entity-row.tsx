@@ -67,25 +67,19 @@ function isPlaceEntity(entity: ListEntity): entity is Place {
 
 function renderCountLinks(
   entity: ListEntity,
-  counts: CountsConfig | undefined,
-  compact: boolean,
-  extraContent?: ReactNode | null
+  counts: CountsConfig | undefined
 ): ReactNode {
-  if (!counts?.links?.length && !extraContent) return null;
-  const links = counts?.links?.filter((spec) => spec.field in entity) ?? [];
-  if (links.length === 0 && !extraContent) return null;
-  const iconClass = compact ? "h-3 w-3" : "h-4 w-4 flex-shrink-0 text-muted-foreground";
-  const wrapperClass = compact
-    ? "mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:hidden"
-    : "flex flex-wrap gap-x-3 gap-y-1 text-sm";
+  if (!counts?.links?.length) return null;
+  const links = counts.links.filter((spec) => spec.field in entity);
+  if (links.length === 0) return null;
 
   return (
-    <div className={wrapperClass}>
+    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
       {links.map((spec) => {
         const Icon = spec.icon;
         const rawCount = (entity as unknown as Record<string, unknown>)[spec.field];
         const count = typeof rawCount === "number" ? rawCount : 0;
-        const href = `${spec.path}?${counts!.filterParam}=${entity.id}`;
+        const href = `${spec.path}?${counts.filterParam}=${entity.id}`;
         return (
           <Link
             key={spec.field}
@@ -93,22 +87,13 @@ function renderCountLinks(
             className="flex items-center gap-1 transition-colors hover:text-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <Icon className={iconClass} />
+            <Icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <span>{count} {spec.label}</span>
           </Link>
         );
       })}
-      {extraContent != null ? extraContent : null}
     </div>
   );
-}
-
-function getEntitySubline(entity: ListEntity): string | null {
-  if ("item_type" in entity) return entity.item_type?.name ?? null;
-  if ("room_type" in entity) return entity.room_type?.name ?? null;
-  if ("building_type" in entity) return entity.building_type?.name ?? null;
-  if ("entity_type" in entity) return entity.entity_type?.name ?? null;
-  return null;
 }
 
 function getLocationInfo(location: Item["last_location"]) {
@@ -142,21 +127,10 @@ const LOCATION_META: Record<
 };
 
 function renderLocationLabel(
-  locationInfo: { destinationType: DestinationType; label: string },
-  compact: boolean
+  locationInfo: { destinationType: DestinationType; label: string }
 ) {
   const meta = LOCATION_META[locationInfo.destinationType];
   const Icon = meta.icon;
-
-  if (compact) {
-    return (
-      <div className="flex items-center gap-1">
-        <Icon className="h-3 w-3 shrink-0" />
-        <span className="truncate">{locationInfo.label}</span>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-2 text-sm">
       <Icon className={cn("h-4 w-4 flex-shrink-0", meta.textClass)} />
@@ -181,7 +155,6 @@ function renderNameCell(
 ): ReactNode {
   const Icon = icon ?? Package;
   const displayName = getName?.(entity);
-  const subline = getEntitySubline(entity);
 
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -207,7 +180,6 @@ function renderNameCell(
         >
           {displayName}
         </Link>
-        {subline && <p className="mt-0.5 text-xs text-muted-foreground">{subline}</p>}
       </div>
     </div>
   );
@@ -227,25 +199,7 @@ function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): Reac
   }
 
   if (isPlaceEntity(entity)) {
-    const furnitureId = entity.furniture_id;
-    const furnitureName = entity.furniture_name;
     const room = entity.room;
-    if (furnitureId && furnitureName) {
-      return (
-        <div className="flex flex-col gap-0.5">
-          <Link
-            href={`/furniture/${furnitureId}`}
-            className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
-          >
-            <Sofa className="h-4 w-4 flex-shrink-0 text-primary" />
-            <span>{furnitureName}</span>
-          </Link>
-          {room?.room_name && (
-            <span className="text-xs text-muted-foreground ml-6 truncate">{room.room_name}</span>
-          )}
-        </div>
-      );
-    }
     if (room?.room_name && room.room_id) {
       return (
         <Link
@@ -282,13 +236,13 @@ function renderMovedAtCell(entity: ListEntity): ReactNode {
 }
 
 function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined): ReactNode {
-  return renderCountLinks(entity, counts, false);
+  return renderCountLinks(entity, counts);
 }
 
 function renderLocationCell(entity: ListEntity): ReactNode {
   const locationInfo = getLocationInfo(entity.last_location);
   if (!locationInfo) return null;
-  return renderLocationLabel(locationInfo, false);
+  return renderLocationLabel(locationInfo);
 }
 
 function getEditHref(actions: Action[]): string | undefined {

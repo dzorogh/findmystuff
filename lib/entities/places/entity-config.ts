@@ -99,7 +99,7 @@ export const placesEntityConfig: EntityConfig = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
-    { key: "room", label: "Мебель", hideOnMobile: true },
+    { key: "room", label: "Помещение", hideOnMobile: true },
     { key: "counts", label: "Содержимое", hideOnMobile: true },
     { key: "actions", label: "Действия" },
   ],
