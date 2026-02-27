@@ -3,6 +3,7 @@ import {
   DEFAULT_ITEMS_FILTERS,
   type ItemsFilters,
 } from "@/lib/entities/items/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getItems } from "@/lib/entities/api";
 
 jest.mock("@/lib/entities/api");
@@ -56,16 +57,14 @@ describe("items entity-config", () => {
     expect(keys).toContain("actions");
   });
 
-  it("getName возвращает name если не пустой", () => {
-    const getName = itemsEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Книга" } as { id: number; name: string | null })).toBe("Книга");
+  it("отображаемое имя по умолчанию (getEntityDisplayName): name если не пустой", () => {
+    expect(getEntityDisplayName("item", 1, "Книга")).toBe("Книга");
   });
 
-  it("getName возвращает 'Вещь #id' если name пустой", () => {
-    const getName = itemsEntityConfig.getName!;
-    expect(getName({ id: 5, name: null } as { id: number; name: string | null })).toBe("Вещь #5");
-    expect(getName({ id: 5, name: "" } as { id: number; name: string | null })).toBe("Вещь #5");
-    expect(getName({ id: 5, name: "   " } as { id: number; name: string | null })).toBe("Вещь #5");
+  it("отображаемое имя по умолчанию: 'Вещь #id' если name пустой", () => {
+    expect(getEntityDisplayName("item", 5, null)).toBe("Вещь #5");
+    expect(getEntityDisplayName("item", 5, "")).toBe("Вещь #5");
+    expect(getEntityDisplayName("item", 5, "   ")).toBe("Вещь #5");
   });
 
   it("fetch вызывает getItems и возвращает data и totalCount", async () => {

@@ -1,9 +1,9 @@
 import { Copy, DoorOpen, Home, Pencil, Printer, RotateCcw, Trash2 } from "lucide-react";
 import AddBuildingForm from "@/components/forms/add-building-form";
 import { getBuildings } from "@/lib/buildings/api";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
-  EntityDisplay,
   FetchListParams,
   FetchListResult,
   Filters,
@@ -27,9 +27,7 @@ async function fetchBuildings(params: FetchListParams): Promise<FetchListResult>
     sortDirection,
     tenantId,
   });
-  const list = Array.isArray(response?.data) ? response.data : [];
-  const totalCount = response?.totalCount ?? list.length;
-  return { data: list, totalCount };
+  return createFetchListResult(response);
 }
 
 const BASE_PATH = "/buildings";
@@ -54,8 +52,6 @@ export const buildingsEntityConfig: EntityConfig = {
     title: "Добавить здание",
     form: AddBuildingForm,
   },
-  getName: (entity: EntityDisplay) =>
-    entity.name != null && entity.name.trim() !== "" ? entity.name : `Здание #${entity.id}`,
   icon: Home,
   filters: {
     fields: [{ type: "showDeleted" as const, label: "Показывать удалённые здания" }],

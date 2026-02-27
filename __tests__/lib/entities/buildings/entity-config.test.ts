@@ -3,6 +3,7 @@ import {
   DEFAULT_BUILDINGS_FILTERS,
   type BuildingsFilters,
 } from "@/lib/entities/buildings/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getBuildings } from "@/lib/buildings/api";
 
 jest.mock("@/lib/buildings/api");
@@ -45,18 +46,14 @@ describe("buildings entity-config", () => {
     expect(buildingsEntityConfig.labels.singular).toBe("Здание");
   });
 
-  it("getName возвращает name если не пустой", () => {
-    const getName = buildingsEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Здание A" } as { id: number; name: string | null })).toBe(
-      "Здание A"
-    );
+  it("отображаемое имя по умолчанию (getEntityDisplayName): name если не пустой", () => {
+    expect(getEntityDisplayName("building", 1, "Здание A")).toBe("Здание A");
   });
 
-  it("getName возвращает 'Здание #id' если name пустой", () => {
-    const getName = buildingsEntityConfig.getName!;
-    expect(getName({ id: 5, name: null } as { id: number; name: string | null })).toBe("Здание #5");
-    expect(getName({ id: 5, name: "" } as { id: number; name: string | null })).toBe("Здание #5");
-    expect(getName({ id: 5, name: "   " } as { id: number; name: string | null })).toBe("Здание #5");
+  it("отображаемое имя по умолчанию: 'Здание #id' если name пустой", () => {
+    expect(getEntityDisplayName("building", 5, null)).toBe("Здание #5");
+    expect(getEntityDisplayName("building", 5, "")).toBe("Здание #5");
+    expect(getEntityDisplayName("building", 5, "   ")).toBe("Здание #5");
   });
 
   it("fetch вызывает getBuildings и возвращает data и totalCount", async () => {

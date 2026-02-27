@@ -2,6 +2,7 @@ import {
   listPageUrlParsers,
   urlStateToFilters,
   filtersToUrlState,
+  createListPageParsers,
 } from "@/lib/app/hooks/list-page-url-state";
 
 describe("list-page-url-state", () => {
@@ -63,6 +64,38 @@ describe("list-page-url-state", () => {
       expect(listPageUrlParsers).toHaveProperty("showDeleted");
       expect(listPageUrlParsers).toHaveProperty("roomId");
       expect(listPageUrlParsers).toHaveProperty("furnitureId");
+    });
+  });
+
+  describe("createListPageParsers", () => {
+    it("возвращает базовые парсеры, если defaultSort не задан", () => {
+      const parsers = createListPageParsers();
+      expect(parsers).toBe(listPageUrlParsers);
+    });
+
+    it("переопределяет сортировку по умолчанию при переданном defaultSort", () => {
+      const parsers = createListPageParsers({
+        sortBy: "name",
+        sortDirection: "asc",
+      });
+
+      expect(parsers).not.toBe(listPageUrlParsers);
+      expect(Object.keys(parsers)).toEqual(Object.keys(listPageUrlParsers));
+    });
+  });
+
+  describe("yesNoAll parser (hasPhoto)", () => {
+    it("корректно парсит и сериализует значения", () => {
+      const parser: any = listPageUrlParsers.hasPhoto;
+
+      expect(parser.parse("true")).toBe(true);
+      expect(parser.parse("false")).toBe(false);
+      expect(parser.parse(undefined)).toBe(null);
+      expect(parser.parse("other")).toBe(null);
+
+      expect(parser.serialize(true)).toBe("true");
+      expect(parser.serialize(false)).toBe("false");
+      expect(parser.serialize(null)).toBe("");
     });
   });
 });

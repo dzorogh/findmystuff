@@ -14,6 +14,7 @@ import MovePlaceForm from "@/components/forms/move-place-form";
 import { getPlaces } from "@/lib/places/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { ComponentType } from "react";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -51,8 +52,7 @@ async function fetchPlaces(params: FetchListParams): Promise<FetchListResult> {
     furnitureId: filters.furnitureId ?? undefined,
     tenantId,
   });
-  const list = Array.isArray(response?.data) ? response.data : [];
-  return { data: list };
+  return createFetchListResult(response);
 }
 
 const BASE_PATH = "/places";
@@ -82,10 +82,6 @@ export const placesEntityConfig: EntityConfig = {
     title: "Добавить место",
     form: AddPlaceForm,
   },
-  getName: (entity: EntityDisplay) =>
-    entity.name != null && entity.name.trim() !== ""
-      ? entity.name
-      : `Место #${entity.id}`,
   icon: LayoutGrid,
   filters: {
     fields: [

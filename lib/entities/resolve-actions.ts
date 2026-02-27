@@ -1,5 +1,15 @@
+import type { ComponentType } from "react";
 import type { ActionsConfig, EntityDisplay } from "@/lib/app/types/entity-config";
 import type { Action, ActionConfig, ActionsContext } from "@/lib/app/types/entity-action";
+
+type ActionConfigVariant = "href" | "onClick" | "form";
+
+function getActionVariant(config: ActionConfig): ActionConfigVariant {
+  if ("getHref" in config) return "href";
+  if ("getOnClick" in config) return "onClick";
+  if ("Form" in config && "getFormProps" in config) return "form";
+  throw new Error(`Invalid ActionConfig: missing getHref, getOnClick, or Form+getFormProps`);
+}
 
 function resolveOne(
   config: ActionConfig,
@@ -13,21 +23,19 @@ function resolveOne(
     variant: config.variant ?? "ghost",
   };
 
-  if ("getHref" in config) {
-    return { ...base, href: config.getHref(entity) };
+  const variant = getActionVariant(config);
+  switch (variant) {
+    case "href":
+      return { ...base, href: (config as ActionConfig & { getHref: (e: EntityDisplay) => string }).getHref(entity) };
+    case "onClick":
+      return { ...base, onClick: (config as ActionConfig & { getOnClick: (e: EntityDisplay, c: ActionsContext) => () => void }).getOnClick(entity, ctx) };
+    case "form":
+      return {
+        ...base,
+        Form: (config as ActionConfig & { Form: ComponentType<Record<string, unknown>>; getFormProps: (e: EntityDisplay, c: ActionsContext) => Record<string, unknown> }).Form,
+        formProps: (config as ActionConfig & { getFormProps: (e: EntityDisplay, c: ActionsContext) => Record<string, unknown> }).getFormProps(entity, ctx),
+      };
   }
-  if ("getOnClick" in config) {
-    return { ...base, onClick: config.getOnClick(entity, ctx) };
-  }
-  if ("Form" in config && "getFormProps" in config) {
-    return {
-      ...base,
-      Form: config.Form,
-      formProps: config.getFormProps(entity, ctx),
-    };
-  }
-
-  throw new Error(`Invalid ActionConfig: missing getHref, getOnClick, or Form+getFormProps`);
 }
 
 export function resolveActions(

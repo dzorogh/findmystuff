@@ -38,6 +38,7 @@ export class HttpClient {
 
       if (!response.ok) {
         return {
+          ...jsonData,
           error: jsonData.error || `HTTP error! status: ${response.status}`,
         } as ApiResponse<T>;
       }

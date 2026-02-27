@@ -8,6 +8,9 @@ const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useParams: () => ({ id: "1" }),
 }));
+jest.mock("@/contexts/tenant-context", () => ({
+  useTenant: () => ({ activeTenantId: 1 }),
+}));
 jest.mock("@/lib/users/context", () => ({
   useUser: () => ({ user: { id: "u1" }, isLoading: false }),
 }));

@@ -3,6 +3,7 @@ import {
   DEFAULT_FURNITURE_FILTERS,
   type FurnitureFilters,
 } from "@/lib/entities/furniture/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getFurniture } from "@/lib/furniture/api";
 
 jest.mock("@/lib/furniture/api");
@@ -65,14 +66,12 @@ describe("furniture entity-config", () => {
     expect(furnitureEntityConfig.labels.singular).toBe("Мебель");
   });
 
-  it("getName возвращает name если не пустой", () => {
-    const getName = furnitureEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Стол" } as { id: number; name: string | null })).toBe("Стол");
+  it("отображаемое имя по умолчанию (getEntityDisplayName): name если не пустой", () => {
+    expect(getEntityDisplayName("furniture", 1, "Стол")).toBe("Стол");
   });
 
-  it("getName возвращает 'Мебель #id' если name пустой", () => {
-    const getName = furnitureEntityConfig.getName!;
-    expect(getName({ id: 3, name: null } as { id: number; name: string | null })).toBe("Мебель #3");
+  it("отображаемое имя по умолчанию: 'Мебель #id' если name пустой", () => {
+    expect(getEntityDisplayName("furniture", 3, null)).toBe("Мебель #3");
   });
 
   it("fetch вызывает getFurniture с roomId", async () => {

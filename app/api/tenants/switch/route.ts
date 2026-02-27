@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerUser } from "@/lib/users/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { setTenantCookieInResponse } from "@/lib/tenants/server";
+import { requireAuth } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { user } = auth;
 
     const body = await request.json();
-    const tenantId = body?.tenantId;
-    if (tenantId == null || typeof tenantId !== "number") {
+    const raw = body?.tenantId;
+    const tenantIdNum =
+      typeof raw === "number"
+        ? raw
+        : typeof raw === "string"
+          ? parseInt(raw, 10)
+          : NaN;
+    if (!Number.isInteger(tenantIdNum) || tenantIdNum <= 0) {
       return NextResponse.json(
         { error: "tenantId required" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
+    const tenantId = tenantIdNum;
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -30,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (error || !data) {
       return NextResponse.json(
         { error: "Тенант не найден или нет доступа" },
-        { status: 403 }
+        { status: HTTP_STATUS.FORBIDDEN }
       );
     }
 
@@ -40,11 +48,10 @@ export async function POST(request: NextRequest) {
       setTenantCookieInResponse(tenantId)
     );
     return res;
-  } catch (err) {
-    console.error("Error switching tenant:", err);
-    return NextResponse.json(
-      { error: "Ошибка переключения тенанта" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiErrorResponse(error, {
+      context: "Ошибка переключения тенанта:",
+      defaultMessage: "Произошла ошибка при переключении тенанта",
+    });
   }
 }

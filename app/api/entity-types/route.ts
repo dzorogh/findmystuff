@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export async function GET(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -45,26 +42,18 @@ export async function GET(request: NextRequest) {
           error:
             "Сервер данных не ответил вовремя. Проверьте подключение или попробуйте позже.",
         },
-        { status: 503 }
+        { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
       );
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Произошла ошибка" },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, { defaultMessage: "Произошла ошибка" });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const { entity_category, name } = body;
@@ -95,23 +84,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Произошла ошибка" },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, { defaultMessage: "Произошла ошибка" });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const { id, name } = body;
@@ -137,23 +118,15 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Произошла ошибка" },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, { defaultMessage: "Произошла ошибка" });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -174,9 +147,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Произошла ошибка" },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, { defaultMessage: "Произошла ошибка" });
   }
 }

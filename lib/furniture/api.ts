@@ -7,24 +7,6 @@ import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
 import type { Furniture, CreateFurnitureResponse } from "@/types/entity";
 
-/** RPC get_places_with_room (вызывать из app/api). */
-export function getPlacesWithRoomRpc(
-  supabase: SupabaseClient,
-  params: {
-    search_query: string | null;
-    show_deleted: boolean;
-    page_limit: number;
-    page_offset: number;
-    sort_by: string;
-    sort_direction: string;
-    filter_entity_type_id: number | null;
-    filter_room_id: number | null;
-    filter_furniture_id: number;
-  }
-) {
-  return supabase.rpc("get_places_with_room", params);
-}
-
 /** RPC get_furniture_with_counts (вызывать из app/api). */
 export function getFurnitureWithCountsRpc(
   supabase: SupabaseClient,

@@ -45,7 +45,12 @@ test.describe('items list', () => {
 
     await link.click();
     await expect(page).toHaveURL(/\/items\/\d+$/, { timeout: NAVIGATION_TIMEOUT });
-    await expect(page.getByText('Редактирование вещи')).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
+    // Дождаться загрузки страницы: либо форма редактирования, либо сообщение об ошибке
+    await expect(
+      page.getByText('Редактирование вещи').or(page.getByText('Вещь не найдена'))
+    ).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
+    await expect(page.getByText('Вещь не найдена')).not.toBeVisible();
+    await expect(page.getByText('Редактирование вещи')).toBeVisible();
     await expect(page.getByLabel('Название вещи')).toBeVisible();
     await expect(page.getByText('История перемещений', { exact: true })).toBeVisible();
 
@@ -55,7 +60,11 @@ test.describe('items list', () => {
     await expect(rowAfterBack).toBeVisible({ timeout: ROW_VISIBILITY_TIMEOUT });
     await rowAfterBack.getByTitle('Редактировать').click();
     await expect(page).toHaveURL(/\/items\/\d+$/, { timeout: NAVIGATION_TIMEOUT });
-    await expect(page.getByText('Редактирование вещи')).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
+    await expect(
+      page.getByText('Редактирование вещи').or(page.getByText('Вещь не найдена'))
+    ).toBeVisible({ timeout: NAVIGATION_TIMEOUT });
+    await expect(page.getByText('Вещь не найдена')).not.toBeVisible();
+    await expect(page.getByText('Редактирование вещи')).toBeVisible();
   });
 
   test('opens move sheet and cancels', async ({ page }) => {

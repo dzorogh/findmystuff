@@ -32,55 +32,46 @@ interface QuickMoveDialogProps {
   onSuccess?: () => void;
 }
 
+const fetchNameByType: Record<
+  EntityTypeName,
+  (id: number) => Promise<string | null>
+> = {
+  item: async (id) => {
+    const res = await getItem(id);
+    const item = res.data?.data;
+    return res.error || !item ? null : item.name ?? null;
+  },
+  container: async (id) => {
+    const res = await getContainer(id);
+    return res.error || !res.data ? null : res.data.container?.name ?? null;
+  },
+  place: async (id) => {
+    const res = await getPlace(id);
+    return res.error || !res.data ? null : res.data.place?.name ?? null;
+  },
+  room: async (id) => {
+    const res = await getRoom(id);
+    return res.error || !res.data ? null : res.data.room?.name ?? null;
+  },
+  furniture: async (id) => {
+    const res = await getFurnitureItem(id);
+    return res.error || !res.data?.furniture
+      ? null
+      : res.data.furniture.name ?? null;
+  },
+  building: async () => null,
+};
+
 const fetchEntityName = async (
   entityType: EntityTypeName,
   entityId: number
 ): Promise<string> => {
   try {
-    if (entityType === "item") {
-      const res = await getItem(entityId);
-      if (res.error || !res.data) {
-        return getEntityDisplayName(entityType, entityId, null);
-      }
-      const name = res.data.item?.name ?? null;
-      return getEntityDisplayName(entityType, entityId, name);
-    }
-    if (entityType === "container") {
-      const res = await getContainer(entityId);
-      if (res.error || !res.data) {
-        return getEntityDisplayName(entityType, entityId, null);
-      }
-      const name = res.data.container?.name ?? null;
-      return getEntityDisplayName(entityType, entityId, name);
-    }
-    if (entityType === "place") {
-      const res = await getPlace(entityId);
-      if (res.error || !res.data) {
-        return getEntityDisplayName(entityType, entityId, null);
-      }
-      const name = res.data.place?.name ?? null;
-      return getEntityDisplayName(entityType, entityId, name);
-    }
-    if (entityType === "room") {
-      const res = await getRoom(entityId);
-      if (res.error || !res.data) {
-        return getEntityDisplayName(entityType, entityId, null);
-      }
-      const name = res.data.room?.name ?? null;
-      return getEntityDisplayName(entityType, entityId, name);
-    }
-    if (entityType === "furniture") {
-      const res = await getFurnitureItem(entityId);
-      if (res.error || !res.data?.furniture) {
-        return getEntityDisplayName(entityType, entityId, null);
-      }
-      const name = res.data.furniture.name ?? null;
-      return getEntityDisplayName(entityType, entityId, name);
-    }
+    const name = await fetchNameByType[entityType](entityId);
+    return getEntityDisplayName(entityType, entityId, name);
   } catch {
-    // ignore
+    return getEntityDisplayName(entityType, entityId, null);
   }
-  return getEntityDisplayName(entityType, entityId, null);
 };
 
 /** Логи только при открытом диалоге, чтобы не засорять консоль при загрузке. */

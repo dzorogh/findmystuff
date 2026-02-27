@@ -1,34 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uploadToS3 } from "@/lib/shared/storage";
-import { getServerUser } from "@/lib/users/server";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { requireAuth } from "@/lib/shared/api/require-auth";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@/lib/shared/api/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "Файл не найден" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Файл не найден" },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
     }
 
     // Проверяем тип файла
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "Файл должен быть изображением" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     // Проверяем размер файла (максимум 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = MAX_UPLOAD_FILE_SIZE_BYTES;
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "Размер файла не должен превышать 10MB" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -42,19 +47,15 @@ export async function POST(request: NextRequest) {
       console.log("Uploaded photo URL:", url);
       return NextResponse.json({ url });
     } catch (s3Error) {
-      console.error("S3 upload error:", s3Error);
-      const errorMessage =
-        s3Error instanceof Error
-          ? s3Error.message
-          : "Ошибка загрузки в S3 хранилище";
-      return NextResponse.json({ error: errorMessage }, { status: 500 });
+      return apiErrorResponse(s3Error, {
+        context: "S3 upload error:",
+        defaultMessage: "Ошибка загрузки в S3 хранилище",
+      });
     }
   } catch (error) {
-    console.error("Ошибка загрузки фото:", error);
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Произошла ошибка при загрузке фото";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки фото:",
+      defaultMessage: "Произошла ошибка при загрузке фото",
+    });
   }
 }

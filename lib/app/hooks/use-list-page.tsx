@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * useListPage: состояние списка сущностей, URL, загрузка.
+ * Поток: ключ запроса (filters + sort + page) → один эффект загрузки → обновление data / totalCount / error.
+ * Использует useRequestKey (избежание дублей запросов) и useDebouncedSearch (дебаунс поиска).
+ */
+
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQueryStates } from "nuqs";
 import { useTenant } from "@/contexts/tenant-context";
@@ -14,6 +20,9 @@ import {
   urlStateToFilters,
   filtersToUrlState,
 } from "@/lib/app/hooks/list-page-url-state";
+import { useRequestKey } from "@/lib/app/hooks/use-request-key";
+import { useDebouncedSearch } from "@/lib/app/hooks/use-debounced-search";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/shared/api/constants";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -21,69 +30,6 @@ import type {
   ListPagePagination,
   Results,
 } from "@/lib/app/types/entity-config";
-
-const DEBOUNCE_MS = 300;
-
-/** Inlined request-key logic: avoid duplicate in-flight requests */
-function useRequestKey() {
-  const isLoadingRef = useRef(false);
-  const requestKeyRef = useRef("");
-
-  const shouldStart = useCallback((key: string) => {
-    if (isLoadingRef.current && requestKeyRef.current === key) return false;
-    isLoadingRef.current = true;
-    requestKeyRef.current = key;
-    return true;
-  }, []);
-
-  const isLatest = useCallback((key: string) => requestKeyRef.current === key, []);
-  const finish = useCallback((key: string) => {
-    if (requestKeyRef.current === key) {
-      isLoadingRef.current = false;
-      requestKeyRef.current = "";
-    }
-  }, []);
-
-  return { shouldStart, isLatest, finish };
-}
-
-/** Inlined debounced search: call onSearch when searchQuery changes after delay */
-function useDebouncedSearch(
-  searchQuery: string,
-  onSearch: (query: string) => void,
-  options: { delay?: number; skipInitial?: boolean } = {}
-) {
-  const { delay = DEBOUNCE_MS, skipInitial = true } = options;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const onSearchRef = useRef(onSearch);
-  const isInitialMountRef = useRef(true);
-  const previousQueryRef = useRef(searchQuery);
-
-  useEffect(() => {
-    onSearchRef.current = onSearch;
-  }, [onSearch]);
-
-  useEffect(() => {
-    if (skipInitial && isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      previousQueryRef.current = searchQuery;
-      return;
-    }
-    if (previousQueryRef.current === searchQuery) return;
-    previousQueryRef.current = searchQuery;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    const timer = setTimeout(() => {
-      onSearchRef.current(searchQuery.trim() || "");
-    }, delay);
-    timerRef.current = timer;
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [searchQuery, delay, skipInitial]);
-}
 
 export interface EntityListState<T> {
   data: T[];
@@ -119,7 +65,7 @@ export function useListPage(config: EntityConfig) {
   const hasPagination = paginationConfig != null;
   const hasAddForm = addForm != null;
 
-  const pageSize = hasPagination ? paginationConfig.pageSize : 20;
+  const pageSize = hasPagination ? paginationConfig.pageSize : DEFAULT_LIST_PAGE_SIZE;
 
   const parsers = useMemo(
     () => createListPageParsers(config.defaultSort),
@@ -247,8 +193,6 @@ export function useListPage(config: EntityConfig) {
     } else {
       load(searchQuery, true);
     }
-    // loadData не в deps: его ссылка меняется каждый рендер из-за filters (объект), что вызывало бесконечный цикл
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey, sortBy, sortDirection, currentPage, activeTenantId, hasPagination, searchQuery]);
 
   const refreshList = useCallback(() => {

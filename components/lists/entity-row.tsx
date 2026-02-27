@@ -7,7 +7,6 @@ import { DoorOpen, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { Action } from "@/lib/app/types/entity-action";
 import type { CountsConfig, ListColumnConfig } from "@/lib/app/types/entity-config";
 import type { Item, Room, Place, Container, Building, Furniture } from "@/types/entity";

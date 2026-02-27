@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { ArrowRightLeft, Printer, RotateCcw, Trash2 } from "lucide-react";
+import { useTenant } from "@/contexts/tenant-context";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
@@ -32,6 +33,7 @@ export interface UseItemDetailReturn {
 
 export const useItemDetail = (): UseItemDetailReturn => {
   const params = useParams();
+  const { activeTenantId } = useTenant();
   const itemId = parseInt(params.id as string);
   const [item, setItem] = useState<Item | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
@@ -42,15 +44,16 @@ export const useItemDetail = (): UseItemDetailReturn => {
 
   const loadItemData = useCallback(
     async (options?: { silent?: boolean }) => {
+      if (activeTenantId == null) return;
       const silent = options?.silent ?? false;
       if (!silent) setIsPageLoading(true);
       setError(null);
       try {
-        const loadedItem = await fetchItemById(itemId);
+        const loadedItem = await fetchItemById(itemId, activeTenantId);
         setItem(loadedItem);
         if (!silent) setIsLoadingTransitions(true);
         try {
-          const loadedTransitions = await fetchItemTransitions(itemId);
+          const loadedTransitions = await fetchItemTransitions(itemId, activeTenantId);
           setTransitions(loadedTransitions);
         } finally {
           if (!silent) setIsLoadingTransitions(false);
@@ -62,7 +65,7 @@ export const useItemDetail = (): UseItemDetailReturn => {
         if (!silent) setIsPageLoading(false);
       }
     },
-    [itemId]
+    [itemId, activeTenantId]
   );
 
   useEntityDataLoader({

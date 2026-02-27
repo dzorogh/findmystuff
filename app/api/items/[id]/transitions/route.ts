@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { parseId } from "@/lib/shared/api/parse-id";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import type { Transition } from "@/types/entity";
 
 export async function GET(
@@ -9,30 +10,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(params);
-    const idString = resolvedParams.id;
-
-    if (!idString) {
-      return NextResponse.json({ error: "Неверный ID вещи" }, { status: 400 });
-    }
-
-    const itemId = parseInt(idString, 10);
-
-    if (isNaN(itemId) || itemId <= 0) {
-      return NextResponse.json({ error: "Неверный ID вещи" }, { status: 400 });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "вещи" });
+    if (idResult instanceof NextResponse) return idResult;
+    const itemId = idResult.id;
 
     // Загружаем все transitions для этой вещи
     const { data: transitionsData, error: transitionsError } = await supabase
@@ -208,15 +192,9 @@ export async function GET(
       data: transitionsWithNames,
     });
   } catch (error) {
-    console.error("Ошибка загрузки transitions вещи:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке transitions",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки transitions вещи:",
+      defaultMessage: "Произошла ошибка при загрузке transitions",
+    });
   }
 }

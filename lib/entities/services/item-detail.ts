@@ -10,29 +10,53 @@ const ITEM_NOT_FOUND_MESSAGE = "Вещь не найдена";
 
 /**
  * Загружает основную информацию о вещи (без истории перемещений).
+ * @param tenantId — активный тенант (передавать с клиента для заголовка x-tenant-id)
  * @throws Error при ошибке API или отсутствии данных
  */
-export const fetchItemById = async (itemId: number): Promise<Item> => {
-  const response = await getItem(itemId);
+export const fetchItemById = async (
+  itemId: number,
+  tenantId?: number | null
+): Promise<Item> => {
+  if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+    console.log("[fetchItemById] itemId=%s tenantId=%s (header x-tenant-id will be %s)", itemId, tenantId, tenantId != null && !Number.isNaN(tenantId) ? tenantId : "absent");
+  }
+  const response = await getItem(itemId, tenantId);
+  const resWithDebug = response as { error?: string; data?: Item | { data: Item }; debug?: { itemId: number; tenantId: number } };
 
-  if (response.error) {
-    throw new Error(response.error);
+  if (resWithDebug.error) {
+    const message =
+      process.env.NODE_ENV === "development" && resWithDebug.debug
+        ? `${resWithDebug.error} (server debug: itemId=${resWithDebug.debug.itemId} tenantId=${resWithDebug.debug.tenantId})`
+        : resWithDebug.error;
+    throw new Error(message);
   }
 
-  if (!response.data?.item) {
-    throw new Error(ITEM_NOT_FOUND_MESSAGE);
+  const raw = resWithDebug.data;
+  const item =
+    raw != null && typeof raw === "object" && "data" in raw && (raw as { data: Item }).data != null
+      ? (raw as { data: Item }).data
+      : (raw as Item | undefined);
+  if (!item || (typeof item === "object" && !("id" in item))) {
+    const message =
+      process.env.NODE_ENV === "development" && resWithDebug.debug
+        ? `${ITEM_NOT_FOUND_MESSAGE} (server: itemId=${resWithDebug.debug.itemId} tenantId=${resWithDebug.debug.tenantId})`
+        : ITEM_NOT_FOUND_MESSAGE;
+    throw new Error(message);
   }
-
-  return response.data.item;
+  return item;
 };
 
 /**
  * Загружает историю перемещений вещи.
+ * @param tenantId — активный тенант (передавать с клиента для заголовка x-tenant-id)
  * При ошибке API возвращает пустой массив (не бросает).
  */
-export const fetchItemTransitions = async (itemId: number): Promise<Transition[]> => {
+export const fetchItemTransitions = async (
+  itemId: number,
+  tenantId?: number | null
+): Promise<Transition[]> => {
   try {
-    const response = await getItemTransitions(itemId);
+    const response = await getItemTransitions(itemId, tenantId);
     if (response.error) return [];
     return response.data ?? [];
   } catch {

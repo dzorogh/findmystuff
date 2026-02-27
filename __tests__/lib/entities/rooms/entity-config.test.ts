@@ -3,6 +3,7 @@ import {
   DEFAULT_ROOMS_FILTERS,
   type RoomsFilters,
 } from "@/lib/entities/rooms/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getRooms } from "@/lib/rooms/api";
 
 jest.mock("@/lib/rooms/api");
@@ -58,15 +59,13 @@ describe("rooms entity-config", () => {
     expect(keys).toContain("actions");
   });
 
-  it("getName возвращает name если не пустой", () => {
-    const getName = roomsEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Кухня" } as { id: number; name: string | null })).toBe("Кухня");
+  it("отображаемое имя по умолчанию (getEntityDisplayName): name если не пустой", () => {
+    expect(getEntityDisplayName("room", 1, "Кухня")).toBe("Кухня");
   });
 
-  it("getName возвращает 'Помещение #id' если name пустой", () => {
-    const getName = roomsEntityConfig.getName!;
-    expect(getName({ id: 2, name: null } as { id: number; name: string | null })).toBe("Помещение #2");
-    expect(getName({ id: 2, name: "" } as { id: number; name: string | null })).toBe("Помещение #2");
+  it("отображаемое имя по умолчанию: 'Помещение #id' если name пустой", () => {
+    expect(getEntityDisplayName("room", 2, null)).toBe("Помещение #2");
+    expect(getEntityDisplayName("room", 2, "")).toBe("Помещение #2");
   });
 
   it("fetch вызывает getRooms и возвращает data и totalCount", async () => {

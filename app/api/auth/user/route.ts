@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUser } from "@/lib/users/server";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export async function GET() {
   try {
@@ -8,21 +10,15 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         { error: "Не авторизован" },
-        { status: 401 }
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
     return NextResponse.json({ data: { user } });
   } catch (error) {
-    console.error("Ошибка получения пользователя:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при получении пользователя",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка получения пользователя:",
+      defaultMessage: "Произошла ошибка при получении пользователя",
+    });
   }
 }

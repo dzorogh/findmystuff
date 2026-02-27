@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
+import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import { getPlacesWithRoomRpc } from "@/lib/places/api";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Place } from "@/types/entity";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -38,13 +42,6 @@ type FallbackPlaceRow = {
 
 const CODE_COLUMN_MISSING_ERROR = 'column "code" does not exist';
 
-const getEntityTypeRelation = (
-  relation: EntityTypeRelation | EntityTypeRelation[] | null | undefined
-): EntityTypeRelation | null => {
-  if (!relation) return null;
-  return Array.isArray(relation) ? relation[0] ?? null : relation;
-};
-
 const mapRpcPlaceToPlace = (place: RpcPlaceRow): Place => ({
   id: place.id,
   name: place.name,
@@ -75,26 +72,24 @@ const buildCountMap = (rows: Array<{ destination_id: number | null }>) => {
   return counts;
 };
 
-const parseOptionalInt = (value: string | null): number | null => {
-  if (value == null || value === "") return null;
-  const n = parseInt(value, 10);
-  return Number.isNaN(n) ? null : n;
-};
-
-const fetchPlacesFallback = async (
+/** Строит и выполняет запрос мест для fallback (без RPC). */
+async function executeFallbackPlacesQuery(
   supabase: SupabaseClient,
-  query: string | null,
   showDeleted: boolean,
   sortBy: SortBy,
   sortDirection: SortDirection,
   entityTypeId: number | null,
   roomId: number | null
-) => {
+): Promise<{ data: FallbackPlaceRow[] | null; error: string | null }> {
   let fallbackQuery = supabase
     .from("places")
-    .select("id, name, entity_type_id, created_at, deleted_at, photo_url, entity_type:entity_types(name)")
-    .order(sortBy === "name" ? "name" : "created_at", { ascending: sortDirection === "asc" })
-    .limit(2000);
+    .select(
+      "id, name, entity_type_id, created_at, deleted_at, photo_url, entity_type:entity_types(name)"
+    )
+    .order(sortBy === "name" ? "name" : "created_at", {
+      ascending: sortDirection === "asc",
+    })
+    .limit(DEFAULT_PAGE_LIMIT);
 
   fallbackQuery = showDeleted
     ? fallbackQuery.not("deleted_at", "is", null)
@@ -111,7 +106,7 @@ const fetchPlacesFallback = async (
       .eq("room_id", roomId);
     const ids = (placeIdsInRoom ?? []).map((r: { place_id: number }) => r.place_id);
     if (ids.length === 0) {
-      return { data: [] as Place[], error: null };
+      return { data: [], error: null };
     }
     fallbackQuery = fallbackQuery.in("id", ids);
   }
@@ -120,22 +115,19 @@ const fetchPlacesFallback = async (
   if (fallbackError) {
     return { data: null, error: fallbackError.message };
   }
+  return { data: (fallbackRows || []) as FallbackPlaceRow[], error: null };
+}
 
-  const normalizedQuery = query?.trim().toLowerCase();
-  const filteredRows = ((fallbackRows || []) as FallbackPlaceRow[]).filter((place) => {
-    if (!normalizedQuery) return true;
-    const entityType = getEntityTypeRelation(place.entity_type);
-    return (
-      (place.name || "").toLowerCase().includes(normalizedQuery) ||
-      (entityType?.name || "").toLowerCase().includes(normalizedQuery)
-    );
-  });
-
-  if (filteredRows.length === 0) {
-    return { data: [] as Place[], error: null };
-  }
-
-  const placeIds = filteredRows.map((place) => place.id);
+/** Загружает карты roomNameById, roomIdByPlaceId и счётчики items/containers по placeIds. */
+async function loadPlaceRoomAndCountMaps(
+  supabase: SupabaseClient,
+  placeIds: number[]
+): Promise<{
+  roomNameById: Map<number, string | null>;
+  roomIdByPlaceId: Map<number, number>;
+  itemCounts: Map<number, number>;
+  containerCounts: Map<number, number>;
+}> {
   const [placeTransitionsResult, itemTransitionsResult, containerTransitionsResult] =
     await Promise.all([
       supabase
@@ -161,8 +153,8 @@ const fetchPlacesFallback = async (
   const roomIds = Array.from(
     new Set(
       placeTransitions
-        .map((transition) => transition.room_id)
-        .filter((roomId): roomId is number => typeof roomId === "number")
+        .map((t) => t.room_id)
+        .filter((id): id is number => typeof id === "number")
     )
   );
 
@@ -173,28 +165,71 @@ const fetchPlacesFallback = async (
       .select("id, name")
       .is("deleted_at", null)
       .in("id", roomIds);
-
     (roomRows || []).forEach((room) => {
       roomNameById.set(room.id as number, (room.name as string | null) || null);
     });
   }
 
   const roomIdByPlaceId = new Map<number, number>();
-  placeTransitions.forEach((transition) => {
-    if (typeof transition.room_id !== "number") return;
-    roomIdByPlaceId.set(transition.place_id, transition.room_id);
+  placeTransitions.forEach((t) => {
+    if (typeof t.room_id !== "number") return;
+    roomIdByPlaceId.set(t.place_id, t.room_id);
   });
 
   const itemCounts = buildCountMap(
-    ((itemTransitionsResult.data || []) as Array<{ destination_id: number | null }>)
+    (itemTransitionsResult.data || []) as Array<{ destination_id: number | null }>
   );
   const containerCounts = buildCountMap(
-    ((containerTransitionsResult.data || []) as Array<{ destination_id: number | null }>)
+    (containerTransitionsResult.data ||
+      []) as Array<{ destination_id: number | null }>
   );
 
+  return { roomNameById, roomIdByPlaceId, itemCounts, containerCounts };
+}
+
+const fetchPlacesFallback = async (
+  supabase: SupabaseClient,
+  query: string | null,
+  showDeleted: boolean,
+  sortBy: SortBy,
+  sortDirection: SortDirection,
+  entityTypeId: number | null,
+  roomId: number | null
+): Promise<{ data: Place[] | null; error: string | null }> => {
+  const { data: fallbackRows, error: queryError } = await executeFallbackPlacesQuery(
+    supabase,
+    showDeleted,
+    sortBy,
+    sortDirection,
+    entityTypeId,
+    roomId
+  );
+  if (queryError) return { data: null, error: queryError };
+  if (!fallbackRows || fallbackRows.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const normalizedQuery = query?.trim().toLowerCase();
+  const filteredRows = fallbackRows.filter((place) => {
+    if (!normalizedQuery) return true;
+    const entityType = normalizeEntityTypeRelation(place.entity_type);
+    return (
+      (place.name || "").toLowerCase().includes(normalizedQuery) ||
+      (entityType?.name || "").toLowerCase().includes(normalizedQuery)
+    );
+  });
+
+  if (filteredRows.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const placeIds = filteredRows.map((place) => place.id);
+  const { roomNameById, roomIdByPlaceId, itemCounts, containerCounts } =
+    await loadPlaceRoomAndCountMaps(supabase, placeIds);
+
   const places: Place[] = filteredRows.map((place) => {
-    const entityType = getEntityTypeRelation(place.entity_type);
-    const roomId = roomIdByPlaceId.get(place.id);
+    const entityType = normalizeEntityTypeRelation(place.entity_type);
+    const placeRoomId = roomIdByPlaceId.get(place.id);
     return {
       id: place.id,
       name: place.name,
@@ -203,8 +238,8 @@ const fetchPlacesFallback = async (
       created_at: place.created_at,
       deleted_at: place.deleted_at,
       photo_url: place.photo_url,
-      room: roomId
-        ? { id: roomId, name: roomNameById.get(roomId) || null }
+      room: placeRoomId
+        ? { id: placeRoomId, name: roomNameById.get(placeRoomId) || null }
         : null,
       items_count: itemCounts.get(place.id) ?? 0,
       containers_count: containerCounts.get(place.id) ?? 0,
@@ -228,17 +263,9 @@ const fetchPlacesFallback = async (
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query")?.trim() || null;
@@ -254,7 +281,7 @@ export async function GET(request: NextRequest) {
     const { data: placesData, error: fetchError } = await getPlacesWithRoomRpc(supabase, {
       search_query: query,
       show_deleted: showDeleted,
-      page_limit: 2000,
+      page_limit: DEFAULT_PAGE_LIMIT,
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
@@ -299,40 +326,25 @@ export async function GET(request: NextRequest) {
       data: places,
     });
   } catch (error) {
-    console.error("Ошибка загрузки списка мест:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки списка мест:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
-    // Места привязываются только к мебели, не к помещениям напрямую
     if (destination_type && destination_type !== "furniture") {
       return NextResponse.json(
-        { error: "Места можно привязывать только к мебели" },
+        { error: PLACE_DESTINATION_FURNITURE_ONLY },
         { status: 400 }
       );
     }
@@ -385,15 +397,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: newPlace });
   } catch (error) {
-    console.error("Ошибка создания места:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при создании места",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка создания места:",
+      defaultMessage: "Произошла ошибка при создании места",
+    });
   }
 }

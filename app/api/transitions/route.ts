@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { parseId } from "@/lib/shared/api/parse-id";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
 import type { DestinationType } from "@/types/entity";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const { item_id, place_id, container_id, destination_type, destination_id } = body;
@@ -24,7 +19,7 @@ export async function POST(request: NextRequest) {
     if (!destination_type || !destination_id) {
       return NextResponse.json(
         { error: "Необходимы destination_type и destination_id" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -32,17 +27,25 @@ export async function POST(request: NextRequest) {
     if (!item_id && !place_id && !container_id) {
       return NextResponse.json(
         { error: "Необходим хотя бы один из: item_id, place_id, container_id" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
-    // Места привязываются только к мебели, не к помещениям напрямую
     if (place_id && destination_type !== "furniture") {
       return NextResponse.json(
-        { error: "Места можно привязывать только к мебели" },
-        { status: 400 }
+        { error: PLACE_DESTINATION_FURNITURE_ONLY },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
+
+    const destIdResult = parseId(String(destination_id), { entityLabel: "назначения" });
+    if (destIdResult instanceof NextResponse) return destIdResult;
+
+    const parseOptionalId = (value: unknown): number | undefined => {
+      if (value == null || value === "") return undefined;
+      const id = typeof value === "number" ? value : parseInt(String(value), 10);
+      return Number.isNaN(id) || id <= 0 ? undefined : id;
+    };
 
     const transitionData: {
       destination_type: DestinationType;
@@ -53,13 +56,31 @@ export async function POST(request: NextRequest) {
       container_id?: number;
     } = {
       destination_type: destination_type as DestinationType,
-      destination_id: parseInt(destination_id),
+      destination_id: destIdResult.id,
       tenant_id: tenantId,
     };
 
-    if (item_id) transitionData.item_id = parseInt(item_id);
-    if (place_id) transitionData.place_id = parseInt(place_id);
-    if (container_id) transitionData.container_id = parseInt(container_id);
+    const itemId = parseOptionalId(item_id);
+    const placeId = parseOptionalId(place_id);
+    const containerId = parseOptionalId(container_id);
+    if (item_id != null && item_id !== "" && itemId == null) {
+      return NextResponse.json({ error: "Некорректный item_id" }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
+    if (place_id != null && place_id !== "" && placeId == null) {
+      return NextResponse.json({ error: "Некорректный place_id" }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
+    if (container_id != null && container_id !== "" && containerId == null) {
+      return NextResponse.json({ error: "Некорректный container_id" }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
+    if (itemId == null && placeId == null && containerId == null) {
+      return NextResponse.json(
+        { error: "Необходим хотя бы один из: item_id, place_id, container_id" },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
+    }
+    if (itemId != null) transitionData.item_id = itemId;
+    if (placeId != null) transitionData.place_id = placeId;
+    if (containerId != null) transitionData.container_id = containerId;
 
     const { data, error } = await supabase
       .from("transitions")
@@ -70,21 +91,15 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Ошибка создания transition:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при создании transition",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка создания transition:",
+      defaultMessage: "Произошла ошибка при создании transition",
+    });
   }
 }

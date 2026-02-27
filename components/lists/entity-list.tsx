@@ -14,9 +14,11 @@ import { EntityListSkeleton } from "@/components/lists/entity-list-skeleton";
 import { EntityRow, getRoomLabel, ROOM_EMPTY_LABEL } from "@/components/lists/entity-row";
 import { EntityFiltersPanel } from "@/components/filters/entity-filters-panel";
 import type { Action } from "@/lib/app/types/entity-action";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type {
   CountsConfig,
   EntityDisplay,
+  EntityKind,
   ListColumnConfig,
   FilterFieldConfig,
   Filters,
@@ -46,6 +48,7 @@ export interface EntityListProps {
   filterFields: FilterFieldConfig[];
   columns: ListColumnConfig[];
   icon?: React.ComponentType<{ className?: string }>;
+  kind: EntityKind;
   getName?: (entity: { id: number; name: string | null }) => string;
   getRowActions: (entity: EntityDisplay) => Action[];
   counts?: CountsConfig;
@@ -79,12 +82,14 @@ export function EntityList({
   filterFields,
   columns,
   icon,
+  kind,
   getName,
   getRowActions,
   counts,
   groupBy,
   groupByEmptyLabel = "Без здания",
 }: EntityListProps) {
+  const resolvedGetName = getName ?? ((e: EntityDisplay) => getEntityDisplayName(kind, e.id, e.name));
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
 
@@ -172,7 +177,7 @@ export function EntityList({
                           entity={row}
                           columnsConfig={columns}
                           icon={icon}
-                          getName={getName}
+                          getName={resolvedGetName}
                           actions={rowActions}
                           roomLabel={roomLabel}
                           counts={counts}

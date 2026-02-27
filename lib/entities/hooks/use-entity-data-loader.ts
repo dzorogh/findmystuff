@@ -5,6 +5,12 @@ interface UseEntityDataLoaderOptions {
   loadData: () => Promise<void>;
 }
 
+/**
+ * Guard-хук для загрузки данных сущности по entityId.
+ * Предотвращает повторный запуск loadData, пока предыдущий запрос не завершён;
+ * при смене entityId сбрасывает флаг и запускает загрузку заново.
+ * Состояние загрузки и результат полностью управляются снаружи (loadData и вызывающий код).
+ */
 export const useEntityDataLoader = ({
   entityId,
   loadData,
@@ -13,7 +19,7 @@ export const useEntityDataLoader = ({
   const lastLoadKeyRef = useRef<string | null>(null);
   const requestIdRef = useRef<number>(0);
 
-  useEffect(() => { 
+  useEffect(() => {
     const loadKey = `${entityId}`;
     const currentRequestId = ++requestIdRef.current;
 
@@ -37,6 +43,5 @@ export const useEntityDataLoader = ({
     return () => {
       isCancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityId]);
+  }, [entityId, loadData]);
 };

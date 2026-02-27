@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { getItemsWithRoomRpc } from "@/lib/entities/api";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import type { Item } from "@/types/entity";
 
 /**
@@ -18,17 +20,9 @@ import type { Item } from "@/types/entity";
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
@@ -36,10 +30,10 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const locationType = searchParams.get("locationType") || null;
-    const roomId = searchParams.get("roomId") ? parseInt(searchParams.get("roomId")!, 10) : null;
-    const placeId = searchParams.get("placeId") ? parseInt(searchParams.get("placeId")!, 10) : null;
-    const containerId = searchParams.get("containerId") ? parseInt(searchParams.get("containerId")!, 10) : null;
-    const furnitureId = searchParams.get("furnitureId") ? parseInt(searchParams.get("furnitureId")!, 10) : null;
+    const roomId = parseOptionalInt(searchParams.get("roomId"));
+    const placeId = parseOptionalInt(searchParams.get("placeId"));
+    const containerId = parseOptionalInt(searchParams.get("containerId"));
+    const furnitureId = parseOptionalInt(searchParams.get("furnitureId"));
     const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
@@ -140,32 +134,18 @@ export async function GET(request: NextRequest) {
       totalCount,
     });
   } catch (error) {
-    console.error("Ошибка загрузки списка вещей:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки списка вещей:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const {
@@ -174,31 +154,12 @@ export async function POST(request: NextRequest) {
       destination_type,
       destination_id,
       item_type_id,
-      price_amount,
-      price_currency,
-      current_value_amount,
-      current_value_currency,
       quantity,
       purchase_date,
     } = body;
 
-    const hasPriceAmount = price_amount != null && price_amount !== "";
-    const hasPriceCurrency = price_currency != null && price_currency !== "";
-    if (hasPriceAmount !== hasPriceCurrency) {
-      return NextResponse.json(
-        { error: "Цена и валюта должны быть указаны вместе или оба опущены" },
-        { status: 400 }
-      );
-    }
-
-    const hasCurrentValueAmount = current_value_amount != null && current_value_amount !== "";
-    const hasCurrentValueCurrency = current_value_currency != null && current_value_currency !== "";
-    if (hasCurrentValueAmount !== hasCurrentValueCurrency) {
-      return NextResponse.json(
-        { error: "Текущая стоимость и валюта должны быть указаны вместе или оба опущены" },
-        { status: 400 }
-      );
-    }
+    const moneyValidation = validateItemMoney(body);
+    if (moneyValidation instanceof NextResponse) return moneyValidation;
 
     const insertItemData: {
       name: string | null;
@@ -215,34 +176,14 @@ export async function POST(request: NextRequest) {
       name: name?.trim() || null,
       photo_url: photo_url || null,
       item_type_id: item_type_id != null ? (Number(item_type_id) || null) : null,
-      price_amount: hasPriceAmount ? Number(price_amount) : null,
-      price_currency: hasPriceCurrency ? String(price_currency).trim() : null,
-      current_value_amount: hasCurrentValueAmount ? Number(current_value_amount) : null,
-      current_value_currency: hasCurrentValueCurrency ? String(current_value_currency).trim() : null,
+      price_amount: moneyValidation.price_amount,
+      price_currency: moneyValidation.price_currency,
+      current_value_amount: moneyValidation.current_value_amount,
+      current_value_currency: moneyValidation.current_value_currency,
       quantity: quantity != null && quantity !== "" ? Number(quantity) : 1,
       purchase_date: purchase_date && purchase_date.trim() ? purchase_date.trim() : null,
       tenant_id: tenantId,
     };
-
-    if (
-      insertItemData.price_amount != null &&
-      (insertItemData.price_amount < 0 || !Number.isInteger(insertItemData.price_amount))
-    ) {
-      return NextResponse.json(
-        { error: "Сумма цены должна быть целым неотрицательным числом в минимальных единицах" },
-        { status: 400 }
-      );
-    }
-
-    if (
-      insertItemData.current_value_amount != null &&
-      (insertItemData.current_value_amount < 0 || !Number.isInteger(insertItemData.current_value_amount))
-    ) {
-      return NextResponse.json(
-        { error: "Сумма текущей стоимости должна быть целым неотрицательным числом в минимальных единицах" },
-        { status: 400 }
-      );
-    }
 
     if (
       insertItemData.quantity != null &&
@@ -290,15 +231,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: newItem });
   } catch (error) {
-    console.error("Ошибка создания вещи:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при создании вещи",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка создания вещи:",
+      defaultMessage: "Произошла ошибка при создании вещи",
+    });
   }
 }

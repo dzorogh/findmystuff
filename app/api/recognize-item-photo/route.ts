@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerUser } from "@/lib/users/server";
 import { recognizeItemFromPhoto } from "@/lib/shared/api/recognize-item-photo-server";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+import { requireAuth } from "@/lib/shared/api/require-auth";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@/lib/shared/api/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         { error: "OpenAI не настроен (OPENAI_API_KEY)", itemName: null },
-        { status: 503 }
+        { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
       );
     }
 
@@ -25,24 +23,24 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { error: "Файл не найден", itemName: null },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "Файл должен быть изображением", itemName: null },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
       return NextResponse.json(
         {
           error: "Размер файла не должен превышать 10MB",
           itemName: null,
         },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -56,20 +54,16 @@ export async function POST(request: NextRequest) {
     );
 
     if (error) {
-      return NextResponse.json(
-        { itemName: null, error },
-        { status: 200 }
-      );
+      return NextResponse.json({ itemName: null, error });
     }
 
     return NextResponse.json({ itemName });
-  } catch (err) {
-    console.error("recognize-item-photo error:", err);
+  } catch (error) {
     const message =
-      err instanceof Error ? err.message : "Ошибка при распознавании фото";
+      error instanceof Error ? error.message : "Ошибка при распознавании фото";
     return NextResponse.json(
       { itemName: null, error: message },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

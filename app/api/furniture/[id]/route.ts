@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
-import { getPlacesWithRoomRpc } from "@/lib/furniture/api";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { parseId } from "@/lib/shared/api/parse-id";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { getPlacesWithRoomRpc } from "@/lib/places/api";
 import { getItemsWithRoomRpc } from "@/lib/entities/api";
 import { getContainersWithLocationRpc } from "@/lib/containers/api";
 import type { Furniture } from "@/types/entity";
@@ -12,24 +13,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-    const supabase = await createClient();
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const resolvedParams = await Promise.resolve(params);
-    const furnitureId = parseInt(resolvedParams.id, 10);
-
-    if (isNaN(furnitureId) || furnitureId <= 0) {
-      return NextResponse.json({ error: "Неверный ID мебели" }, { status: 400 });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "мебели" });
+    if (idResult instanceof NextResponse) return idResult;
+    const furnitureId = idResult.id;
+    const supabase = await createClient();
 
     const { data: furnitureData, error: furnitureError } = await supabase
       .from("furniture")
@@ -94,6 +85,7 @@ export async function GET(
       filter_entity_type_id: null,
       filter_room_id: null,
       filter_furniture_id: furnitureId,
+      filter_tenant_id: tenantId,
     });
 
     const places = (placesData ?? []).map((p: { id: number; name: string | null; entity_type_id: number | null }) => ({
@@ -150,16 +142,10 @@ export async function GET(
       data: { furniture, places, items, containers },
     });
   } catch (error) {
-    console.error("Ошибка загрузки данных мебели:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки данных мебели:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
@@ -168,24 +154,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-    const supabase = await createClient();
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const resolvedParams = await Promise.resolve(params);
-    const furnitureId = parseInt(resolvedParams.id, 10);
-
-    if (isNaN(furnitureId) || furnitureId <= 0) {
-      return NextResponse.json({ error: "Неверный ID мебели" }, { status: 400 });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "мебели" });
+    if (idResult instanceof NextResponse) return idResult;
+    const furnitureId = idResult.id;
+    const supabase = await createClient();
 
     const body = await request.json();
     const {
@@ -246,15 +221,9 @@ export async function PUT(
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Ошибка обновления мебели:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при обновлении мебели",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка обновления мебели:",
+      defaultMessage: "Произошла ошибка при обновлении мебели",
+    });
   }
 }

@@ -12,9 +12,9 @@ import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getContainers } from "@/lib/containers/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { ComponentType } from "react";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
-  EntityDisplay,
   FetchListParams,
   FetchListResult,
   FilterFieldConfig,
@@ -42,6 +42,22 @@ export const DEFAULT_CONTAINERS_FILTERS: ContainersFilters = {
 
 const CONTAINERS_PAGE_SIZE = 20;
 
+function matchesContainerFilters(c: Container, filters: ContainersFilters): boolean {
+  if (filters.entityTypeId !== null && c.entity_type_id !== filters.entityTypeId) return false;
+  if (filters.hasItems !== null) {
+    const count = c.itemsCount ?? 0;
+    if (filters.hasItems ? count === 0 : count > 0) return false;
+  }
+  if (
+    filters.locationType !== null &&
+    filters.locationType !== "all" &&
+    c.last_location?.destination_type !== filters.locationType
+  ) {
+    return false;
+  }
+  return true;
+}
+
 async function fetchContainers(params: FetchListParams): Promise<FetchListResult> {
   const { query, filterValues, sortBy, sortDirection, tenantId } = params;
   const filters = filterValues as ContainersFilters;
@@ -63,22 +79,9 @@ async function fetchContainers(params: FetchListParams): Promise<FetchListResult
     filters.hasItems !== null ||
     (filters.locationType !== null && filters.locationType !== "all");
   if (hasClientFilters) {
-    list = list.filter((c: Container) => {
-      if (filters.entityTypeId !== null && c.entity_type_id !== filters.entityTypeId) return false;
-      if (filters.hasItems !== null) {
-        const count = c.itemsCount ?? 0;
-        if (filters.hasItems ? count === 0 : count > 0) return false;
-      }
-      if (
-        filters.locationType !== null &&
-        filters.locationType !== "all" &&
-        c.last_location?.destination_type !== filters.locationType
-      )
-        return false;
-      return true;
-    });
+    list = list.filter((c: Container) => matchesContainerFilters(c, filters));
   }
-  return { data: list };
+  return createFetchListResult({ data: list, totalCount: list.length });
 }
 
 const BASE_PATH = "/containers";
@@ -110,8 +113,6 @@ export const containersEntityConfig: EntityConfig = {
     title: "Добавить контейнер",
     form: AddContainerForm,
   },
-  getName: (entity: EntityDisplay) =>
-    getEntityDisplayName("container", entity.id, entity.name),
   icon: ContainerIcon,
   filters: {
     fields: [

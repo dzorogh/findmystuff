@@ -3,14 +3,15 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { createTenantForCurrentUserRpc } from "@/lib/tenants/api";
 import { seedDefaultEntityTypesForTenant } from "@/lib/tenants/seed-default-entity-types";
-import { getServerUser } from "@/lib/users/server";
+import { requireAuth } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { user } = auth;
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -28,7 +29,10 @@ export async function GET() {
       .eq("user_id", user.id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      );
     }
 
     const tenants = (data ?? [])
@@ -38,21 +42,19 @@ export async function GET() {
       .map(({ id, name, created_at }) => ({ id, name, created_at }));
 
     return NextResponse.json(tenants);
-  } catch (err) {
-    console.error("Error fetching tenants:", err);
-    return NextResponse.json(
-      { error: "Ошибка загрузки тенантов" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки тенантов:",
+      defaultMessage: "Произошла ошибка при загрузке тенантов",
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { user: _user } = auth;
 
     const body = await request.json();
     const name = body?.name?.trim() ?? "Мой склад";
@@ -62,9 +64,11 @@ export async function POST(request: NextRequest) {
     try {
       row = await createTenantForCurrentUserRpc(supabase, name);
     } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Ошибка создания тенанта";
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : "Ошибка создания тенанта" },
-        { status: 500 }
+        { error: message },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -79,11 +83,10 @@ export async function POST(request: NextRequest) {
       { id: row.id, name: row.name, created_at: row.created_at },
       { status: 201 }
     );
-  } catch (err) {
-    console.error("Error creating tenant:", err);
-    return NextResponse.json(
-      { error: "Ошибка создания тенанта" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiErrorResponse(error, {
+      context: "Ошибка создания тенанта:",
+      defaultMessage: "Произошла ошибка при создании тенанта",
+    });
   }
 }

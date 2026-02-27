@@ -28,33 +28,61 @@ export interface QuickMoveResult {
  * Типы должны быть разными. Room всегда назначение.
  */
 export const resolveQuickMove = (
-  a: EntityQrPayload,
-  b: EntityQrPayload
+  firstScan: EntityQrPayload,
+  secondScan: EntityQrPayload
 ): QuickMoveResult | null => {
-  if (a.type === b.type) return null;
-  // Building не поддерживается как назначение при быстром перемещении
-  if (a.type === "building" || b.type === "building") return null;
+  if (firstScan.type === secondScan.type) return null;
+  if (firstScan.type === "building" || secondScan.type === "building") return null;
 
-  // Места можно перемещать только в мебель, не в помещения
-  if (a.type === "room") {
-    if (b.type === "place") return null;
-    return { sourceType: b.type, sourceId: b.id, destType: "room", destId: a.id };
+  if (firstScan.type === "room") {
+    if (secondScan.type === "place") return null;
+    return {
+      sourceType: secondScan.type,
+      sourceId: secondScan.id,
+      destType: "room",
+      destId: firstScan.id,
+    };
   }
-  if (b.type === "room") {
-    if (a.type === "place") return null;
-    return { sourceType: a.type, sourceId: a.id, destType: "room", destId: b.id };
+  if (secondScan.type === "room") {
+    if (firstScan.type === "place") return null;
+    return {
+      sourceType: firstScan.type,
+      sourceId: firstScan.id,
+      destType: "room",
+      destId: secondScan.id,
+    };
   }
-  if (a.type === "furniture") {
-    return { sourceType: b.type, sourceId: b.id, destType: "furniture", destId: a.id };
+  if (firstScan.type === "furniture") {
+    return {
+      sourceType: secondScan.type,
+      sourceId: secondScan.id,
+      destType: "furniture",
+      destId: firstScan.id,
+    };
   }
-  if (b.type === "furniture") {
-    return { sourceType: a.type, sourceId: a.id, destType: "furniture", destId: b.id };
+  if (secondScan.type === "furniture") {
+    return {
+      sourceType: firstScan.type,
+      sourceId: firstScan.id,
+      destType: "furniture",
+      destId: secondScan.id,
+    };
   }
 
-  const levelA = ENTITY_LEVEL[a.type];
-  const levelB = ENTITY_LEVEL[b.type];
-  if (levelA > levelB) {
-    return { sourceType: a.type, sourceId: a.id, destType: b.type as DestinationType, destId: b.id };
+  const levelFirst = ENTITY_LEVEL[firstScan.type];
+  const levelSecond = ENTITY_LEVEL[secondScan.type];
+  if (levelFirst > levelSecond) {
+    return {
+      sourceType: firstScan.type,
+      sourceId: firstScan.id,
+      destType: secondScan.type as DestinationType,
+      destId: secondScan.id,
+    };
   }
-  return { sourceType: b.type, sourceId: b.id, destType: a.type as DestinationType, destId: a.id };
+  return {
+    sourceType: secondScan.type,
+    sourceId: secondScan.id,
+    destType: firstScan.type as DestinationType,
+    destId: firstScan.id,
+  };
 };

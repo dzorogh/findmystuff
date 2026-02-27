@@ -103,15 +103,50 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 
 ## Архитектура и код
 
-### Структура данных
+### Основные папки
 
-- **rooms** — помещения  
-- **places** — места (привязка к помещению через `transitions`)  
-- **containers** — контейнеры  
-- **items** — вещи  
-- **transitions** — история перемещений; текущее местоположение = последняя запись по `created_at`.
+- **`app/`** — маршруты Next.js (App Router), страницы, API (`app/api/`).
+- **`lib/`** — доменная логика и общие хелперы: `lib/shared/api/` (auth, parse-id, apiErrorResponse, HTTP_STATUS), `lib/entities/` (конфиги списков сущностей, helpers, services), `lib/rooms/`, `lib/places/`, `lib/containers/` и т.д.
+- **`components/`** — переиспользуемые UI-компоненты.
+- **`contexts/`** — глобальный контекст тенанта (`tenant-context.tsx`). Контексты приложения — `lib/app/contexts/` (add-item, current-page, quick-move); доменные (users, settings) — в `lib/users/`, `lib/settings/`.
+- **`types/`** — глобальные типы сущностей и API (`types/entity.ts`). Типы списков и действий — `lib/app/types/` (`entity-config.ts`, `entity-action.ts`).
 
-У сущностей есть `deleted_at` (мягкое удаление). Включён RLS.
+### Типы и конфиги сущностей
+
+- **Типы списков сущностей** — `lib/app/types/entity-config.ts` (EntityDisplay, Filters, EntityLabels, ListColumnConfig, FetchListResult и т.д.).
+- **Конфиги по сущностям** — `lib/entities/<entity>/entity-config.ts` (например `itemsEntityConfig`, `placesEntityConfig`): колонки, фильтры, fetch, labels, actions. Не путать с файлом типов: один и тот же термин «entity-config» используется для типов (в `lib/app/types/`) и для конфигов (в `lib/entities/`).
+
+### API-маршруты
+
+Типичный поток: **auth → tenant → парсинг параметров → Supabase/бизнес-логика → ответ**.
+
+Общие хелперы в `lib/shared/api/`:
+
+- **`require-auth.ts`** — `requireAuth`, `requireTenant`, `requireAuthAndTenant` (401/400).
+- **`parse-id.ts`** — `parseId(params.id, { entityLabel })` для [id]-маршрутов (400 при неверном ID).
+- **`parse-optional-int.ts`** — `parseOptionalInt(searchParams.get("..."))` для опциональных query-параметров.
+- **`api-error-response.ts`** — `apiErrorResponse(error, { context, defaultMessage })` для catch-блоков (500).
+- **`http-status.ts`** — константы `HTTP_STATUS` (UNAUTHORIZED, BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR и т.д.).
+- **`validate-item-money.ts`**, **`normalize-entity-type-relation.ts`** — валидация и нормализация данных.
+
+Новые маршруты класть в `app/api/<ресурс>/route.ts` или `app/api/<ресурс>/[id]/route.ts`; везде, где нужны user и tenant, использовать `requireAuthAndTenant(request)` и при необходимости `parseId`.
+
+### Списки сущностей и страница детали
+
+- **Список:** конфиг сущности (columns, filters, fetch, actions) → `useListPage` (состояние, URL, загрузка) → `EntityList` / `EntityRow` (рендер). Ключевые файлы: `lib/app/hooks/use-list-page.tsx`, `lib/app/hooks/list-page-url-state.ts`, `components/lists/entity-list.tsx`, `lib/entities/<entity>/entity-config.ts`.
+- **Страница детали:** загрузка по id через API, формы редактирования, переходы (transitions). Для длинных GET [id] загрузка вынесена в `lib/<domain>/` (например `lib/rooms/load-room-detail.ts`).
+
+### Структура данных и мультитенантность
+
+- **Иерархия:** rooms → places (через transitions), containers, items. **transitions** — история перемещений; текущее местоположение = последняя запись по `created_at`.
+- У сущностей есть `deleted_at` (мягкое удаление). Включён RLS.
+- **Мультитенантность:** у сущностей поле `tenant_id`; активный тенант — cookie, на сервере `getActiveTenantId(request.headers)` (`lib/tenants/server`).
+
+### Конвенции
+
+- **Новая сущность:** добавить entity-config в `lib/entities/<entity>/entity-config.ts`, API-функции в `lib/<entity>/api.ts`, миграции в Supabase, при необходимости маршруты в `app/api/<entity>/`.
+- **В `lib/entities/`:** **services** — слой между API и UI (загрузка и нормализация данных страницы, например `item-detail.ts`); **helpers** — чистые утилиты и форматирование (display-name, fetch-list, quick-move, sort и т.д.).
+- **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. E2E — `tests/` (Playwright).
 
 ### Правила ESLint
 

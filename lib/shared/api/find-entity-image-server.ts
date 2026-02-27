@@ -4,6 +4,7 @@
  */
 
 import OpenAI from "openai";
+import { MAX_UPLOAD_FILE_SIZE_BYTES } from "./constants";
 
 export async function generateEntityImage(
   apiKey: string,
@@ -38,7 +39,7 @@ export async function generateEntityImage(
     }
 
     const buffer = Buffer.from(b64, "base64");
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = MAX_UPLOAD_FILE_SIZE_BYTES;
     if (buffer.length > maxSize) {
       return { error: "Изображение слишком большое" };
     }

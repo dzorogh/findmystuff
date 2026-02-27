@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getContainersWithLocationRpc } from "@/lib/containers/api";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Container } from "@/types/entity";
 
 /**
@@ -15,26 +17,14 @@ import type { Container } from "@/types/entity";
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
-    const entityTypeIdParam = searchParams.get("entityTypeId");
-    const entityTypeId =
-      entityTypeIdParam !== null && entityTypeIdParam !== ""
-        ? parseInt(entityTypeIdParam, 10)
-        : null;
+    const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
     const hasItemsParam = searchParams.get("hasItems");
     const hasItems =
       hasItemsParam === null || hasItemsParam === ""
@@ -45,12 +35,8 @@ export async function GET(request: NextRequest) {
       locationTypeParam !== null && locationTypeParam !== "" && locationTypeParam !== "all"
         ? locationTypeParam
         : null;
-    const placeIdParam = searchParams.get("placeId");
-    const placeId =
-      placeIdParam !== null && placeIdParam !== "" ? parseInt(placeIdParam, 10) : null;
-    const furnitureIdParam = searchParams.get("furnitureId");
-    const furnitureId =
-      furnitureIdParam !== null && furnitureIdParam !== "" ? parseInt(furnitureIdParam, 10) : null;
+    const placeId = parseOptionalInt(searchParams.get("placeId"));
+    const furnitureId = parseOptionalInt(searchParams.get("furnitureId"));
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -59,16 +45,16 @@ export async function GET(request: NextRequest) {
     const { data: containersData, error: fetchError } = await getContainersWithLocationRpc(supabase, {
       search_query: query?.trim() || null,
       show_deleted: showDeleted,
-      page_limit: 2000,
+      page_limit: DEFAULT_PAGE_LIMIT,
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
-      p_entity_type_id: Number.isNaN(entityTypeId) ? null : entityTypeId,
+      p_entity_type_id: entityTypeId,
       p_has_items: hasItems,
       p_destination_type: locationType,
-      p_place_id: placeId != null && !Number.isNaN(placeId) ? placeId : null,
+      p_place_id: placeId,
       filter_tenant_id: tenantId,
-      p_furniture_id: furnitureId != null && !Number.isNaN(furnitureId) ? furnitureId : null,
+      p_furniture_id: furnitureId,
     });
 
     if (fetchError) {
@@ -125,32 +111,18 @@ export async function GET(request: NextRequest) {
       data: containers,
     });
   } catch (error) {
-    console.error("Ошибка загрузки списка контейнеров:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки списка контейнеров:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
@@ -203,15 +175,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: newContainer });
   } catch (error) {
-    console.error("Ошибка создания контейнера:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при создании контейнера",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка создания контейнера:",
+      defaultMessage: "Произошла ошибка при создании контейнера",
+    });
   }
 }

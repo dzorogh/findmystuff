@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { getServerUser } from "@/lib/users/server";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export interface Setting {
   id: number;
@@ -36,22 +38,16 @@ export async function GET(_request: NextRequest) {
     if (fetchError) {
       return NextResponse.json(
         { error: fetchError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
     return NextResponse.json({ data: data || [] });
   } catch (error) {
-    console.error("Ошибка загрузки настроек:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке настроек",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки настроек:",
+      defaultMessage: "Произошла ошибка при загрузке настроек",
+    });
   }
 }
 
@@ -66,14 +62,14 @@ export async function PUT(request: NextRequest) {
     if (!key || value === undefined) {
       return NextResponse.json(
         { error: "Необходимы key и value" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     if (isUserSetting && !user?.id) {
       return NextResponse.json(
         { error: "Пользователь не авторизован" },
-        { status: 401 }
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -90,7 +86,7 @@ export async function PUT(request: NextRequest) {
     if (checkError && checkError.code !== "PGRST116") {
       return NextResponse.json(
         { error: checkError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -105,7 +101,7 @@ export async function PUT(request: NextRequest) {
       if (updateError) {
         return NextResponse.json(
           { error: updateError.message },
-          { status: 500 }
+          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );
       }
     } else {
@@ -123,22 +119,16 @@ export async function PUT(request: NextRequest) {
       if (insertError) {
         return NextResponse.json(
           { error: insertError.message },
-          { status: 500 }
+          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );
       }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Ошибка обновления настройки:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при обновлении настройки",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка обновления настройки:",
+      defaultMessage: "Произошла ошибка при обновлении настройки",
+    });
   }
 }

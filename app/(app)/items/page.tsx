@@ -95,6 +95,7 @@ export default function ItemsPage() {
           filterFields={listPage.filterFields}
           columns={listPage.columns}
           icon={listPage.icon}
+          kind={listPage.kind}
           getName={listPage.getName}
           getRowActions={getRowActions}
           counts={listPage.counts}

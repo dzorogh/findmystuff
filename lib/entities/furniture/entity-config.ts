@@ -1,6 +1,7 @@
 import { Copy, LayoutGrid, Pencil, Printer, RotateCcw, Sofa, Trash2 } from "lucide-react";
 import AddFurnitureForm from "@/components/forms/add-furniture-form";
 import { getFurniture } from "@/lib/furniture/api";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -32,9 +33,7 @@ async function fetchFurniture(params: FetchListParams): Promise<FetchListResult>
     roomId: filters.roomId ?? undefined,
     tenantId,
   });
-  const list = Array.isArray(response?.data) ? response.data : [];
-  const totalCount = response?.totalCount ?? list.length;
-  return { data: list, totalCount };
+  return createFetchListResult(response);
 }
 
 const BASE_PATH = "/furniture";
@@ -60,10 +59,6 @@ export const furnitureEntityConfig: EntityConfig = {
     title: "Добавить мебель",
     form: AddFurnitureForm,
   },
-  getName: (entity: EntityDisplay) =>
-    entity.name != null && entity.name.trim() !== ""
-      ? entity.name
-      : `Мебель #${entity.id}`,
   icon: Sofa,
   filters: {
     fields: [

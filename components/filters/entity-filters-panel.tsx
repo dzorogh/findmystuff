@@ -12,6 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { FilterFieldConfig, Filters } from "@/lib/app/types/entity-config";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
+/** Filter field config that has a key (excludes showDeleted). */
+type FilterFieldWithKey = Exclude<FilterFieldConfig, { type: "showDeleted" }>;
+
 export interface EntityFiltersPanelProps {
   fields: FilterFieldConfig[];
   filters: Filters;
@@ -33,137 +36,89 @@ export function EntityFiltersPanel({
     onFiltersChange({ ...filters, showDeleted: checked });
   };
 
-  const otherFields = fields.filter((f) => f.type !== "showDeleted");
+  const otherFields = fields.filter(
+    (f): f is FilterFieldWithKey => f.type !== "showDeleted"
+  );
+
+  const renderFilterField = (field: FilterFieldWithKey) => {
+    const value = (filters as Record<string, unknown>)[field.key];
+    const setFilterValue = (v: string | number | boolean | null) =>
+      onFiltersChange({
+        ...filters,
+        [field.key]: v === "all" || v == null ? null : v,
+      });
+    const setNumericValue = (v: string | null) =>
+      onFiltersChange({
+        ...filters,
+        [field.key]:
+          v === "all" || v == null ? null : parseInt(String(v), 10),
+      });
+
+    switch (field.type) {
+      case "yesNoAll":
+        return (
+          <YesNoAllFilter
+            key={field.key}
+            label={field.label}
+            value={(value as boolean | null | undefined) ?? null}
+            onChange={(v) => onFiltersChange({ ...filters, [field.key]: v })}
+          />
+        );
+      case "locationType":
+        return (
+          <LocationTypeSelect
+            key={field.key}
+            value={(value as "all" | "room" | "place" | "container" | null | undefined) ?? null}
+            onValueChange={(v) => setFilterValue(v === "all" ? null : v)}
+          />
+        );
+      case "room":
+        return (
+          <RoomsSelect
+            key={field.key}
+            value={(value as number | null | undefined) ?? null}
+            onValueChange={setNumericValue}
+          />
+        );
+      case "building":
+        return (
+          <BuildingsSelect
+            key={field.key}
+            value={(value as number | null | undefined) ?? null}
+            onValueChange={setNumericValue}
+          />
+        );
+      case "furniture":
+        return (
+          <FurnitureSelect
+            key={field.key}
+            value={(value as number | null | undefined) ?? null}
+            onValueChange={setNumericValue}
+          />
+        );
+      case "entityType":
+        return (
+          <EntityTypeFilterField
+            key={field.key}
+            entityKind={field.entityKind}
+            value={(value as number | null | undefined) ?? null}
+            onValueChange={setNumericValue}
+            label={
+              field.entityKind === "place"
+                ? "Тип места"
+                : field.entityKind === "furniture"
+                  ? "Тип мебели"
+                  : "Тип контейнера"
+            }
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   const fieldsContent = (
-    <>
-      {otherFields.map((field) => {
-        if (field.type === "yesNoAll") {
-          const value = (filters as Record<string, unknown>)[field.key] as
-            | boolean
-            | null
-            | undefined;
-          return (
-            <YesNoAllFilter
-              key={field.key}
-              label={field.label}
-              value={value ?? null}
-              onChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]: v,
-                })
-              }
-            />
-          );
-        }
-        if (field.type === "locationType") {
-          const value = (filters as Record<string, unknown>)[field.key] as
-            | "all"
-            | "room"
-            | "place"
-            | "container"
-            | null
-            | undefined;
-          return (
-            <LocationTypeSelect
-              key={field.key}
-              value={value ?? null}
-              onValueChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]: v === "all" ? null : v,
-                })
-              }
-            />
-          );
-        }
-        if (field.type === "room") {
-          const value = (filters as Record<string, unknown>)[field.key] as
-            | number
-            | null
-            | undefined;
-          return (
-            <RoomsSelect
-              key={field.key}
-              value={value ?? null}
-              onValueChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]:
-                    v === "all" || v == null ? null : parseInt(String(v), 10),
-                })
-              }
-            />
-          );
-        }
-        if (field.type === "building") {
-          const value = (filters as Record<string, unknown>)[field.key] as
-            | number
-            | null
-            | undefined;
-          return (
-            <BuildingsSelect
-              key={field.key}
-              value={value ?? null}
-              onValueChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]:
-                    v === "all" || v == null ? null : parseInt(String(v), 10),
-                })
-              }
-            />
-          );
-        }
-        if (field.type === "furniture") {
-          const value = (filters as Record<string, unknown>)[field.key] as
-            | number
-            | null
-            | undefined;
-          return (
-            <FurnitureSelect
-              key={field.key}
-              value={value ?? null}
-              onValueChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]:
-                    v === "all" || v == null ? null : parseInt(String(v), 10),
-                })
-              }
-            />
-          );
-        }
-        if (field.type === "entityType") {
-          return (
-            <EntityTypeFilterField
-              key={field.key}
-              entityKind={field.entityKind}
-              value={(filters as Record<string, unknown>)[field.key] as
-                | number
-                | null
-                | undefined}
-              onValueChange={(v) =>
-                onFiltersChange({
-                  ...filters,
-                  [field.key]:
-                    v === "all" || v == null ? null : parseInt(String(v), 10),
-                })
-              }
-              label={
-                field.entityKind === "place"
-                  ? "Тип места"
-                  : field.entityKind === "furniture"
-                    ? "Тип мебели"
-                    : "Тип контейнера"
-              }
-            />
-          );
-        }
-        return null;
-      })}
-    </>
+    <>{otherFields.map((field) => renderFilterField(field))}</>
   );
 
   return showDeletedField ? (

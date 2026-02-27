@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import type { SearchResult } from "@/types/entity";
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId: _tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
@@ -193,15 +185,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: results });
   } catch (error) {
-    console.error("Ошибка поиска:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при поиске",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка поиска:",
+      defaultMessage: "Произошла ошибка при поиске",
+    });
   }
 }

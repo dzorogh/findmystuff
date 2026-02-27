@@ -2,30 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getFurnitureWithCountsRpc } from "@/lib/furniture/api";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Furniture } from "@/types/entity";
-
-const parseOptionalInt = (value: string | null): number | null => {
-  if (value == null || value === "") return null;
-  const n = parseInt(value, 10);
-  return Number.isNaN(n) ? null : n;
-};
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
@@ -39,7 +26,7 @@ export async function GET(request: NextRequest) {
     const { data: furnitureData, error: fetchError } = await getFurnitureWithCountsRpc(supabase, {
       search_query: query?.trim() || null,
       show_deleted: showDeleted,
-      page_limit: 2000,
+      page_limit: DEFAULT_PAGE_LIMIT,
       page_offset: 0,
       sort_by: sortBy,
       sort_direction: sortDirection,
@@ -97,32 +84,18 @@ export async function GET(request: NextRequest) {
       totalCount,
     });
   } catch (error) {
-    console.error("Ошибка загрузки списка мебели:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки списка мебели:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
 
     const body = await request.json();
@@ -189,15 +162,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: newFurniture });
   } catch (error) {
-    console.error("Ошибка создания мебели:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при создании мебели",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка создания мебели:",
+      defaultMessage: "Произошла ошибка при создании мебели",
+    });
   }
 }

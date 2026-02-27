@@ -57,7 +57,7 @@ const EditItemForm = ({
       const loadItem = async () => {
         try {
           const response = await getItem(itemId);
-          const item = response.data?.item;
+          const item = response.data?.data;
           if (item) {
             setPhotoUrl(item.photo_url || null);
             if (item.item_type_id != null) setItemTypeId(item.item_type_id.toString());

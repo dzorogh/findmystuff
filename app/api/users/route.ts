@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { createClient as createServerClient } from "@/lib/shared/supabase/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createServerClient();
     const { data: memberships, error: membersError } = await supabase
       .from("tenant_memberships")
@@ -48,12 +44,10 @@ export async function GET(request: NextRequest) {
     const filteredUsers = (users ?? []).filter((u) => memberUserIds.has(u.id));
     return NextResponse.json({ users: filteredUsers });
   } catch (error) {
-    console.error("Error in GET /api/users:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Error in GET /api/users:",
+      defaultMessage: "Unknown error",
+    });
   }
 }
 
@@ -82,13 +76,9 @@ async function findUserByEmail(admin: ReturnType<typeof getSupabaseAdmin>, email
 
 export async function POST(request: NextRequest) {
   try {
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
 
     const body = await request.json();
     const { email, email_confirm } = body;
@@ -165,14 +155,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: data.user, password });
   } catch (error) {
-    console.error("Error in POST /api/users:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return apiErrorResponse(error, {
+      context: "Error in POST /api/users:",
+      defaultMessage: "Unknown error",
+    });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const body = await request.json();
     const { id, email } = body;
 
@@ -207,17 +200,17 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ user: data.user, password });
   } catch (error) {
-    console.error("Error in PUT /api/users:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Error in PUT /api/users:",
+      defaultMessage: "Unknown error",
+    });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("id");
 
@@ -240,11 +233,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in DELETE /api/users:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Error in DELETE /api/users:",
+      defaultMessage: "Unknown error",
+    });
   }
 }

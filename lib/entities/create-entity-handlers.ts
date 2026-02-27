@@ -24,13 +24,16 @@ export function createEntityListHandlers(
   ) => {
     if (action === "delete" && messages.confirm && !confirm(messages.confirm)) return;
     try {
-      const api =
-        action === "delete"
-          ? () => softDeleteApi.softDelete(apiTable, entityId)
-          : action === "restore"
-            ? () => softDeleteApi.restoreDeleted(apiTable, entityId)
-            : () => duplicateEntityApi.duplicate(apiTable, entityId);
-      const res = await api();
+      const res = await (() => {
+        switch (action) {
+          case "delete":
+            return softDeleteApi.softDelete(apiTable, entityId);
+          case "restore":
+            return softDeleteApi.restoreDeleted(apiTable, entityId);
+          case "duplicate":
+            return duplicateEntityApi.duplicate(apiTable, entityId);
+        }
+      })();
       if (res.error) throw new Error(res.error);
       toast.success(messages.success);
       refreshList();

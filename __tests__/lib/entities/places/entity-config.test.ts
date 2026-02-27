@@ -3,6 +3,7 @@ import {
   DEFAULT_PLACES_FILTERS,
   type PlacesFilters,
 } from "@/lib/entities/places/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getPlaces } from "@/lib/places/api";
 
 jest.mock("@/lib/places/api");
@@ -53,15 +54,13 @@ describe("places entity-config", () => {
     expect(keys).toContain("actions");
   });
 
-  it("getName возвращает name если не пустой", () => {
-    const getName = placesEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Полка" } as { id: number; name: string | null })).toBe("Полка");
+  it("отображаемое имя по умолчанию (getEntityDisplayName): name если не пустой", () => {
+    expect(getEntityDisplayName("place", 1, "Полка")).toBe("Полка");
   });
 
-  it("getName возвращает 'Место #id' если name пустой", () => {
-    const getName = placesEntityConfig.getName!;
-    expect(getName({ id: 3, name: null } as { id: number; name: string | null })).toBe("Место #3");
-    expect(getName({ id: 3, name: "" } as { id: number; name: string | null })).toBe("Место #3");
+  it("отображаемое имя по умолчанию: 'Место #id' если name пустой", () => {
+    expect(getEntityDisplayName("place", 3, null)).toBe("Место #3");
+    expect(getEntityDisplayName("place", 3, "")).toBe("Место #3");
   });
 
   it("fetch вызывает getPlaces и возвращает data", async () => {

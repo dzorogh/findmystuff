@@ -79,7 +79,7 @@ class EntitiesApiClient extends HttpClient {
   }
 
   async getItem(id: number, tenantId?: number | null) {
-    return this.request<{ item: Item }>(`/items/${id}`, { tenantId });
+    return this.request<{ data: Item }>(`/items/${id}`, { tenantId });
   }
 
   async getItemTransitions(id: number, tenantId?: number | null) {
@@ -176,7 +176,8 @@ export const getItems = (params?: Parameters<EntitiesApiClient["getItems"]>[0]) 
   entitiesApiClient.getItems(params);
 export const getItem = (id: number, tenantId?: number | null) =>
   entitiesApiClient.getItem(id, tenantId);
-export const getItemTransitions = (id: number) => entitiesApiClient.getItemTransitions(id);
+export const getItemTransitions = (id: number, tenantId?: number | null) =>
+  entitiesApiClient.getItemTransitions(id, tenantId);
 export const createItem = (data: Parameters<EntitiesApiClient["createItem"]>[0]) =>
   entitiesApiClient.createItem(data);
 export const updateItem = (id: number, data: Parameters<EntitiesApiClient["updateItem"]>[1]) =>

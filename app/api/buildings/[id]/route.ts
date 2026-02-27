@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { parseId } from "@/lib/shared/api/parse-id";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import type { Building } from "@/types/entity";
 
 export async function GET(
@@ -9,24 +11,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-    const supabase = await createClient();
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const resolvedParams = await Promise.resolve(params);
-    const buildingId = parseInt(resolvedParams.id, 10);
-
-    if (isNaN(buildingId) || buildingId <= 0) {
-      return NextResponse.json({ error: "Неверный ID здания" }, { status: 400 });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "здания" });
+    if (idResult instanceof NextResponse) return idResult;
+    const buildingId = idResult.id;
+    const supabase = await createClient();
 
     const { data: buildingData, error: buildingError } = await supabase
       .from("buildings")
@@ -41,12 +32,7 @@ export async function GET(
       );
     }
 
-    const entityTypes = buildingData.entity_types;
-    const entityType = Array.isArray(entityTypes) && entityTypes.length > 0
-      ? entityTypes[0]
-      : entityTypes && !Array.isArray(entityTypes)
-        ? entityTypes
-        : null;
+    const entityType = normalizeEntityTypeRelation(buildingData.entity_types);
 
     const building: Building = {
       id: buildingData.id,
@@ -75,16 +61,10 @@ export async function GET(
       data: { building, rooms },
     });
   } catch (error) {
-    console.error("Ошибка загрузки данных здания:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при загрузке данных",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка загрузки данных здания:",
+      defaultMessage: "Произошла ошибка при загрузке данных",
+    });
   }
 }
 
@@ -93,24 +73,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
-    const supabase = await createClient();
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
     const resolvedParams = await Promise.resolve(params);
-    const buildingId = parseInt(resolvedParams.id, 10);
-
-    if (isNaN(buildingId) || buildingId <= 0) {
-      return NextResponse.json({ error: "Неверный ID здания" }, { status: 400 });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "здания" });
+    if (idResult instanceof NextResponse) return idResult;
+    const buildingId = idResult.id;
+    const supabase = await createClient();
 
     const body = await request.json();
     const { name, photo_url, building_type_id } = body;
@@ -141,15 +110,9 @@ export async function PUT(
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Ошибка обновления здания:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при обновлении здания",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка обновления здания:",
+      defaultMessage: "Произошла ошибка при обновлении здания",
+    });
   }
 }

@@ -73,14 +73,14 @@ describe("entities/api", () => {
   it("getItem вызывает /items/:id", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ data: { item: { id: 1 } } }),
+      json: () => Promise.resolve({ data: { id: 1 } }),
     });
 
     const result = await getItem(1);
 
     expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain("/api/items/1");
     expect((global.fetch as jest.Mock).mock.calls[0][0]).not.toContain("includeTransitions");
-    expect(result.data?.item).toEqual({ id: 1 });
+    expect(result.data).toEqual({ id: 1 });
   });
 
   it("getItemTransitions вызывает /items/:id/transitions", async () => {

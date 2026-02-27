@@ -4,9 +4,9 @@ import MoveEntityForm from "@/components/forms/move-entity-form";
 import { getItems } from "@/lib/entities/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type { ComponentType } from "react";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
-  EntityDisplay,
   FetchListParams,
   FetchListResult,
   FilterFieldConfig,
@@ -53,8 +53,7 @@ async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
     sortDirection,
     tenantId,
   });
-  const data = Array.isArray(response?.data) ? response.data : [];
-  return { data, totalCount: response?.totalCount ?? 0 };
+  return createFetchListResult(response);
 }
 
 const BASE_PATH = "/items";
@@ -85,8 +84,6 @@ export const itemsEntityConfig: EntityConfig = {
     title: "Добавить вещь",
     form: AddItemForm,
   },
-  getName: (entity: EntityDisplay) =>
-    entity.name != null && entity.name.trim() !== "" ? entity.name : `Вещь #${entity.id}`,
   icon: Package,
   filters: {
     fields: [

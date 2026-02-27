@@ -3,6 +3,7 @@ import {
   DEFAULT_CONTAINERS_FILTERS,
   type ContainersFilters,
 } from "@/lib/entities/containers/entity-config";
+import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import { getContainers } from "@/lib/containers/api";
 
 jest.mock("@/lib/containers/api");
@@ -26,9 +27,8 @@ describe("containers entity-config", () => {
     expect(containersEntityConfig.filters.initial).toEqual(DEFAULT_CONTAINERS_FILTERS);
   });
 
-  it("getName использует getEntityDisplayName (контейнер)", () => {
-    const getName = containersEntityConfig.getName!;
-    expect(getName({ id: 1, name: "Ящик" } as { id: number; name: string | null })).toBe("Ящик");
+  it("отображаемое имя по умолчанию (getEntityDisplayName): контейнер", () => {
+    expect(getEntityDisplayName("container", 1, "Ящик")).toBe("Ящик");
   });
 
   it("DEFAULT_CONTAINERS_FILTERS содержит ожидаемые поля", () => {

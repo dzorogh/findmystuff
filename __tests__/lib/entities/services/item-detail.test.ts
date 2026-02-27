@@ -15,13 +15,13 @@ describe("item-detail service", () => {
   describe("fetchItemById", () => {
     it("возвращает item при успешном ответе", async () => {
       (getItem as jest.Mock).mockResolvedValue({
-        data: { item: { id: 1, name: "Item 1" } },
-        error: null,
+        data: { data: { id: 1, name: "Item 1" } },
+        error: undefined,
       });
 
       const result = await fetchItemById(1);
 
-      expect(getItem).toHaveBeenCalledWith(1);
+      expect(getItem).toHaveBeenCalledWith(1, undefined);
       expect(result).toEqual({ id: 1, name: "Item 1" });
     });
 
@@ -31,8 +31,14 @@ describe("item-detail service", () => {
       await expect(fetchItemById(1)).rejects.toThrow("Not found");
     });
 
-    it("выбрасывает ошибку при отсутствии item в data", async () => {
-      (getItem as jest.Mock).mockResolvedValue({ data: {}, error: null });
+    it("выбрасывает ошибку при отсутствии data", async () => {
+      (getItem as jest.Mock).mockResolvedValue({ data: null, error: null });
+
+      await expect(fetchItemById(1)).rejects.toThrow("Вещь не найдена");
+    });
+
+    it("выбрасывает ошибку при пустом payload.data", async () => {
+      (getItem as jest.Mock).mockResolvedValue({ data: {}, error: undefined });
 
       await expect(fetchItemById(1)).rejects.toThrow("Вещь не найдена");
     });
@@ -47,7 +53,7 @@ describe("item-detail service", () => {
 
       const result = await fetchItemTransitions(1);
 
-      expect(getItemTransitions).toHaveBeenCalledWith(1);
+      expect(getItemTransitions).toHaveBeenCalledWith(1, undefined);
       expect(result).toEqual([{ id: 1 }, { id: 2 }]);
     });
 

@@ -177,4 +177,42 @@ describe("SettingsContext", () => {
       );
     });
   });
+
+  it("updateSetting при ошибке API возвращает сообщение об ошибке", async () => {
+    const { updateSetting } = require("@/lib/settings/api");
+    updateSetting.mockResolvedValue({ data: null, error: "Update failed" });
+
+    const TestConsumer = () => {
+      const [result, setResult] = React.useState<string | null>(null);
+      const { updateSetting } = useSettings();
+      return (
+        <div>
+          <button
+            data-testid="update-setting-error"
+            onClick={async () => {
+              const r = await updateSetting("theme", "light");
+              setResult(r.error ?? "ok");
+            }}
+          />
+          <span data-testid="update-result">{result ?? "pending"}</span>
+        </div>
+      );
+    };
+
+    render(
+      <SettingsProvider>
+        <TestConsumer />
+      </SettingsProvider>
+    );
+
+    await act(async () => {
+      screen.getByTestId("update-setting-error").click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("update-result")).toHaveTextContent(
+        "Update failed"
+      );
+    });
+  });
 });

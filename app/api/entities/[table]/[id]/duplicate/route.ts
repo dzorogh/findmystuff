@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { getServerUser } from "@/lib/users/server";
-import { getActiveTenantId } from "@/lib/tenants/server";
+import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 
 const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings", "furniture"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
@@ -61,17 +61,9 @@ export async function POST(
   context: DuplicateParams
 ) {
   try {
-    const user = await getServerUser();
-    if (!user) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-    const tenantId = await getActiveTenantId(request.headers);
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "Выберите тенант или создайте склад" },
-        { status: 400 }
-      );
-    }
+    const auth = await requireAuthAndTenant(request);
+    if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(context.params);
     const table = resolvedParams.table as TableName;
@@ -211,15 +203,9 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("Ошибка дублирования сущности:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Произошла ошибка при дублировании сущности",
-      },
-      { status: 500 }
-    );
+    return apiErrorResponse(error, {
+      context: "Ошибка дублирования сущности:",
+      defaultMessage: "Произошла ошибка при дублировании сущности",
+    });
   }
 }

@@ -4,6 +4,7 @@ import AddRoomForm from "@/components/forms/add-room-form";
 import MoveRoomForm from "@/components/forms/move-room-form";
 import { getRooms } from "@/lib/rooms/api";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
+import { createFetchListResult } from "@/lib/entities/helpers/fetch-list";
 import type {
   EntityConfig,
   EntityDisplay,
@@ -44,9 +45,7 @@ async function fetchRooms(params: FetchListParams): Promise<FetchListResult> {
     buildingId: filters.buildingId ?? undefined,
     tenantId,
   });
-  const list = Array.isArray(response?.data) ? response.data : [];
-  const totalCount = response?.totalCount ?? list.length;
-  return { data: list, totalCount };
+  return createFetchListResult(response);
 }
 
 const BASE_PATH = "/rooms";
@@ -77,8 +76,6 @@ export const roomsEntityConfig: EntityConfig = {
     title: "Добавить помещение",
     form: AddRoomForm,
   },
-  getName: (entity: EntityDisplay) =>
-    entity.name != null && entity.name.trim() !== "" ? entity.name : `Помещение #${entity.id}`,
   icon: DoorOpen,
   filters: {
     fields: [
