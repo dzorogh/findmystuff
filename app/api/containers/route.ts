@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { insertEntityWithTransition } from "@/lib/shared/api/insert-entity-with-transition";
 import { getContainersWithLocationRpc } from "@/lib/containers/api";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
@@ -128,53 +129,37 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
-    const insertData: {
-      name: string | null;
-      entity_type_id: number | null;
-      photo_url: string | null;
-      tenant_id: number;
-    } = {
+    const insertData = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
       photo_url: photo_url || null,
       tenant_id: tenantId,
     };
 
-    const { data: newContainer, error: insertError } = await supabase
-      .from("containers")
-      .insert(insertData)
-      .select()
-      .single();
+    const transitionPayload =
+      destination_type && destination_id
+        ? {
+            destination_type,
+            destination_id: parseInt(destination_id, 10),
+            tenant_id: tenantId,
+          }
+        : null;
 
-    if (insertError) {
+    const result = await insertEntityWithTransition({
+      supabase,
+      table: "containers",
+      insertData,
+      transitionPayload,
+    });
+
+    if (result.error) {
       return NextResponse.json(
-        { error: insertError.message },
+        { error: result.error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    // Если указано местоположение, создаем transition
-    if (destination_type && destination_id && newContainer) {
-      const { error: transitionError } = await supabase
-        .from("transitions")
-        .insert({
-          container_id: newContainer.id,
-          destination_type,
-          destination_id: parseInt(destination_id),
-          tenant_id: tenantId,
-        });
-
-      if (transitionError) {
-        // Удаляем созданный контейнер, если не удалось создать transition
-        await supabase.from("containers").delete().eq("id", newContainer.id);
-        return NextResponse.json(
-          { error: transitionError.message },
-          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-        );
-      }
-    }
-
-    return NextResponse.json({ data: newContainer });
+    return NextResponse.json({ data: result.data });
   } catch (error) {
     return apiErrorResponse(error, {
       context: "Ошибка создания контейнера:",

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { photoApi } from "@/lib/shared/api/photo";
+import { toast } from "sonner";
+import { photoApiClient } from "@/lib/shared/api/photo";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,16 +38,14 @@ const ImageUpload = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверяем тип файла
     if (!file.type.startsWith("image/")) {
-      alert("Файл должен быть изображением");
+      toast.error("Файл должен быть изображением");
       return;
     }
 
-    // Проверяем размер файла (максимум 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      alert("Размер файла не должен превышать 10MB");
+      toast.error("Размер файла не должен превышать 10MB");
       return;
     }
 
@@ -61,7 +60,7 @@ const ImageUpload = ({
     setIsUploading(true);
     isUploadingRef.current = true;
     try {
-      const response = await photoApi.uploadPhoto(file);
+      const response = await photoApiClient.uploadPhoto(file);
 
       if (!response.data?.url) {
         throw new Error("Сервер не вернул URL загруженного файла");
@@ -73,13 +72,12 @@ const ImageUpload = ({
       // Даем время для обновления value prop перед снятием флага загрузки
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
-      console.error("Ошибка загрузки фото:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
           : "Произошла ошибка при загрузке фото";
-      alert(errorMessage);
-      setPreview(value || null); // Возвращаем предыдущее значение
+      toast.error(errorMessage);
+      setPreview(value || null);
     } finally {
       setIsUploading(false);
       // Сбрасываем флаг загрузки после небольшой задержки, чтобы value успел обновиться

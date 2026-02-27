@@ -1,5 +1,6 @@
 /**
  * API клиент для получения наименования товара по штрихкоду.
+ * Конвенция именования: *ApiClient (см. CONTRIBUTING.md).
  */
 
 import { HttpClient } from "@/lib/shared/api/http-client";
@@ -9,7 +10,7 @@ export interface BarcodeLookupResponse {
   error?: string;
 }
 
-class BarcodeLookupClient extends HttpClient {
+export class BarcodeLookupApiClient extends HttpClient {
   async lookup(barcode: string): Promise<BarcodeLookupResponse> {
     const result = await this.request<BarcodeLookupResponse>(
       `/barcode-lookup?barcode=${encodeURIComponent(barcode)}`
@@ -18,7 +19,8 @@ class BarcodeLookupClient extends HttpClient {
   }
 }
 
-const barcodeLookupClient = new BarcodeLookupClient();
+export const barcodeLookupApiClient = new BarcodeLookupApiClient();
 
+/** @deprecated Используйте barcodeLookupApiClient.lookup(barcode). */
 export const barcodeLookupApi = (barcode: string) =>
-  barcodeLookupClient.lookup(barcode);
+  barcodeLookupApiClient.lookup(barcode);

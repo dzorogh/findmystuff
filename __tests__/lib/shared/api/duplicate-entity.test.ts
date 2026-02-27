@@ -6,16 +6,16 @@ jest.mock("@/lib/shared/api/http-client", () => ({
   },
 }));
 
-import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
+import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 
-describe("duplicateEntityApi", () => {
+describe("duplicateEntityApiClient", () => {
   it("экспортирует API с методом duplicate", () => {
-    expect(duplicateEntityApi).toBeDefined();
-    expect(typeof duplicateEntityApi.duplicate).toBe("function");
+    expect(duplicateEntityApiClient).toBeDefined();
+    expect(typeof duplicateEntityApiClient.duplicate).toBe("function");
   });
 
   it("duplicate возвращает результат request", async () => {
-    const res = await duplicateEntityApi.duplicate("rooms", 5);
+    const res = await duplicateEntityApiClient.duplicate("rooms", 5);
     expect(res).toEqual({ id: 1 });
   });
 });

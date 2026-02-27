@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
+import { insertEntityWithTransition } from "@/lib/shared/api/insert-entity-with-transition";
 import { getItemsWithRoomRpc } from "@/lib/entities/api";
+import {
+  mapItemsRpcToItems,
+  type ItemsRpcRow,
+} from "@/lib/entities/helpers/map-items-rpc";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
-import type { Item } from "@/types/entity";
 
 /**
  * Retrieve a paginated, optionally filtered and sorted list of items including each item's last known location and the total matching count.
@@ -74,61 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     const totalCount = itemsData[0]?.total_count ?? 0;
-
-    const items: Item[] = itemsData.map((item: {
-      id: number;
-      name: string | null;
-      item_type_id: number | null;
-      item_type_name: string | null;
-      created_at: string;
-      deleted_at: string | null;
-      photo_url: string | null;
-      price_amount: number | null;
-      price_currency: string | null;
-      current_value_amount: number | null;
-      current_value_currency: string | null;
-      quantity: number | null;
-      purchase_date: string | null;
-      destination_type: string | null;
-      destination_id: number | null;
-      moved_at: string | null;
-      room_name: string | null;
-      room_id: number | null;
-    }) => {
-      const hasLocation = Boolean(item.destination_type);
-      const price =
-        item.price_amount != null && item.price_currency
-          ? { amount: item.price_amount, currency: item.price_currency }
-          : null;
-      const currentValue =
-        item.current_value_amount != null && item.current_value_currency
-          ? { amount: item.current_value_amount, currency: item.current_value_currency }
-          : null;
-
-      return {
-        id: item.id,
-        name: item.name,
-        item_type_id: item.item_type_id ?? null,
-        item_type: item.item_type_name ? { name: item.item_type_name } : null,
-        created_at: item.created_at,
-        deleted_at: item.deleted_at,
-        photo_url: item.photo_url,
-        price,
-        currentValue,
-        quantity: item.quantity ?? null,
-        purchaseDate: item.purchase_date ?? null,
-        room_id: item.room_id ?? null,
-        room_name: item.room_name ?? null,
-        last_location: hasLocation
-          ? {
-              destination_type: item.destination_type as "room" | "place" | "container" | "furniture" | null,
-              destination_id: item.destination_id,
-              moved_at: item.moved_at || "",
-              room_name: item.room_name ?? null,
-            }
-          : null,
-      };
-    });
+    const items = mapItemsRpcToItems(itemsData as ItemsRpcRow[]);
 
     return NextResponse.json({
       data: items,
@@ -196,41 +146,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: newItem, error: insertError } = await supabase
-      .from("items")
-      .insert(insertItemData)
-      .select()
-      .single();
+    const transitionPayload =
+      destination_type && destination_id
+        ? {
+            destination_type,
+            destination_id: parseInt(destination_id, 10),
+            tenant_id: tenantId,
+          }
+        : null;
 
-    if (insertError) {
+    const result = await insertEntityWithTransition({
+      supabase,
+      table: "items",
+      insertData: insertItemData,
+      transitionPayload,
+    });
+
+    if (result.error) {
       return NextResponse.json(
-        { error: insertError.message },
+        { error: result.error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    // Если указано местоположение, создаем transition
-    if (destination_type && destination_id && newItem) {
-      const { error: transitionError } = await supabase
-        .from("transitions")
-        .insert({
-          item_id: newItem.id,
-          destination_type,
-          destination_id: parseInt(destination_id),
-          tenant_id: tenantId,
-        });
-
-      if (transitionError) {
-        // Удаляем созданную вещь, если не удалось создать transition
-        await supabase.from("items").delete().eq("id", newItem.id);
-        return NextResponse.json(
-          { error: transitionError.message },
-          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-        );
-      }
-    }
-
-    return NextResponse.json({ data: newItem });
+    return NextResponse.json({ data: result.data });
   } catch (error) {
     return apiErrorResponse(error, {
       context: "Ошибка создания вещи:",

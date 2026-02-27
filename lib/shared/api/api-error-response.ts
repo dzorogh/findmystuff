@@ -1,10 +1,11 @@
 /**
  * Единообразный ответ с ошибкой 500 для catch-блоков API.
- * Логирует ошибку с контекстом и возвращает NextResponse с телом { error: string }.
+ * Логирует ошибку с контекстом (только в development) и возвращает NextResponse с телом { error: string }.
  */
 
 import { NextResponse } from "next/server";
 import { HTTP_STATUS } from "./http-status";
+import { logError, logErrorOnly } from "@/lib/shared/logger";
 
 const DEFAULT_MESSAGE = "Произошла ошибка";
 
@@ -16,9 +17,9 @@ export function apiErrorResponse(
     error instanceof Error ? error.message : options?.defaultMessage ?? DEFAULT_MESSAGE;
   const context = options?.context;
   if (context) {
-    console.error(context, error);
+    logError(context, error);
   } else {
-    console.error(error);
+    logErrorOnly(error);
   }
   return NextResponse.json(
     { error: message },

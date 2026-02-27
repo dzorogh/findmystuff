@@ -17,9 +17,6 @@ export const fetchItemById = async (
   itemId: number,
   tenantId?: number | null
 ): Promise<Item> => {
-  if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-    console.log("[fetchItemById] itemId=%s tenantId=%s (header x-tenant-id will be %s)", itemId, tenantId, tenantId != null && !Number.isNaN(tenantId) ? tenantId : "absent");
-  }
   const response = await getItem(itemId, tenantId);
   const resWithDebug = response as { error?: string; data?: Item | { data: Item }; debug?: { itemId: number; tenantId: number } };
 

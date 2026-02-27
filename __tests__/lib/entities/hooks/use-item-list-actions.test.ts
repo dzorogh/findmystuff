@@ -13,12 +13,12 @@ jest.mock("sonner");
 
 describe("useItemListActions", () => {
   const mockRefreshList = jest.fn();
-  const softDeleteApi = softDeleteApiModule.softDeleteApi as jest.Mocked<
-    typeof softDeleteApiModule.softDeleteApi
+  const softDeleteApiClient = softDeleteApiModule.softDeleteApiClient as jest.Mocked<
+    typeof softDeleteApiModule.softDeleteApiClient
   >;
-  const duplicateEntityApi =
-    duplicateEntityApiModule.duplicateEntityApi as jest.Mocked<
-      typeof duplicateEntityApiModule.duplicateEntityApi
+  const duplicateEntityApiClient =
+    duplicateEntityApiModule.duplicateEntityApiClient as jest.Mocked<
+      typeof duplicateEntityApiModule.duplicateEntityApiClient
     >;
   const toast = sonnerModule.toast as jest.Mocked<typeof sonnerModule.toast>;
 
@@ -26,9 +26,9 @@ describe("useItemListActions", () => {
 
   beforeEach(() => {
     mockRefreshList.mockClear();
-    softDeleteApi.softDelete.mockResolvedValue({});
-    softDeleteApi.restoreDeleted.mockResolvedValue({});
-    duplicateEntityApi.duplicate.mockResolvedValue({});
+    softDeleteApiClient.softDelete.mockResolvedValue({});
+    softDeleteApiClient.restoreDeleted.mockResolvedValue({});
+    duplicateEntityApiClient.duplicate.mockResolvedValue({});
     toast.success.mockClear();
     toast.error.mockClear();
   });
@@ -60,7 +60,7 @@ describe("useItemListActions", () => {
     expect(confirmSpy).toHaveBeenCalledWith(
       "Вы уверены, что хотите удалить эту вещь?"
     );
-    expect(softDeleteApi.softDelete).toHaveBeenCalledWith("items", 1);
+    expect(softDeleteApiClient.softDelete).toHaveBeenCalledWith("items", 1);
     expect(toast.success).toHaveBeenCalledWith("Вещь успешно удалена");
     expect(mockRefreshList).toHaveBeenCalled();
   });
@@ -68,7 +68,7 @@ describe("useItemListActions", () => {
   it("handleDeleteItem не вызывает API при отказе в confirm", async () => {
     const confirmFn = jest.fn(() => false);
     confirmSpy = jest.spyOn(globalThis, "confirm").mockImplementation(confirmFn);
-    softDeleteApi.softDelete.mockClear();
+    softDeleteApiClient.softDelete.mockClear();
     const { result } = renderHook(() =>
       useItemListActions({ refreshList: mockRefreshList })
     );
@@ -78,7 +78,7 @@ describe("useItemListActions", () => {
     });
 
     expect(confirmFn).toHaveBeenCalled();
-    expect(softDeleteApi.softDelete).not.toHaveBeenCalled();
+    expect(softDeleteApiClient.softDelete).not.toHaveBeenCalled();
     expect(mockRefreshList).not.toHaveBeenCalled();
   });
 
@@ -91,7 +91,7 @@ describe("useItemListActions", () => {
       await result.current.handleRestoreItem(2);
     });
 
-    expect(softDeleteApi.restoreDeleted).toHaveBeenCalledWith("items", 2);
+    expect(softDeleteApiClient.restoreDeleted).toHaveBeenCalledWith("items", 2);
     expect(toast.success).toHaveBeenCalledWith("Вещь успешно восстановлена");
     expect(mockRefreshList).toHaveBeenCalled();
   });
@@ -105,13 +105,13 @@ describe("useItemListActions", () => {
       await result.current.handleDuplicateItem(3);
     });
 
-    expect(duplicateEntityApi.duplicate).toHaveBeenCalledWith("items", 3);
+    expect(duplicateEntityApiClient.duplicate).toHaveBeenCalledWith("items", 3);
     expect(toast.success).toHaveBeenCalledWith("Вещь успешно дублирована");
     expect(mockRefreshList).toHaveBeenCalled();
   });
 
   it("при ошибке API показывает toast.error и не вызывает refreshList", async () => {
-    softDeleteApi.restoreDeleted.mockResolvedValue({
+    softDeleteApiClient.restoreDeleted.mockResolvedValue({
       error: "Ошибка восстановления",
     });
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
@@ -131,7 +131,7 @@ describe("useItemListActions", () => {
   });
 
   it("при исключении в API показывает toast.error", async () => {
-    softDeleteApi.restoreDeleted.mockRejectedValue(new Error("Network error"));
+    softDeleteApiClient.restoreDeleted.mockRejectedValue(new Error("Network error"));
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
     const { result } = renderHook(() =>
       useItemListActions({ refreshList: mockRefreshList })

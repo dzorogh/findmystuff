@@ -1,6 +1,6 @@
 import { createEntityListHandlers } from "@/lib/entities/create-entity-handlers";
-import { softDeleteApi } from "@/lib/shared/api/soft-delete";
-import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
+import { softDeleteApiClient } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 import { toast } from "sonner";
 
 jest.mock("@/lib/shared/api/soft-delete");
@@ -31,50 +31,50 @@ describe("createEntityListHandlers", () => {
   });
 
   it("handleDelete вызывает softDelete и refreshList", async () => {
-    (softDeleteApi.softDelete as jest.Mock).mockResolvedValue({});
+    (softDeleteApiClient.softDelete as jest.Mock).mockResolvedValue({});
     const { handleDelete } = createEntityListHandlers("items", labels, mockRefreshList);
 
     await handleDelete(5);
 
-    expect(softDeleteApi.softDelete).toHaveBeenCalledWith("items", 5);
+    expect(softDeleteApiClient.softDelete).toHaveBeenCalledWith("items", 5);
     expect(toast.success).toHaveBeenCalledWith("Удалено");
     expect(mockRefreshList).toHaveBeenCalled();
   });
 
   it("handleRestore вызывает restoreDeleted", async () => {
-    (softDeleteApi.restoreDeleted as jest.Mock).mockResolvedValue({});
+    (softDeleteApiClient.restoreDeleted as jest.Mock).mockResolvedValue({});
     const { handleRestore } = createEntityListHandlers("items", labels, mockRefreshList);
 
     await handleRestore(3);
 
-    expect(softDeleteApi.restoreDeleted).toHaveBeenCalledWith("items", 3);
+    expect(softDeleteApiClient.restoreDeleted).toHaveBeenCalledWith("items", 3);
     expect(toast.success).toHaveBeenCalledWith("Восстановлено");
     expect(mockRefreshList).toHaveBeenCalled();
   });
 
   it("handleDuplicate вызывает duplicate", async () => {
-    (duplicateEntityApi.duplicate as jest.Mock).mockResolvedValue({});
+    (duplicateEntityApiClient.duplicate as jest.Mock).mockResolvedValue({});
     const { handleDuplicate } = createEntityListHandlers("items", labels, mockRefreshList);
 
     await handleDuplicate(7);
 
-    expect(duplicateEntityApi.duplicate).toHaveBeenCalledWith("items", 7);
+    expect(duplicateEntityApiClient.duplicate).toHaveBeenCalledWith("items", 7);
     expect(toast.success).toHaveBeenCalledWith("Дублировано");
     expect(mockRefreshList).toHaveBeenCalled();
   });
 
   it("при отказе confirm handleDelete не вызывает API", async () => {
     (global as { confirm?: (msg: string) => boolean }).confirm = () => false;
-    (softDeleteApi.softDelete as jest.Mock).mockResolvedValue({});
+    (softDeleteApiClient.softDelete as jest.Mock).mockResolvedValue({});
     const { handleDelete } = createEntityListHandlers("items", labels, mockRefreshList);
 
     await handleDelete(1);
 
-    expect(softDeleteApi.softDelete).not.toHaveBeenCalled();
+    expect(softDeleteApiClient.softDelete).not.toHaveBeenCalled();
   });
 
   it("при ошибке API показывает toast.error", async () => {
-    (softDeleteApi.restoreDeleted as jest.Mock).mockResolvedValue({ error: "Ошибка" });
+    (softDeleteApiClient.restoreDeleted as jest.Mock).mockResolvedValue({ error: "Ошибка" });
     const { handleRestore } = createEntityListHandlers("items", labels, mockRefreshList);
 
     await handleRestore(1);

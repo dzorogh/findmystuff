@@ -2,9 +2,10 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { softDeleteApi } from "@/lib/shared/api/soft-delete";
-import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
+import { softDeleteApiClient } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
+import { logError } from "@/lib/shared/logger";
 
 interface UseItemListActionsParams {
   refreshList: () => void;
@@ -29,7 +30,7 @@ export function useItemListActions({ refreshList }: UseItemListActionsParams) {
         toast.success(options.successMsg);
         refreshList();
       } catch (err) {
-        console.error(`Ошибка ${options.errorMsg}:`, err);
+        logError(`Ошибка ${options.errorMsg}:`, err);
         toast.error(`Произошла ошибка ${options.errorMsg}`);
       }
     },
@@ -40,7 +41,7 @@ export function useItemListActions({ refreshList }: UseItemListActionsParams) {
     (itemId: number) =>
       runItemAction(itemId, {
         confirm: true,
-        api: () => softDeleteApi.softDelete("items", itemId),
+        api: () => softDeleteApiClient.softDelete("items", itemId),
         successMsg: "Вещь успешно удалена",
         errorMsg: "при удалении вещи",
       }),
@@ -50,7 +51,7 @@ export function useItemListActions({ refreshList }: UseItemListActionsParams) {
   const handleRestoreItem = useCallback(
     (itemId: number) =>
       runItemAction(itemId, {
-        api: () => softDeleteApi.restoreDeleted("items", itemId),
+        api: () => softDeleteApiClient.restoreDeleted("items", itemId),
         successMsg: "Вещь успешно восстановлена",
         errorMsg: "при восстановлении вещи",
       }),
@@ -60,7 +61,7 @@ export function useItemListActions({ refreshList }: UseItemListActionsParams) {
   const handleDuplicateItem = useCallback(
     (itemId: number) =>
       runItemAction(itemId, {
-        api: () => duplicateEntityApi.duplicate("items", itemId),
+        api: () => duplicateEntityApiClient.duplicate("items", itemId),
         successMsg: "Вещь успешно дублирована",
         errorMsg: "при дублировании вещи",
       }),

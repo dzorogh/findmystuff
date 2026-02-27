@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import type { User, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/shared/supabase/client";
 import { getClientUser } from "@/lib/users/api";
+import { logError } from "@/lib/shared/logger";
 import { toast } from "sonner";
 
 interface UserContextType {
@@ -32,7 +33,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser);
       } catch (err) {
         if (!isActive) return;
-        console.error("Error getting client user:", err);
+        logError("Error getting client user:", err);
         toast.error(err instanceof Error ? err.message : "Не удалось получить пользователя");
         setUser(null);
       } finally {

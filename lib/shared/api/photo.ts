@@ -4,7 +4,7 @@
 
 import { HttpClient } from "./http-client";
 
-export class PhotoApi extends HttpClient {
+export class PhotoApiClient extends HttpClient {
   async uploadPhoto(file: File) {
     const formData = new FormData();
     formData.append("file", file);
@@ -64,4 +64,4 @@ export class PhotoApi extends HttpClient {
 }
 
 
-export const photoApi = new PhotoApi();
+export const photoApiClient = new PhotoApiClient();

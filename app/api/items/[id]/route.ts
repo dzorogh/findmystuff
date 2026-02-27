@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
-import { parseId } from "@/lib/shared/api/parse-id";
+import { requireIdParam } from "@/lib/shared/api/require-id-param";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
@@ -18,16 +18,10 @@ export async function GET(
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
     const { tenantId } = auth;
-    const resolvedParams = await Promise.resolve(params);
-    const idResult = parseId(resolvedParams.id, { entityLabel: "вещи" });
+    const idResult = await requireIdParam(params, { entityLabel: "вещи" });
     if (idResult instanceof NextResponse) return idResult;
     const itemId = idResult.id;
     const supabase = await createClient();
-
-    const headerTenant = request.headers.get("x-tenant-id");
-    if (process.env.NODE_ENV === "development") {
-      console.log("[GET /api/items/:id] itemId=%s header x-tenant-id=%s resolved tenantId=%s", itemId, headerTenant ?? "absent", tenantId);
-    }
 
     const { data: itemData, error: itemError } = await supabase
       .from("items")
@@ -35,10 +29,6 @@ export async function GET(
       .eq("id", itemId)
       .eq("tenant_id", tenantId)
       .single();
-
-    if (process.env.NODE_ENV === "development" && (!itemData || itemError)) {
-      console.log("[GET /api/items/:id] itemId=%s tenantId=%s result: data=%s error=%s", itemId, tenantId, itemData ? "ok" : "null", itemError?.message ?? "none");
-    }
 
     if (itemError) {
       return NextResponse.json(
@@ -90,8 +80,7 @@ export async function PUT(
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
     const { tenantId } = auth;
-    const resolvedParams = await Promise.resolve(params);
-    const idResult = parseId(resolvedParams.id, { entityLabel: "вещи" });
+    const idResult = await requireIdParam(params, { entityLabel: "вещи" });
     if (idResult instanceof NextResponse) return idResult;
     const itemId = idResult.id;
     const supabase = await createClient();

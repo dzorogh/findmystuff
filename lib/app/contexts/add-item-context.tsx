@@ -12,9 +12,10 @@ import { BarcodeScanner } from "@/components/common/scanner";
 import { CameraCaptureDialog } from "@/components/common/camera-capture-dialog";
 import AddItemForm from "@/components/forms/add-item-form";
 import { toast } from "sonner";
-import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";
-import { photoApi } from "@/lib/shared/api/photo";
-import { recognizeItemPhotoApi } from "@/lib/shared/api/recognize-item-photo";
+import { barcodeLookupApiClient } from "@/lib/shared/api/barcode-lookup";
+import { photoApiClient } from "@/lib/shared/api/photo";
+import { recognizeItemPhotoApiClient } from "@/lib/shared/api/recognize-item-photo";
+import { logError } from "@/lib/shared/logger";
 
 interface AddItemContextValue {
   openByPhoto: () => void;
@@ -60,7 +61,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
     setIsBarcodeLookupLoading(true);
 
     try {
-      const data = await barcodeLookupApi(barcode);
+      const data = await barcodeLookupApiClient.lookup(barcode);
 
       if (data.error) {
         toast.error(data.error);
@@ -74,7 +75,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
         toast.info("Наименование не найдено. Введите название вручную.");
       }
     } catch (err) {
-      console.error("Barcode lookup error:", err);
+      logError("Barcode lookup error:", err);
       toast.error("Не удалось получить данные по штрихкоду");
       setInitialName(null);
       setAddFormOpen(true);
@@ -92,8 +93,8 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
 
     try {
       const [uploadResult, recognizeResult] = await Promise.all([
-        photoApi.uploadPhoto(file),
-        recognizeItemPhotoApi(file),
+        photoApiClient.uploadPhoto(file),
+        recognizeItemPhotoApiClient.recognize(file),
       ]);
 
       const url = uploadResult.data?.url ?? null;
@@ -110,7 +111,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
         toast.info("Название не распознано. Введите название вручную.");
       }
     } catch (err) {
-      console.error("Photo capture/recognize error:", err);
+      logError("Photo capture/recognize error:", err);
       toast.error(
         err instanceof Error ? err.message : "Не удалось обработать фотографию"
       );

@@ -1,6 +1,7 @@
 import { toast } from "sonner";
-import { softDeleteApi } from "@/lib/shared/api/soft-delete";
-import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
+import { softDeleteApiClient } from "@/lib/shared/api/soft-delete";
+import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
+import { logErrorOnly } from "@/lib/shared/logger";
 import type { TableName } from "@/lib/app/types/entity-config";
 import type { EntityLabels } from "@/lib/app/types/entity-config";
 
@@ -27,18 +28,18 @@ export function createEntityListHandlers(
       const res = await (() => {
         switch (action) {
           case "delete":
-            return softDeleteApi.softDelete(apiTable, entityId);
+            return softDeleteApiClient.softDelete(apiTable, entityId);
           case "restore":
-            return softDeleteApi.restoreDeleted(apiTable, entityId);
+            return softDeleteApiClient.restoreDeleted(apiTable, entityId);
           case "duplicate":
-            return duplicateEntityApi.duplicate(apiTable, entityId);
+            return duplicateEntityApiClient.duplicate(apiTable, entityId);
         }
       })();
       if (res.error) throw new Error(res.error);
       toast.success(messages.success);
       refreshList();
     } catch (err) {
-      console.error(err);
+      logErrorOnly(err);
       toast.error(messages.error);
     }
   };

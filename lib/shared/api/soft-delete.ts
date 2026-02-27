@@ -4,7 +4,7 @@
 
 import { HttpClient } from "./http-client";
 
-export class SoftDeleteApi extends HttpClient {
+export class SoftDeleteApiClient extends HttpClient {
   async softDelete(table: "items" | "places" | "containers" | "rooms" | "buildings" | "furniture", id: number) {
     return this.request<{ success: boolean }>(`/entities/${table}/${id}`, {
       method: "DELETE",
@@ -18,4 +18,4 @@ export class SoftDeleteApi extends HttpClient {
   }
 }
 
-export const softDeleteApi = new SoftDeleteApi();
+export const softDeleteApiClient = new SoftDeleteApiClient();

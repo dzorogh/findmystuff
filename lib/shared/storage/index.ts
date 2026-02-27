@@ -1,9 +1,10 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import https from "https";
+import { logError } from "@/lib/shared/logger";
 
 if (!process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
-  console.error("S3 credentials are not set in environment variables");
+  logError("S3 credentials are not set in environment variables");
 }
 
 const s3Client = new S3Client({
@@ -80,7 +81,7 @@ export const uploadToS3 = async (
     const publicUrl = `${endpoint}/${BUCKET_NAME}/${key}`;
     return publicUrl;
   } catch (error) {
-    console.error("S3 upload error:", error);
+    logError("S3 upload error:", error);
     throw new Error(
       error instanceof Error
         ? `Ошибка загрузки в S3: ${error.message}`

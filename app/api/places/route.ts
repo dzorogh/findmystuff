@@ -1,267 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
-import { normalizeSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
-import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
-import { getPlacesWithRoomRpc } from "@/lib/places/api";
-import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
-import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
-import type { Place } from "@/types/entity";
+import { insertEntityWithTransition } from "@/lib/shared/api/insert-entity-with-transition";
+import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
+import { normalizeSortParams } from "@/lib/shared/api/list-params";
+import { getPlacesList } from "@/lib/places/get-places-list";
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
-type RpcPlaceRow = {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  entity_type_name: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  room_id: number | null;
-  room_name: string | null;
-  furniture_id: number | null;
-  furniture_name: string | null;
-  items_count: number;
-  containers_count: number;
-};
-
-type EntityTypeRelation = { name: string | null };
-
-type FallbackPlaceRow = {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  entity_type: EntityTypeRelation | EntityTypeRelation[] | null;
-};
-
-const CODE_COLUMN_MISSING_ERROR = 'column "code" does not exist';
-
-const mapRpcPlaceToPlace = (place: RpcPlaceRow): Place => ({
-  id: place.id,
-  name: place.name,
-  entity_type_id: place.entity_type_id || null,
-  entity_type: place.entity_type_name
-    ? { name: place.entity_type_name }
-    : null,
-  created_at: place.created_at,
-  deleted_at: place.deleted_at,
-  photo_url: place.photo_url,
-  room_id: place.room_id ?? null,
-  room_name: place.room_name ?? null,
-  furniture_id: place.furniture_id ?? null,
-  furniture_name: place.furniture_name ?? null,
-  room: place.room_id
-    ? { id: place.room_id, name: place.room_name || null }
-    : null,
-  items_count: place.items_count ?? 0,
-  containers_count: place.containers_count ?? 0,
-});
-
-const buildCountMap = (rows: Array<{ destination_id: number | null }>) => {
-  const counts = new Map<number, number>();
-  rows.forEach((row) => {
-    if (typeof row.destination_id !== "number") return;
-    counts.set(row.destination_id, (counts.get(row.destination_id) ?? 0) + 1);
-  });
-  return counts;
-};
-
-/** Строит и выполняет запрос мест для fallback (без RPC). */
-async function executeFallbackPlacesQuery(
-  supabase: SupabaseClient,
-  showDeleted: boolean,
-  sortBy: SortBy,
-  sortDirection: SortDirection,
-  entityTypeId: number | null,
-  roomId: number | null
-): Promise<{ data: FallbackPlaceRow[] | null; error: string | null }> {
-  let fallbackQuery = supabase
-    .from("places")
-    .select(
-      "id, name, entity_type_id, created_at, deleted_at, photo_url, entity_type:entity_types(name)"
-    )
-    .order(sortBy === "name" ? "name" : "created_at", {
-      ascending: sortDirection === "asc",
-    })
-    .limit(DEFAULT_PAGE_LIMIT);
-
-  fallbackQuery = showDeleted
-    ? fallbackQuery.not("deleted_at", "is", null)
-    : fallbackQuery.is("deleted_at", null);
-
-  if (entityTypeId != null) {
-    fallbackQuery = fallbackQuery.eq("entity_type_id", entityTypeId);
-  }
-
-  if (roomId != null) {
-    const { data: placeIdsInRoom } = await supabase
-      .from("v_place_last_room_transition")
-      .select("place_id")
-      .eq("room_id", roomId);
-    const ids = (placeIdsInRoom ?? []).map((r: { place_id: number }) => r.place_id);
-    if (ids.length === 0) {
-      return { data: [], error: null };
-    }
-    fallbackQuery = fallbackQuery.in("id", ids);
-  }
-
-  const { data: fallbackRows, error: fallbackError } = await fallbackQuery;
-  if (fallbackError) {
-    return { data: null, error: fallbackError.message };
-  }
-  return { data: (fallbackRows || []) as FallbackPlaceRow[], error: null };
-}
-
-/** Загружает карты roomNameById, roomIdByPlaceId и счётчики items/containers по placeIds. */
-async function loadPlaceRoomAndCountMaps(
-  supabase: SupabaseClient,
-  placeIds: number[]
-): Promise<{
-  roomNameById: Map<number, string | null>;
-  roomIdByPlaceId: Map<number, number>;
-  itemCounts: Map<number, number>;
-  containerCounts: Map<number, number>;
-}> {
-  const [placeTransitionsResult, itemTransitionsResult, containerTransitionsResult] =
-    await Promise.all([
-      supabase
-        .from("v_place_last_room_transition")
-        .select("place_id, room_id")
-        .in("place_id", placeIds),
-      supabase
-        .from("mv_item_last_transition")
-        .select("destination_id")
-        .eq("destination_type", "place")
-        .in("destination_id", placeIds),
-      supabase
-        .from("mv_container_last_transition")
-        .select("destination_id")
-        .eq("destination_type", "place")
-        .in("destination_id", placeIds),
-    ]);
-
-  const placeTransitions = (placeTransitionsResult.data || []) as Array<{
-    place_id: number;
-    room_id: number | null;
-  }>;
-  const roomIds = Array.from(
-    new Set(
-      placeTransitions
-        .map((t) => t.room_id)
-        .filter((id): id is number => typeof id === "number")
-    )
-  );
-
-  const roomNameById = new Map<number, string | null>();
-  if (roomIds.length > 0) {
-    const { data: roomRows } = await supabase
-      .from("rooms")
-      .select("id, name")
-      .is("deleted_at", null)
-      .in("id", roomIds);
-    (roomRows || []).forEach((room) => {
-      roomNameById.set(room.id as number, (room.name as string | null) || null);
-    });
-  }
-
-  const roomIdByPlaceId = new Map<number, number>();
-  placeTransitions.forEach((t) => {
-    if (typeof t.room_id !== "number") return;
-    roomIdByPlaceId.set(t.place_id, t.room_id);
-  });
-
-  const itemCounts = buildCountMap(
-    (itemTransitionsResult.data || []) as Array<{ destination_id: number | null }>
-  );
-  const containerCounts = buildCountMap(
-    (containerTransitionsResult.data ||
-      []) as Array<{ destination_id: number | null }>
-  );
-
-  return { roomNameById, roomIdByPlaceId, itemCounts, containerCounts };
-}
-
-const fetchPlacesFallback = async (
-  supabase: SupabaseClient,
-  query: string | null,
-  showDeleted: boolean,
-  sortBy: SortBy,
-  sortDirection: SortDirection,
-  entityTypeId: number | null,
-  roomId: number | null
-): Promise<{ data: Place[] | null; error: string | null }> => {
-  const { data: fallbackRows, error: queryError } = await executeFallbackPlacesQuery(
-    supabase,
-    showDeleted,
-    sortBy,
-    sortDirection,
-    entityTypeId,
-    roomId
-  );
-  if (queryError) return { data: null, error: queryError };
-  if (!fallbackRows || fallbackRows.length === 0) {
-    return { data: [], error: null };
-  }
-
-  const normalizedQuery = query?.trim().toLowerCase();
-  const filteredRows = fallbackRows.filter((place) => {
-    if (!normalizedQuery) return true;
-    const entityType = normalizeEntityTypeRelation(place.entity_type);
-    return (
-      (place.name || "").toLowerCase().includes(normalizedQuery) ||
-      (entityType?.name || "").toLowerCase().includes(normalizedQuery)
-    );
-  });
-
-  if (filteredRows.length === 0) {
-    return { data: [], error: null };
-  }
-
-  const placeIds = filteredRows.map((place) => place.id);
-  const { roomNameById, roomIdByPlaceId, itemCounts, containerCounts } =
-    await loadPlaceRoomAndCountMaps(supabase, placeIds);
-
-  const places: Place[] = filteredRows.map((place) => {
-    const entityType = normalizeEntityTypeRelation(place.entity_type);
-    const placeRoomId = roomIdByPlaceId.get(place.id);
-    return {
-      id: place.id,
-      name: place.name,
-      entity_type_id: place.entity_type_id || null,
-      entity_type: entityType?.name ? { name: entityType.name } : null,
-      created_at: place.created_at,
-      deleted_at: place.deleted_at,
-      photo_url: place.photo_url,
-      room: placeRoomId
-        ? { id: placeRoomId, name: roomNameById.get(placeRoomId) || null }
-        : null,
-      items_count: itemCounts.get(place.id) ?? 0,
-      containers_count: containerCounts.get(place.id) ?? 0,
-    };
-  });
-
-  return { data: places, error: null };
-};
-
-/**
- * List places, optionally filtered by text, including deleted items, and sorted.
- *
- * Calls a Supabase RPC to retrieve places with their room data; falls back to a client-side query when the RPC fails due to a missing column. Requires an authenticated user and returns HTTP responses describing the result.
- *
- * @param request - Incoming request whose URL may include query parameters:
- *   - `query`: text to search in place name or entity type name
- *   - `showDeleted`: `"true"` to include deleted places
- *   - `sortBy`: field to sort by (e.g., `name` or `created_at`)
- *   - `sortDirection`: `asc` or `desc`
- * @returns On success, a JSON object with `data` containing an array of `Place` objects. If the user is not authenticated, returns a 401 response with an `error` message. On server or database errors, returns a 500 response with an `error` message.
- */
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAuthAndTenant(request);
@@ -279,52 +26,26 @@ export async function GET(request: NextRequest) {
       searchParams.get("sortDirection")
     );
 
-    const { data: placesData, error: fetchError } = await getPlacesWithRoomRpc(supabase, {
-      search_query: query,
-      show_deleted: showDeleted,
-      page_limit: DEFAULT_PAGE_LIMIT,
-      page_offset: 0,
-      sort_by: sortBy,
-      sort_direction: sortDirection,
-      filter_entity_type_id: entityTypeId ?? undefined,
-      filter_room_id: roomId ?? undefined,
-      filter_furniture_id: furnitureId ?? undefined,
-      filter_tenant_id: tenantId,
+    const { data: places, error } = await getPlacesList(supabase, {
+      query,
+      showDeleted,
+      sortBy,
+      sortDirection,
+      entityTypeId,
+      roomId,
+      furnitureId,
+      tenantId,
     });
 
-    if (fetchError) {
-      if (fetchError.message.includes(CODE_COLUMN_MISSING_ERROR)) {
-        const { data: fallbackPlaces, error: fallbackError } =
-          await fetchPlacesFallback(supabase, query, showDeleted, sortBy, sortDirection, entityTypeId, roomId);
-
-        if (fallbackError) {
-          return NextResponse.json(
-            { error: fallbackError },
-            { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-          );
-        }
-
-        return NextResponse.json({
-          data: fallbackPlaces || [],
-        });
-      }
-
+    if (error) {
       return NextResponse.json(
-        { error: fetchError.message },
+        { error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    if (!placesData || placesData.length === 0) {
-      return NextResponse.json({
-        data: [],
-      });
-    }
-
-    const places: Place[] = (placesData as RpcPlaceRow[]).map(mapRpcPlaceToPlace);
-
     return NextResponse.json({
-      data: places,
+      data: places ?? [],
     });
   } catch (error) {
     return apiErrorResponse(error, {
@@ -350,53 +71,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const insertData: {
-      name: string | null;
-      entity_type_id: number | null;
-      photo_url: string | null;
-      tenant_id: number;
-    } = {
+    const insertData = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
       photo_url: photo_url || null,
       tenant_id: tenantId,
     };
 
-    const { data: newPlace, error: insertError } = await supabase
-      .from("places")
-      .insert(insertData)
-      .select()
-      .single();
+    const transitionPayload =
+      destination_type && destination_id
+        ? {
+            destination_type,
+            destination_id: parseInt(destination_id, 10),
+            tenant_id: tenantId,
+          }
+        : null;
 
-    if (insertError) {
+    const result = await insertEntityWithTransition({
+      supabase,
+      table: "places",
+      insertData,
+      transitionPayload,
+    });
+
+    if (result.error) {
       return NextResponse.json(
-        { error: insertError.message },
+        { error: result.error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    // Если указано местоположение, создаем transition
-    if (destination_type && destination_id && newPlace) {
-      const { error: transitionError } = await supabase
-        .from("transitions")
-        .insert({
-          place_id: newPlace.id,
-          destination_type,
-          destination_id: parseInt(destination_id),
-          tenant_id: tenantId,
-        });
-
-      if (transitionError) {
-        // Удаляем созданное место, если не удалось создать transition
-        await supabase.from("places").delete().eq("id", newPlace.id);
-        return NextResponse.json(
-          { error: transitionError.message },
-          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-        );
-      }
-    }
-
-    return NextResponse.json({ data: newPlace });
+    return NextResponse.json({ data: result.data });
   } catch (error) {
     return apiErrorResponse(error, {
       context: "Ошибка создания места:",

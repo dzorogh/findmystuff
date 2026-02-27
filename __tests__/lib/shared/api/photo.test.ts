@@ -1,7 +1,7 @@
-import { photoApi } from "@/lib/shared/api/photo";
+import { photoApiClient } from "@/lib/shared/api/photo";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
-describe("photoApi", () => {
+describe("photoApiClient", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe("photoApi", () => {
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
-    const result = await photoApi.uploadPhoto(file);
+    const result = await photoApiClient.uploadPhoto(file);
 
     expect(result.data?.url).toBe("https://example.com/photo.jpg");
     expect(global.fetch).toHaveBeenCalledWith(
@@ -40,7 +40,7 @@ describe("photoApi", () => {
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
-    await expect(photoApi.uploadPhoto(file)).rejects.toThrow("Invalid file type");
+    await expect(photoApiClient.uploadPhoto(file)).rejects.toThrow("Invalid file type");
   });
 
   it("выбрасывает ошибку при !response.ok без json", async () => {
@@ -52,7 +52,7 @@ describe("photoApi", () => {
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
-    await expect(photoApi.uploadPhoto(file)).rejects.toThrow("Ошибка сервера");
+    await expect(photoApiClient.uploadPhoto(file)).rejects.toThrow("Ошибка сервера");
   });
 
   it("выбрасывает ошибку если сервер не вернул url", async () => {
@@ -62,13 +62,13 @@ describe("photoApi", () => {
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
-    await expect(photoApi.uploadPhoto(file)).rejects.toThrow(
+    await expect(photoApiClient.uploadPhoto(file)).rejects.toThrow(
       "Сервер не вернул URL загруженного файла"
     );
   });
 });
 
-describe("photoApi.findEntityImage", () => {
+describe("photoApiClient.findEntityImage", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -85,7 +85,7 @@ describe("photoApi.findEntityImage", () => {
       json: () => Promise.resolve({ url: "https://example.com/icon.png" }),
     });
 
-    const result = await photoApi.findEntityImage({ name: "Стол" });
+    const result = await photoApiClient.findEntityImage({ name: "Стол" });
 
     expect(result.data?.url).toBe("https://example.com/icon.png");
     expect(global.fetch).toHaveBeenCalledWith(
@@ -103,7 +103,7 @@ describe("photoApi.findEntityImage", () => {
       json: () => Promise.resolve({ url: "https://x.com/i.png" }),
     });
 
-    await photoApi.findEntityImage({ name: "Шкаф", entityType: "furniture" });
+    await photoApiClient.findEntityImage({ name: "Шкаф", entityType: "furniture" });
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -121,7 +121,7 @@ describe("photoApi.findEntityImage", () => {
     });
 
     await expect(
-      photoApi.findEntityImage({ name: "X" })
+      photoApiClient.findEntityImage({ name: "X" })
     ).rejects.toThrow("Not found");
   });
 
@@ -131,7 +131,7 @@ describe("photoApi.findEntityImage", () => {
       json: () => Promise.resolve({}),
     });
 
-    await expect(photoApi.findEntityImage({ name: "X" })).rejects.toThrow(
+    await expect(photoApiClient.findEntityImage({ name: "X" })).rejects.toThrow(
       "Сервер не вернул URL изображения"
     );
   });

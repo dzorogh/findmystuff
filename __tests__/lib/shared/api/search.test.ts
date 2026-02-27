@@ -1,6 +1,6 @@
-import { searchApi } from "@/lib/shared/api/search";
+import { searchApiClient } from "@/lib/shared/api/search";
 
-describe("searchApi", () => {
+describe("searchApiClient", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("searchApi", () => {
       json: () => Promise.resolve({ data: [] }),
     });
 
-    await searchApi.search("test query");
+    await searchApiClient.search("test query");
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/search"),
@@ -38,7 +38,7 @@ describe("searchApi", () => {
       json: () => Promise.resolve({ data: mockResults }),
     });
 
-    const result = await searchApi.search("item");
+    const result = await searchApiClient.search("item");
 
     expect(result.data).toEqual(mockResults);
   });

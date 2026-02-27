@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
-import { parseId } from "@/lib/shared/api/parse-id";
+import { requireIdParam } from "@/lib/shared/api/require-id-param";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import type { Transition } from "@/types/entity";
@@ -14,8 +14,7 @@ export async function GET(
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
     const supabase = await createClient();
-    const resolvedParams = await Promise.resolve(params);
-    const idResult = parseId(resolvedParams.id, { entityLabel: "вещи" });
+    const idResult = await requireIdParam(params, { entityLabel: "вещи" });
     if (idResult instanceof NextResponse) return idResult;
     const itemId = idResult.id;
 

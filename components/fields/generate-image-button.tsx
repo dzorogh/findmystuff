@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-import { photoApi } from "@/lib/shared/api/photo";
+import { photoApiClient } from "@/lib/shared/api/photo";
 
 interface GenerateImageButtonProps {
   entityName: string;
@@ -27,7 +27,7 @@ export function GenerateImageButton({
 
     setIsLoading(true);
     try {
-      const response = await photoApi.findEntityImage({ name, entityType });
+      const response = await photoApiClient.findEntityImage({ name, entityType });
       if (response.data?.url) {
         onSuccess(response.data.url);
       }

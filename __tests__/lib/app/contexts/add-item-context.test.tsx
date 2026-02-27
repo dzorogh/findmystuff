@@ -39,17 +39,17 @@ jest.mock("@/components/forms/add-item-form", () => ({
 }));
 
 jest.mock("@/lib/shared/api/barcode-lookup", () => ({
-  barcodeLookupApi: jest.fn(),
+  barcodeLookupApiClient: { lookup: jest.fn() },
 }));
 
 jest.mock("@/lib/shared/api/photo", () => ({
-  photoApi: {
+  photoApiClient: {
     uploadPhoto: jest.fn(),
   },
 }));
 
 jest.mock("@/lib/shared/api/recognize-item-photo", () => ({
-  recognizeItemPhotoApi: jest.fn(),
+  recognizeItemPhotoApiClient: { recognize: jest.fn() },
 }));
 
 jest.mock("sonner", () => ({
@@ -61,15 +61,15 @@ jest.mock("sonner", () => ({
   },
 }));
 
-const { barcodeLookupApi } = jest.requireMock(
+const { barcodeLookupApiClient } = jest.requireMock(
   "@/lib/shared/api/barcode-lookup"
-) as { barcodeLookupApi: jest.Mock };
-const { photoApi } = jest.requireMock(
+) as { barcodeLookupApiClient: { lookup: jest.Mock } };
+const { photoApiClient } = jest.requireMock(
   "@/lib/shared/api/photo"
-) as { photoApi: { uploadPhoto: jest.Mock } };
-const { recognizeItemPhotoApi } = jest.requireMock(
+) as { photoApiClient: { uploadPhoto: jest.Mock } };
+const { recognizeItemPhotoApiClient } = jest.requireMock(
   "@/lib/shared/api/recognize-item-photo"
-) as { recognizeItemPhotoApi: jest.Mock };
+) as { recognizeItemPhotoApiClient: { recognize: jest.Mock } };
 const { toast } = jest.requireMock("sonner") as {
   toast: {
     error: jest.Mock;
@@ -153,7 +153,7 @@ describe("AddItemContext", () => {
   });
 
   it("openByBarcode открывает сканер и при успешном скане заполняет initialName", async () => {
-    barcodeLookupApi.mockResolvedValue({
+    barcodeLookupApiClient.lookup.mockResolvedValue({
       productName: "  Товар  ",
       error: undefined,
     });
@@ -180,7 +180,7 @@ describe("AddItemContext", () => {
   });
 
   it("показывает info-toast, если наименование по штрихкоду не найдено", async () => {
-    barcodeLookupApi.mockResolvedValue({
+    barcodeLookupApiClient.lookup.mockResolvedValue({
       productName: "   ",
       error: undefined,
     });
@@ -208,8 +208,8 @@ describe("AddItemContext", () => {
     );
   });
 
-  it("показывает ошибку и открывает форму, если barcodeLookupApi выбрасывает исключение", async () => {
-    barcodeLookupApi.mockRejectedValue(new Error("network error"));
+  it("показывает ошибку и открывает форму, если barcodeLookupApiClient.lookup выбрасывает исключение", async () => {
+    barcodeLookupApiClient.lookup.mockRejectedValue(new Error("network error"));
     const consoleSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -240,10 +240,10 @@ describe("AddItemContext", () => {
   });
 
   it("openByPhoto открывает диалог камеры и при capture заполняет initialPhotoUrl и initialName", async () => {
-    photoApi.uploadPhoto.mockResolvedValue({
+    photoApiClient.uploadPhoto.mockResolvedValue({
       data: { url: "https://example.com/photo.jpg" },
     });
-    recognizeItemPhotoApi.mockResolvedValue({
+    recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "  Стол  ",
       error: undefined,
     });
@@ -272,10 +272,10 @@ describe("AddItemContext", () => {
   });
 
   it("показывает ошибки распознавания и отсутствие имени при обработке фотографии", async () => {
-    photoApi.uploadPhoto.mockResolvedValue({
+    photoApiClient.uploadPhoto.mockResolvedValue({
       data: { url: "https://example.com/photo2.jpg" },
     });
-    recognizeItemPhotoApi.mockResolvedValue({
+    recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "   ",
       error: "Ошибка распознавания",
     });
@@ -322,10 +322,10 @@ describe("AddItemContext", () => {
   });
 
   it("сбрасывает initialName и initialPhotoUrl при закрытии формы", async () => {
-    photoApi.uploadPhoto.mockResolvedValue({
+    photoApiClient.uploadPhoto.mockResolvedValue({
       data: { url: "https://example.com/photo3.jpg" },
     });
-    recognizeItemPhotoApi.mockResolvedValue({
+    recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "  Lamp  ",
       error: undefined,
     });

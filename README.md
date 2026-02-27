@@ -99,6 +99,12 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 - **Build type:** Dockerfile, путь `./Dockerfile`.
 - **Environment:** задать `INFISICAL_PROJECT_ID`, `INFISICAL_TOKEN` (или Machine Identity: `INFISICAL_CLIENT_ID` + `INFISICAL_CLIENT_SECRET`). Секреты подставляются при запуске контейнера через `infisical run -- node server.js`.
 
+### Первый деплой
+
+1. **Миграции и RLS** — применить все миграции в Supabase (SQL Editor или MCP). Убедиться, что RLS включён для мультитенантности.
+2. **Переменные окружения** — на сервере задать те же ключи, что и локально: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, при необходимости `DATABASE_URL`, `BARCODES_API_KEY`. При использовании Infisical секреты подставляются при старте контейнера.
+3. **Site URL и Redirect URLs** — в Supabase Dashboard → Settings → API указать production URL и при необходимости добавить его в Redirect URLs для OAuth.
+
 ---
 
 ## Архитектура и код
@@ -110,6 +116,10 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 - **`components/`** — переиспользуемые UI-компоненты.
 - **`contexts/`** — глобальный контекст тенанта (`tenant-context.tsx`). Контексты приложения — `lib/app/contexts/` (add-item, current-page, quick-move); доменные (users, settings) — в `lib/users/`, `lib/settings/`.
 - **`types/`** — глобальные типы сущностей и API (`types/entity.ts`). Типы списков и действий — `lib/app/types/` (`entity-config.ts`, `entity-action.ts`).
+
+### Поток данных
+
+Данные идут в одну сторону: **UI (страницы, компоненты)** запрашивает данные через **API-клиенты** (`lib/*/api.ts`), те вызывают **маршруты** `app/api/*`; маршруты используют **хелперы и доменную логику** в `lib/shared/api/` и `lib/<domain>/` и обращаются к **Supabase** (createClient только в `app/api/`, `lib/*/api.ts`, `lib/shared/api/`, контекстах и auth). Страницы и компоненты не импортируют Supabase и не делают прямые запросы к БД (см. ADR 001).
 
 ### Типы и конфиги сущностей
 
@@ -154,7 +164,11 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 
 - **Новая сущность:** добавить entity-config в `lib/entities/<entity>/entity-config.ts`, API-функции в `lib/<entity>/api.ts`, миграции в Supabase, при необходимости маршруты в `app/api/<entity>/`.
 - **В `lib/entities/`:** **services** — слой между API и UI (загрузка и нормализация данных страницы, например `item-detail.ts`); **helpers** — чистые утилиты и форматирование (display-name, fetch-list, quick-move, sort и т.д.).
-- **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. E2E — `tests/` (Playwright). Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. Покрытие Jest считается только по `lib/` (см. [CONTRIBUTING.md](CONTRIBUTING.md)). E2E — `tests/` (Playwright).
+
+### Неиспользуемые заготовки
+
+Маршрут `/api/products` и папка `lib/products/` в текущей версии не используются. Поиск по штрихкоду реализован через `/api/barcode-lookup` и `lib/shared/api/barcode-lookup*.ts`. Пустые директории `app/api/products/` и `lib/products/` при наличии можно удалить.
 
 ### Правила ESLint
 

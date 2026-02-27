@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
@@ -68,15 +69,14 @@ export async function POST(
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(context.params);
     const table = resolvedParams.table as TableName;
-    const sourceId = Number.parseInt(resolvedParams.id, 10);
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Недопустимая таблица" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
-    if (!Number.isInteger(sourceId) || sourceId <= 0) {
-      return NextResponse.json({ error: "Неверный ID" }, { status: HTTP_STATUS.BAD_REQUEST });
-    }
+    const idResult = parseId(resolvedParams.id, { entityLabel: "сущности" });
+    if (idResult instanceof NextResponse) return idResult;
+    const sourceId = idResult.id;
 
     const { data: sourceEntity, error: sourceError } = await supabase
       .from(table)

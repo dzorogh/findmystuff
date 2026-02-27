@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { photoApi } from "@/lib/shared/api/photo";
+import { photoApiClient } from "@/lib/shared/api/photo";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,7 @@ export function EntityImageCard({
     setIsUploading(true);
     isUploadingRef.current = true;
     try {
-      const response = await photoApi.uploadPhoto(file);
+      const response = await photoApiClient.uploadPhoto(file);
 
       if (!response.data?.url) {
         throw new Error("Сервер не вернул URL загруженного файла");
@@ -120,7 +120,7 @@ export function EntityImageCard({
 
     setIsGenerating(true);
     try {
-      const response = await photoApi.findEntityImage({ name, entityType });
+      const response = await photoApiClient.findEntityImage({ name, entityType });
       if (response.data?.url) {
         setPreview(response.data.url);
         await handlePhotoChange(response.data.url);

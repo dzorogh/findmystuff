@@ -1,6 +1,6 @@
-import { softDeleteApi } from "@/lib/shared/api/soft-delete";
+import { softDeleteApiClient } from "@/lib/shared/api/soft-delete";
 
-describe("softDeleteApi", () => {
+describe("softDeleteApiClient", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("softDeleteApi", () => {
       json: () => Promise.resolve({ data: { success: true } }),
     });
 
-    const result = await softDeleteApi.softDelete("items", 5);
+    const result = await softDeleteApiClient.softDelete("items", 5);
 
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/entities/items/5",
@@ -32,7 +32,7 @@ describe("softDeleteApi", () => {
       json: () => Promise.resolve({ data: { success: true } }),
     });
 
-    const result = await softDeleteApi.restoreDeleted("containers", 3);
+    const result = await softDeleteApiClient.restoreDeleted("containers", 3);
 
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/entities/containers/3",
@@ -48,7 +48,7 @@ describe("softDeleteApi", () => {
       json: () => Promise.resolve({ error: "Forbidden" }),
     });
 
-    const result = await softDeleteApi.softDelete("rooms", 1);
+    const result = await softDeleteApiClient.softDelete("rooms", 1);
 
     expect(result.error).toBe("Forbidden");
   });

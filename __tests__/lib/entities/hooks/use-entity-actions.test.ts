@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useEntityActions } from '@/lib/entities/hooks/use-entity-actions'
-import { softDeleteApi } from '@/lib/shared/api/soft-delete'
+import { softDeleteApiClient } from '@/lib/shared/api/soft-delete'
 import { toast } from 'sonner'
 
 jest.mock('@/lib/shared/api/soft-delete')
@@ -24,7 +24,7 @@ describe('useEntityActions', () => {
 
   it('удаляет сущность при подтверждении', async () => {
     const mockSoftDelete = jest.fn().mockResolvedValue({ data: {} })
-    ;(softDeleteApi.softDelete as jest.Mock) = mockSoftDelete
+    ;(softDeleteApiClient.softDelete as jest.Mock) = mockSoftDelete
 
     const { result } = renderHook(() =>
       useEntityActions({
@@ -53,7 +53,7 @@ describe('useEntityActions', () => {
   it('не удаляет сущность при отмене', async () => {
     mockConfirm.mockReturnValue(false)
     const mockSoftDelete = jest.fn()
-    ;(softDeleteApi.softDelete as jest.Mock) = mockSoftDelete
+    ;(softDeleteApiClient.softDelete as jest.Mock) = mockSoftDelete
 
     const { result } = renderHook(() =>
       useEntityActions({
@@ -72,7 +72,7 @@ describe('useEntityActions', () => {
 
   it('обрабатывает ошибку при удалении', async () => {
     const errorMessage = 'Ошибка удаления'
-    ;(softDeleteApi.softDelete as jest.Mock).mockResolvedValue({ error: errorMessage })
+    ;(softDeleteApiClient.softDelete as jest.Mock).mockResolvedValue({ error: errorMessage })
 
     const { result } = renderHook(() =>
       useEntityActions({
@@ -95,7 +95,7 @@ describe('useEntityActions', () => {
 
   it('восстанавливает удаленную сущность', async () => {
     const mockRestore = jest.fn().mockResolvedValue({ data: {} })
-    ;(softDeleteApi.restoreDeleted as jest.Mock) = mockRestore
+    ;(softDeleteApiClient.restoreDeleted as jest.Mock) = mockRestore
 
     const { result } = renderHook(() =>
       useEntityActions({
@@ -122,7 +122,7 @@ describe('useEntityActions', () => {
   })
 
   it('обрабатывает ошибку при восстановлении', async () => {
-    ;(softDeleteApi.restoreDeleted as jest.Mock).mockResolvedValue({
+    ;(softDeleteApiClient.restoreDeleted as jest.Mock).mockResolvedValue({
       error: 'Ошибка восстановления',
     })
 
@@ -149,7 +149,7 @@ describe('useEntityActions', () => {
 
   it('работает с разными типами сущностей', async () => {
     const mockSoftDelete = jest.fn().mockResolvedValue({ data: {} })
-    ;(softDeleteApi.softDelete as jest.Mock) = mockSoftDelete
+    ;(softDeleteApiClient.softDelete as jest.Mock) = mockSoftDelete
 
     const types: Array<'containers' | 'items' | 'places' | 'rooms'> = [
       'containers',

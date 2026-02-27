@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { searchApi } from "@/lib/shared/api/search";
+import { searchApiClient } from "@/lib/shared/api/search";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight } from "lucide-react";
@@ -34,7 +34,7 @@ export default function Home() {
     setIsSearching(true);
 
     try {
-      const response = await searchApi.search(queryToSearch.trim());
+      const response = await searchApiClient.search(queryToSearch.trim());
       // API возвращает { data: SearchResult[] }
       // request возвращает это напрямую, поэтому response будет { data: SearchResult[] }
       // И response.data будет SearchResult[]

@@ -31,7 +31,7 @@
 
 - **Юнит-тесты (Jest)**  
   Файлы в `__tests__/`, структура зеркалит `lib/`. Запуск: `npm run test` или `npm run test:watch`.  
-  Покрытие: `npm run test:coverage`. Генерируется `coverage/coverage-summary.json`; проверка порога: `npm run test:coverage:check`.
+  Покрытие: `npm run test:coverage`. **Покрытие считается только по коду в `lib/`** (в `jest.config.js` задано `collectCoverageFrom: ['lib/**/*...']`). Страницы `app/`, компоненты и контексты в отчёт не входят. Генерируется `coverage/coverage-summary.json`; проверка порога: `npm run test:coverage:check`.
 
 - **E2E (Playwright)**  
   Тесты в `tests/*.spec.ts`. Запуск: `npm run test:e2e` (через Infisical для env). Для CI: `npm run test:e2e:ci`.  
@@ -47,5 +47,5 @@
 ## Конвенции
 
 - В API везде использовать константы `HTTP_STATUS` вместо числовых литералов.
-- **Именование API-клиентов в `lib/`:** в кодовой базе встречаются оба суффикса — `*Api` (SearchApi, PhotoApi, SoftDeleteApi) и `*ApiClient` (PlacesApiClient, RoomsApiClient и т.д.). Для **новых** API-клиентов использовать суффикс **`*ApiClient`** (например `MyEntityApiClient`), чтобы со временем прийти к единому стилю. Рефакторинг существующих классов оставить на отдельную задачу.
+- **Именование API-клиентов в `lib/`:** для **новых** клиентов, обращающихся к маршрутам `/api/*`, использовать суффикс **`*ApiClient`** (например `PlacesApiClient`, `BarcodeLookupApiClient`, `RecognizeItemPhotoApiClient`). Экспортировать класс и синглтон, например: `export class BarcodeLookupApiClient extends HttpClient { ... }` и `export const barcodeLookupApiClient = new BarcodeLookupApiClient()`. Функции вида `*Api` (например устаревшие `barcodeLookupApi`, `recognizeItemPhotoApi`) не использовать для новых клиентов; в коде применять экземпляры `*ApiClient`.
 - Логирование: отладочные логи только в dev или через единый логгер; в продакшене не оставлять `console.log` и `console.error` без проверки `process.env.NODE_ENV === "development"` (в т.ч. в `HttpClient` и других catch-блоках).

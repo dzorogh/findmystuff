@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 
 import { getFurnitureItem, updateFurniture } from "@/lib/furniture/api";
-import { duplicateEntityApi } from "@/lib/shared/api/duplicate-entity";
+import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,7 +182,7 @@ export default function FurnitureDetailPage() {
   const printLabel = usePrintEntityLabel("furniture");
 
   const handleDuplicate = useCallback(async () => {
-    const res = await duplicateEntityApi.duplicate("furniture", furnitureId);
+    const res = await duplicateEntityApiClient.duplicate("furniture", furnitureId);
     if (res.error) toast.error(res.error);
     else {
       toast.success("Мебель успешно дублирована");
