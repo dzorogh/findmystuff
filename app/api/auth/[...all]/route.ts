@@ -1,6 +1,7 @@
 import { getAuth } from "@/lib/auth/config";
 import { toNextJsHandler } from "better-auth/next-js";
 import { NextResponse } from "next/server";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
           error: "Database connection failed",
           message: "Please check your DATABASE_URL in .env.local file",
         },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
     throw error;
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
           error: "Database connection failed",
           message: "Please check your DATABASE_URL in .env.local file",
         },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
     throw error;

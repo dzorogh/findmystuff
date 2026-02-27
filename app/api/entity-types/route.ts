@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     return NextResponse.json({ data });
@@ -61,14 +61,14 @@ export async function POST(request: NextRequest) {
     if (!entity_category || !name) {
       return NextResponse.json(
         { error: "Необходимы поля: entity_category, name" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     if (!["place", "container", "room", "item", "building", "furniture"].includes(entity_category)) {
       return NextResponse.json(
         { error: "entity_category должен быть 'place', 'container', 'room', 'item', 'building' или 'furniture'" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     return NextResponse.json({ data });
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest) {
     const { id, name } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "Необходим id" }, { status: 400 });
+      return NextResponse.json({ error: "Необходим id" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     const updateData: { name?: string } = {};
@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     return NextResponse.json({ data });
@@ -132,7 +132,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Необходим id" }, { status: 400 });
+      return NextResponse.json({ error: "Необходим id" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     const { error } = await supabase
@@ -142,7 +142,7 @@ export async function DELETE(request: NextRequest) {
       .eq("tenant_id", tenantId);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     return NextResponse.json({ success: true });

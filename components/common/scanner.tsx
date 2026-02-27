@@ -77,7 +77,7 @@ function ScannerBase({
         }
         await Promise.resolve(scannerRef.current.clear()).catch(() => { });
       } catch (err) {
-        console.debug("Error stopping scanner:", err);
+        if (process.env.NODE_ENV === "development") console.debug("Error stopping scanner:", err);
       }
       isScanningRef.current = false;
       setIsScanning(false);
@@ -216,7 +216,8 @@ function ScannerBase({
             if (
               errorMessage &&
               !errorMessage.includes("NotFoundException") &&
-              !errorMessage.includes("No QR code found")
+              !errorMessage.includes("No QR code found") &&
+              process.env.NODE_ENV === "development"
             ) {
               console.debug("Scanner error:", errorMessage);
             }

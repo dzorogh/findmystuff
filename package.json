@@ -1,5 +1,5 @@
 {
-  "name": "storage",
+  "name": "findmystuff",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -57,7 +57,6 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.562.0",
     "next": "^16.1.6",
-    "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",
     "nuqs": "^2.8.8",
     "openai": "^6.21.0",

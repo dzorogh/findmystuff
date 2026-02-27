@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { createClient as createServerClient } from "@/lib/shared/supabase/server";
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching tenant members:", membersError);
       return NextResponse.json(
         { error: membersError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching users:", error);
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { error: "Email обязателен" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -126,14 +127,14 @@ export async function POST(request: NextRequest) {
         if (!existingUser) {
           return NextResponse.json(
             { error: "Пользователь с этим email зарегистрирован, но не найден. Обратитесь в поддержку." },
-            { status: 500 }
+            { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
           );
         }
         const result = await addToTenant(existingUser.id);
         if (result.alreadyMember) {
           return NextResponse.json(
             { error: "Пользователь уже добавлен в этот склад" },
-            { status: 400 }
+            { status: HTTP_STATUS.BAD_REQUEST }
           );
         }
         return NextResponse.json({
@@ -141,11 +142,11 @@ export async function POST(request: NextRequest) {
           invited: true,
         });
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     if (!data.user) {
-      return NextResponse.json({ error: "Ошибка создания пользователя" }, { status: 500 });
+      return NextResponse.json({ error: "Ошибка создания пользователя" }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     const result = await addToTenant(data.user.id);
@@ -172,14 +173,14 @@ export async function PUT(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     if (!email) {
       return NextResponse.json(
         { error: "Email is required" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -194,7 +195,7 @@ export async function PUT(request: NextRequest) {
       console.error("Error updating user:", error);
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -217,7 +218,7 @@ export async function DELETE(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -227,7 +228,7 @@ export async function DELETE(request: NextRequest) {
       console.error("Error deleting user:", error);
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

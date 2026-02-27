@@ -6,6 +6,7 @@ import { getPlacesWithRoomRpc } from "@/lib/places/api";
 import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Place } from "@/types/entity";
@@ -299,7 +300,7 @@ export async function GET(request: NextRequest) {
         if (fallbackError) {
           return NextResponse.json(
             { error: fallbackError },
-            { status: 500 }
+            { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
           );
         }
 
@@ -310,7 +311,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json(
         { error: fetchError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -345,7 +346,7 @@ export async function POST(request: NextRequest) {
     if (destination_type && destination_type !== "furniture") {
       return NextResponse.json(
         { error: PLACE_DESTINATION_FURNITURE_ONLY },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -370,7 +371,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return NextResponse.json(
         { error: insertError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -390,7 +391,7 @@ export async function POST(request: NextRequest) {
         await supabase.from("places").delete().eq("id", newPlace.id);
         return NextResponse.json(
           { error: transitionError.message },
-          { status: 500 }
+          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );
       }
     }

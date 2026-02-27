@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/shared/supabase/client";
 import { useUser } from "@/lib/users/context";
+import { updatePassword } from "@/lib/auth/api";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,12 +49,10 @@ export default function AccountPage() {
     }
 
     setIsLoading(true);
-    const supabase = createClient();
-
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) {
-        setError(updateError.message);
+      const result = await updatePassword(newPassword);
+      if (result.error) {
+        setError(result.error);
         return;
       }
       setSuccess("Пароль успешно изменён");
@@ -115,7 +113,7 @@ export default function AccountPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form id="account-password-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="account-new-password">
@@ -167,7 +165,7 @@ export default function AccountPage() {
           </form>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" form="account-password-form" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

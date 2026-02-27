@@ -13,21 +13,23 @@ export async function GET(request: Request) {
     next = '/'
   }
 
-  // Логирование для отладки
+  // Логирование для отладки (только в development)
   const host = request.headers.get('host')
   const forwardedHost = request.headers.get('x-forwarded-host')
   const forwardedProto = request.headers.get('x-forwarded-proto')
   const referer = request.headers.get('referer')
-  
-  console.log('🔍 Callback route called:', {
-    origin,
-    host,
-    forwardedHost,
-    forwardedProto,
-    referer,
-    requestUrl: requestUrl.toString(),
-    allHeaders: Object.fromEntries(request.headers.entries()),
-  })
+
+  if (process.env.NODE_ENV === "development") {
+    console.log('🔍 Callback route called:', {
+      origin,
+      host,
+      forwardedHost,
+      forwardedProto,
+      referer,
+      requestUrl: requestUrl.toString(),
+      allHeaders: Object.fromEntries(request.headers.entries()),
+    });
+  }
 
   if (code) {
     const supabase = await createClient()
@@ -40,13 +42,13 @@ export async function GET(request: Request) {
       if (forwardedHost) {
         const protocol = forwardedProto || 'https'
         redirectUrl = `${protocol}://${forwardedHost}${next}`
-        console.log('✅ Using x-forwarded-host:', redirectUrl)
+        if (process.env.NODE_ENV === "development") console.log('✅ Using x-forwarded-host:', redirectUrl);
       } 
       // Приоритет 2: host из заголовков (может быть dev tunnels домен)
       else if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
         const protocol = forwardedProto || (host.includes('devtunnels.ms') ? 'https' : 'http')
         redirectUrl = `${protocol}://${host}${next}`
-        console.log('✅ Using host header:', redirectUrl)
+        if (process.env.NODE_ENV === "development") console.log('✅ Using host header:', redirectUrl);
       }
       // Приоритет 3: referer (откуда пришел запрос)
       else if (referer) {
@@ -54,7 +56,7 @@ export async function GET(request: Request) {
           const refererUrl = new URL(referer)
           if (!refererUrl.origin.includes('localhost')) {
             redirectUrl = `${refererUrl.origin}${next}`
-            console.log('✅ Using referer:', redirectUrl)
+            if (process.env.NODE_ENV === "development") console.log('✅ Using referer:', redirectUrl);
           } else {
             throw new Error('Referer is localhost')
           }
@@ -63,31 +65,31 @@ export async function GET(request: Request) {
           const baseUrl = process.env.NEXT_PUBLIC_APP_URL
           if (baseUrl && !baseUrl.includes('localhost')) {
             redirectUrl = baseUrl.startsWith('http') ? `${baseUrl}${next}` : `https://${baseUrl}${next}`
-            console.log('✅ Using NEXT_PUBLIC_APP_URL:', redirectUrl)
+            if (process.env.NODE_ENV === "development") console.log('✅ Using NEXT_PUBLIC_APP_URL:', redirectUrl);
           } else {
             redirectUrl = `${origin}${next}`
-            console.log('⚠️ Fallback to origin:', redirectUrl)
+            if (process.env.NODE_ENV === "development") console.log('⚠️ Fallback to origin:', redirectUrl);
           }
         }
       }
       // Приоритет 4: origin (если не localhost)
       else if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
         redirectUrl = `${origin}${next}`
-        console.log('✅ Using origin:', redirectUrl)
+        if (process.env.NODE_ENV === "development") console.log('✅ Using origin:', redirectUrl);
       }
       // Приоритет 5: переменная окружения
       else {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL
         if (baseUrl && !baseUrl.includes('localhost')) {
           redirectUrl = baseUrl.startsWith('http') ? `${baseUrl}${next}` : `https://${baseUrl}${next}`
-          console.log('✅ Using NEXT_PUBLIC_APP_URL (fallback):', redirectUrl)
+          if (process.env.NODE_ENV === "development") console.log('✅ Using NEXT_PUBLIC_APP_URL (fallback):', redirectUrl);
         } else {
           redirectUrl = `${origin}${next}`
-          console.log('⚠️ Final fallback to origin:', redirectUrl)
+          if (process.env.NODE_ENV === "development") console.log('⚠️ Final fallback to origin:', redirectUrl);
         }
       }
-      
-      console.log('🚀 Redirecting to:', redirectUrl)
+
+      if (process.env.NODE_ENV === "development") console.log('🚀 Redirecting to:', redirectUrl);
       return NextResponse.redirect(redirectUrl)
     } else {
       console.error('Supabase exchangeCodeForSession error:', error)
@@ -109,7 +111,7 @@ export async function GET(request: Request) {
       errorRedirectUrl = `${origin}/auth/auth-code-error`
     }
   }
-  
-  console.log('❌ Error redirect to:', errorRedirectUrl)
+
+  if (process.env.NODE_ENV === "development") console.log('❌ Error redirect to:', errorRedirectUrl);
   return NextResponse.redirect(errorRedirectUrl)
 }

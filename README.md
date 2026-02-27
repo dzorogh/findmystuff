@@ -1,6 +1,6 @@
 # Домашний склад
 
-Веб-приложение для управления домашним складом и быстрого поиска вещей. Иерархия: **Помещения → Места → Контейнеры → Вещи**.
+Веб-приложение для управления домашним складом и быстрого поиска вещей. Иерархия: **Здания → Помещения → Мебель → Места → Контейнеры → Вещи** (места привязаны к мебели, не к помещению напрямую).
 
 ## Возможности
 
@@ -14,7 +14,7 @@
 
 - **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, ShadCN UI
 - **Backend:** Supabase (PostgreSQL, Auth, RLS), Google OAuth 2.0
-- **Инструменты:** ESLint, pnpm
+- **Инструменты:** ESLint, npm
 
 ---
 
@@ -136,9 +136,17 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 - **Список:** конфиг сущности (columns, filters, fetch, actions) → `useListPage` (состояние, URL, загрузка) → `EntityList` / `EntityRow` (рендер). Ключевые файлы: `lib/app/hooks/use-list-page.tsx`, `lib/app/hooks/list-page-url-state.ts`, `components/lists/entity-list.tsx`, `lib/entities/<entity>/entity-config.ts`.
 - **Страница детали:** загрузка по id через API, формы редактирования, переходы (transitions). Для длинных GET [id] загрузка вынесена в `lib/<domain>/` (например `lib/rooms/load-room-detail.ts`).
 
+### Иерархия сущностей
+
+Полная иерархия (сверху вниз):
+
+**buildings (здания) → rooms (помещения) → furniture (мебель) → places (места) → containers (контейнеры) → items (вещи).**
+
+Места (places) привязаны к мебели (furniture), а не к помещению (room) напрямую. **transitions** — история перемещений; текущее местоположение вещи/контейнера определяется последней записью по `created_at`.
+
 ### Структура данных и мультитенантность
 
-- **Иерархия:** rooms → places (через transitions), containers, items. **transitions** — история перемещений; текущее местоположение = последняя запись по `created_at`.
+- **Иерархия:** см. подраздел «Иерархия сущностей» выше.
 - У сущностей есть `deleted_at` (мягкое удаление). Включён RLS.
 - **Мультитенантность:** у сущностей поле `tenant_id`; активный тенант — cookie, на сервере `getActiveTenantId(request.headers)` (`lib/tenants/server`).
 
@@ -146,15 +154,20 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 
 - **Новая сущность:** добавить entity-config в `lib/entities/<entity>/entity-config.ts`, API-функции в `lib/<entity>/api.ts`, миграции в Supabase, при необходимости маршруты в `app/api/<entity>/`.
 - **В `lib/entities/`:** **services** — слой между API и UI (загрузка и нормализация данных страницы, например `item-detail.ts`); **helpers** — чистые утилиты и форматирование (display-name, fetch-list, quick-move, sort и т.д.).
-- **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. E2E — `tests/` (Playwright).
+- **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. E2E — `tests/` (Playwright). Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Правила ESLint
 
-Прямые запросы к БД и импорт `createClient` из `@/lib/supabase/client` разрешены только в:
+Прямые запросы к БД и импорт `createClient` разрешены только в:
 
-- `lib/`, `app/api/`, `contexts/`, `components/auth/`
+- `lib/*/api.ts`, `lib/shared/api/**`
+- `app/api/**`
+- `contexts/**`
+- `components/auth/**`
 
-В страницах, остальных компонентах и хуках используйте **API-клиент** (`apiClient`), а не прямые вызовы Supabase/fetch. Проверка: `npm run lint`.
+В страницах приложения (кроме auth) и в остальных компонентах/хуках используйте **API-клиент** (`apiClient`), а не прямые вызовы Supabase/fetch.
+
+**Страницы auth (`app/(auth)/**`):** допускается прямой вызов `createClient()` и `supabase.auth.*` для входа, регистрации и сброса пароля; эти пути учтены в конфиге ESLint. Проверка: `npm run lint`.
 
 ---
 

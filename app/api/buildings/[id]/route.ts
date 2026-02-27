@@ -4,6 +4,7 @@ import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-t
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import type { Building } from "@/types/entity";
 
 export async function GET(
@@ -28,7 +29,7 @@ export async function GET(
     if (buildingError || !buildingData) {
       return NextResponse.json(
         { error: buildingError?.message ?? "Здание не найдено" },
-        { status: 404 }
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -104,7 +105,7 @@ export async function PUT(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

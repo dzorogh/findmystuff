@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     try {
       const url = await uploadToS3(buffer, fileName, file.type);
-      console.log("Uploaded photo URL:", url);
+      if (process.env.NODE_ENV === "development") console.log("Uploaded photo URL:", url);
       return NextResponse.json({ url });
     } catch (s3Error) {
       return apiErrorResponse(s3Error, {

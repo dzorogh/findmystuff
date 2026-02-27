@@ -3,7 +3,9 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { loadPlaceDetail } from "@/lib/places/load-place-detail";
+import { buildPlaceLikeUpdateBody } from "@/lib/shared/api/build-place-like-update-body";
 
 export async function GET(
   request: NextRequest,
@@ -48,16 +50,7 @@ export async function PUT(
     const supabase = await createClient();
 
     const body = await request.json();
-    const { name, entity_type_id, photo_url } = body;
-
-    const updateData: {
-      name?: string | null;
-      entity_type_id?: number | null;
-      photo_url?: string | null;
-    } = {};
-    if (name !== undefined) updateData.name = name?.trim() || null;
-    if (entity_type_id !== undefined) updateData.entity_type_id = entity_type_id || null;
-    if (photo_url !== undefined) updateData.photo_url = photo_url || null;
+    const updateData = buildPlaceLikeUpdateBody(body);
 
     const { data, error } = await supabase
       .from("places")
@@ -69,7 +62,7 @@ export async function PUT(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

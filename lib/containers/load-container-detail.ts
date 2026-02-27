@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import type { Transition, Location, Item } from "@/types/entity";
 
@@ -42,10 +43,10 @@ export async function loadContainerDetail(
     .single();
 
   if (containerError) {
-    return { error: containerError.message, status: 500 };
+    return { error: containerError.message, status: HTTP_STATUS.INTERNAL_SERVER_ERROR };
   }
   if (!containerData) {
-    return { error: "Контейнер не найден", status: 404 };
+    return { error: "Контейнер не найден", status: HTTP_STATUS.NOT_FOUND };
   }
 
   const { data: transitionsData, error: transitionsError } = await supabase
@@ -55,7 +56,7 @@ export async function loadContainerDetail(
     .order("created_at", { ascending: false });
 
   if (transitionsError) {
-    return { error: transitionsError.message, status: 500 };
+    return { error: transitionsError.message, status: HTTP_STATUS.INTERNAL_SERVER_ERROR };
   }
 
   const placeIds = (transitionsData || [])

@@ -4,6 +4,7 @@ import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getBuildingsWithCountsRpc } from "@/lib/buildings/api";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Building } from "@/types/entity";
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (fetchError) {
       return NextResponse.json(
         { error: fetchError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return NextResponse.json(
         { error: insertError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 export type IconSize = {
   width: number;
@@ -46,8 +47,8 @@ export const createIconResponse = (size: IconSize, theme?: IconTheme) => {
 
 export const createIconErrorResponse = (error: unknown) => {
   const message = error instanceof Error ? error.message : "Unknown error";
-  console.log(message);
+  if (process.env.NODE_ENV === "development") console.log(message);
   return new Response("Failed to generate the image", {
-    status: 500,
+    status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
   });
 };

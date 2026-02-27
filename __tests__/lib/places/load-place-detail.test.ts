@@ -2,6 +2,7 @@ import {
   loadPlaceDetail,
   type PlaceDetailData,
 } from "@/lib/places/load-place-detail";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 type QueryResult<T> = { data: T; error: null } | { data: null; error: { message: string } };
 
@@ -35,7 +36,7 @@ describe("loadPlaceDetail", () => {
 
     const res = await loadPlaceDetail(supabase as any, 1);
 
-    expect(res).toEqual({ error: "DB error", status: 500 });
+    expect(res).toEqual({ error: "DB error", status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
   });
 
   it("возвращает 404, если место не найдено", async () => {
@@ -45,7 +46,7 @@ describe("loadPlaceDetail", () => {
 
     const res = await loadPlaceDetail(supabase as any, 42);
 
-    expect(res).toEqual({ error: "Место не найдено", status: 404 });
+    expect(res).toEqual({ error: "Место не найдено", status: HTTP_STATUS.NOT_FOUND });
   });
 
   it("возвращает данные места без переходов, предметов и контейнеров", async () => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings", "furniture"] as const;
 type TableName = (typeof ALLOWED_TABLES)[number];
@@ -70,11 +71,11 @@ export async function POST(
     const sourceId = Number.parseInt(resolvedParams.id, 10);
 
     if (!ALLOWED_TABLES.includes(table)) {
-      return NextResponse.json({ error: "Недопустимая таблица" }, { status: 400 });
+      return NextResponse.json({ error: "Недопустимая таблица" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     if (!Number.isInteger(sourceId) || sourceId <= 0) {
-      return NextResponse.json({ error: "Неверный ID" }, { status: 400 });
+      return NextResponse.json({ error: "Неверный ID" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     const { data: sourceEntity, error: sourceError } = await supabase
@@ -84,18 +85,18 @@ export async function POST(
       .maybeSingle();
 
     if (sourceError) {
-      return NextResponse.json({ error: sourceError.message }, { status: 500 });
+      return NextResponse.json({ error: sourceError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
     if (!sourceEntity) {
-      return NextResponse.json({ error: "Сущность не найдена" }, { status: 404 });
+      return NextResponse.json({ error: "Сущность не найдена" }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     const source = sourceEntity as unknown as SourceRow;
     if (source.deleted_at) {
       return NextResponse.json(
         { error: "Нельзя дублировать удаленную сущность" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -156,7 +157,7 @@ export async function POST(
     if (insertError || !duplicatedEntity) {
       return NextResponse.json(
         { error: insertError?.message || "Не удалось создать копию" },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -172,7 +173,7 @@ export async function POST(
 
       if (transitionLoadError) {
         await supabase.from(table).delete().eq("id", duplicatedEntity.id);
-        return NextResponse.json({ error: transitionLoadError.message }, { status: 500 });
+        return NextResponse.json({ error: transitionLoadError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
       }
 
       const transition = lastTransition as LastTransitionRow | null;
@@ -191,7 +192,7 @@ export async function POST(
 
         if (transitionInsertError) {
           await supabase.from(table).delete().eq("id", duplicatedEntity.id);
-          return NextResponse.json({ error: transitionInsertError.message }, { status: 500 });
+          return NextResponse.json({ error: transitionInsertError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
         }
       }
     }
@@ -200,7 +201,7 @@ export async function POST(
       {
         data: duplicatedEntity,
       },
-      { status: 201 }
+      { status: HTTP_STATUS.CREATED }
     );
   } catch (error) {
     return apiErrorResponse(error, {

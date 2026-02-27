@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import type { Transition, Location, Item, Container, DestinationType } from "@/types/entity";
 
@@ -58,10 +59,10 @@ export async function loadPlaceDetail(
     .single();
 
   if (placeError) {
-    return { error: placeError.message, status: 500 };
+    return { error: placeError.message, status: HTTP_STATUS.INTERNAL_SERVER_ERROR };
   }
   if (!placeData) {
-    return { error: "Место не найдено", status: 404 };
+    return { error: "Место не найдено", status: HTTP_STATUS.NOT_FOUND };
   }
 
   const { data: transitionsData, error: transitionsError } = await supabase
@@ -71,7 +72,7 @@ export async function loadPlaceDetail(
     .order("created_at", { ascending: false });
 
   if (transitionsError) {
-    return { error: transitionsError.message, status: 500 };
+    return { error: transitionsError.message, status: HTTP_STATUS.INTERNAL_SERVER_ERROR };
   }
 
   const furnitureIds = (transitionsData || [])

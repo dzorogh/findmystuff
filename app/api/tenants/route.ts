@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { id: row.id, name: row.name, created_at: row.created_at },
-      { status: 201 }
+      { status: HTTP_STATUS.CREATED }
     );
   } catch (error) {
     return apiErrorResponse(error, {

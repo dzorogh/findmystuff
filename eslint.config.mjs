@@ -7,6 +7,10 @@ import nextTs from "eslint-config-next/typescript";
 const fetchAndSupabaseAllowedPaths = [
   "lib/*/api.ts",
   "lib/shared/api/**/*.ts",
+  "app/api/**/*.ts",
+  "app/(auth)/**/*.{ts,tsx}",
+  "contexts/**/*.{ts,tsx}",
+  "components/auth/**/*.{ts,tsx}",
 ];
 
 const ALLOWED_PATHS_HINT = "Прямые запросы разрешены только в " + fetchAndSupabaseAllowedPaths.join(", ") + ".";

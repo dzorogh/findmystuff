@@ -13,3 +13,17 @@ export const getCurrentUser = async () => {
   })();
   return client.getCurrentUser();
 };
+
+export type UpdatePasswordResult = { success?: boolean; error?: string };
+
+export const updatePassword = async (password: string): Promise<UpdatePasswordResult> => {
+  const client = new (class AuthApi extends HttpClient {
+    async updatePassword(password: string) {
+      return this.request<{ success?: boolean }>("/auth/update-password", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+    }
+  })();
+  return client.updatePassword(password);
+};

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import type { Transition } from "@/types/entity";
 
 export async function GET(
@@ -28,7 +29,7 @@ export async function GET(
     if (transitionsError) {
       return NextResponse.json(
         { error: transitionsError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

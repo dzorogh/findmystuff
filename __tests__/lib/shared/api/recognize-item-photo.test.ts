@@ -1,4 +1,5 @@
 import { recognizeItemPhotoApi } from "@/lib/shared/api/recognize-item-photo";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 describe("recognizeItemPhotoApi", () => {
   const originalFetch = global.fetch;
@@ -33,7 +34,7 @@ describe("recognizeItemPhotoApi", () => {
   it("бросает ошибку, если сервер вернул error", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 400,
+      status: HTTP_STATUS.BAD_REQUEST,
       json: () => Promise.resolve({ itemName: null, error: "Bad image" }),
     });
 
@@ -45,14 +46,14 @@ describe("recognizeItemPhotoApi", () => {
   it("бросает ошибку, если сервер вернул !ok без error", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 500,
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       json: () => Promise.resolve({ itemName: null }),
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
 
     await expect(recognizeItemPhotoApi(file)).rejects.toThrow(
-      "HTTP error! status: 500"
+      `HTTP error! status: ${HTTP_STATUS.INTERNAL_SERVER_ERROR}`
     );
   });
 });

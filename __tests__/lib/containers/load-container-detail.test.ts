@@ -2,6 +2,7 @@ import {
   loadContainerDetail,
   type ContainerDetailData,
 } from "@/lib/containers/load-container-detail";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 type QueryResult<T> = { data: T; error: null } | { data: null; error: { message: string } };
 
@@ -35,7 +36,7 @@ describe("loadContainerDetail", () => {
 
     const res = await loadContainerDetail(supabase as any, 1);
 
-    expect(res).toEqual({ error: "DB error", status: 500 });
+    expect(res).toEqual({ error: "DB error", status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
   });
 
   it("возвращает 404, если контейнер не найден", async () => {
@@ -45,7 +46,7 @@ describe("loadContainerDetail", () => {
 
     const res = await loadContainerDetail(supabase as any, 42);
 
-    expect(res).toEqual({ error: "Контейнер не найден", status: 404 });
+    expect(res).toEqual({ error: "Контейнер не найден", status: HTTP_STATUS.NOT_FOUND });
   });
 
   it("возвращает данные контейнера без переходов и предметов", async () => {

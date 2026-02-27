@@ -18,6 +18,7 @@ const CapacitorAuthListener = () => {
     const supabase = createClient();
     const lastHandledUrlRef = { current: "" };
     const log = (message: string, details?: unknown) => {
+      if (process.env.NODE_ENV !== "development") return;
       const suffix = details ? ` ${JSON.stringify(details)}` : "";
       console.log(`[auth][capacitor] ${message}${suffix}`);
     };

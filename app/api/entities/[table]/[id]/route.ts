@@ -3,6 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 const ALLOWED_TABLES = ["items", "places", "containers", "rooms", "buildings", "furniture"];
 
@@ -21,7 +22,7 @@ export async function DELETE(
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json(
         { error: "Недопустимая таблица" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -37,7 +38,7 @@ export async function DELETE(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -65,7 +66,7 @@ export async function POST(
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json(
         { error: "Недопустимая таблица" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -81,7 +82,7 @@ export async function POST(
     if (error) {
       return NextResponse.json(
         { error: error.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 

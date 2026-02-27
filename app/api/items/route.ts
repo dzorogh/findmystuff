@@ -5,6 +5,7 @@ import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { getItemsWithRoomRpc } from "@/lib/entities/api";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import type { Item } from "@/types/entity";
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     if (itemsError) {
       return NextResponse.json(
         { error: itemsError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Количество должно быть целым числом не менее 1" },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return NextResponse.json(
         { error: insertError.message },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -224,7 +225,7 @@ export async function POST(request: NextRequest) {
         await supabase.from("items").delete().eq("id", newItem.id);
         return NextResponse.json(
           { error: transitionError.message },
-          { status: 500 }
+          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );
       }
     }

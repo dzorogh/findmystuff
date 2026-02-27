@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import { getItemIdsInRoomRpc } from "@/lib/rooms/api";
 import type { Item, Place, Container, Transition, Furniture } from "@/types/entity";
@@ -67,10 +68,10 @@ export async function loadRoomDetail(
 
   const { data: roomData, error: roomError } = roomResult;
   if (roomError) {
-    return { error: roomError.message, status: 500 };
+    return { error: roomError.message, status: HTTP_STATUS.INTERNAL_SERVER_ERROR };
   }
   if (!roomData) {
-    return { error: "Помещение не найдено", status: 404 };
+    return { error: "Помещение не найдено", status: HTTP_STATUS.NOT_FOUND };
   }
 
   const entityType = normalizeEntityTypeRelation(roomData.entity_types);

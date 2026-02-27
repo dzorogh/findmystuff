@@ -74,11 +74,10 @@ const fetchEntityName = async (
   }
 };
 
-/** Логи только при открытом диалоге, чтобы не засорять консоль при загрузке. */
+/** Логи только при открытом диалоге и в development, чтобы не засорять консоль. */
 const LOG = (open: boolean, msg: string, data?: object) => {
-  if (open) {
-    console.log("[QuickMove]", msg, data ?? "");
-  }
+  if (process.env.NODE_ENV !== "development" || !open) return;
+  console.log("[QuickMove]", msg, data ?? "");
 };
 
 const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialogProps) => {

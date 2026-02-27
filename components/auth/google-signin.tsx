@@ -15,6 +15,7 @@ const GoogleSignIn = () => {
       setIsLoading(true);
       const supabase = createClient();
       const log = (message: string, details?: unknown) => {
+        if (process.env.NODE_ENV !== "development") return;
         const suffix = details ? ` ${JSON.stringify(details)}` : "";
         console.log(`[auth][google-signin] ${message}${suffix}`);
       };

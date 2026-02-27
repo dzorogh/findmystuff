@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- Node 20+, pnpm
+- Node 20+, npm
 - Supabase project with migrations applied
 - Google OAuth configured (Supabase Auth)
 

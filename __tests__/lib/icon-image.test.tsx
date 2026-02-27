@@ -78,26 +78,23 @@ describe('icon-image', () => {
     it('создает Response с ошибкой 500', () => {
       const error = new Error('Test error')
       const result = createIconErrorResponse(error)
-      
+
       expect(result).toBeInstanceOf(Response)
       expect(result.status).toBe(500)
-      expect(console.log).toHaveBeenCalledWith('Test error')
     })
 
     it('обрабатывает неизвестные ошибки', () => {
       const result = createIconErrorResponse('Unknown error')
-      
+
       expect(result).toBeInstanceOf(Response)
       expect(result.status).toBe(500)
-      expect(console.log).toHaveBeenCalledWith('Unknown error')
     })
 
     it('обрабатывает null ошибки', () => {
       const result = createIconErrorResponse(null)
-      
+
       expect(result).toBeInstanceOf(Response)
       expect(result.status).toBe(500)
-      expect(console.log).toHaveBeenCalledWith('Unknown error')
     })
   })
 })

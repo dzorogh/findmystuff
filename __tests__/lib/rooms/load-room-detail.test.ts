@@ -1,4 +1,5 @@
 import { loadRoomDetail, type RoomDetailData } from "@/lib/rooms/load-room-detail";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 const createRoomsBuilder = (roomResult: { data: any; error: any }) => {
   const builder: any = {};
@@ -189,7 +190,7 @@ describe("loadRoomDetail", () => {
 
     const res = await loadRoomDetail(supabase as any, 1);
 
-    expect(res).toEqual({ error: "DB error", status: 500 });
+    expect(res).toEqual({ error: "DB error", status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
   });
 
   it("возвращает 404, если комната не найдена", async () => {
@@ -200,7 +201,7 @@ describe("loadRoomDetail", () => {
 
     const res = await loadRoomDetail(supabase as any, 42);
 
-    expect(res).toEqual({ error: "Помещение не найдено", status: 404 });
+    expect(res).toEqual({ error: "Помещение не найдено", status: HTTP_STATUS.NOT_FOUND });
   });
 
   it("возвращает детали комнаты с вещами, местами, контейнерами и мебелью", async () => {
