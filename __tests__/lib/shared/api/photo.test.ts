@@ -1,4 +1,5 @@
 import { photoApi } from "@/lib/shared/api/photo";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 describe("photoApi", () => {
   const originalFetch = global.fetch;
@@ -33,7 +34,7 @@ describe("photoApi", () => {
   it("выбрасывает ошибку при !response.ok с json error", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 400,
+      status: HTTP_STATUS.BAD_REQUEST,
       statusText: "Bad Request",
       json: () => Promise.resolve({ error: "Invalid file type" }),
     });
@@ -45,7 +46,7 @@ describe("photoApi", () => {
   it("выбрасывает ошибку при !response.ok без json", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 500,
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       statusText: "Server Error",
       json: () => Promise.reject(new Error("Invalid JSON")),
     });
@@ -115,7 +116,7 @@ describe("photoApi.findEntityImage", () => {
   it("выбрасывает ошибку при !response.ok с json error", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 404,
+      status: HTTP_STATUS.NOT_FOUND,
       json: () => Promise.resolve({ error: "Not found" }),
     });
 

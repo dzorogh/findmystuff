@@ -1,4 +1,5 @@
 import { HttpClient } from "@/lib/shared/api/http-client";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 describe("HttpClient", () => {
   const originalFetch = global.fetch;
@@ -39,7 +40,7 @@ describe("HttpClient", () => {
   it("возвращает error при !response.ok", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 404,
+      status: HTTP_STATUS.NOT_FOUND,
       json: () => Promise.resolve({ error: "Not found" }),
     });
 
@@ -59,7 +60,7 @@ describe("HttpClient", () => {
   it("возвращает сообщение по умолчанию при !response.ok без error в json", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 500,
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       json: () => Promise.resolve({}),
     });
 

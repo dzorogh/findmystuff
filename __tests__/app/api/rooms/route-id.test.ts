@@ -104,7 +104,7 @@ describe("GET /api/rooms/[id]", () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
     parseId.mockReturnValue({ id: 999 });
     createClient.mockResolvedValue({});
-    loadRoomDetail.mockResolvedValue({ error: "Помещение не найдено", status: 404 });
+    loadRoomDetail.mockResolvedValue({ error: "Помещение не найдено", status: HTTP_STATUS.NOT_FOUND });
 
     const { GET } = await import("@/app/api/rooms/[id]/route");
     const request = createRequest();

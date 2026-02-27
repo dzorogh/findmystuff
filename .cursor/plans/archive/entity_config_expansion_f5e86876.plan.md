@@ -18,7 +18,7 @@ isProject: false
 
 1. Несогласованность API: `useListPage` уже работает с `addForm`, страницы частично используют `addDialog`.
 2. Логика одной сущности разбита на 3-4 файла.
-3. `list-page-content` частично “items-specific” (хардкод заголовков/кнопок).
+3. `list-page-content` частично "items-specific" (хардкод заголовков/кнопок).
 4. Настройки move (title/messages/destinationTypes) дублируются между list и detail.
 
 ## 3. Целевой контракт

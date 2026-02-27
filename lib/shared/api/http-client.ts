@@ -45,7 +45,9 @@ export class HttpClient {
 
       return jsonData;
     } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+      if (process.env.NODE_ENV === "development") {
+        console.error(`API request failed: ${endpoint}`, error);
+      }
       throw error;
     }
   }

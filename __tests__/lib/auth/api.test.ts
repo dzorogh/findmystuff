@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/api";
+import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
 describe("auth/api getCurrentUser", () => {
   const originalFetch = global.fetch;
@@ -30,7 +31,7 @@ describe("auth/api getCurrentUser", () => {
   it("возвращает error при неуспешном ответе", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      status: 401,
+      status: HTTP_STATUS.UNAUTHORIZED,
       json: () => Promise.resolve({ error: "Unauthorized" }),
     });
 
