@@ -2,29 +2,9 @@
  * Маппинг строк RPC get_items_with_room в тип Item для GET /api/items.
  */
 
-import type { Item } from "@/types/entity";
+import type { Item, ItemsRpcRow } from "@/types/entity";
 
-export type ItemsRpcRow = {
-  id: number;
-  name: string | null;
-  item_type_id: number | null;
-  item_type_name: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  price_amount: number | null;
-  price_currency: string | null;
-  current_value_amount: number | null;
-  current_value_currency: string | null;
-  quantity: number | null;
-  purchase_date: string | null;
-  destination_type: string | null;
-  destination_id: number | null;
-  moved_at: string | null;
-  room_name: string | null;
-  room_id: number | null;
-  total_count?: number;
-};
+export type { ItemsRpcRow };
 
 export function mapItemsRpcToItems(rows: ItemsRpcRow[]): Item[] {
   return rows.map((item) => {

@@ -7,7 +7,7 @@ import type {
   FetchListParams,
   FetchListResult,
   Filters,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 
 export interface BuildingsFilters extends Filters {
   showDeleted: boolean;

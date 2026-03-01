@@ -2,18 +2,12 @@
  * Базовый HTTP-клиент для API запросов
  */
 
+import type { ApiResponse, RequestOptions } from "@/types/api";
+
+export type { ApiResponse, RequestOptions };
+
 const API_BASE_URL = "/api";
 const TENANT_HEADER = "x-tenant-id";
-
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  totalCount?: number;
-}
-
-export interface RequestOptions extends RequestInit {
-  tenantId?: number | null;
-}
 
 export class HttpClient {
   protected async request<T>(

@@ -4,7 +4,7 @@ import {
   TableBody,
 } from "@/components/ui/table";
 import { EntityRowSkeleton } from "@/components/lists/entity-row-skeleton";
-import type { ListColumnConfig } from "@/lib/app/types/entity-config";
+import type { ListColumnConfig } from "@/types/entity";
 
 const DEFAULT_ROW_COUNT = 6;
 

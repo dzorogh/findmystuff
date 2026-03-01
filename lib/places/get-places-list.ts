@@ -4,29 +4,16 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { SortBy, SortDirection } from "@/lib/shared/api/list-params";
+import type { GetPlacesListParams, SortBy, SortDirection } from "@/types/api";
+import type { Place, RpcPlaceRow } from "@/types/entity";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import { getPlacesWithRoomRpc } from "@/lib/places/api";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
-import type { Place } from "@/types/entity";
+
+export type { GetPlacesListParams } from "@/types/api";
+export type { RpcPlaceRow } from "@/types/entity";
 
 const CODE_COLUMN_MISSING_ERROR = 'column "code" does not exist';
-
-export type RpcPlaceRow = {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  entity_type_name: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  photo_url: string | null;
-  room_id: number | null;
-  room_name: string | null;
-  furniture_id: number | null;
-  furniture_name: string | null;
-  items_count: number;
-  containers_count: number;
-};
 
 type EntityTypeRelation = { name: string | null };
 
@@ -246,17 +233,6 @@ async function fetchPlacesFallback(
 
   return { data: places, error: null };
 }
-
-export type GetPlacesListParams = {
-  query: string | null;
-  showDeleted: boolean;
-  sortBy: SortBy;
-  sortDirection: SortDirection;
-  entityTypeId: number | null;
-  roomId: number | null;
-  furnitureId: number | null;
-  tenantId: number;
-};
 
 /**
  * Загружает список мест: RPC get_places_with_room с fallback при ошибке отсутствующей колонки.

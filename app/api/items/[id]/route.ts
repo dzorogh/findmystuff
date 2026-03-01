@@ -6,9 +6,7 @@ import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
-import type { ItemEntity } from "@/types/entity";
-
-type Item = ItemEntity;
+import type { Item } from "@/types/entity";
 
 export async function GET(
   request: NextRequest,

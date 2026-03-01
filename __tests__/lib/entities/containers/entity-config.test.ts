@@ -67,8 +67,8 @@ describe("containers entity-config", () => {
   it("fetch с entityTypeId фильтрует по entity_type_id", async () => {
     (getContainers as jest.Mock).mockResolvedValue({
       data: [
-        { id: 1, entity_type_id: 5, itemsCount: 2 },
-        { id: 2, entity_type_id: 3, itemsCount: 0 },
+        { id: 1, entity_type_id: 5, items_count: 2 },
+        { id: 2, entity_type_id: 3, items_count: 0 },
       ],
     });
 
@@ -92,8 +92,8 @@ describe("containers entity-config", () => {
   it("fetch с hasItems: true фильтрует контейнеры без вещей", async () => {
     (getContainers as jest.Mock).mockResolvedValue({
       data: [
-        { id: 1, itemsCount: 2 },
-        { id: 2, itemsCount: 0 },
+        { id: 1, items_count: 2 },
+        { id: 2, items_count: 0 },
       ],
     });
 
@@ -111,14 +111,14 @@ describe("containers entity-config", () => {
     });
 
     expect(result.data).toHaveLength(1);
-    expect(result.data[0].itemsCount).toBe(2);
+    expect(result.data[0].items_count).toBe(2);
   });
 
   it("fetch с hasItems: false фильтрует контейнеры с вещами", async () => {
     (getContainers as jest.Mock).mockResolvedValue({
       data: [
-        { id: 1, itemsCount: 2 },
-        { id: 2, itemsCount: 0 },
+        { id: 1, items_count: 2 },
+        { id: 2, items_count: 0 },
       ],
     });
 
@@ -136,7 +136,7 @@ describe("containers entity-config", () => {
     });
 
     expect(result.data).toHaveLength(1);
-    expect(result.data[0].itemsCount).toBe(0);
+    expect(result.data[0].items_count).toBe(0);
   });
 
   it("fetch с locationType фильтрует по destination_type", async () => {

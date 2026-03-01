@@ -9,8 +9,7 @@ import { ListPagination } from "@/components/lists/list-pagination";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { useAddItem } from "@/lib/app/contexts/add-item-context";
 import { resolveActions } from "@/lib/entities/resolve-actions";
-import type { ActionsContext } from "@/lib/app/types/entity-action";
-import type { EntityDisplay } from "@/lib/app/types/entity-config";
+import type { ActionsContext, EntityDisplay } from "@/types/entity";
 import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
 

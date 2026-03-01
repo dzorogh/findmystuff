@@ -4,6 +4,9 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { InsertEntityWithTransitionParams, InsertEntityWithTransitionResult } from "@/types/api";
+
+export type { InsertEntityWithTransitionParams, InsertEntityWithTransitionResult };
 
 const TRANSITION_ID_COLUMN_BY_TABLE = {
   places: "place_id",
@@ -12,21 +15,6 @@ const TRANSITION_ID_COLUMN_BY_TABLE = {
 } as const;
 
 type EntityTable = keyof typeof TRANSITION_ID_COLUMN_BY_TABLE;
-
-export type InsertEntityWithTransitionParams<T> = {
-  supabase: SupabaseClient;
-  table: EntityTable;
-  insertData: Record<string, unknown>;
-  transitionPayload: {
-    destination_type: string;
-    destination_id: number;
-    tenant_id: number;
-  } | null;
-};
-
-export type InsertEntityWithTransitionResult<T> =
-  | { data: T; error: null }
-  | { data: null; error: string };
 
 /**
  * Вставляет запись в table, при наличии transitionPayload создаёт transition.

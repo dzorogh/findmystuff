@@ -5,6 +5,7 @@ import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
+import { transitionBodySchema } from "@/lib/shared/api/schemas/transition-body";
 import type { DestinationType } from "@/types/entity";
 
 export async function POST(request: NextRequest) {
@@ -14,24 +15,22 @@ export async function POST(request: NextRequest) {
     const { tenantId } = auth;
     const supabase = await createClient();
     const body = await request.json();
-    const { item_id, place_id, container_id, destination_type, destination_id } = body;
 
-    if (!destination_type || !destination_id) {
-      return NextResponse.json(
-        { error: "Необходимы destination_type и destination_id" },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
+    const parsed = transitionBodySchema.safeParse(body);
+    if (!parsed.success) {
+      const issues = "issues" in parsed.error ? parsed.error.issues : [];
+      const first = Array.isArray(issues) ? issues[0] : null;
+      const message =
+        first && typeof first === "object" && "message" in first
+          ? String(first.message)
+          : String(parsed.error.message ?? "Неверный формат тела запроса");
+      return NextResponse.json({ error: message }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
-    // Проверяем, что указан хотя бы один из item_id, place_id, container_id
-    if (!item_id && !place_id && !container_id) {
-      return NextResponse.json(
-        { error: "Необходим хотя бы один из: item_id, place_id, container_id" },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
-    }
+    const { item_id, place_id, container_id, destination_type, destination_id } = parsed.data;
+    const validatedDestType = destination_type;
 
-    if (place_id && destination_type !== "furniture") {
+    if (place_id && validatedDestType !== "furniture") {
       return NextResponse.json(
         { error: PLACE_DESTINATION_FURNITURE_ONLY },
         { status: HTTP_STATUS.BAD_REQUEST }
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
       place_id?: number;
       container_id?: number;
     } = {
-      destination_type: destination_type as DestinationType,
+      destination_type: validatedDestType,
       destination_id: destIdResult.id,
       tenant_id: tenantId,
     };

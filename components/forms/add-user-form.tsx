@@ -54,11 +54,9 @@ const AddUserForm = ({ open, onOpenChange, onSuccess }: AddUserFormProps) => {
       toast.success(
         invited ? "Пользователь добавлен в склад" : "Пользователь успешно создан",
         {
-          description: !invited && response.data?.password
-            ? `Пароль: ${response.data.password}`
-            : invited
-              ? "Он сможет переключаться между складами в меню"
-              : undefined,
+          description: invited
+            ? "Он сможет переключаться между складами в меню"
+            : response.data?.message ?? undefined,
         }
       );
       setEmail("");

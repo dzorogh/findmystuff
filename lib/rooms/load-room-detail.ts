@@ -7,27 +7,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import { getItemIdsInRoomRpc } from "@/lib/rooms/api";
-import type { Item, Place, Container, Transition, Furniture } from "@/types/entity";
+import type {
+  LoadDetailError,
+  RoomDetailData,
+  Item,
+  Place,
+  Container,
+  Transition,
+  Furniture,
+} from "@/types/entity";
 
-export type RoomDetailData = {
-  room: {
-    id: number;
-    name: string | null;
-    photo_url: string | null;
-    created_at: string;
-    deleted_at: string | null;
-    room_type_id: number | null;
-    room_type: { name: string } | null;
-    building_id: number | null;
-    building_name: string | null;
-  };
-  items: Item[];
-  places: Place[];
-  containers: Container[];
-  furniture: Furniture[];
-};
-
-export type LoadRoomDetailError = { error: string; status: number };
+export type { LoadDetailError, RoomDetailData };
 
 /**
  * Загружает данные помещения по id. При ошибке БД или отсутствии комнаты возвращает { error, status }.
@@ -35,7 +25,7 @@ export type LoadRoomDetailError = { error: string; status: number };
 export async function loadRoomDetail(
   supabase: SupabaseClient,
   roomId: number
-): Promise<RoomDetailData | LoadRoomDetailError> {
+): Promise<RoomDetailData | LoadDetailError> {
   const [roomResult, itemIdsResult, transitionsResult, placesInRoomMv, furnitureResult] =
     await Promise.all([
       supabase

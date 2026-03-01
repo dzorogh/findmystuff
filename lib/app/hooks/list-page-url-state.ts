@@ -7,7 +7,7 @@ import {
   parseAsStringLiteral,
   createParser,
 } from "nuqs";
-import type { Filters } from "@/lib/app/types/entity-config";
+import type { Filters } from "@/types/entity";
 
 /** Parser for yesNoAll filter: true | false | null, stored as "true" | "false" in URL. */
 const yesNoAllParser = createParser<boolean | null>({

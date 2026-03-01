@@ -5,6 +5,9 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DefaultEntityTypesConfig } from "@/types/entity";
+
+export type { DefaultEntityTypesConfig };
 
 const ENTITY_CATEGORIES = [
   "building",
@@ -14,10 +17,6 @@ const ENTITY_CATEGORIES = [
   "furniture",
   "item",
 ] as const;
-
-export type DefaultEntityTypesConfig = Partial<
-  Record<(typeof ENTITY_CATEGORIES)[number], string[]>
->;
 
 async function loadDefaultEntityTypes(): Promise<DefaultEntityTypesConfig> {
   const configPath = join(process.cwd(), "config/default-entity-types.json");

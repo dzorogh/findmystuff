@@ -4,7 +4,8 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
-import { appendSortParams, type SortBy, type SortDirection } from "@/lib/shared/api/list-params";
+import { appendSortParams } from "@/lib/shared/api/list-params";
+import type { SortBy, SortDirection } from "@/types/api";
 import type { Furniture, CreateFurnitureResponse } from "@/types/entity";
 
 /** RPC get_furniture_with_counts (вызывать из app/api). */

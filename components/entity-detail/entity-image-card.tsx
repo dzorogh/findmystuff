@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { photoApiClient } from "@/lib/shared/api/photo";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,7 +91,7 @@ export function EntityImageCard({
       await handlePhotoChange(response.data.url);
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
-      console.error("Ошибка загрузки фото:", error);
+      logError("Ошибка загрузки фото:", error);
       toast.error(
         error instanceof Error ? error.message : "Произошла ошибка при загрузке фото"
       );

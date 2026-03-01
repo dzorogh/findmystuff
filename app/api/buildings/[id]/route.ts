@@ -14,6 +14,7 @@ export async function GET(
   try {
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const idResult = await requireIdParam(params, { entityLabel: "здания" });
     if (idResult instanceof NextResponse) return idResult;
     const buildingId = idResult.id;
@@ -23,6 +24,7 @@ export async function GET(
       .from("buildings")
       .select("id, name, photo_url, created_at, deleted_at, building_type_id, entity_types(name)")
       .eq("id", buildingId)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (buildingError || !buildingData) {

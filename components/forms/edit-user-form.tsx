@@ -58,7 +58,7 @@ const EditUserForm = ({ user, open, onOpenChange, onSuccess }: EditUserFormProps
       }
 
       toast.success("Пользователь успешно обновлен", {
-        description: response.data?.password ? `Новый пароль: ${response.data.password}` : undefined,
+        description: response.data?.message ?? undefined,
       });
 
       if (onSuccess) {

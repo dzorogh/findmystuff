@@ -1,4 +1,4 @@
-import type { SortBy, SortDirection } from "@/lib/shared/api/list-params";
+import type { SortBy, SortDirection } from "@/types/api";
 
 export type EntitySortBy = SortBy;
 export type EntitySortDirection = SortDirection;

@@ -132,6 +132,49 @@ describe("getPlacesList", () => {
     expect(result.data).toEqual([]);
   });
 
+  it("возвращает несколько мест при успешном RPC с несколькими строками", async () => {
+    const rows: RpcPlaceRow[] = [
+      {
+        id: 1,
+        name: "Полка A",
+        entity_type_id: 1,
+        entity_type_name: "Стеллаж",
+        created_at: "2024-01-01T00:00:00Z",
+        deleted_at: null,
+        photo_url: null,
+        room_id: 10,
+        room_name: "Гостиная",
+        furniture_id: 5,
+        furniture_name: "Шкаф",
+        items_count: 0,
+        containers_count: 0,
+      },
+      {
+        id: 2,
+        name: "Ящик",
+        entity_type_id: 2,
+        entity_type_name: "Ящик",
+        created_at: "2024-01-02T00:00:00Z",
+        deleted_at: null,
+        photo_url: null,
+        room_id: 10,
+        room_name: "Гостиная",
+        furniture_id: 5,
+        furniture_name: "Шкаф",
+        items_count: 1,
+        containers_count: 0,
+      },
+    ];
+    getPlacesWithRoomRpc.mockResolvedValue({ data: rows, error: null });
+
+    const result = await getPlacesList(supabase, defaultParams);
+
+    expect(result.error).toBeNull();
+    expect(result.data).toHaveLength(2);
+    expect(result.data?.[0].name).toBe("Полка A");
+    expect(result.data?.[1].name).toBe("Ящик");
+    expect(result.data?.[1].items_count).toBe(1);
+  });
 });
 
 describe("mapRpcPlaceToPlace", () => {

@@ -1,9 +1,8 @@
 import { HttpClient } from "./http-client";
-
-export type DuplicatableEntityTable = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
+import type { EntityTypeName } from "@/types/entity";
 
 class DuplicateEntityApiClient extends HttpClient {
-  async duplicate(table: DuplicatableEntityTable, id: number) {
+  async duplicate(table: EntityTypeName, id: number) {
     return this.request<{ id: number }>(`/entities/${table}/${id}/duplicate`, {
       method: "POST",
     });

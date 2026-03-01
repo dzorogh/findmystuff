@@ -6,6 +6,7 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Furniture } from "@/types/entity";
 
@@ -119,10 +120,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hasPriceAmount = price_amount != null && price_amount !== "";
-    const hasPriceCurrency = price_currency != null && price_currency !== "";
-    const hasCurrentValueAmount = current_value_amount != null && current_value_amount !== "";
-    const hasCurrentValueCurrency = current_value_currency != null && current_value_currency !== "";
+    const moneyValidation = validateItemMoney(body);
+    if (moneyValidation instanceof NextResponse) return moneyValidation;
 
     const insertData: {
       name: string | null;
@@ -141,10 +140,10 @@ export async function POST(request: NextRequest) {
       tenant_id: tenantId,
       furniture_type_id: furniture_type_id != null ? (Number(furniture_type_id) || null) : null,
       photo_url: photo_url || null,
-      price_amount: hasPriceAmount ? Number(price_amount) : null,
-      price_currency: hasPriceCurrency ? String(price_currency).trim() : null,
-      current_value_amount: hasCurrentValueAmount ? Number(current_value_amount) : null,
-      current_value_currency: hasCurrentValueCurrency ? String(current_value_currency).trim() : null,
+      price_amount: moneyValidation.price_amount,
+      price_currency: moneyValidation.price_currency,
+      current_value_amount: moneyValidation.current_value_amount,
+      current_value_currency: moneyValidation.current_value_currency,
       purchase_date: purchase_date && purchase_date.trim() ? purchase_date.trim() : null,
     };
 

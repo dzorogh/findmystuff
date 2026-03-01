@@ -1,6 +1,11 @@
 import type { ComponentType } from "react";
-import type { ActionsConfig, EntityDisplay } from "@/lib/app/types/entity-config";
-import type { Action, ActionConfig, ActionsContext } from "@/lib/app/types/entity-action";
+import type {
+  Action,
+  ActionConfig,
+  ActionsConfig,
+  ActionsContext,
+  EntityDisplay,
+} from "@/types/entity";
 
 type ActionConfigVariant = "href" | "onClick" | "form";
 

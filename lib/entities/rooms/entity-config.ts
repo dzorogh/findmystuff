@@ -12,7 +12,7 @@ import type {
   FetchListResult,
   FilterFieldConfig,
   Filters,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 import type { Room } from "@/types/entity";
 
 export interface RoomsFilters extends Filters {

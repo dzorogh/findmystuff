@@ -1,6 +1,9 @@
 /**
  * Единообразный ответ с ошибкой 500 для catch-блоков API.
  * Логирует ошибку с контекстом (только в development) и возвращает NextResponse с телом { error: string }.
+ *
+ * Конвенция API: во всех маршрутах app/api/* тело ответа с ошибкой — всегда { error: string } (не объект с message).
+ * Доменные функции (getPlacesList, loadRoomDetail и т.д.) возвращают error как строку или { error: string, status }.
  */
 
 import { NextResponse } from "next/server";

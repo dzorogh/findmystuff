@@ -3,17 +3,9 @@
  * Используется в PUT /api/places/[id] и PUT /api/containers/[id].
  */
 
-export type PlaceLikeUpdateBody = {
-  name?: string | null;
-  entity_type_id?: number | null;
-  photo_url?: string | null;
-};
+import type { PlaceLikeUpdateBody, PlaceLikeUpdateData } from "@/types/api";
 
-export type PlaceLikeUpdateData = {
-  name?: string | null;
-  entity_type_id?: number | null;
-  photo_url?: string | null;
-};
+export type { PlaceLikeUpdateBody, PlaceLikeUpdateData };
 
 export const buildPlaceLikeUpdateBody = (body: PlaceLikeUpdateBody): PlaceLikeUpdateData => {
   const updateData: PlaceLikeUpdateData = {};

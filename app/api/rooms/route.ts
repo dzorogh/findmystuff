@@ -5,8 +5,11 @@ import { getRoomsWithCountsRpc } from "@/lib/rooms/api";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { parseOptionalBool } from "@/lib/shared/api/parse-optional-bool";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Room } from "@/types/entity";
+import type { RoomRow } from "@/types/db-rows";
 
 /**
  * Handle GET requests to list rooms with counts, supporting search, deleted visibility, and sorting.
@@ -23,28 +26,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
     const showDeleted = searchParams.get("showDeleted") === "true";
-    const hasItemsParam = searchParams.get("hasItems");
-    const hasItems =
-      hasItemsParam === null || hasItemsParam === ""
-        ? null
-        : hasItemsParam === "true";
-    const hasContainersParam = searchParams.get("hasContainers");
-    const hasContainers =
-      hasContainersParam === null || hasContainersParam === ""
-        ? null
-        : hasContainersParam === "true";
-    const hasPlacesParam = searchParams.get("hasPlaces");
-    const hasPlaces =
-      hasPlacesParam === null || hasPlacesParam === ""
-        ? null
-        : hasPlacesParam === "true";
-    const buildingIdParam = searchParams.get("buildingId");
-    const buildingId =
-      buildingIdParam === null || buildingIdParam === ""
-        ? null
-        : parseInt(buildingIdParam, 10);
-    const filterBuildingId =
-      buildingId != null && !Number.isNaN(buildingId) ? buildingId : null;
+    const hasItems = parseOptionalBool(searchParams.get("hasItems"));
+    const hasContainers = parseOptionalBool(searchParams.get("hasContainers"));
+    const hasPlaces = parseOptionalBool(searchParams.get("hasPlaces"));
+    const filterBuildingId = parseOptionalInt(searchParams.get("buildingId"));
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")
@@ -70,23 +55,6 @@ export async function GET(request: NextRequest) {
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
-
-    type RoomRow = {
-      id: number;
-      name: string | null;
-      room_type_id: number | null;
-      room_type_name: string | null;
-      building_id: number | null;
-      building_name: string | null;
-      created_at: string;
-      deleted_at: string | null;
-      photo_url: string | null;
-      items_count: number;
-      places_count: number;
-      containers_count: number;
-      furniture_count: number;
-      total_count?: number;
-    };
 
     if (!roomsData || roomsData.length === 0) {
       return NextResponse.json({

@@ -4,11 +4,9 @@
  */
 
 import { HttpClient } from "@/lib/shared/api/http-client";
+import type { BarcodeLookupResponse } from "@/types/api";
 
-export interface BarcodeLookupResponse {
-  productName: string | null;
-  error?: string;
-}
+export type { BarcodeLookupResponse };
 
 export class BarcodeLookupApiClient extends HttpClient {
   async lookup(barcode: string): Promise<BarcodeLookupResponse> {

@@ -4,6 +4,9 @@
 
 import { HttpClient } from "@/lib/shared/api/http-client";
 import type { User } from "@supabase/supabase-js";
+import type { UpdatePasswordResult } from "@/types/api";
+
+export type { UpdatePasswordResult };
 
 export const getCurrentUser = async () => {
   const client = new (class AuthApi extends HttpClient {
@@ -13,8 +16,6 @@ export const getCurrentUser = async () => {
   })();
   return client.getCurrentUser();
 };
-
-export type UpdatePasswordResult = { success?: boolean; error?: string };
 
 export const updatePassword = async (password: string): Promise<UpdatePasswordResult> => {
   const client = new (class AuthApi extends HttpClient {

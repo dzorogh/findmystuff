@@ -160,15 +160,20 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 - У сущностей есть `deleted_at` (мягкое удаление). Включён RLS.
 - **Мультитенантность:** у сущностей поле `tenant_id`; активный тенант — cookie, на сервере `getActiveTenantId(request.headers)` (`lib/tenants/server`).
 
+### Глоссарий
+
+- **tenant (тенант)** — склад/организация; у каждой сущности есть `tenant_id`. Пользователь может входить в несколько тенантов; активный тенант хранится в cookie и передаётся в API через заголовок.
+- **entity-config** — конфигурация списка сущности: колонки, фильтры, fetch, labels, actions. Типы в `lib/app/types/entity-config.ts`; конфиги по сущностям в `lib/entities/<entity>/entity-config.ts`.
+- **entity kind** — вид сущности по имени: item, place, container, room, building, furniture (см. `EntityKind` в entity-config).
+- **RLS (Row Level Security)** — политики PostgreSQL в Supabase; ограничивают доступ к строкам по `tenant_id` и роли. Все запросы к таблицам проходят через RLS.
+
+**Эталонный API-маршрут (список с фильтрами и totalCount):** [app/api/rooms/route.ts](app/api/rooms/route.ts) — GET (requireAuthAndTenant, parseOptionalBool/parseOptionalInt, RPC, маппинг, ответ `{ data, totalCount }`), POST (создание с валидацией).
+
 ### Конвенции
 
 - **Новая сущность:** добавить entity-config в `lib/entities/<entity>/entity-config.ts`, API-функции в `lib/<entity>/api.ts`, миграции в Supabase, при необходимости маршруты в `app/api/<entity>/`.
 - **В `lib/entities/`:** **services** — слой между API и UI (загрузка и нормализация данных страницы, например `item-detail.ts`); **helpers** — чистые утилиты и форматирование (display-name, fetch-list, quick-move, sort и т.д.).
 - **Тесты:** юнит-тесты — `__tests__/` (Jest), структура зеркалит `lib/`. Покрытие Jest считается только по `lib/` (см. [CONTRIBUTING.md](CONTRIBUTING.md)). E2E — `tests/` (Playwright).
-
-### Неиспользуемые заготовки
-
-Маршрут `/api/products` и папка `lib/products/` в текущей версии не используются. Поиск по штрихкоду реализован через `/api/barcode-lookup` и `lib/shared/api/barcode-lookup*.ts`. Пустые директории `app/api/products/` и `lib/products/` при наличии можно удалить.
 
 ### Правила ESLint
 

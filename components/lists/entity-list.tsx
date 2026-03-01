@@ -13,17 +13,17 @@ import { ListShell } from "@/components/lists/list-shell";
 import { EntityListSkeleton } from "@/components/lists/entity-list-skeleton";
 import { EntityRow, getRoomLabel, ROOM_EMPTY_LABEL } from "@/components/lists/entity-row";
 import { EntityFiltersPanel } from "@/components/filters/entity-filters-panel";
-import type { Action } from "@/lib/app/types/entity-action";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
 import type {
+  Action,
   CountsConfig,
   EntityDisplay,
-  EntityKind,
+  EntityTypeName,
   ListColumnConfig,
   FilterFieldConfig,
   Filters,
   Results,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { Card } from "@/components/ui/card";
@@ -48,7 +48,7 @@ export interface EntityListProps {
   filterFields: FilterFieldConfig[];
   columns: ListColumnConfig[];
   icon?: React.ComponentType<{ className?: string }>;
-  kind: EntityKind;
+  kind: EntityTypeName;
   getName?: (entity: { id: number; name: string | null }) => string;
   getRowActions: (entity: EntityDisplay) => Action[];
   counts?: CountsConfig;

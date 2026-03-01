@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getRoom, updateRoom } from "@/lib/rooms/api";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { EntityContentBlock } from "@/components/entity-detail/entity-content-bl
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { ErrorMessage } from "@/components/common/error-message";
-import type { RoomEntity } from "@/types/entity";
+import type { Room } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
 import { roomsEntityConfig } from "@/lib/entities/rooms/entity-config";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
@@ -32,8 +33,6 @@ import { useBuildings } from "@/lib/buildings/hooks/use-buildings";
 import AddFurnitureForm from "@/components/forms/add-furniture-form";
 import AddItemForm from "@/components/forms/add-item-form";
 import AddContainerForm from "@/components/forms/add-container-form";
-
-type Room = RoomEntity;
 
 export default function RoomDetailPage() {
   const params = useParams();
@@ -112,7 +111,7 @@ export default function RoomDetailPage() {
         setRoomFurniture(furniture || []);
         setRoomContainers(containers || []);
       } catch (err) {
-        console.error("Ошибка загрузки данных помещения:", err);
+        logError("Ошибка загрузки данных помещения:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       } finally {
         if (!silent) setIsPageLoading(false);

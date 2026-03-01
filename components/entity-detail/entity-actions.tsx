@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Action } from "@/lib/app/types/entity-action";
+import type { Action } from "@/types/entity";
 
 interface EntityActionsItemProps {
   action: Action;

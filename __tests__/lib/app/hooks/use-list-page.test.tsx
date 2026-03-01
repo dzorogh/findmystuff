@@ -2,10 +2,10 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { Pencil } from "lucide-react";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { TenantContext } from "@/contexts/tenant-context";
-import type { Tenant } from "@/lib/tenants/types";
+import type { Tenant } from "@/types/tenants";
 
 jest.mock("nuqs");
-import type { EntityConfig } from "@/lib/app/types/entity-config";
+import type { EntityConfig } from "@/types/entity";
 
 const mockTenantContextValue = {
   tenants: [{ id: 1, name: "Test", created_at: "2024-01-01T00:00:00Z" }] as Tenant[],

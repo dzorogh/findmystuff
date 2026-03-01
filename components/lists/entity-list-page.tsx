@@ -4,7 +4,7 @@ import { Suspense, useCallback, useMemo } from "react";
 import { ListPageContent } from "@/components/lists/list-page-content";
 import { useListPage } from "@/lib/app/hooks/use-list-page";
 import { resolveActions } from "@/lib/entities/resolve-actions";
-import type { EntityConfig, EntityDisplay } from "@/lib/app/types/entity-config";
+import type { EntityConfig, EntityDisplay } from "@/types/entity";
 import { createEntityListHandlers } from "@/lib/entities/create-entity-handlers";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 

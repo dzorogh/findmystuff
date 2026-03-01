@@ -5,6 +5,7 @@ import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import { insertEntityWithTransition } from "@/lib/shared/api/insert-entity-with-transition";
+import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
 import { PLACE_DESTINATION_FURNITURE_ONLY } from "@/lib/places/validation-messages";
 import { normalizeSortParams } from "@/lib/shared/api/list-params";
 import { getPlacesList } from "@/lib/places/get-places-list";
@@ -64,7 +65,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
-    if (destination_type && destination_type !== "furniture") {
+    const validatedDestType = validateDestinationType(destination_type);
+    if (validatedDestType instanceof NextResponse) return validatedDestType;
+    if (validatedDestType && validatedDestType !== "furniture") {
       return NextResponse.json(
         { error: PLACE_DESTINATION_FURNITURE_ONLY },
         { status: HTTP_STATUS.BAD_REQUEST }
@@ -79,9 +82,9 @@ export async function POST(request: NextRequest) {
     };
 
     const transitionPayload =
-      destination_type && destination_id
+      validatedDestType && destination_id
         ? {
-            destination_type,
+            destination_type: validatedDestType,
             destination_id: parseInt(destination_id, 10),
             tenant_id: tenantId,
           }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { logError } from "@/lib/shared/logger";
 import { getSupabaseAdmin } from "@/lib/shared/supabase/admin";
 import { createClient as createServerClient } from "@/lib/shared/supabase/server";
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
       .eq("tenant_id", tenantId);
 
     if (membersError) {
-      console.error("Error fetching tenant members:", membersError);
+      logError("Error fetching tenant members:", membersError);
       return NextResponse.json(
         { error: membersError.message },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     const { data: { users }, error } = await getSupabaseAdmin().auth.admin.listUsers();
 
     if (error) {
-      console.error("Error fetching users:", error);
+      logError("Error fetching users:", error);
       return NextResponse.json(
         { error: error.message },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
@@ -151,10 +152,13 @@ export async function POST(request: NextRequest) {
 
     const result = await addToTenant(data.user.id);
     if (result.alreadyMember) {
-      return NextResponse.json({ user: data.user, password });
+      return NextResponse.json({ user: data.user });
     }
 
-    return NextResponse.json({ user: data.user, password });
+    return NextResponse.json({
+      user: data.user,
+      message: "Пользователь создан. Попросите его использовать «Забыли пароль?» для установки пароля.",
+    });
   } catch (error) {
     return apiErrorResponse(error, {
       context: "Error in POST /api/users:",
@@ -192,14 +196,17 @@ export async function PUT(request: NextRequest) {
     });
 
     if (error) {
-      console.error("Error updating user:", error);
+      logError("Error updating user:", error);
       return NextResponse.json(
         { error: error.message },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    return NextResponse.json({ user: data.user, password });
+    return NextResponse.json({
+      user: data.user,
+      message: "Пароль сброшен. Попросите пользователя использовать «Забыли пароль?» для установки нового пароля.",
+    });
   } catch (error) {
     return apiErrorResponse(error, {
       context: "Error in PUT /api/users:",
@@ -208,10 +215,16 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+/**
+ * DELETE /api/users?id=<userId> — удаляет пользователя только из текущего склада (тенанта).
+ * Запись в tenant_memberships удаляется; аккаунт пользователя в Auth не удаляется.
+ * Для полного удаления аккаунта нужен отдельный сценарий с проверкой роли и подтверждением.
+ */
 export async function DELETE(request: NextRequest) {
   try {
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
+    const { tenantId } = auth;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("id");
 
@@ -222,10 +235,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
+    const supabase = await createServerClient();
+    const { error } = await supabase
+      .from("tenant_memberships")
+      .delete()
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId);
 
     if (error) {
-      console.error("Error deleting user:", error);
+      logError("Error removing user from tenant:", error);
       return NextResponse.json(
         { error: error.message },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }

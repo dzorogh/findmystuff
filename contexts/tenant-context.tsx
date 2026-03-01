@@ -9,7 +9,8 @@ import {
   ReactNode,
 } from "react";
 import { getTenants, switchTenant } from "@/lib/tenants/api";
-import type { Tenant } from "@/lib/tenants/types";
+import { logError } from "@/lib/shared/logger";
+import type { Tenant } from "@/types/tenants";
 
 const TENANT_COOKIE = "tenant_id";
 const TENANT_COOKIE_DAYS = 365;
@@ -61,7 +62,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       }
       setActiveTenantIdState(nextId);
     } catch (err) {
-      console.error("Failed to fetch tenants:", err);
+      logError("Failed to fetch tenants:", err);
       setTenants([]);
       setActiveTenantIdState(null);
     } finally {

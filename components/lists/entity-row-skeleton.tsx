@@ -2,7 +2,7 @@
 
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ListColumnConfig } from "@/lib/app/types/entity-config";
+import type { ListColumnConfig } from "@/types/entity";
 
 interface EntityRowSkeletonProps {
   columnsConfig: ListColumnConfig[];

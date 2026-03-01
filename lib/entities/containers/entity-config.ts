@@ -19,7 +19,7 @@ import type {
   FetchListResult,
   FilterFieldConfig,
   Filters,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 import type { Container } from "@/types/entity";
 
 export interface ContainersFilters extends Filters {
@@ -45,7 +45,7 @@ const CONTAINERS_PAGE_SIZE = 20;
 function matchesContainerFilters(c: Container, filters: ContainersFilters): boolean {
   if (filters.entityTypeId !== null && c.entity_type_id !== filters.entityTypeId) return false;
   if (filters.hasItems !== null) {
-    const count = c.itemsCount ?? 0;
+    const count = c.items_count ?? 0;
     if (filters.hasItems ? count === 0 : count > 0) return false;
   }
   if (

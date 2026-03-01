@@ -4,8 +4,7 @@ import { Button } from "../ui/button";
 import { EntityList } from "./entity-list";
 import { Plus } from "lucide-react";
 import { ListPagination } from "./list-pagination";
-import type { Action } from "@/lib/app/types/entity-action";
-import type { EntityDisplay } from "@/lib/app/types/entity-config";
+import type { Action, EntityDisplay } from "@/types/entity";
 
 export function ListPageContent({
   listPage,

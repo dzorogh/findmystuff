@@ -1,5 +1,4 @@
-export type SortBy = "name" | "created_at";
-export type SortDirection = "asc" | "desc";
+import type { SortBy, SortDirection } from "@/types/api";
 
 export const normalizeSortParams = (
   sortByParam?: string | null,

@@ -25,7 +25,7 @@ class UsersApiClient extends HttpClient {
     data: { email: string; email_confirm?: boolean },
     tenantId?: number | null
   ) {
-    return this.request<{ user: User; password?: string; invited?: boolean }>("/users", {
+    return this.request<{ user: User; message?: string; invited?: boolean }>("/users", {
       method: "POST",
       body: JSON.stringify(data),
       tenantId,
@@ -33,7 +33,7 @@ class UsersApiClient extends HttpClient {
   }
 
   async updateUser(data: { id: string; email: string }) {
-    return this.request<{ user: User; password: string }>("/users", {
+    return this.request<{ user: User; message?: string }>("/users", {
       method: "PUT",
       body: JSON.stringify(data),
     });

@@ -9,7 +9,7 @@ import type {
   FetchListResult,
   FilterFieldConfig,
   Filters,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 import type { Furniture } from "@/types/entity";
 
 export interface FurnitureFilters extends Filters {

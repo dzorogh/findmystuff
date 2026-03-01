@@ -6,7 +6,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
-import type { Transition, Location, Item, Container, DestinationType } from "@/types/entity";
+import type {
+  LoadDetailError,
+  PlaceDetailData,
+  Place,
+  Transition,
+  Location,
+  Item,
+  Container,
+  DestinationType,
+} from "@/types/entity";
+
+export type { LoadDetailError, PlaceDetailData };
 
 interface TransitionRow {
   id: number;
@@ -18,38 +29,13 @@ interface TransitionRow {
   destination_id: number | null;
 }
 
-export type PlaceDetailPlace = {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  entity_type: { name: string | null } | null;
-  photo_url: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  last_location: Location | null;
-  furniture_id: number | null;
-  furniture_name: string | null;
-  room_id: number | null;
-  room_name: string | null;
-  room: { id: number; name: string | null } | null;
-};
-
-export type PlaceDetailData = {
-  place: PlaceDetailPlace;
-  transitions: Transition[];
-  items: Item[];
-  containers: Container[];
-};
-
-export type LoadPlaceDetailError = { error: string; status: number };
-
 /**
  * Загружает данные места по id. При ошибке БД или отсутствии места возвращает { error, status }.
  */
 export async function loadPlaceDetail(
   supabase: SupabaseClient,
   placeId: number
-): Promise<PlaceDetailData | LoadPlaceDetailError> {
+): Promise<PlaceDetailData | LoadDetailError> {
   const { data: placeData, error: placeError } = await supabase
     .from("places")
     .select(
@@ -157,7 +143,7 @@ export async function loadPlaceDetail(
     }
   }
 
-  const place: PlaceDetailPlace = {
+  const place: Place = {
     id: placeData.id,
     name: placeData.name,
     entity_type_id: placeData.entity_type_id || null,

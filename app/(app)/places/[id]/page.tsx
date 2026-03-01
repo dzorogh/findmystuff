@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getPlace, updatePlace } from "@/lib/places/api";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,9 @@ import AddItemForm from "@/components/forms/add-item-form";
 import AddContainerForm from "@/components/forms/add-container-form";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
-import type { Transition, PlaceEntity } from "@/types/entity";
+import type { Transition, Place } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
-
-type Place = PlaceEntity;
 
 export default function PlaceDetailPage() {
   const params = useParams();
@@ -90,7 +89,7 @@ export default function PlaceDetailPage() {
         setPlaceItems(items || []);
         setPlaceContainers(containers || []);
       } catch (err) {
-        console.error("Ошибка загрузки данных места:", err);
+        logError("Ошибка загрузки данных места:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       } finally {
         if (!silent) setIsPageLoading(false);

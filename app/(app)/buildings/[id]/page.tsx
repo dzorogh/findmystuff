@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getBuilding, updateBuilding } from "@/lib/buildings/api";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,7 @@ export default function BuildingDetailPage() {
           }))
         );
       } catch (err) {
-        console.error("Ошибка загрузки данных здания:", err);
+        logError("Ошибка загрузки данных здания:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       } finally {
         if (!silent) setIsPageLoading(false);

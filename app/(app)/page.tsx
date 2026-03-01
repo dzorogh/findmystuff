@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { searchApiClient } from "@/lib/shared/api/search";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight } from "lucide-react";
@@ -40,7 +41,7 @@ export default function Home() {
       // И response.data будет SearchResult[]
       setSearchResults(response.data || []);
     } catch (error) {
-      console.error("Ошибка поиска:", error);
+      logError("Ошибка поиска:", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);

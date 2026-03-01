@@ -3,20 +3,9 @@
  * Несколько вызовов с одним ключом получают один запрос и общий результат.
  */
 
-export interface CacheEntry<T> {
-  data: T[];
-  error: Error | null;
-}
+import type { CacheEntry, SimpleListCache } from "@/types/api";
 
-export interface SimpleListCache<T> {
-  get(key: string): CacheEntry<T> | undefined;
-  subscribe(key: string, notify: (data: T[], error: Error | null) => void): () => void;
-  load(
-    key: string,
-    fetch: () => Promise<{ data: T[] | null; error?: string }>
-  ): Promise<void>;
-  invalidate(key: string): void;
-}
+export type { CacheEntry, SimpleListCache };
 
 function createSimpleListCache<T>(): SimpleListCache<T> {
   const cache = new Map<string, CacheEntry<T>>();

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getContainer, updateContainer } from "@/lib/containers/api";
+import { logError } from "@/lib/shared/logger";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,15 +28,9 @@ import { ErrorMessage } from "@/components/common/error-message";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { getEntityDisplayName } from "@/lib/entities/helpers/display-name";
-import type { Transition, ContainerEntity } from "@/types/entity";
+import type { Transition, Container } from "@/types/entity";
 import { PageHeader } from "@/components/layout/page-header";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";
-
-interface Container extends ContainerEntity {
-  entity_type?: {
-    name: string;
-  } | null;
-}
 
 function parseContainerId(id: unknown): number | null {
   if (id == null || typeof id !== "string" || id.trim() === "") return null;
@@ -96,7 +91,7 @@ export default function ContainerDetailPage() {
         setTransitions(transitionsWithNames);
         setContainerItems(items || []);
       } catch (err) {
-        console.error("Ошибка загрузки данных контейнера:", err);
+        logError("Ошибка загрузки данных контейнера:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       } finally {
         if (!silent) setIsPageLoading(false);

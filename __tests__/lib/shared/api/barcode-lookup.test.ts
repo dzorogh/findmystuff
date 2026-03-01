@@ -1,4 +1,4 @@
-import { barcodeLookupApi } from "@/lib/shared/api/barcode-lookup";
+import { barcodeLookupApiClient } from "@/lib/shared/api/barcode-lookup";
 
 describe("barcode-lookup", () => {
   const originalFetch = global.fetch;
@@ -17,7 +17,7 @@ describe("barcode-lookup", () => {
       json: () => Promise.resolve({ productName: "Товар" }),
     });
 
-    await barcodeLookupApi("4601234567890");
+    await barcodeLookupApiClient.lookup("4601234567890");
 
     const url = (global.fetch as jest.Mock).mock.calls[0][0];
     expect(url).toContain("/api/barcode-lookup");
@@ -30,7 +30,7 @@ describe("barcode-lookup", () => {
       json: () => Promise.resolve({ productName: "Молоко" }),
     });
 
-    const result = await barcodeLookupApi("4601234567890");
+    const result = await barcodeLookupApiClient.lookup("4601234567890");
 
     expect(result.productName).toBe("Молоко");
   });

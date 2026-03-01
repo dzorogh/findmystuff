@@ -4,6 +4,7 @@ import { LogOut, UserIcon, Settings, Users, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/auth/sign-out";
+import { logError } from "@/lib/shared/logger";
 import { toast } from "sonner";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -22,7 +23,7 @@ export const SecondaryMenu = () => {
         try {
             await signOut();
         } catch (err) {
-            console.error("Sign out failed:", err);
+            logError("Sign out failed:", err);
             toast.error(err instanceof Error ? err.message : "Не удалось выйти из аккаунта");
         }
     };

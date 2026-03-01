@@ -17,9 +17,7 @@ import { useRooms } from "@/lib/rooms/hooks/use-rooms";
 import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import { useFurniture } from "@/lib/furniture/hooks/use-furniture";
-import type { Container, Place, Room, Furniture } from "@/types/entity";
-
-export type DestinationType = "room" | "place" | "container" | "furniture";
+import type { Container, Place, Room, Furniture, DestinationType } from "@/types/entity";
 
 interface LocationComboboxProps {
   destinationType: DestinationType | null;

@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 
 import { getFurnitureItem, updateFurniture } from "@/lib/furniture/api";
+import { logError } from "@/lib/shared/logger";
 import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -158,7 +159,7 @@ export default function FurnitureDetailPage() {
         );
         setPurchaseDate(furnitureData.purchaseDate ?? "");
       } catch (err) {
-        console.error("Ошибка загрузки данных мебели:", err);
+        logError("Ошибка загрузки данных мебели:", err);
         setError(err instanceof Error ? err.message : "Произошла ошибка при загрузке данных");
       } finally {
         if (!silent) setIsPageLoading(false);

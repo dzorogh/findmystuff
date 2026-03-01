@@ -3,10 +3,9 @@
  * Конвенция именования: *ApiClient (см. CONTRIBUTING.md).
  */
 
-export interface RecognizeItemPhotoResponse {
-  itemName: string | null;
-  error?: string;
-}
+import type { RecognizeItemPhotoResponse } from "@/types/api";
+
+export type { RecognizeItemPhotoResponse };
 
 export class RecognizeItemPhotoApiClient {
   async recognize(file: File): Promise<RecognizeItemPhotoResponse> {

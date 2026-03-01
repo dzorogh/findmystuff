@@ -12,6 +12,7 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
 
 /**
  * Retrieve a paginated, optionally filtered and sorted list of items including each item's last known location and the total matching count.
@@ -146,10 +147,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const validatedDestType = validateDestinationType(destination_type);
+    if (validatedDestType instanceof NextResponse) return validatedDestType;
+
     const transitionPayload =
-      destination_type && destination_id
+      validatedDestType && destination_id
         ? {
-            destination_type,
+            destination_type: validatedDestType,
             destination_id: parseInt(destination_id, 10),
             tenant_id: tenantId,
           }

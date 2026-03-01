@@ -5,13 +5,12 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EntityTypesManager, type EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
-
-export type EntityCategory = "container" | "place" | "room" | "item" | "building" | "furniture";
+import type { EntityTypeName } from "@/types/entity";
 
 interface EntitySectionProps {
   title: string;
   cardTitle: string;
-  category: EntityCategory;
+  category: EntityTypeName;
   managerRef: RefObject<EntityTypesManagerRef | null>;
 }
 

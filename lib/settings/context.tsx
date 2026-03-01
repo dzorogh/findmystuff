@@ -1,11 +1,10 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getSettings, updateSetting as updateSettingApi, type Setting } from "@/lib/settings/api";
+import { getSettings, updateSetting as updateSettingApi } from "@/lib/settings/api";
+import type { Setting } from "@/types/settings";
 import { useUser } from "@/lib/users/context";
 import { ThemeSync } from "@/components/theme/theme-sync";
-
-export type { Setting };
 
 interface SettingsContextType {
   settings: Setting[];

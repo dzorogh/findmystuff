@@ -6,26 +6,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
-import type { Transition, Location, Item } from "@/types/entity";
+import type {
+  Container,
+  ContainerDetailData,
+  LoadDetailError,
+  Transition,
+  Location,
+  Item,
+} from "@/types/entity";
 
-export type ContainerDetailContainer = {
-  id: number;
-  name: string | null;
-  entity_type_id: number | null;
-  entity_type: { name: string | null } | null;
-  photo_url: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  last_location: Location | null;
-};
-
-export type ContainerDetailData = {
-  container: ContainerDetailContainer;
-  transitions: Transition[];
-  items: Item[];
-};
-
-export type LoadContainerDetailError = { error: string; status: number };
+export type { ContainerDetailData, LoadDetailError };
 
 /**
  * Загружает данные контейнера по id. При ошибке БД или отсутствии контейнера возвращает { error, status }.
@@ -33,7 +23,7 @@ export type LoadContainerDetailError = { error: string; status: number };
 export async function loadContainerDetail(
   supabase: SupabaseClient,
   containerId: number
-): Promise<ContainerDetailData | LoadContainerDetailError> {
+): Promise<ContainerDetailData | LoadDetailError> {
   const { data: containerData, error: containerError } = await supabase
     .from("containers")
     .select(
@@ -230,7 +220,7 @@ export async function loadContainerDetail(
 
   const entityType = normalizeEntityTypeRelation(containerData.entity_types);
 
-  const container: ContainerDetailContainer = {
+  const container: Container = {
     id: containerData.id,
     name: containerData.name,
     entity_type_id: containerData.entity_type_id || null,

@@ -4,17 +4,6 @@ import { getServerUser } from "@/lib/users/server";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
-export interface Setting {
-  id: number;
-  key: string;
-  value: string;
-  description: string | null;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string | null;
-}
-
 export async function GET(_request: NextRequest) {
   try {
     const user = await getServerUser();

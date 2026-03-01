@@ -1,7 +1,7 @@
-import { recognizeItemPhotoApi } from "@/lib/shared/api/recognize-item-photo";
+import { recognizeItemPhotoApiClient } from "@/lib/shared/api/recognize-item-photo";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
-describe("recognizeItemPhotoApi", () => {
+describe("RecognizeItemPhotoApiClient", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe("recognizeItemPhotoApi", () => {
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
-    const result = await recognizeItemPhotoApi(file);
+    const result = await recognizeItemPhotoApiClient.recognize(file);
 
     expect(result).toEqual({ itemName: "Стул" });
     expect(global.fetch).toHaveBeenCalledWith(
@@ -40,7 +40,7 @@ describe("recognizeItemPhotoApi", () => {
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
 
-    await expect(recognizeItemPhotoApi(file)).rejects.toThrow("Bad image");
+    await expect(recognizeItemPhotoApiClient.recognize(file)).rejects.toThrow("Bad image");
   });
 
   it("бросает ошибку, если сервер вернул !ok без error", async () => {
@@ -52,7 +52,7 @@ describe("recognizeItemPhotoApi", () => {
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
 
-    await expect(recognizeItemPhotoApi(file)).rejects.toThrow(
+    await expect(recognizeItemPhotoApiClient.recognize(file)).rejects.toThrow(
       `HTTP error! status: ${HTTP_STATUS.INTERNAL_SERVER_ERROR}`
     );
   });

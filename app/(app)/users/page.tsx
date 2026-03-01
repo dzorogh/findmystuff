@@ -27,6 +27,7 @@ import type { User } from "@supabase/supabase-js";
 import AddUserForm from "@/components/forms/add-user-form";
 import EditUserForm from "@/components/forms/edit-user-form";
 import { getUsers, deleteUser } from "@/lib/users/api";
+import { logError } from "@/lib/shared/logger";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -62,7 +63,7 @@ export default function PageUsers() {
       const users = response.data?.users || [];
       setUsers(users);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      logError("Error fetching users:", error);
       toast.error(
         error instanceof Error ? error.message : "Ошибка загрузки пользователей"
       );
@@ -107,7 +108,7 @@ export default function PageUsers() {
       setUserToDelete(null);
       await fetchUsers();
     } catch (error) {
-      console.error("Error deleting user:", error);
+      logError("Error deleting user:", error);
       toast.error(
         error instanceof Error ? error.message : "Ошибка удаления пользователя"
       );

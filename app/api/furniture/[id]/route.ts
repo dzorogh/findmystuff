@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { requireIdParam } from "@/lib/shared/api/require-id-param";
+import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
+import {
+  FURNITURE_DETAIL_PLACES_LIMIT,
+  FURNITURE_DETAIL_CHILDREN_LIMIT,
+} from "@/lib/shared/api/constants";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { getPlacesWithRoomRpc } from "@/lib/places/api";
@@ -26,6 +31,7 @@ export async function GET(
       .from("furniture")
       .select("id, name, room_id, photo_url, created_at, deleted_at, furniture_type_id, price_amount, price_currency, current_value_amount, current_value_currency, purchase_date")
       .eq("id", furnitureId)
+      .eq("tenant_id", tenantId)
       .single();
 
     if (furnitureError || !furnitureData) {
@@ -78,7 +84,7 @@ export async function GET(
     const { data: placesData } = await getPlacesWithRoomRpc(supabase, {
       search_query: null,
       show_deleted: false,
-      page_limit: 500,
+      page_limit: FURNITURE_DETAIL_PLACES_LIMIT,
       page_offset: 0,
       sort_by: "created_at",
       sort_direction: "desc",
@@ -98,7 +104,7 @@ export async function GET(
       getItemsWithRoomRpc(supabase, {
         search_query: null,
         show_deleted: false,
-        page_limit: 100,
+        page_limit: FURNITURE_DETAIL_CHILDREN_LIMIT,
         page_offset: 0,
         location_type: "furniture",
         room_id: null,
@@ -113,7 +119,7 @@ export async function GET(
       getContainersWithLocationRpc(supabase, {
         search_query: null,
         show_deleted: false,
-        page_limit: 100,
+        page_limit: FURNITURE_DETAIL_CHILDREN_LIMIT,
         page_offset: 0,
         sort_by: "created_at",
         sort_direction: "desc",
@@ -174,10 +180,8 @@ export async function PUT(
       purchase_date,
     } = body;
 
-    const hasPriceAmount = price_amount != null && price_amount !== "";
-    const hasPriceCurrency = price_currency != null && price_currency !== "";
-    const hasCurrentValueAmount = current_value_amount != null && current_value_amount !== "";
-    const hasCurrentValueCurrency = current_value_currency != null && current_value_currency !== "";
+    const moneyValidation = validateItemMoney(body);
+    if (moneyValidation instanceof NextResponse) return moneyValidation;
 
     const updateData: {
       name?: string | null;
@@ -195,12 +199,12 @@ export async function PUT(
     if (furniture_type_id !== undefined)
       updateData.furniture_type_id = furniture_type_id != null ? (Number(furniture_type_id) || null) : null;
     if (photo_url !== undefined) updateData.photo_url = photo_url || null;
-    if (price_amount !== undefined) updateData.price_amount = hasPriceAmount ? Number(price_amount) : null;
-    if (price_currency !== undefined) updateData.price_currency = hasPriceCurrency ? String(price_currency).trim() : null;
+    if (price_amount !== undefined) updateData.price_amount = moneyValidation.price_amount;
+    if (price_currency !== undefined) updateData.price_currency = moneyValidation.price_currency;
     if (current_value_amount !== undefined)
-      updateData.current_value_amount = hasCurrentValueAmount ? Number(current_value_amount) : null;
+      updateData.current_value_amount = moneyValidation.current_value_amount;
     if (current_value_currency !== undefined)
-      updateData.current_value_currency = hasCurrentValueCurrency ? String(current_value_currency).trim() : null;
+      updateData.current_value_currency = moneyValidation.current_value_currency;
     if (purchase_date !== undefined)
       updateData.purchase_date = purchase_date && purchase_date.trim() ? purchase_date.trim() : null;
 

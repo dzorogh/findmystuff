@@ -3,9 +3,9 @@
  * Используется в [id]-маршрутах (items, places, containers, rooms, buildings).
  */
 
-export interface EntityTypeRelation {
-  name?: string | null;
-}
+import type { EntityTypeRelation } from "@/types/api";
+
+export type { EntityTypeRelation };
 
 /**
  * Приводит entity_types / entity_type к одному объекту или null.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
+import { validateEntityCategory } from "@/lib/shared/api/validate-entity-category";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 
@@ -20,8 +21,10 @@ export async function GET(request: NextRequest) {
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
-    if (category) {
-      query = query.eq("entity_category", category);
+    const validatedCategory = validateEntityCategory(category);
+    if (validatedCategory instanceof NextResponse) return validatedCategory;
+    if (validatedCategory) {
+      query = query.eq("entity_category", validatedCategory);
     }
 
     const { data, error } = await query;
@@ -65,16 +68,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["place", "container", "room", "item", "building", "furniture"].includes(entity_category)) {
+    const validatedCategory = validateEntityCategory(entity_category);
+    if (validatedCategory instanceof NextResponse) return validatedCategory;
+    if (validatedCategory === null) {
       return NextResponse.json(
-        { error: "entity_category должен быть 'place', 'container', 'room', 'item', 'building' или 'furniture'" },
+        { error: "Необходимы поля: entity_category, name" },
         { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     const { data, error } = await supabase
       .from("entity_types")
-      .insert({ tenant_id: tenantId, entity_category, name })
+      .insert({ tenant_id: tenantId, entity_category: validatedCategory, name })
       .select()
       .single();
 

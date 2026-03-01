@@ -80,5 +80,30 @@ describe("loadPlaceDetail", () => {
     expect(data.items).toEqual([]);
     expect(data.containers).toEqual([]);
   });
+
+  it("возвращает 500 при ошибке загрузки transitions", async () => {
+    const supabase = createSupabaseMock({
+      placeResult: {
+        data: {
+          id: 5,
+          name: "Shelf",
+          entity_type_id: 3,
+          entity_types: null,
+          photo_url: null,
+          created_at: "2024-01-01T00:00:00.000Z",
+          deleted_at: null,
+        },
+        error: null,
+      },
+      transitionsResult: { data: null, error: { message: "Transitions fetch failed" } },
+    });
+
+    const res = await loadPlaceDetail(supabase as any, 5);
+
+    expect(res).toEqual({
+      error: "Transitions fetch failed",
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    });
+  });
 });
 

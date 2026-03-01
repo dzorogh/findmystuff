@@ -29,7 +29,7 @@ import type {
   Filters,
   ListPagePagination,
   Results,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 
 export interface EntityListState<T> {
   data: T[];

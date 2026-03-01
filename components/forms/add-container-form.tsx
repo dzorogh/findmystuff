@@ -7,7 +7,8 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/users/context";
-import LocationCombobox, { type DestinationType as LocationDestinationType } from "@/components/fields/location-combobox";
+import type { DestinationType as LocationDestinationType } from "@/types/entity";
+import LocationCombobox from "@/components/fields/location-combobox";
 import ImageUpload from "@/components/fields/image-upload";
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { EntityTypeSelect } from "@/components/fields/entity-type-select";

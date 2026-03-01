@@ -2,8 +2,7 @@ import { toast } from "sonner";
 import { softDeleteApiClient } from "@/lib/shared/api/soft-delete";
 import { duplicateEntityApiClient } from "@/lib/shared/api/duplicate-entity";
 import { logErrorOnly } from "@/lib/shared/logger";
-import type { TableName } from "@/lib/app/types/entity-config";
-import type { EntityLabels } from "@/lib/app/types/entity-config";
+import type { EntityLabels, EntityTypeName } from "@/types/entity";
 
 export interface EntityListHandlers {
   handleDelete: (id: number) => void;
@@ -12,7 +11,7 @@ export interface EntityListHandlers {
 }
 
 export function createEntityListHandlers(
-  apiTable: TableName,
+  apiTable: EntityTypeName,
   labels: EntityLabels,
   refreshList: () => void
 ): EntityListHandlers {

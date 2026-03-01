@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { HTTP_STATUS } from "./http-status";
+import type { ItemMoneyFields, ValidateItemMoneyInput } from "@/types/api";
+
+export type { ItemMoneyFields, ValidateItemMoneyInput };
 
 const PRICE_PAIR_MESSAGE = "Цена и валюта должны быть указаны вместе или оба опущены";
 const CURRENT_VALUE_PAIR_MESSAGE =
@@ -8,20 +11,6 @@ const PRICE_AMOUNT_MESSAGE =
   "Сумма цены должна быть целым неотрицательным числом в минимальных единицах";
 const CURRENT_VALUE_AMOUNT_MESSAGE =
   "Сумма текущей стоимости должна быть целым неотрицательным числом в минимальных единицах";
-
-export interface ItemMoneyFields {
-  price_amount: number | null;
-  price_currency: string | null;
-  current_value_amount: number | null;
-  current_value_currency: string | null;
-}
-
-export interface ValidateItemMoneyInput {
-  price_amount: unknown;
-  price_currency: unknown;
-  current_value_amount: unknown;
-  current_value_currency: unknown;
-}
 
 /**
  * Проверяет пару amount + currency: оба заданы или оба опущены.

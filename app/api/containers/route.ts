@@ -7,15 +7,18 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
+import { parseOptionalBool } from "@/lib/shared/api/parse-optional-bool";
+import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Container } from "@/types/entity";
+import type { ContainerRow } from "@/types/db-rows";
 
 /**
  * Retrieve a list of containers with optional search, deleted filtering, sorting, and last-location data.
  *
  * Requires an authenticated user; responds with a 401 JSON error if the request is unauthenticated.
  *
- * @returns `{ data: Container[] }` on success, or `{ error: string }` with an appropriate HTTP status on failure.
+ * @returns `{ data: Container[], totalCount: number }` on success, or `{ error: string }` with an appropriate HTTP status on failure.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -25,13 +28,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || null;
-    const showDeleted = searchParams.get("showDeleted") === "true";
+    const showDeleted = parseOptionalBool(searchParams.get("showDeleted")) ?? false;
     const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
-    const hasItemsParam = searchParams.get("hasItems");
-    const hasItems =
-      hasItemsParam === null || hasItemsParam === ""
-        ? null
-        : hasItemsParam === "true";
+    const hasItems = parseOptionalBool(searchParams.get("hasItems"));
     const locationTypeParam = searchParams.get("locationType");
     const locationType =
       locationTypeParam !== null && locationTypeParam !== "" && locationTypeParam !== "all"
@@ -69,25 +68,15 @@ export async function GET(request: NextRequest) {
     if (!containersData || containersData.length === 0) {
       return NextResponse.json({
         data: [],
+        totalCount: 0,
       });
     }
 
-    const containers: Container[] = containersData.map((container: {
-      id: number;
-      name: string | null;
-      entity_type_id: number | null;
-      entity_type_name: string | null;
-      created_at: string;
-      deleted_at: string | null;
-      photo_url: string | null;
-      items_count: number;
-      destination_type: string | null;
-      destination_id: number | null;
-      destination_name: string | null;
-      moved_at: string | null;
-      room_id: number | null;
-      room_name: string | null;
-    }) => ({
+    const rows = containersData as ContainerRow[];
+    const totalCount =
+      rows[0]?.total_count != null ? Number(rows[0].total_count) : rows.length;
+
+    const containers: Container[] = rows.map((container: ContainerRow) => ({
       id: container.id,
       name: container.name,
       entity_type_id: container.entity_type_id || null,
@@ -97,7 +86,7 @@ export async function GET(request: NextRequest) {
       created_at: container.created_at,
       deleted_at: container.deleted_at,
       photo_url: container.photo_url,
-      itemsCount: container.items_count ?? 0,
+      items_count: container.items_count ?? 0,
       last_location: container.destination_type
         ? {
             destination_type: container.destination_type,
@@ -111,6 +100,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: containers,
+      totalCount,
     });
   } catch (error) {
     return apiErrorResponse(error, {
@@ -129,6 +119,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, entity_type_id, photo_url, destination_type, destination_id } = body;
 
+    const validatedDestType = validateDestinationType(destination_type);
+    if (validatedDestType instanceof NextResponse) return validatedDestType;
+
     const insertData = {
       name: name?.trim() || null,
       entity_type_id: entity_type_id || null,
@@ -137,9 +130,9 @@ export async function POST(request: NextRequest) {
     };
 
     const transitionPayload =
-      destination_type && destination_id
+      validatedDestType && destination_id
         ? {
-            destination_type,
+            destination_type: validatedDestType,
             destination_id: parseInt(destination_id, 10),
             tenant_id: tenantId,
           }

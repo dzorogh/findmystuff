@@ -1,4 +1,4 @@
-import type { EntityDisplay, FetchListResult } from "@/lib/app/types/entity-config";
+import type { EntityDisplay, FetchListResult } from "@/types/entity";
 
 /**
  * Нормализует ответ API списка в FetchListResult.

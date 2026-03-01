@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { EntityTypeName } from "@/types/entity";
 import {
-  type EntityType,
   getEntityNameForMetadata,
   generateEntityDetailMetadata,
 } from "@/lib/entities/server-metadata";
@@ -34,7 +34,7 @@ describe("getEntityNameForMetadata", () => {
     expect(createClient).not.toHaveBeenCalled();
   });
 
-  const types: EntityType[] = [
+  const types: EntityTypeName[] = [
     "item",
     "place",
     "container",

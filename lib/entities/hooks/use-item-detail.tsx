@@ -9,7 +9,7 @@ import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
 import { fetchItemById, fetchItemTransitions } from "@/lib/entities/services/item-detail";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
-import type { Action } from "@/lib/app/types/entity-action";
+import type { Action } from "@/types/entity";
 import type { Item, Transition } from "@/types/entity";
 
 const ENTITY_LABEL = "Вещь";

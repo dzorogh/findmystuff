@@ -22,7 +22,7 @@ import type {
   FetchListResult,
   FilterFieldConfig,
   Filters,
-} from "@/lib/app/types/entity-config";
+} from "@/types/entity";
 import type { Place } from "@/types/entity";
 
 export interface PlacesFilters extends Filters {

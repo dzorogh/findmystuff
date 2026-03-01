@@ -9,7 +9,7 @@ import { BuildingsSelect } from "@/components/fields/buildings-select";
 import { FurnitureSelect } from "@/components/fields/furniture-select";
 import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FilterFieldConfig, Filters } from "@/lib/app/types/entity-config";
+import type { FilterFieldConfig, Filters } from "@/types/entity";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
 
 /** Filter field config that has a key (excludes showDeleted). */
