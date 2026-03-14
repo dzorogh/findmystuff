@@ -51,6 +51,10 @@ const FurnitureCombobox = ({
 
   const isEmpty = items.length === 0 || (allowNone && items.length === 1);
 
+  // Ключ заставляет комбобокс перемонтироваться, когда выбранное значение появляется в списке
+  // (после загрузки опций), чтобы отображение корректно обновилось при первом рендере.
+  const comboboxKey = `${selectedFurnitureId}-${selectedItem ? "resolved" : "pending"}`;
+
   return (
     <Field>
       <FieldLabel htmlFor={`${id}-combobox`}>
@@ -58,6 +62,7 @@ const FurnitureCombobox = ({
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
       <Combobox
+        key={comboboxKey}
         value={selectedItem}
         items={items}
         onValueChange={handleValueChange}

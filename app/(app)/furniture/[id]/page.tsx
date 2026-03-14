@@ -426,6 +426,7 @@ export default function FurnitureDetailPage() {
       ) : null}
 
       <AddPlaceForm
+        key={addPlaceOpen ? `add-place-open-${furniture?.id ?? "none"}` : "add-place-closed"}
         open={addPlaceOpen}
         onOpenChange={setAddPlaceOpen}
         onSuccess={() => loadFurnitureData({ silent: true })}

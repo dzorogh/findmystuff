@@ -34,7 +34,9 @@ const AddPlaceForm = ({ open, onOpenChange, onSuccess, initialFurnitureId }: Add
   const { types: placeTypes, isLoading: isLoadingTypes } = useEntityTypes("place");
   const [name, setName] = useState("");
   const [placeTypeId, setPlaceTypeId] = useState<string>("");
-  const [selectedFurnitureId, setSelectedFurnitureId] = useState<string>("");
+  const [selectedFurnitureId, setSelectedFurnitureId] = useState<string>(() =>
+    open && initialFurnitureId != null ? initialFurnitureId.toString() : ""
+  );
 
   useEffect(() => {
     if (open) {
