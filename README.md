@@ -144,6 +144,7 @@ Client ID/Secret задаются в Supabase Dashboard, не в `.env`.
 ### Списки сущностей и страница детали
 
 - **Список:** конфиг сущности (columns, filters, fetch, actions) → `useListPage` (состояние, URL, загрузка) → `EntityList` / `EntityRow` (рендер). Ключевые файлы: `lib/app/hooks/use-list-page.tsx`, `lib/app/hooks/list-page-url-state.ts`, `components/lists/entity-list.tsx`, `lib/entities/<entity>/entity-config.ts`.
+- **Быстрое переименование в списке:** при наведении на строку рядом с названием показывается кнопка (иконка карандаша). По клику открывается диалог с полем ввода; сохранение вызывает переданный в `EntityList` колбэк `onRename(entity, newName)`. Для страниц через `EntityListPage` переименование подключено по умолчанию (вызов соответствующего API и `refreshList`). Для кастомной страницы списка (например items) нужно передать `onRename` в `EntityList` вручную.
 - **Страница детали:** загрузка по id через API, формы редактирования, переходы (transitions). Для длинных GET [id] загрузка вынесена в `lib/<domain>/` (например `lib/rooms/load-room-detail.ts`).
 
 ### Иерархия сущностей

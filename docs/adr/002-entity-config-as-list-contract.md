@@ -13,6 +13,7 @@
 - **Единый контракт списка** задаётся конфигом сущности в `lib/entities/<entity>/entity-config.ts`: колонки (`columns`), фильтры (`filters`), функция загрузки (`fetch`), метки (`labels`), действия (`actions`), при необходимости пагинация и счётчики.
 - **Типы конфига** определены в `lib/app/types/entity-config.ts` (EntityDisplay, Filters, EntityLabels, ListColumnConfig, FetchListResult и др.).
 - **Рендер списка** унифицирован: хук `useListPage` (состояние, URL, вызов fetch) + компоненты `EntityList` / `EntityListPage`. Страница списка — по сути `<EntityListPage config={itemsEntityConfig} />` или кастомная обёртка с тем же конфигом.
+- **Быстрое переименование:** опциональный проп `EntityList.onRename(entity, newName) => Promise<void>`. При его наличии в каждой строке рядом с названием при наведении показывается кнопка переименования; по клику открывается диалог с вводом нового имени, по сохранению вызывается `onRename`, затем обновление списка. В `EntityListPage` обработчик переименования реализован по `config.apiTable` (updateItem, updateRoom, updatePlace и т.д.); кастомные страницы передают свой `onRename` в `ListPageContent` или напрямую в `EntityList`.
 - **Добавление новой сущности** (см. CONTRIBUTING): миграции, entity-config, API в `lib/<entity>/api.ts`, маршруты в `app/api/<entity>/`, страницы списка и детали.
 
 ## Следствия

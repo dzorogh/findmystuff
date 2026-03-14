@@ -49,6 +49,7 @@
 ## Где смотреть при изменении списков и деталей
 
 - **Списки:** конфиг сущности в `lib/entities/<entity>/entity-config.ts`, хук `useListPage` в `lib/app/hooks/use-list-page.tsx`, URL-состояние в `lib/app/hooks/list-page-url-state.ts`, рендер таблицы в `components/lists/entity-list.tsx` и общая обёртка страницы списка в `components/lists/entity-list-page.tsx`.
+- **Переименование в списке:** кнопка при наведении на строку и диалог — в `EntityList` (проп `onRename`) и `EntityRow` (проп `onRenameClick`). Обработчик по типу сущности (updateItem, updateRoom и т.д.) — в `EntityListPage`; для кастомной страницы (например `app/(app)/items/page.tsx`) нужно передать свой `onRename` в `EntityList`.
 - **Детали:** загрузка данных — в `lib/<entity>/load-<entity>-detail.ts` или в API route; страница — `app/(app)/<entity>/[id]/page.tsx`.
 
 ## Конвенции
