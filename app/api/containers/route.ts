@@ -10,7 +10,7 @@ import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import { parseOptionalBool } from "@/lib/shared/api/parse-optional-bool";
 import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
-import type { Container } from "@/types/entity";
+import type { Container, DestinationType } from "@/types/entity";
 import type { ContainerRow } from "@/types/db-rows";
 
 /**
@@ -89,10 +89,10 @@ export async function GET(request: NextRequest) {
       items_count: container.items_count ?? 0,
       last_location: container.destination_type
         ? {
-            destination_type: container.destination_type,
+            destination_type: container.destination_type as DestinationType,
             destination_id: container.destination_id,
             destination_name: container.destination_name,
-            moved_at: container.moved_at,
+            moved_at: container.moved_at ?? "",
             room_name: container.room_name ?? null,
           }
         : null,

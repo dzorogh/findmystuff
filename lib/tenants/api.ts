@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Tenant } from "./types";
+import type { Tenant } from "@/types/tenants";
 
 /** RPC create_tenant_for_current_user. Только для вызова из app/api (server). */
 export async function createTenantForCurrentUserRpc(

@@ -4,9 +4,10 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
-import type { EntityTypeName } from "@/types/entity";
+/** Имена таблиц API (путь [table]), не путать с EntityTypeName (item, place, ...). */
+type ApiTableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
 
-const ALLOWED_TABLES: readonly EntityTypeName[] = ["items", "places", "containers", "rooms", "buildings", "furniture"];
+const ALLOWED_TABLES: readonly ApiTableName[] = ["items", "places", "containers", "rooms", "buildings", "furniture"];
 
 type DuplicateParams =
   | { params: Promise<{ table: string; id: string }> }
@@ -37,7 +38,7 @@ type LastTransitionRow = {
   destination_id: number | null;
 };
 
-const SOURCE_SELECT_BY_TABLE: Record<EntityTypeName, string> = {
+const SOURCE_SELECT_BY_TABLE: Record<ApiTableName, string> = {
   items: "id, name, photo_url, item_type_id, price_amount, price_currency, current_value_amount, current_value_currency, quantity, purchase_date, deleted_at",
   places: "id, name, photo_url, entity_type_id, deleted_at",
   containers: "id, name, photo_url, entity_type_id, deleted_at",
@@ -46,7 +47,7 @@ const SOURCE_SELECT_BY_TABLE: Record<EntityTypeName, string> = {
   furniture: "id, name, photo_url, room_id, furniture_type_id, price_amount, price_currency, current_value_amount, current_value_currency, purchase_date, deleted_at",
 };
 
-const TRANSITION_ID_COLUMN_BY_TABLE: Partial<Record<EntityTypeName, "item_id" | "place_id" | "container_id">> = {
+const TRANSITION_ID_COLUMN_BY_TABLE: Partial<Record<ApiTableName, "item_id" | "place_id" | "container_id">> = {
   items: "item_id",
   places: "place_id",
   containers: "container_id",
@@ -68,7 +69,7 @@ export async function POST(
     const { tenantId } = auth;
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(context.params);
-    const table = resolvedParams.table as EntityTypeName;
+    const table = resolvedParams.table as ApiTableName;
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Недопустимая таблица" }, { status: HTTP_STATUS.BAD_REQUEST });

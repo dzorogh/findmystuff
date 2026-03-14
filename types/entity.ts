@@ -10,6 +10,9 @@ export type MoveDestinationType = DestinationType | "building";
 /** Тип сущности по имени (для отображения, этикеток, списков, имён таблиц API). */
 export type EntityTypeName = "item" | "place" | "container" | "room" | "building" | "furniture";
 
+/** Имена таблиц API (пути, Supabase): items, places, containers, rooms, buildings, furniture. */
+export type ApiTableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
+
 /** Ключ действия в меню сущности. */
 export type ActionKey = "edit" | "move" | "printLabel" | "duplicate" | "delete" | "restore";
 
@@ -348,7 +351,7 @@ export interface ListPagePagination {
 export interface EntityConfig {
   kind: EntityTypeName;
   basePath: string;
-  apiTable: EntityTypeName;
+  apiTable: ApiTableName;
   labels: EntityLabels;
   actions: ActionsConfig;
   move?: MoveConfig;
