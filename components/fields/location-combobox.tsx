@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { LayoutGrid, Container as ContainerIcon, DoorOpen, Sofa } from "lucide-react";
+import { useState, useCallback } from "react";
+import { LayoutGrid, Container as ContainerIcon, DoorOpen, Sofa, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -18,6 +19,9 @@ import { usePlaces } from "@/lib/places/hooks/use-places";
 import { useContainers } from "@/lib/containers/hooks/use-containers";
 import { useFurniture } from "@/lib/furniture/hooks/use-furniture";
 import type { Container, Place, Room, Furniture, DestinationType } from "@/types/entity";
+import { QRScanner } from "@/components/common/scanner";
+import type { EntityQrPayload } from "@/lib/entities/helpers/qr-code";
+import { toast } from "sonner";
 
 interface LocationComboboxProps {
   destinationType: DestinationType | null;
@@ -31,7 +35,16 @@ interface LocationComboboxProps {
   excludeContainerId?: number;
   label?: string;
   id?: string;
+  /** Показывать кнопку сканирования QR для быстрого выбора места. По умолчанию true. */
+  showQrScan?: boolean;
 }
+
+const VALID_LOCATION_QR_TYPES: DestinationType[] = [
+  "place",
+  "room",
+  "container",
+  "furniture",
+];
 
 const LocationCombobox = ({
   destinationType,
@@ -43,7 +56,37 @@ const LocationCombobox = ({
   excludeContainerId,
   label = "Местоположение (необязательно)",
   id = "location-combobox",
+  showQrScan = true,
 }: LocationComboboxProps) => {
+  const [scanLocationQrOpen, setScanLocationQrOpen] = useState(false);
+
+  const handleLocationQrScan = useCallback(
+    (payload: EntityQrPayload) => {
+      if (VALID_LOCATION_QR_TYPES.includes(payload.type as DestinationType)) {
+        onDestinationTypeChange(payload.type as DestinationType);
+        onDestinationIdChange(String(payload.id));
+        setScanLocationQrOpen(false);
+        const typeLabel =
+          payload.type === "place"
+            ? "Место"
+            : payload.type === "room"
+              ? "Помещение"
+              : payload.type === "container"
+                ? "Контейнер"
+                : "Мебель";
+        toast.success("Место задано по QR-коду", {
+          description: `${typeLabel} #${payload.id}`,
+        });
+      } else {
+        toast.error("Не подходит для местоположения", {
+          description:
+            "Отсканируйте QR-код места, помещения, контейнера или мебели",
+        });
+      }
+    },
+    [onDestinationTypeChange, onDestinationIdChange]
+  );
+
   const { rooms, isLoading: isLoadingRooms } = useRooms();
   const { places, isLoading: isLoadingPlaces } = usePlaces();
   const { containers, isLoading: isLoadingContainers } = useContainers();
@@ -137,6 +180,19 @@ const LocationCombobox = ({
               {btnLabel}
             </Button>
           ))}
+          {showQrScan && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setScanLocationQrOpen(true)}
+              disabled={disabled}
+              aria-label="Сканировать QR-код места"
+            >
+              <QrCode className="mr-2 h-4 w-4" />
+              Сканировать QR
+            </Button>
+          )}
         </div>
       </Field>
 
@@ -192,6 +248,11 @@ const LocationCombobox = ({
           )}
         </Field>
       )}
+      <QRScanner
+        open={scanLocationQrOpen}
+        onClose={() => setScanLocationQrOpen(false)}
+        onScanSuccess={handleLocationQrScan}
+      />
     </FieldGroup>
   );
 };
