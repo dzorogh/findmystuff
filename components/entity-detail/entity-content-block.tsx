@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EntityContentList } from "./entity-content-list";
+import type { Action } from "@/types/entity";
 
 interface EntityContentListItem {
   id: number;
@@ -21,6 +22,8 @@ interface EntityContentBlockProps {
     label: string;
     onClick: () => void;
   };
+  /** Действия для каждого элемента списка (например, печать этикетки). */
+  getItemActions?: (item: EntityContentListItem) => Action[];
 }
 
 export function EntityContentBlock({
@@ -30,6 +33,7 @@ export function EntityContentBlock({
   entityType,
   emptyMessage,
   addButton,
+  getItemActions,
 }: EntityContentBlockProps) {
   return (
     <Card>
@@ -55,6 +59,7 @@ export function EntityContentBlock({
           items={items}
           entityType={entityType}
           emptyMessage={emptyMessage}
+          getItemActions={getItemActions}
         />
       </CardContent>
     </Card>

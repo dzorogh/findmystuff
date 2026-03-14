@@ -26,7 +26,7 @@ import AddContainerForm from "@/components/forms/add-container-form";
 import { EntityRelatedLinks } from "@/components/entity-detail/entity-related-links";
 import { EntityImageCard } from "@/components/entity-detail/entity-image-card";
 import { PageHeader } from "@/components/layout/page-header";
-import { Loader2 } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import RoomCombobox from "@/components/fields/room-combobox";
 import { useRooms } from "@/lib/rooms/hooks/use-rooms";
@@ -181,6 +181,7 @@ export default function FurnitureDetailPage() {
   });
 
   const printLabel = usePrintEntityLabel("furniture");
+  const printPlaceLabel = usePrintEntityLabel("place");
 
   const handleDuplicate = useCallback(async () => {
     const res = await duplicateEntityApiClient.duplicate("furniture", furnitureId);
@@ -389,6 +390,14 @@ export default function FurnitureDetailPage() {
                 label: "Добавить место",
                 onClick: () => setAddPlaceOpen(true),
               }}
+              getItemActions={(place) => [
+                {
+                  key: "printLabel",
+                  label: "Печать этикетки",
+                  icon: Printer,
+                  onClick: () => printPlaceLabel(place.id, place.name),
+                },
+              ]}
             />
             <EntityContentBlock
               title="Вещи в мебели"

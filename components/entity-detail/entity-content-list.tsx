@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Package, Container, LayoutGrid, DoorOpen, Sofa } from "lucide-react";
+import { EntityActions } from "./entity-actions";
+import type { Action } from "@/types/entity";
 
 interface EntityContentListItem {
   id: number;
@@ -11,6 +13,7 @@ interface EntityContentListProps {
   items: EntityContentListItem[];
   entityType: "items" | "containers" | "places" | "rooms" | "furniture";
   emptyMessage: string;
+  getItemActions?: (item: EntityContentListItem) => Action[];
 }
 
 const entityIcons = {
@@ -33,6 +36,7 @@ export function EntityContentList({
   items,
   entityType,
   emptyMessage,
+  getItemActions,
 }: EntityContentListProps) {
   if (items.length === 0) {
     return (
@@ -50,32 +54,46 @@ export function EntityContentList({
     <div className="grid gap-2 sm:grid-cols-2">
       {items.map((item) => {
         const displayName = item.name ?? `${fallbackName} #${item.id}`;
+        const itemActions = getItemActions?.(item) ?? [];
         return (
-          <Link
+          <div
             key={item.id}
-            href={`${hrefPrefix}/${item.id}`}
             className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
           >
-            {item.photo_url ? (
-              <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded border">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.photo_url}
-                  alt={displayName}
-                  className="h-full w-full object-cover"
-                  width={48}
-                  height={48}
-                />
+            <Link
+              href={`${hrefPrefix}/${item.id}`}
+              className="flex min-w-0 flex-1 items-center gap-3"
+            >
+              {item.photo_url ? (
+                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.photo_url}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                    width={48}
+                    height={48}
+                  />
+                </div>
+              ) : (
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded border bg-muted">
+                  <Icon className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{displayName}</span>
               </div>
-            ) : (
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded border bg-muted">
-                <Icon className="h-6 w-6 text-muted-foreground" />
+            </Link>
+            {itemActions.length > 0 && (
+              <div
+                className="shrink-0"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <EntityActions actions={itemActions} />
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <span className="font-medium truncate block">{displayName}</span>
-            </div>
-          </Link>
+          </div>
         );
       })}
     </div>
