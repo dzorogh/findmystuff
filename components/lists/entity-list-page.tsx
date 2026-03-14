@@ -68,7 +68,7 @@ function EntityListPageContent({ config }: EntityListPageProps) {
       }
       listPage.refreshList();
     },
-    [config.apiTable, listPage.refreshList]
+    [config, listPage]
   );
 
   return (

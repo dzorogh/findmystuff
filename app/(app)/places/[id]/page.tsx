@@ -129,6 +129,17 @@ export default function PlaceDetailPage() {
     [loadPlaceData, printLabel, handleDelete, handleRestore]
   );
 
+  const breadcrumbAncestors = useMemo(() => {
+    const base = [{ label: "Места", href: "/places" }];
+    if (place?.furniture_id != null) {
+      base.push({
+        label: place.furniture_name?.trim() || `Мебель #${place.furniture_id}`,
+        href: `/furniture/${place.furniture_id}`,
+      });
+    }
+    return base;
+  }, [place?.furniture_id, place?.furniture_name]);
+
   if (error && !isLoading) {
     return <EntityDetailError error={error} entityName="Место" />;
   }
@@ -164,17 +175,6 @@ export default function PlaceDetailPage() {
     place != null ? (
       <EntityActions actions={resolveActions(placesEntityConfig.actions, place, placeCtx)} />
     ) : null;
-
-  const breadcrumbAncestors = useMemo(() => {
-    const base = [{ label: "Места", href: "/places" }];
-    if (place?.furniture_id != null) {
-      base.push({
-        label: place.furniture_name?.trim() || `Мебель #${place.furniture_id}`,
-        href: `/furniture/${place.furniture_id}`,
-      });
-    }
-    return base;
-  }, [place?.furniture_id, place?.furniture_name]);
 
   return (
     <div className="flex flex-col gap-4">

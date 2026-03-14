@@ -46,7 +46,7 @@ export default function ItemsPage() {
       await updateItem(entity.id, { name: trimmed });
       listPage.refreshList();
     },
-    [listPage.refreshList]
+    [listPage]
   );
 
   const addForm = listPage.addForm;
