@@ -12,6 +12,7 @@ import { resolveActions } from "@/lib/entities/resolve-actions";
 import type { ActionsContext, EntityDisplay } from "@/types/entity";
 import { useItemListActions } from "@/lib/entities/hooks/use-item-list-actions";
 import { itemsEntityConfig } from "@/lib/entities/items/entity-config";
+import { updateItem } from "@/lib/entities/api";
 
 export default function ItemsPage() {
   const listPage = useListPage(itemsEntityConfig);
@@ -36,6 +37,16 @@ export default function ItemsPage() {
   const getRowActions = useCallback(
     (entity: EntityDisplay) => resolveActions(itemsEntityConfig.actions, entity, ctx),
     [ctx]
+  );
+
+  const handleRename = useCallback(
+    async (entity: EntityDisplay, newName: string) => {
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      await updateItem(entity.id, { name: trimmed });
+      listPage.refreshList();
+    },
+    [listPage.refreshList]
   );
 
   const addForm = listPage.addForm;
@@ -98,6 +109,7 @@ export default function ItemsPage() {
           getName={listPage.getName}
           getRowActions={getRowActions}
           counts={listPage.counts}
+          onRename={handleRename}
         />
         {listPage.pagination &&
           listPage.pagination.totalCount > listPage.pagination.pageSize && (

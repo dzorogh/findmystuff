@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment, useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -27,7 +28,16 @@ import type {
 import type { EntitySortOption } from "@/lib/entities/helpers/sort";
 import type { Item, Room, Place, Container } from "@/types/entity";
 import { Card } from "@/components/ui/card";
-import { Fragment } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export interface EntityListProps {
   data: EntityDisplay[];
@@ -54,6 +64,8 @@ export interface EntityListProps {
   counts?: CountsConfig;
   groupBy?: (entity: EntityDisplay) => string | null;
   groupByEmptyLabel?: string;
+  /** При наличии — показывается кнопка переименования в строке и диалог переименования. */
+  onRename?: (entity: EntityDisplay, newName: string) => Promise<void>;
 }
 
 /** Подпись помещения для строки: только у сущностей с last_location (items). */
@@ -88,10 +100,51 @@ export function EntityList({
   counts,
   groupBy,
   groupByEmptyLabel = "Без здания",
+  onRename,
 }: EntityListProps) {
   const resolvedGetName = getName ?? ((e: EntityDisplay) => getEntityDisplayName(kind, e.id, e.name));
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
+
+  const [renameState, setRenameState] = useState<{
+    entity: EntityDisplay;
+    inputValue: string;
+  } | null>(null);
+  const [renameSubmitting, setRenameSubmitting] = useState(false);
+
+  const handleRenameClick = useCallback(
+    (entity: EntityDisplay) => {
+      const displayName = resolvedGetName(entity);
+      setRenameState({
+        entity,
+        inputValue: displayName ?? entity.name ?? "",
+      });
+    },
+    [resolvedGetName]
+  );
+
+  const handleRenameDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setRenameState(null);
+  }, []);
+
+  const handleRenameSubmit = useCallback(async () => {
+    if (!renameState || !onRename) return;
+    const trimmed = renameState.inputValue.trim();
+    if (!trimmed) {
+      toast.error("Введите название");
+      return;
+    }
+    setRenameSubmitting(true);
+    try {
+      await onRename(renameState.entity, trimmed);
+      setRenameState(null);
+      toast.success("Название изменено");
+    } catch {
+      toast.error("Не удалось изменить название");
+    } finally {
+      setRenameSubmitting(false);
+    }
+  }, [renameState, onRename]);
 
   const groupedEntries: Array<{ key: string; entities: EntityDisplay[] }> = groupBy
     ? (() => {
@@ -181,6 +234,7 @@ export function EntityList({
                           actions={rowActions}
                           roomLabel={roomLabel}
                           counts={counts}
+                          onRenameClick={onRename ? handleRenameClick : undefined}
                         />
                       );
                     })}
@@ -206,6 +260,49 @@ export function EntityList({
           onFiltersChange={onFiltersChange}
         />
       </ListFiltersSheet>
+
+      {onRename && (
+        <Dialog open={!!renameState} onOpenChange={handleRenameDialogOpenChange}>
+          <DialogContent showCloseButton>
+            {renameState && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Переименовать</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-2 py-2">
+                  <Input
+                    value={renameState.inputValue}
+                    onChange={(e) =>
+                      setRenameState((prev) =>
+                        prev ? { ...prev, inputValue: e.target.value } : null
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRenameSubmit();
+                    }}
+                    placeholder="Название"
+                    aria-label="Новое название"
+                    disabled={renameSubmitting}
+                    autoFocus
+                  />
+                </div>
+                <DialogFooter showCloseButton={false}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setRenameState(null)}
+                    disabled={renameSubmitting}
+                  >
+                    Отмена
+                  </Button>
+                  <Button onClick={handleRenameSubmit} disabled={renameSubmitting}>
+                    Сохранить
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

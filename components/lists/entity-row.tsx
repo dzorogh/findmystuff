@@ -3,7 +3,8 @@
 import { memo, useRef, type ComponentType, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DoorOpen, Package } from "lucide-react";
+import { DoorOpen, Package, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
@@ -44,6 +45,8 @@ interface EntityRowProps {
   roomLabel?: string;
   /** Конфиг счётчиков (room, building, furniture, place). */
   counts?: CountsConfig;
+  /** При клике открывает диалог переименования (если передан). */
+  onRenameClick?: (entity: ListEntity) => void;
 }
 
 function renderCountLinks(
@@ -90,9 +93,16 @@ function renderNameCell(
   editHref: string | undefined,
   icon: IconComponent | undefined,
   getName: ((entity: { id: number; name: string | null }) => string) | undefined,
+  onRenameClick: ((entity: ListEntity) => void) | undefined,
 ): ReactNode {
   const Icon = icon ?? Package;
   const displayName = getName?.(entity);
+
+  const handleRenameClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRenameClick?.(entity);
+  };
 
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -111,13 +121,26 @@ function renderNameCell(
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       )}
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <Link
           href={editHref ?? "#"}
-          className="block overflow-hidden text-ellipsis break-words font-medium leading-tight"
+          className="block min-w-0 flex-1 overflow-hidden text-ellipsis break-words font-medium leading-tight"
         >
           {displayName}
         </Link>
+        {onRenameClick && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+            onClick={handleRenameClick}
+            aria-label="Переименовать"
+            tabIndex={0}
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -179,7 +202,8 @@ function renderCellContent(
   editHref: string | undefined,
   icon: IconComponent | undefined,
   getName: ((entity: { id: number; name: string | null }) => string) | undefined,
-  counts: CountsConfig | undefined
+  counts: CountsConfig | undefined,
+  onRenameClick: ((entity: ListEntity) => void) | undefined
 ): ReactNode {
   switch (columnKey) {
     case "id":
@@ -198,7 +222,7 @@ function renderCellContent(
       );
 
     case "name":
-      return renderNameCell(entity, editHref, icon, getName);
+      return renderNameCell(entity, editHref, icon, getName, onRenameClick);
 
     case "room":
       return renderRoomCell(entity, roomLabel);
@@ -230,6 +254,7 @@ export const EntityRow = memo(function EntityRow({
   getName,
   roomLabel,
   counts,
+  onRenameClick,
 }: EntityRowProps) {
   const router = useRouter();
   const pointerStartedOnRowRef = useRef(false);
@@ -258,7 +283,7 @@ export const EntityRow = memo(function EntityRow({
 
   return (
     <TableRow
-      className={cn(entity.deleted_at ? "opacity-60" : "", "cursor-pointer")}
+      className={cn(entity.deleted_at ? "opacity-60" : "", "cursor-pointer group")}
       onPointerDown={handlePointerDown}
       onPointerCancel={() => {
         pointerStartedOnRowRef.current = false;
@@ -274,7 +299,8 @@ export const EntityRow = memo(function EntityRow({
           editHref,
           icon,
           getName,
-          counts
+          counts,
+          onRenameClick
         );
         const responsiveHidden = getResponsiveHiddenClass(col);
 

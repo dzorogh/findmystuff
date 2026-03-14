@@ -9,9 +9,11 @@ import type { Action, EntityDisplay } from "@/types/entity";
 export function ListPageContent({
   listPage,
   getRowActions,
+  onRename,
 }: {
   listPage: ReturnType<typeof useListPage>;
   getRowActions: (entity: EntityDisplay) => Action[];
+  onRename?: (entity: EntityDisplay, newName: string) => Promise<void>;
 }) {
   const addForm = listPage.addForm;
   const AddForm = addForm?.form ?? null;
@@ -57,6 +59,7 @@ export function ListPageContent({
         counts={listPage.counts}
         groupBy={listPage.groupBy}
         groupByEmptyLabel={listPage.groupByEmptyLabel}
+        onRename={onRename}
       />
       {listPage.pagination &&
         listPage.pagination.totalCount > listPage.pagination.pageSize && (
