@@ -165,14 +165,23 @@ export default function PlaceDetailPage() {
       <EntityActions actions={resolveActions(placesEntityConfig.actions, place, placeCtx)} />
     ) : null;
 
+  const breadcrumbAncestors = useMemo(() => {
+    const base = [{ label: "Места", href: "/places" }];
+    if (place?.furniture_id != null) {
+      base.push({
+        label: place.furniture_name?.trim() || `Мебель #${place.furniture_id}`,
+        href: `/furniture/${place.furniture_id}`,
+      });
+    }
+    return base;
+  }, [place?.furniture_id, place?.furniture_name]);
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         isLoading={isPageLoading}
         title={place?.name ?? (place ? `Место #${place.id}` : "Место")}
-        ancestors={[
-          { label: "Места", href: "/places" },
-        ]}
+        ancestors={breadcrumbAncestors}
         actions={headerActions}
       />
       {place && (
