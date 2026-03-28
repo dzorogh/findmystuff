@@ -47,6 +47,8 @@ interface EntityRowProps {
   counts?: CountsConfig;
   /** При клике открывает диалог переименования (если передан). */
   onRenameClick?: (entity: ListEntity) => void;
+  /** При клике открывает быстрое редактирование категории (если передан). */
+  onEditItemTypeClick?: (entity: ListEntity) => void;
 }
 
 function renderCountLinks(
@@ -196,6 +198,42 @@ function renderItemTypeCell(entity: ListEntity): ReactNode {
   return <span className="text-sm">{itemTypeName}</span>;
 }
 
+function renderEditableItemTypeCell(
+  entity: ListEntity,
+  onEditItemTypeClick: ((entity: ListEntity) => void) | undefined
+): ReactNode {
+  if (!("item_type" in entity)) return renderItemTypeCell(entity);
+
+  const itemTypeName = entity.item_type?.name?.trim() || "—";
+
+  const handleEditItemTypeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEditItemTypeClick?.(entity);
+  };
+
+  return (
+    <div className="flex min-w-0 items-center gap-1">
+      <span className={cn("text-sm truncate", itemTypeName === "—" && "text-muted-foreground")}>
+        {itemTypeName}
+      </span>
+      {onEditItemTypeClick && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+          onClick={handleEditItemTypeClick}
+          aria-label="Изменить категорию"
+          tabIndex={0}
+        >
+          <Pencil className="h-3 w-3" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined): ReactNode {
   return renderCountLinks(entity, counts);
 }
@@ -214,7 +252,8 @@ function renderCellContent(
   icon: IconComponent | undefined,
   getName: ((entity: { id: number; name: string | null }) => string) | undefined,
   counts: CountsConfig | undefined,
-  onRenameClick: ((entity: ListEntity) => void) | undefined
+  onRenameClick: ((entity: ListEntity) => void) | undefined,
+  onEditItemTypeClick: ((entity: ListEntity) => void) | undefined
 ): ReactNode {
   switch (columnKey) {
     case "id":
@@ -239,7 +278,7 @@ function renderCellContent(
       return renderRoomCell(entity, roomLabel);
 
     case "itemType":
-      return renderItemTypeCell(entity);
+      return renderEditableItemTypeCell(entity, onEditItemTypeClick);
 
     case "movedAt":
       return renderMovedAtCell(entity);
@@ -269,6 +308,7 @@ export const EntityRow = memo(function EntityRow({
   roomLabel,
   counts,
   onRenameClick,
+  onEditItemTypeClick,
 }: EntityRowProps) {
   const router = useRouter();
   const pointerStartedOnRowRef = useRef(false);
@@ -314,7 +354,8 @@ export const EntityRow = memo(function EntityRow({
           icon,
           getName,
           counts,
-          onRenameClick
+          onRenameClick,
+          onEditItemTypeClick
         );
         const responsiveHidden = getResponsiveHiddenClass(col);
 

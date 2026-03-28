@@ -38,6 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { EntityTypeSelect } from "@/components/fields/entity-type-select";
 
 export interface EntityListProps {
   data: EntityDisplay[];
@@ -66,6 +67,8 @@ export interface EntityListProps {
   groupByEmptyLabel?: string;
   /** При наличии — показывается кнопка переименования в строке и диалог переименования. */
   onRename?: (entity: EntityDisplay, newName: string) => Promise<void>;
+  /** При наличии — показывается быстрое редактирование категории вещи. */
+  onEditItemType?: (entity: EntityDisplay, newItemTypeId: number | null) => Promise<void>;
 }
 
 /** Подпись помещения для строки: только у сущностей с last_location (items). */
@@ -101,6 +104,7 @@ export function EntityList({
   groupBy,
   groupByEmptyLabel = "Без здания",
   onRename,
+  onEditItemType,
 }: EntityListProps) {
   const resolvedGetName = getName ?? ((e: EntityDisplay) => getEntityDisplayName(kind, e.id, e.name));
   const list = Array.isArray(data) ? data : [];
@@ -111,6 +115,11 @@ export function EntityList({
     inputValue: string;
   } | null>(null);
   const [renameSubmitting, setRenameSubmitting] = useState(false);
+  const [itemTypeState, setItemTypeState] = useState<{
+    entity: EntityDisplay;
+    itemTypeId: number | null;
+  } | null>(null);
+  const [itemTypeSubmitting, setItemTypeSubmitting] = useState(false);
 
   const handleRenameClick = useCallback(
     (entity: EntityDisplay) => {
@@ -125,6 +134,21 @@ export function EntityList({
 
   const handleRenameDialogOpenChange = useCallback((open: boolean) => {
     if (!open) setRenameState(null);
+  }, []);
+
+  const handleItemTypeClick = useCallback(
+    (entity: EntityDisplay) => {
+      const item = entity as Item;
+      setItemTypeState({
+        entity,
+        itemTypeId: item.item_type_id ?? null,
+      });
+    },
+    []
+  );
+
+  const handleItemTypeDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setItemTypeState(null);
   }, []);
 
   const handleRenameSubmit = useCallback(async () => {
@@ -145,6 +169,20 @@ export function EntityList({
       setRenameSubmitting(false);
     }
   }, [renameState, onRename]);
+
+  const handleItemTypeSubmit = useCallback(async () => {
+    if (!itemTypeState || !onEditItemType) return;
+    setItemTypeSubmitting(true);
+    try {
+      await onEditItemType(itemTypeState.entity, itemTypeState.itemTypeId);
+      setItemTypeState(null);
+      toast.success("Категория изменена");
+    } catch {
+      toast.error("Не удалось изменить категорию");
+    } finally {
+      setItemTypeSubmitting(false);
+    }
+  }, [itemTypeState, onEditItemType]);
 
   const groupedEntries: Array<{ key: string; entities: EntityDisplay[] }> = groupBy
     ? (() => {
@@ -235,6 +273,7 @@ export function EntityList({
                           roomLabel={roomLabel}
                           counts={counts}
                           onRenameClick={onRename ? handleRenameClick : undefined}
+                          onEditItemTypeClick={onEditItemType ? handleItemTypeClick : undefined}
                         />
                       );
                     })}
@@ -295,6 +334,48 @@ export function EntityList({
                     Отмена
                   </Button>
                   <Button onClick={handleRenameSubmit} disabled={renameSubmitting}>
+                    Сохранить
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {onEditItemType && (
+        <Dialog open={!!itemTypeState} onOpenChange={handleItemTypeDialogOpenChange}>
+          <DialogContent showCloseButton>
+            {itemTypeState && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Изменить категорию</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-2 py-2">
+                  <EntityTypeSelect
+                    type="item"
+                    value={itemTypeState.itemTypeId}
+                    onValueChange={(value) =>
+                      setItemTypeState((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              itemTypeId: value.trim() ? parseInt(value, 10) : null,
+                            }
+                          : null
+                      )
+                    }
+                  />
+                </div>
+                <DialogFooter showCloseButton={false}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setItemTypeState(null)}
+                    disabled={itemTypeSubmitting}
+                  >
+                    Отмена
+                  </Button>
+                  <Button onClick={handleItemTypeSubmit} disabled={itemTypeSubmitting}>
                     Сохранить
                   </Button>
                 </DialogFooter>

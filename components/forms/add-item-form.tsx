@@ -29,6 +29,7 @@ interface AddItemFormProps {
   onSuccess?: () => void;
   initialName?: string | null;
   initialPhotoUrl?: string | null;
+  initialItemTypeId?: number | null;
   initialDestinationType?: LocationDestinationType | null;
   initialDestinationId?: number | null;
   /** При открытии формы со страницы мебели — предзаполнить мебель как местоположение. */
@@ -41,6 +42,7 @@ const AddItemForm = ({
   onSuccess,
   initialName,
   initialPhotoUrl,
+  initialItemTypeId,
   initialDestinationType,
   initialDestinationId,
   initialFurnitureId,
@@ -61,7 +63,7 @@ const AddItemForm = ({
     if (open) {
       setName(initialName?.trim() ?? "");
       setPhotoUrl(initialPhotoUrl ?? null);
-      setItemTypeId(null);
+      setItemTypeId(initialItemTypeId ?? null);
       const destType = initialDestinationType ?? (initialFurnitureId != null ? "furniture" : null);
       const destId = initialDestinationId ?? initialFurnitureId ?? null;
       setDestinationType(destType);
@@ -72,7 +74,7 @@ const AddItemForm = ({
       setPurchaseDate("");
       setError(null);
     }
-  }, [open, initialName, initialPhotoUrl, initialDestinationType, initialDestinationId, initialFurnitureId]);
+  }, [open, initialName, initialPhotoUrl, initialItemTypeId, initialDestinationType, initialDestinationId, initialFurnitureId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -34,6 +34,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
   const [addFormOpen, setAddFormOpen] = useState(false);
   const [initialName, setInitialName] = useState<string | null>(null);
   const [initialPhotoUrl, setInitialPhotoUrl] = useState<string | null>(null);
+  const [initialItemTypeId, setInitialItemTypeId] = useState<number | null>(null);
   const [isBarcodeLookupLoading, setIsBarcodeLookupLoading] = useState(false);
   const [isRecognizeLoading, setIsRecognizeLoading] = useState(false);
   const onSuccessRef = useRef<(() => void) | null>(null);
@@ -53,6 +54,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
   const openByForm = useCallback(() => {
     setInitialName(null);
     setInitialPhotoUrl(null);
+    setInitialItemTypeId(null);
     setAddFormOpen(true);
   }, []);
 
@@ -69,6 +71,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
 
       const productName = data.productName?.trim() || null;
       setInitialName(productName);
+      setInitialItemTypeId(null);
       setAddFormOpen(true);
 
       if (!productName) {
@@ -78,6 +81,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
       logError("Barcode lookup error:", err);
       toast.error("Не удалось получить данные по штрихкоду");
       setInitialName(null);
+      setInitialItemTypeId(null);
       setAddFormOpen(true);
     } finally {
       setIsBarcodeLookupLoading(false);
@@ -99,9 +103,11 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
 
       const url = uploadResult.data?.url ?? null;
       const itemName = recognizeResult.itemName?.trim() ?? null;
+      const itemTypeId = recognizeResult.itemTypeId ?? null;
 
       setInitialPhotoUrl(url);
       setInitialName(itemName);
+      setInitialItemTypeId(itemTypeId);
       setAddFormOpen(true);
 
       if (recognizeResult.error) {
@@ -117,6 +123,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
       );
       setInitialPhotoUrl(null);
       setInitialName(null);
+      setInitialItemTypeId(null);
       setAddFormOpen(true);
     } finally {
       toast.dismiss(toastId);
@@ -128,6 +135,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
     if (!open) {
       setInitialName(null);
       setInitialPhotoUrl(null);
+      setInitialItemTypeId(null);
     }
     setAddFormOpen(open);
   }, []);
@@ -164,6 +172,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
         onSuccess={handleAddSuccess}
         initialName={initialName}
         initialPhotoUrl={initialPhotoUrl}
+        initialItemTypeId={initialItemTypeId}
       />
     </AddItemContext.Provider>
   );

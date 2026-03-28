@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const showDeleted = searchParams.get("showDeleted") === "true";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const entityTypeId = parseOptionalInt(searchParams.get("entityTypeId"));
     const locationType = searchParams.get("locationType") || null;
     const roomId = parseOptionalInt(searchParams.get("roomId"));
     const placeId = parseOptionalInt(searchParams.get("placeId"));
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
       place_id: placeId,
       container_id: containerId,
       furniture_id: furnitureId,
+      filter_item_type_id: entityTypeId,
       has_photo: hasPhoto,
       sort_by: sortBy,
       sort_direction: sortDirection,

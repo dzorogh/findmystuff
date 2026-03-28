@@ -7,7 +7,13 @@ import { LocationTypeSelect } from "@/components/fields/location-type-select";
 import { RoomsSelect } from "@/components/fields/rooms-select";
 import { BuildingsSelect } from "@/components/fields/buildings-select";
 import { FurnitureSelect } from "@/components/fields/furniture-select";
-import { Combobox } from "@/components/ui/combobox";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FilterFieldConfig, Filters } from "@/types/entity";
 import { useEntityTypeFilterOptions } from "@/lib/entities/hooks/use-entity-type-filter-options";
@@ -104,7 +110,9 @@ export function EntityFiltersPanel({
             value={(value as number | null | undefined) ?? null}
             onValueChange={setNumericValue}
             label={
-              field.entityKind === "place"
+              field.entityKind === "item"
+                ? "Категория"
+                : field.entityKind === "place"
                 ? "Тип места"
                 : field.entityKind === "furniture"
                   ? "Тип мебели"
@@ -135,7 +143,7 @@ export function EntityFiltersPanel({
 }
 
 interface EntityTypeFilterFieldProps {
-  entityKind: "place" | "container" | "furniture";
+  entityKind: "item" | "place" | "container" | "furniture";
   value: number | null | undefined;
   onValueChange: (value: string | null) => void;
   label: string;
@@ -149,6 +157,7 @@ function EntityTypeFilterField({
 }: EntityTypeFilterFieldProps) {
   const { options, isLoading } =
     useEntityTypeFilterOptions(entityKind);
+  const selectedOption = options.find((option) => option.value === (value != null ? value.toString() : "all")) ?? null;
 
   return (
     <Field>
@@ -157,10 +166,22 @@ function EntityTypeFilterField({
         <Skeleton className="h-8 w-full" />
       ) : (
         <Combobox
+          key={selectedOption ? `${entityKind}-${selectedOption.value}` : `${entityKind}-empty`}
+          value={selectedOption}
           items={options}
-          value={value != null ? value.toString() : "all"}
-          onValueChange={(v) => onValueChange(v === "all" ? null : v)}
-        />
+          onValueChange={(option) => onValueChange(option?.value === "all" ? null : option?.value ?? null)}
+        >
+          <ComboboxInput placeholder={`Выберите ${label.toLowerCase()}...`} />
+          <ComboboxContent>
+            <ComboboxList>
+              {(option: typeof options[number]) => (
+                <ComboboxItem key={option.value} value={option}>
+                  {option.label}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       )}
     </Field>
   );

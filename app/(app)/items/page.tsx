@@ -49,6 +49,14 @@ export default function ItemsPage() {
     [listPage]
   );
 
+  const handleEditItemType = useCallback(
+    async (entity: EntityDisplay, newItemTypeId: number | null) => {
+      await updateItem(entity.id, { item_type_id: newItemTypeId });
+      listPage.refreshList();
+    },
+    [listPage]
+  );
+
   const addForm = listPage.addForm;
 
   return (
@@ -110,6 +118,7 @@ export default function ItemsPage() {
           getRowActions={getRowActions}
           counts={listPage.counts}
           onRename={handleRename}
+          onEditItemType={handleEditItemType}
         />
         {listPage.pagination &&
           listPage.pagination.totalCount > listPage.pagination.pageSize && (

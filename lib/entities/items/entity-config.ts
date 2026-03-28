@@ -15,6 +15,7 @@ import type {
 
 export interface ItemsFilters extends Filters {
   showDeleted: boolean;
+  entityTypeId: number | null;
   locationType: "all" | "room" | "place" | "container" | "furniture" | null;
   hasPhoto: boolean | null;
   roomId: number | null;
@@ -25,6 +26,7 @@ export interface ItemsFilters extends Filters {
 
 export const DEFAULT_ITEMS_FILTERS: ItemsFilters = {
   showDeleted: false,
+  entityTypeId: null,
   locationType: null,
   hasPhoto: null,
   roomId: null,
@@ -43,6 +45,7 @@ async function fetchItems(params: FetchListParams): Promise<FetchListResult> {
     showDeleted: filters.showDeleted,
     page,
     limit: ITEMS_PAGE_SIZE,
+    entityTypeId: filters.entityTypeId ?? undefined,
     locationType: filters.locationType,
     roomId: filters.roomId ?? undefined,
     placeId: filters.placeId ?? undefined,
@@ -88,6 +91,7 @@ export const itemsEntityConfig: EntityConfig = {
   filters: {
     fields: [
       { type: "showDeleted", label: "Показывать удаленные вещи" },
+      { type: "entityType", key: "entityTypeId", entityKind: "item" },
       { type: "locationType", key: "locationType" },
       { type: "yesNoAll", key: "hasPhoto", label: "Есть фото" },
       { type: "room", key: "roomId" },

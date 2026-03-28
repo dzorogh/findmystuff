@@ -16,6 +16,7 @@ describe("items entity-config", () => {
   it("DEFAULT_ITEMS_FILTERS содержит ожидаемые поля", () => {
     expect(DEFAULT_ITEMS_FILTERS).toEqual({
       showDeleted: false,
+      entityTypeId: null,
       locationType: null,
       hasPhoto: null,
       roomId: null,
@@ -75,6 +76,7 @@ describe("items entity-config", () => {
 
     const filters: ItemsFilters = {
       showDeleted: false,
+      entityTypeId: null,
       locationType: null,
       hasPhoto: null,
       roomId: null,
@@ -109,6 +111,7 @@ describe("items entity-config", () => {
     await itemsEntityConfig.fetch({
       filterValues: {
         showDeleted: false,
+        entityTypeId: 7,
         locationType: "furniture",
         hasPhoto: true,
         roomId: 1,
@@ -122,6 +125,7 @@ describe("items entity-config", () => {
 
     expect(getItems).toHaveBeenCalledWith(
       expect.objectContaining({
+        entityTypeId: 7,
         locationType: "furniture",
         hasPhoto: true,
         roomId: 1,

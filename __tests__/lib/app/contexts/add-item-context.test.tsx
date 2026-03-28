@@ -33,6 +33,7 @@ jest.mock("@/components/forms/add-item-form", () => ({
         data-open={String(props.open)}
         data-initial-name={props.initialName ?? ""}
         data-initial-photo-url={props.initialPhotoUrl ?? ""}
+        data-initial-item-type-id={props.initialItemTypeId ?? ""}
       />
     );
   },
@@ -150,6 +151,7 @@ describe("AddItemContext", () => {
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialName).toBeNull();
     expect(lastFormProps.initialPhotoUrl).toBeNull();
+    expect(lastFormProps.initialItemTypeId).toBeNull();
   });
 
   it("openByBarcode открывает сканер и при успешном скане заполняет initialName", async () => {
@@ -177,6 +179,7 @@ describe("AddItemContext", () => {
 
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialName).toBe("Товар");
+    expect(lastFormProps.initialItemTypeId).toBeNull();
   });
 
   it("показывает info-toast, если наименование по штрихкоду не найдено", async () => {
@@ -203,6 +206,7 @@ describe("AddItemContext", () => {
 
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialName).toBeNull();
+    expect(lastFormProps.initialItemTypeId).toBeNull();
     expect(toast.info).toHaveBeenCalledWith(
       "Наименование не найдено. Введите название вручную."
     );
@@ -232,6 +236,7 @@ describe("AddItemContext", () => {
 
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialName).toBeNull();
+    expect(lastFormProps.initialItemTypeId).toBeNull();
     expect(toast.error).toHaveBeenCalledWith(
       "Не удалось получить данные по штрихкоду"
     );
@@ -239,12 +244,13 @@ describe("AddItemContext", () => {
     consoleSpy.mockRestore();
   });
 
-  it("openByPhoto открывает диалог камеры и при capture заполняет initialPhotoUrl и initialName", async () => {
+  it("openByPhoto открывает диалог камеры и при capture заполняет initialPhotoUrl, initialName и initialItemTypeId", async () => {
     photoApiClient.uploadPhoto.mockResolvedValue({
       data: { url: "https://example.com/photo.jpg" },
     });
     recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "  Стол  ",
+      itemTypeId: 42,
       error: undefined,
     });
 
@@ -268,6 +274,7 @@ describe("AddItemContext", () => {
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialPhotoUrl).toBe("https://example.com/photo.jpg");
     expect(lastFormProps.initialName).toBe("Стол");
+    expect(lastFormProps.initialItemTypeId).toBe(42);
     expect(toast.dismiss).toHaveBeenCalled();
   });
 
@@ -277,6 +284,7 @@ describe("AddItemContext", () => {
     });
     recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "   ",
+      itemTypeId: null,
       error: "Ошибка распознавания",
     });
 
@@ -299,6 +307,7 @@ describe("AddItemContext", () => {
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialPhotoUrl).toBe("https://example.com/photo2.jpg");
     expect(lastFormProps.initialName).toBe("");
+    expect(lastFormProps.initialItemTypeId).toBeNull();
     expect(toast.error).toHaveBeenCalledWith("Ошибка распознавания");
     expect(toast.info).toHaveBeenCalledWith(
       "Название не распознано. Введите название вручную."
@@ -327,6 +336,7 @@ describe("AddItemContext", () => {
     });
     recognizeItemPhotoApiClient.recognize.mockResolvedValue({
       itemName: "  Lamp  ",
+      itemTypeId: 7,
       error: undefined,
     });
 
@@ -349,6 +359,7 @@ describe("AddItemContext", () => {
     expect(lastFormProps.open).toBe(true);
     expect(lastFormProps.initialName).toBe("Lamp");
     expect(lastFormProps.initialPhotoUrl).toBe("https://example.com/photo3.jpg");
+    expect(lastFormProps.initialItemTypeId).toBe(7);
 
     act(() => {
       lastFormProps.onOpenChange(false);
@@ -357,5 +368,6 @@ describe("AddItemContext", () => {
     expect(lastFormProps.open).toBe(false);
     expect(lastFormProps.initialName).toBeNull();
     expect(lastFormProps.initialPhotoUrl).toBeNull();
+    expect(lastFormProps.initialItemTypeId).toBeNull();
   });
 });

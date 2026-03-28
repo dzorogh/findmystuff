@@ -33,6 +33,7 @@ export function getItemsWithRoomRpc(
     sort_by: SortBy;
     sort_direction: SortDirection;
     filter_tenant_id?: number | null;
+    filter_item_type_id?: number | null;
   }
 ) {
   const { place_id: _place_id, container_id: _container_id, ...rpcParams } = params;
@@ -40,6 +41,7 @@ export function getItemsWithRoomRpc(
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
     furniture_id: params.furniture_id ?? null,
+    filter_item_type_id: params.filter_item_type_id ?? null,
   });
 }
 
@@ -49,6 +51,7 @@ class EntitiesApiClient extends HttpClient {
     showDeleted?: boolean;
     page?: number;
     limit?: number;
+    entityTypeId?: number | null;
     locationType?: string | null;
     roomId?: number | null;
     placeId?: number | null;
@@ -64,6 +67,7 @@ class EntitiesApiClient extends HttpClient {
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
     if (params?.page) searchParams.set("page", params.page.toString());
     if (params?.limit) searchParams.set("limit", params.limit.toString());
+    if (params?.entityTypeId != null) searchParams.set("entityTypeId", params.entityTypeId.toString());
     if (params?.locationType) searchParams.set("locationType", params.locationType);
     if (params?.roomId) searchParams.set("roomId", params.roomId.toString());
     if (params?.placeId) searchParams.set("placeId", params.placeId.toString());

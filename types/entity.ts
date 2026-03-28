@@ -301,7 +301,7 @@ export type FilterFieldConfig =
   | { type: "room"; key: string }
   | { type: "building"; key: string }
   | { type: "furniture"; key: string }
-  | { type: "entityType"; key: string; entityKind: Extract<EntityTypeName, "place" | "container" | "furniture"> };
+  | { type: "entityType"; key: string; entityKind: Extract<EntityTypeName, "item" | "place" | "container" | "furniture"> };
 
 export interface ListColumnConfig {
   key: string;

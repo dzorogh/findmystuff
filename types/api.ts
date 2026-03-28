@@ -31,6 +31,7 @@ export interface BarcodeLookupResponse {
 
 export interface RecognizeItemPhotoResponse {
   itemName: string | null;
+  itemTypeId: number | null;
   error?: string;
 }
 

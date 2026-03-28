@@ -12,16 +12,16 @@ describe("RecognizeItemPhotoApiClient", () => {
     global.fetch = originalFetch;
   });
 
-  it("отправляет файл на /api/recognize-item-photo и возвращает itemName", async () => {
+  it("отправляет файл на /api/recognize-item-photo и возвращает itemName с itemTypeId", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ itemName: "Стул" }),
+      json: () => Promise.resolve({ itemName: "Стул", itemTypeId: 2 }),
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
     const result = await recognizeItemPhotoApiClient.recognize(file);
 
-    expect(result).toEqual({ itemName: "Стул" });
+    expect(result).toEqual({ itemName: "Стул", itemTypeId: 2 });
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/recognize-item-photo",
       expect.objectContaining({
@@ -35,7 +35,8 @@ describe("RecognizeItemPhotoApiClient", () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
       status: HTTP_STATUS.BAD_REQUEST,
-      json: () => Promise.resolve({ itemName: null, error: "Bad image" }),
+      json: () =>
+        Promise.resolve({ itemName: null, itemTypeId: null, error: "Bad image" }),
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
@@ -47,7 +48,7 @@ describe("RecognizeItemPhotoApiClient", () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
       status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      json: () => Promise.resolve({ itemName: null }),
+      json: () => Promise.resolve({ itemName: null, itemTypeId: null }),
     });
 
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
