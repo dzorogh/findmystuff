@@ -70,6 +70,57 @@ export default function Home() {
 
   const getTypeLabel = (type: string) => ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG]?.label ?? type;
 
+  const getLocationDetails = (result: SearchResult) => {
+    const details = [
+      {
+        key: "room",
+        label: "Помещение",
+        Icon: DoorOpen,
+        value: result.room_name,
+      },
+      {
+        key: "furniture",
+        label: "Мебель",
+        Icon: Sofa,
+        value: result.furniture_name,
+      },
+      {
+        key: "place",
+        label: "Место",
+        Icon: LayoutGrid,
+        value: result.place_name,
+      },
+      {
+        key: "container",
+        label: "Контейнер",
+        Icon: Container,
+        value: result.container_name,
+      },
+    ].filter((detail) => detail.value?.trim());
+
+    if (details.length > 0) {
+      return details;
+    }
+
+    if (!result.location || !result.locationType) {
+      return [];
+    }
+
+    if (result.locationType === "room") {
+      return [{ key: "room", label: "Помещение", Icon: DoorOpen, value: result.location }];
+    }
+
+    if (result.locationType === "furniture") {
+      return [{ key: "furniture", label: "Мебель", Icon: Sofa, value: result.location }];
+    }
+
+    if (result.locationType === "place") {
+      return [{ key: "place", label: "Место", Icon: LayoutGrid, value: result.location }];
+    }
+
+    return [{ key: "container", label: "Контейнер", Icon: Container, value: result.location }];
+  };
+
   const handleResultClick = (result: SearchResult) => {
     if (result.type === "item") {
       router.push(`/items/${result.id}`);
@@ -176,18 +227,14 @@ export default function Home() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {result.location && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {result.locationType === "place" ? (
-                          <LayoutGrid className="h-3 w-3" />
-                        ) : result.locationType === "container" ? (
-                          <Container className="h-3 w-3" />
-                        ) : (
-                          <DoorOpen className="h-3 w-3" />
-                        )}
-                        <span>
-                          {result.locationType === "place" ? "Место" : result.locationType === "container" ? "Контейнер" : "Помещение"}: {result.location}
-                        </span>
+                    {getLocationDetails(result).length > 0 && (
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        {getLocationDetails(result).map(({ key, label, Icon, value }) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <Icon className="h-3 w-3 flex-shrink-0" />
+                            <span>{label}: {value}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="mt-3 flex items-center text-sm text-primary">

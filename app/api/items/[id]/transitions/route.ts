@@ -6,6 +6,25 @@ import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import type { Transition } from "@/types/entity";
 
+type TransitionRow = {
+  id: number;
+  created_at: string;
+  item_id?: number | null;
+  container_id?: number | null;
+  place_id?: number | null;
+  destination_type: Transition["destination_type"];
+  destination_id: number | null;
+};
+
+type NamedRow = {
+  id: number;
+  name: string | null;
+};
+
+type FurnitureRow = NamedRow & {
+  room_id: number | null;
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -46,7 +65,7 @@ export async function GET(
       .filter((t) => t.destination_type === "furniture" && t.destination_id)
       .map((t) => t.destination_id);
 
-    // Сначала загружаем контейнеры, чтобы получить их transitions и узнать места
+    // Сначала загружаем контейнеры, чтобы получить их transitions и узнать их иерархию
     const containersData = containerIds.length > 0
       ? await supabase
           .from("containers")
@@ -69,7 +88,7 @@ export async function GET(
           .order("created_at", { ascending: false })
       : { data: [] };
 
-    const lastContainerTransitions = new Map<number, Transition>();
+    const lastContainerTransitions = new Map<number, TransitionRow>();
     (containersTransitionsData || []).forEach((t) => {
       if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
         lastContainerTransitions.set(t.container_id, t);
@@ -80,9 +99,41 @@ export async function GET(
     const containerPlaceIds = Array.from(lastContainerTransitions.values())
       .filter((t) => t.destination_type === "place" && t.destination_id)
       .map((t) => t.destination_id);
+    const containerRoomIds = Array.from(lastContainerTransitions.values())
+      .filter((t) => t.destination_type === "room" && t.destination_id)
+      .map((t) => t.destination_id);
+    const containerFurnitureIds = Array.from(lastContainerTransitions.values())
+      .filter((t) => t.destination_type === "furniture" && t.destination_id)
+      .map((t) => t.destination_id);
     const allPlaceIds = Array.from(new Set([...placeIds, ...containerPlaceIds]));
 
-    const [placesData, roomsData, furnitureData] = await Promise.all([
+    const { data: placeTransitionsData } = allPlaceIds.length > 0
+      ? await supabase
+          .from("transitions")
+          .select("place_id, destination_type, destination_id")
+          .in("place_id", allPlaceIds)
+          .order("created_at", { ascending: false })
+      : { data: [] };
+
+    const lastPlaceTransitions = new Map<number, TransitionRow>();
+    (placeTransitionsData || []).forEach((t: TransitionRow) => {
+      if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
+        lastPlaceTransitions.set(t.place_id, t);
+      }
+    });
+
+    const placeFurnitureIds = Array.from(lastPlaceTransitions.values())
+      .filter((t) => t.destination_type === "furniture" && t.destination_id)
+      .map((t) => t.destination_id as number);
+    const placeRoomIds = Array.from(lastPlaceTransitions.values())
+      .filter((t) => t.destination_type === "room" && t.destination_id)
+      .map((t) => t.destination_id as number);
+
+    const allFurnitureIds = Array.from(
+      new Set([...furnitureIds, ...containerFurnitureIds, ...placeFurnitureIds])
+    );
+
+    const [placesData, furnitureData] = await Promise.all([
       allPlaceIds.length > 0
         ? supabase
             .from("places")
@@ -90,64 +141,78 @@ export async function GET(
             .in("id", allPlaceIds)
             .is("deleted_at", null)
         : { data: [] },
-      roomIds.length > 0
-        ? supabase
-            .from("rooms")
-            .select("id, name")
-            .in("id", roomIds)
-            .is("deleted_at", null)
-        : { data: [] },
-      furnitureIds.length > 0
+      allFurnitureIds.length > 0
         ? supabase
             .from("furniture")
-            .select("id, name")
-            .in("id", furnitureIds)
+            .select("id, name, room_id")
+            .in("id", allFurnitureIds)
             .is("deleted_at", null)
         : { data: [] },
     ]);
 
     const placesMap = new Map(
-      (placesData.data || []).map((p) => [p.id, p.name])
-    );
-    const roomsMap = new Map(
-      (roomsData.data || []).map((r) => [r.id, r.name])
+      (placesData.data || []).map((p: NamedRow) => [p.id, p.name])
     );
     const furnitureMap = new Map(
-      (furnitureData.data || []).map((f) => [f.id, f.name])
+      (furnitureData.data || []).map((f: FurnitureRow) => [f.id, f])
     );
 
-    // Для мест получаем их помещения
-    const { data: placesTransitionsData } = allPlaceIds.length > 0
-      ? await supabase
-          .from("transitions")
-          .select("*")
-          .eq("destination_type", "room")
-          .in("place_id", allPlaceIds)
-          .order("created_at", { ascending: false })
-      : { data: [] };
+    const furnitureRoomIds = (furnitureData.data || [])
+      .map((f: FurnitureRow) => f.room_id)
+      .filter((id): id is number => id != null);
+    const allRoomIds = Array.from(
+      new Set([...roomIds, ...containerRoomIds, ...placeRoomIds, ...furnitureRoomIds])
+    );
 
-    const lastPlaceTransitions = new Map<number, Transition>();
-    (placesTransitionsData || []).forEach((t) => {
-      if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
-        lastPlaceTransitions.set(t.place_id, t);
-      }
-    });
-
-    const placeRoomIds = Array.from(lastPlaceTransitions.values())
-      .map((t) => t.destination_id)
-      .filter((id) => id !== null);
-
-    const { data: placeRoomsData } = placeRoomIds.length > 0
+    const { data: roomsData } = allRoomIds.length > 0
       ? await supabase
           .from("rooms")
           .select("id, name")
-          .in("id", placeRoomIds)
+          .in("id", allRoomIds)
           .is("deleted_at", null)
       : { data: [] };
 
-    const placeRoomsMap = new Map(
-      (placeRoomsData || []).map((r) => [r.id, r.name])
+    const roomsMap = new Map(
+      (roomsData || []).map((r: NamedRow) => [r.id, r.name])
     );
+
+    const resolveFurnitureHierarchy = (furnitureId: number) => {
+      const furniture = furnitureMap.get(furnitureId);
+      const roomName = furniture?.room_id != null
+        ? roomsMap.get(furniture.room_id) || null
+        : null;
+
+      return {
+        furniture_name: furniture?.name ?? null,
+        room_name: roomName,
+      };
+    };
+
+    const resolvePlaceHierarchy = (placeId: number) => {
+      const hierarchy = {
+        place_name: placesMap.get(placeId) || null,
+        furniture_name: null as string | null,
+        room_name: null as string | null,
+      };
+      const placeTransition = lastPlaceTransitions.get(placeId);
+
+      if (!placeTransition?.destination_id) {
+        return hierarchy;
+      }
+
+      if (placeTransition.destination_type === "furniture") {
+        const furnitureHierarchy = resolveFurnitureHierarchy(placeTransition.destination_id);
+        hierarchy.furniture_name = furnitureHierarchy.furniture_name;
+        hierarchy.room_name = furnitureHierarchy.room_name;
+        return hierarchy;
+      }
+
+      if (placeTransition.destination_type === "room") {
+        hierarchy.room_name = roomsMap.get(placeTransition.destination_id) || null;
+      }
+
+      return hierarchy;
+    };
 
     // Формируем transitions с названиями
     const transitionsWithNames = (transitionsData || []).map((t): Transition => {
@@ -160,21 +225,22 @@ export async function GET(
 
       if (t.destination_type === "place" && t.destination_id) {
         transition.destination_name = placesMap.get(t.destination_id) || null;
-        const placeTransition = lastPlaceTransitions.get(t.destination_id);
-        if (placeTransition?.destination_id) {
-          transition.room_name = placeRoomsMap.get(placeTransition.destination_id) || null;
-        }
+        const placeHierarchy = resolvePlaceHierarchy(t.destination_id);
+        transition.furniture_name = placeHierarchy.furniture_name;
+        transition.room_name = placeHierarchy.room_name;
       } else if (t.destination_type === "container" && t.destination_id) {
         transition.destination_name = containersMap.get(t.destination_id) || null;
         const containerTransition = lastContainerTransitions.get(t.destination_id);
         if (containerTransition) {
           if (containerTransition.destination_type === "place" && containerTransition.destination_id) {
-            const placeName = placesMap.get(containerTransition.destination_id);
-            transition.place_name = placeName || null;
-            const placeTransition = lastPlaceTransitions.get(containerTransition.destination_id);
-            if (placeTransition?.destination_id) {
-              transition.room_name = placeRoomsMap.get(placeTransition.destination_id) || null;
-            }
+            const placeHierarchy = resolvePlaceHierarchy(containerTransition.destination_id);
+            transition.place_name = placeHierarchy.place_name;
+            transition.furniture_name = placeHierarchy.furniture_name;
+            transition.room_name = placeHierarchy.room_name;
+          } else if (containerTransition.destination_type === "furniture" && containerTransition.destination_id) {
+            const furnitureHierarchy = resolveFurnitureHierarchy(containerTransition.destination_id);
+            transition.furniture_name = furnitureHierarchy.furniture_name;
+            transition.room_name = furnitureHierarchy.room_name;
           } else if (containerTransition.destination_type === "room" && containerTransition.destination_id) {
             transition.room_name = roomsMap.get(containerTransition.destination_id) || null;
           }
@@ -182,7 +248,9 @@ export async function GET(
       } else if (t.destination_type === "room" && t.destination_id) {
         transition.destination_name = roomsMap.get(t.destination_id) || null;
       } else if (t.destination_type === "furniture" && t.destination_id) {
-        transition.destination_name = furnitureMap.get(t.destination_id) || null;
+        const furnitureHierarchy = resolveFurnitureHierarchy(t.destination_id);
+        transition.destination_name = furnitureHierarchy.furniture_name;
+        transition.room_name = furnitureHierarchy.room_name;
       }
 
       return transition;

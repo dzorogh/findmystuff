@@ -25,6 +25,8 @@ export interface Transition {
   destination_type: DestinationType | null;
   destination_id: number | null;
   destination_name?: string | null;
+  container_name?: string | null;
+  furniture_name?: string | null;
   place_name?: string | null;
   room_name?: string | null;
 }
@@ -34,6 +36,8 @@ export interface Location {
   destination_id: number | null;
   destination_name: string | null;
   moved_at: string;
+  container_name?: string | null;
+  furniture_name?: string | null;
   place_name?: string | null;
   room_name?: string | null;
 }
@@ -137,6 +141,10 @@ export interface SearchResult {
   type: EntityTypeName;
   location?: string | null;
   locationType?: "place" | "container" | "room" | "furniture";
+  container_name?: string | null;
+  furniture_name?: string | null;
+  place_name?: string | null;
+  room_name?: string | null;
 }
 
 // Типы для пользователей

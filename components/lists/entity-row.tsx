@@ -185,6 +185,17 @@ function renderMovedAtCell(entity: ListEntity): ReactNode {
   return <span className="text-xs text-muted-foreground">{formatRuDate(movedAt)}</span>;
 }
 
+function renderItemTypeCell(entity: ListEntity): ReactNode {
+  if (!("item_type" in entity)) return null;
+
+  const itemTypeName = entity.item_type?.name?.trim();
+  if (!itemTypeName) {
+    return <span className="text-sm text-muted-foreground">—</span>;
+  }
+
+  return <span className="text-sm">{itemTypeName}</span>;
+}
+
 function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined): ReactNode {
   return renderCountLinks(entity, counts);
 }
@@ -226,6 +237,9 @@ function renderCellContent(
 
     case "room":
       return renderRoomCell(entity, roomLabel);
+
+    case "itemType":
+      return renderItemTypeCell(entity);
 
     case "movedAt":
       return renderMovedAtCell(entity);

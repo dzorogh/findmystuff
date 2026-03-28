@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, DoorOpen, Sofa, LayoutGrid, Container, Box } from "lucide-react";
+import { Search, Home, DoorOpen, Sofa, LayoutGrid, Container, Box } from "lucide-react";
 import Link from "next/link";
 import {
     SidebarGroupContent,
@@ -24,7 +24,21 @@ export const PrimaryMenu = () => {
         if (isMobile) setOpenMobile(false);
     };
 
+    const isMenuItemActive = (href: string) => {
+        if (href === "/") {
+            return pathname === "/";
+        }
+
+        return pathname.startsWith(href);
+    };
+
     const menuItems = [
+        {
+            group: "Главное",
+            items: [
+                { href: "/", label: "Поиск", icon: Search },
+            ],
+        },
         {
             group: "Расположения",
             items: [
@@ -56,7 +70,7 @@ export const PrimaryMenu = () => {
                                 <TooltipTrigger render={
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
-                                            isActive={pathname.startsWith(item.href)}
+                                            isActive={isMenuItemActive(item.href)}
                                             render={<Link href={item.href} />}
                                             onClick={closeMobileSidebar}
                                         >

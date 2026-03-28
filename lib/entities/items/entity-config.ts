@@ -98,6 +98,7 @@ export const itemsEntityConfig: EntityConfig = {
   columns: [
     { key: "id", label: "ID", width: "w-12", hideOnMobile: true },
     { key: "name", label: "Название", width: "w-80" },
+    { key: "itemType", label: "Категория", width: "w-48", hideOnMobile: true },
     { key: "room", label: "Помещение", width: "w-40", hideOnMobile: true },
     { key: "movedAt", label: "Дата перемещения", width: "w-40", hideOnMobile: true },
     { key: "actions", label: "Действия" },

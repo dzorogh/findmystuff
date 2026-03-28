@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, DoorOpen, LayoutGrid, Container, Sofa } from "lucide-react";
+import { Calendar, DoorOpen, LayoutGrid, Container, Sofa, type LucideIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -82,6 +82,16 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
     return <span>{name}</span>;
   };
 
+  const renderHierarchyRow = (icon: LucideIcon, value: string) => {
+    const Icon = icon;
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
+        <Icon className="h-3 w-3 flex-shrink-0" />
+        <span>{value}</span>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -120,55 +130,6 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
       <TableBody>
         {transitions.map((transition, index) => (
           <TableRow key={transition.id}>
-            <TableCell className="flex items-start gap-2">
-              <div className="space-y-1">
-                {(transition.destination_type === "room" || transition.destination_type === "furniture") && (
-                  <div className="flex items-center gap-2 text-sm">
-                    {getLocationIcon(transition.destination_type)}
-                    {renderLocationName(transition)}
-                  </div>
-                )}
-                {transition.destination_type === "place" && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      {getLocationIcon(transition.destination_type)}
-                      {renderLocationName(transition)}
-                    </div>
-                    {transition.room_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
-                        <span>{transition.room_name}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {transition.destination_type === "container" && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      {getLocationIcon(transition.destination_type)}
-                      {renderLocationName(transition)}
-                    </div>
-                    {transition.place_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <LayoutGrid className="h-3 w-3 flex-shrink-0" />
-                        <span>{transition.place_name}</span>
-                      </div>
-                    )}
-                    {transition.room_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-6">
-                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
-                        <span>{transition.room_name}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {index === 0 && (
-                <Badge variant="default">
-                  Текущее
-                </Badge>
-              )}
-            </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -181,6 +142,59 @@ export const TransitionsTable = ({ transitions, emptyMessage = "История �
                     minute: "2-digit",
                   })}
                 </span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-start gap-2">
+                <div className="space-y-1">
+                  {(transition.destination_type === "room" || transition.destination_type === "furniture") && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        {getLocationIcon(transition.destination_type)}
+                        {renderLocationName(transition)}
+                      </div>
+                      {transition.destination_type === "furniture" && transition.room_name
+                        ? renderHierarchyRow(DoorOpen, transition.room_name)
+                        : null}
+                    </div>
+                  )}
+                  {transition.destination_type === "place" && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        {getLocationIcon(transition.destination_type)}
+                        {renderLocationName(transition)}
+                      </div>
+                      {transition.furniture_name
+                        ? renderHierarchyRow(Sofa, transition.furniture_name)
+                        : null}
+                      {transition.room_name
+                        ? renderHierarchyRow(DoorOpen, transition.room_name)
+                        : null}
+                    </div>
+                  )}
+                  {transition.destination_type === "container" && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        {getLocationIcon(transition.destination_type)}
+                        {renderLocationName(transition)}
+                      </div>
+                      {transition.place_name
+                        ? renderHierarchyRow(LayoutGrid, transition.place_name)
+                        : null}
+                      {transition.furniture_name
+                        ? renderHierarchyRow(Sofa, transition.furniture_name)
+                        : null}
+                      {transition.room_name
+                        ? renderHierarchyRow(DoorOpen, transition.room_name)
+                        : null}
+                    </div>
+                  )}
+                </div>
+                {index === 0 && (
+                  <Badge variant="default">
+                    Текущее
+                  </Badge>
+                )}
               </div>
             </TableCell>
           </TableRow>
