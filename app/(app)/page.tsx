@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { searchApiClient } from "@/lib/shared/api/search";
 import { logError } from "@/lib/shared/logger";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight } from "lucide-react";
-import type { SearchResult } from "@/types/entity";
+import { Button } from "@/components/ui/button";
+import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight, Loader2, ScanSearch, X } from "lucide-react";
+import type { Item, SearchResult } from "@/types/entity";
 import Link from "next/link";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { PageHeader } from "@/components/layout/page-header";
+import { CameraCaptureDialog } from "@/components/common/camera-capture-dialog";
+import { itemPhotoSearchApiClient } from "@/lib/shared/api/item-photo-search";
+import { toast } from "sonner";
 
 const ENTITY_CONFIG = {
   item: { Icon: Package, label: "Вещи" },
@@ -24,7 +29,33 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isPhotoSearchOpen, setIsPhotoSearchOpen] = useState(false);
+  const [isPhotoSearching, setIsPhotoSearching] = useState(false);
+  const [photoSearchResults, setPhotoSearchResults] = useState<Item[]>([]);
+  const [photoSearchPreviewUrl, setPhotoSearchPreviewUrl] = useState<string | null>(null);
+  const [photoSearchTotalCount, setPhotoSearchTotalCount] = useState(0);
+  const [photoSearchNoMatches, setPhotoSearchNoMatches] = useState(false);
   const router = useRouter();
+
+  const clearPhotoSearch = useCallback(() => {
+    setPhotoSearchResults([]);
+    setPhotoSearchTotalCount(0);
+    setPhotoSearchNoMatches(false);
+    setPhotoSearchPreviewUrl((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev);
+      }
+      return null;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (photoSearchPreviewUrl) {
+        URL.revokeObjectURL(photoSearchPreviewUrl);
+      }
+    };
+  }, [photoSearchPreviewUrl]);
 
   const performSearch = async (queryToSearch: string) => {
     if (!queryToSearch.trim()) {
@@ -60,6 +91,45 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const handlePhotoSearchCapture = useCallback(
+    async (blob: Blob) => {
+      const file =
+        blob instanceof File
+          ? blob
+          : new File([blob], "home-photo-search.jpg", {
+              type: blob.type || "image/jpeg",
+            });
+
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoSearchPreviewUrl((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev);
+        }
+        return previewUrl;
+      });
+      setSearchQuery("");
+      setSearchResults([]);
+      setIsPhotoSearching(true);
+
+      try {
+        const result = await itemPhotoSearchApiClient.search({ file });
+        setPhotoSearchResults(result.data);
+        setPhotoSearchTotalCount(result.totalCount);
+        setPhotoSearchNoMatches(result.noSimilarFound);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Не удалось выполнить поиск по фото";
+        toast.error(message);
+        clearPhotoSearch();
+      } finally {
+        setIsPhotoSearching(false);
+      }
+    },
+    [clearPhotoSearch]
+  );
 
   const getIcon = (type: string) => {
     const config = ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG];
@@ -167,25 +237,84 @@ export default function Home() {
       description: "Просмотр всей мебели",
     },
   ];
+  const isPhotoSearchActive =
+    photoSearchPreviewUrl != null || isPhotoSearching || photoSearchResults.length > 0;
+
   return (
     <div className="flex flex-col gap-4">
 
       <PageHeader title="Поиск" />
 
       {/* Поиск */}
-      <InputGroup>
-        <InputGroupInput
-          onChange={(e) => setSearchQuery(e.target.value)}
-          value={searchQuery}
-          placeholder="Введите название вещи, места, контейнера, мебели или помещения..."
-        />
-        <InputGroupAddon>
-          <Search />
-        </InputGroupAddon>
-      </InputGroup>
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <InputGroup>
+            <InputGroupInput
+              onChange={(e) => {
+                if (isPhotoSearchActive) {
+                  clearPhotoSearch();
+                }
+                setSearchQuery(e.target.value);
+              }}
+              value={searchQuery}
+              placeholder="Введите название вещи, места, контейнера, мебели или помещения..."
+            />
+            <InputGroupAddon>
+              <Search />
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+        <Button
+          type="button"
+          variant={isPhotoSearchActive ? "default" : "outline"}
+          onClick={() => setIsPhotoSearchOpen(true)}
+          disabled={isPhotoSearching}
+        >
+          {isPhotoSearching ? (
+            <Loader2 className="animate-spin" data-icon="inline-start" />
+          ) : (
+            <ScanSearch data-icon="inline-start" />
+          )}
+          <span className="hidden sm:inline">Поиск по фото</span>
+        </Button>
+      </div>
+
+      {isPhotoSearchActive && (
+        <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            {photoSearchPreviewUrl && (
+              <div className="relative h-16 w-16 overflow-hidden rounded-md border bg-muted">
+                <Image
+                  src={photoSearchPreviewUrl}
+                  alt="Фото для поиска"
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-medium">
+                {isPhotoSearching
+                  ? "Ищем похожие вещи..."
+                  : photoSearchNoMatches
+                    ? "Похожих вещей не найдено"
+                    : `Найдено ${photoSearchTotalCount} похожих вещей`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Поиск учитывает и фото вещей, и умные совпадения по их названию.
+              </p>
+            </div>
+          </div>
+          <Button type="button" variant="outline" onClick={clearPhotoSearch}>
+            <X data-icon="inline-start" />
+            Сбросить поиск по фото
+          </Button>
+        </Card>
+      )}
 
       {/* Результаты поиска */}
-      {searchQuery && (
+      {searchQuery && !isPhotoSearchActive && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-semibold">
@@ -249,8 +378,81 @@ export default function Home() {
         </div>
       )}
 
+      {isPhotoSearchActive && !isPhotoSearching && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Результаты поиска по фото
+              {photoSearchResults.length > 0 && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({photoSearchResults.length})
+                </span>
+              )}
+            </h2>
+          </div>
+
+          {photoSearchResults.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <ScanSearch className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">
+                  Похожих вещей не найдено
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {photoSearchResults.map((item) => (
+                <Card
+                  key={item.id}
+                  className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
+                  onClick={() => router.push(`/items/${item.id}`)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <CardTitle className="text-lg">
+                          {item.name || `Вещь #${item.id}`}
+                        </CardTitle>
+                        {item.item_type?.name && (
+                          <CardDescription>{item.item_type.name}</CardDescription>
+                        )}
+                      </div>
+                      <Badge variant="secondary">
+                        {item.search_match?.source === "image"
+                          ? "Совпадение по фото"
+                          : "Умное совпадение"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {item.last_location?.room_name && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
+                        <span>Помещение: {item.last_location.room_name}</span>
+                      </div>
+                    )}
+                    {item.search_match && (
+                      <div className="mt-3">
+                        <Badge variant="outline">
+                          Релевантность {Math.round(item.search_match.similarity * 100)}%
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="mt-3 flex items-center text-sm text-primary">
+                      Открыть вещь
+                      <ArrowRight className="ml-1 h-3 w-3" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Быстрые действия */}
-      {!searchQuery && (
+      {!searchQuery && !isPhotoSearchActive && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href} className="group">
@@ -270,6 +472,15 @@ export default function Home() {
           ))}
         </div>
       )}
+      <CameraCaptureDialog
+        open={isPhotoSearchOpen}
+        onClose={() => setIsPhotoSearchOpen(false)}
+        onCapture={handlePhotoSearchCapture}
+        title="Поиск по фото"
+        hint="Наведите камеру на предмет или загрузите готовую фотографию"
+        uploadLabel="Загрузить"
+        captureLabel="Найти"
+      />
     </div>
   );
 }

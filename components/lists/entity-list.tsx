@@ -65,6 +65,8 @@ export interface EntityListProps {
   counts?: CountsConfig;
   groupBy?: (entity: EntityDisplay) => string | null;
   groupByEmptyLabel?: string;
+  toolbarActions?: React.ReactNode;
+  toolbarContent?: React.ReactNode;
   /** При наличии — показывается кнопка переименования в строке и диалог переименования. */
   onRename?: (entity: EntityDisplay, newName: string) => Promise<void>;
   /** При наличии — показывается быстрое редактирование категории вещи. */
@@ -103,6 +105,8 @@ export function EntityList({
   counts,
   groupBy,
   groupByEmptyLabel = "Без здания",
+  toolbarActions,
+  toolbarContent,
   onRename,
   onEditItemType,
 }: EntityListProps) {
@@ -219,7 +223,9 @@ export function EntityList({
         activeFiltersCount={activeFiltersCount}
         onOpenFilters={() => onFiltersOpenChange(true)}
         onResetFilters={onResetFilters}
+        toolbarActions={toolbarActions}
       />
+      {toolbarContent}
 
       <ListShell
         error={error}

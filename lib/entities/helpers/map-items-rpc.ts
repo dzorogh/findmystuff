@@ -33,6 +33,13 @@ export function mapItemsRpcToItems(rows: ItemsRpcRow[]): Item[] {
       currentValue,
       quantity: item.quantity ?? null,
       purchaseDate: item.purchase_date ?? null,
+      search_match:
+        item.similarity != null && item.match_source
+          ? {
+              similarity: item.similarity,
+              source: item.match_source,
+            }
+          : null,
       room_id: item.room_id ?? null,
       room_name: item.room_name ?? null,
       last_location: hasLocation

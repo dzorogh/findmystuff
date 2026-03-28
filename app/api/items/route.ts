@@ -13,6 +13,8 @@ import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
+import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import { logError } from "@/lib/shared/logger";
 
 /**
  * Retrieve a paginated, optionally filtered and sorted list of items including each item's last known location and the total matching count.
@@ -173,6 +175,12 @@ export async function POST(request: NextRequest) {
         { error: result.error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
+    }
+
+    try {
+      await syncItemSearchDocumentsByItemId(supabase, result.data.id, tenantId);
+    } catch (error) {
+      logError("Ошибка синхронизации поискового индекса вещи после создания:", error);
     }
 
     return NextResponse.json({ data: result.data });

@@ -26,6 +26,7 @@ export interface EntityListToolbarProps {
   activeFiltersCount?: number;
   onOpenFilters: () => void;
   onResetFilters?: () => void;
+  toolbarActions?: React.ReactNode;
 }
 
 export function EntityListToolbar({
@@ -37,6 +38,7 @@ export function EntityListToolbar({
   activeFiltersCount = 0,
   onOpenFilters,
   onResetFilters,
+  toolbarActions,
 }: EntityListToolbarProps) {
   return (
     <div className="flex items-center gap-2">
@@ -48,6 +50,7 @@ export function EntityListToolbar({
         />
       </div>
       <div className="flex items-center gap-2 shrink-0">
+        {toolbarActions}
         <Select items={ENTITY_SORT_OPTIONS} value={sort} onValueChange={(v) => v != null && onSortChange(v as EntitySortOption)}>
           <SelectTrigger >
             <SortAsc data-icon="inline-start" />

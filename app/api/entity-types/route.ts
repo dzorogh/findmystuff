@@ -4,6 +4,8 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { validateEntityCategory } from "@/lib/shared/api/validate-entity-category";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { syncItemSearchDocumentsForEntityType } from "@/lib/entities/items/search-index-server";
+import { logError } from "@/lib/shared/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +33,14 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    }
+
+    if (data?.entity_category === "item") {
+      try {
+        await syncItemSearchDocumentsForEntityType(supabase, tenantId, data.id);
+      } catch (error) {
+        logError("Ошибка синхронизации item search index после обновления типа вещи:", error);
+      }
     }
 
     return NextResponse.json({ data });
@@ -140,14 +150,24 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Необходим id" }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("entity_types")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", tenantId)
+      .select()
+      .single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    }
+
+    if (data?.entity_category === "item") {
+      try {
+        await syncItemSearchDocumentsForEntityType(supabase, tenantId, data.id);
+      } catch (syncError) {
+        logError("Ошибка синхронизации item search index после удаления типа вещи:", syncError);
+      }
     }
 
     return NextResponse.json({ success: true });

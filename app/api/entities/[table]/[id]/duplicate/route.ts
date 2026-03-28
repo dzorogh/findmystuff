@@ -4,6 +4,8 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
+import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import { logError } from "@/lib/shared/logger";
 /** Имена таблиц API (путь [table]), не путать с EntityTypeName (item, place, ...). */
 type ApiTableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
 
@@ -195,6 +197,14 @@ export async function POST(
           await supabase.from(table).delete().eq("id", duplicatedEntity.id);
           return NextResponse.json({ error: transitionInsertError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
         }
+      }
+    }
+
+    if (table === "items") {
+      try {
+        await syncItemSearchDocumentsByItemId(supabase, duplicatedEntity.id, tenantId);
+      } catch (error) {
+        logError("Ошибка синхронизации поискового индекса вещи после дублирования:", error);
       }
     }
 

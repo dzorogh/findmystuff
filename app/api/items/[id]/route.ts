@@ -7,6 +7,8 @@ import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import type { Item } from "@/types/entity";
+import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import { logError } from "@/lib/shared/logger";
 
 export async function GET(
   request: NextRequest,
@@ -133,6 +135,12 @@ export async function PUT(
         { error: error.message },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
+    }
+
+    try {
+      await syncItemSearchDocumentsByItemId(supabase, itemId, tenantId);
+    } catch (error) {
+      logError("Ошибка синхронизации поискового индекса вещи после обновления:", error);
     }
 
     return NextResponse.json({ data });

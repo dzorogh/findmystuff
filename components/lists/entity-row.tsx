@@ -99,6 +99,8 @@ function renderNameCell(
 ): ReactNode {
   const Icon = icon ?? Package;
   const displayName = getName?.(entity);
+  const searchMatch =
+    "search_match" in entity ? entity.search_match ?? null : null;
 
   const handleRenameClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -123,13 +125,25 @@ function renderNameCell(
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       )}
-      <div className="flex min-w-0 flex-1 items-center gap-1">
-        <Link
-          href={editHref ?? "#"}
-          className="block min-w-0 flex-1 overflow-hidden text-ellipsis break-words font-medium leading-tight"
-        >
-          {displayName}
-        </Link>
+      <div className="flex min-w-0 flex-1 items-start gap-1">
+        <div className="min-w-0 flex-1">
+          <Link
+            href={editHref ?? "#"}
+            className="block min-w-0 overflow-hidden text-ellipsis break-words font-medium leading-tight"
+          >
+            {displayName}
+          </Link>
+          {searchMatch && (
+            <div className="mt-1">
+              <Badge variant="secondary" className="max-w-full truncate">
+                {searchMatch.source === "image"
+                  ? "Похоже по фото"
+                  : "Умное совпадение по названию"}
+                {` ${Math.round(searchMatch.similarity * 100)}%`}
+              </Badge>
+            </div>
+          )}
+        </div>
         {onRenameClick && (
           <Button
             type="button"

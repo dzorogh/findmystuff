@@ -69,6 +69,10 @@ export interface Item extends BaseEntity {
   item_type?: EntityTypeRef | null;
   room_id?: number | null;
   room_name?: string | null;
+  search_match?: {
+    similarity: number;
+    source: "text" | "image";
+  } | null;
   /** Fowler Money Pattern: amount в минимальных единицах + currency ISO 4217 */
   price?: { amount: number; currency: string } | null;
   /** Текущая оценочная стоимость. Fowler Money Pattern. */
@@ -441,6 +445,8 @@ export type ItemsRpcRow = Pick<
   moved_at: string | null;
   room_name: string | null;
   room_id: number | null;
+  similarity?: number | null;
+  match_source?: "text" | "image" | null;
   total_count?: number;
 };
 

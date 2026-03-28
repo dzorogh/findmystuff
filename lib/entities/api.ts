@@ -45,6 +45,42 @@ export function getItemsWithRoomRpc(
   });
 }
 
+/** RPC search_items_by_embedding (вызывать из app/api). */
+export function searchItemsByEmbeddingRpc(
+  supabase: SupabaseClient,
+  params: {
+    query_embedding_text: string;
+    filter_tenant_id: number;
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    location_type: string | null;
+    room_id: number | null;
+    place_id: number | null;
+    container_id: number | null;
+    furniture_id: number | null;
+    has_photo: boolean | null;
+    filter_item_type_id: number | null;
+    similarity_threshold?: number;
+  }
+) {
+  return supabase.rpc("search_items_by_embedding", {
+    query_embedding_text: params.query_embedding_text,
+    filter_tenant_id: params.filter_tenant_id,
+    show_deleted: params.show_deleted,
+    page_limit: params.page_limit,
+    page_offset: params.page_offset,
+    location_type: params.location_type,
+    room_id: params.room_id,
+    place_id: params.place_id,
+    container_id: params.container_id,
+    furniture_id: params.furniture_id,
+    has_photo: params.has_photo,
+    filter_item_type_id: params.filter_item_type_id,
+    similarity_threshold: params.similarity_threshold ?? 0.25,
+  });
+}
+
 class EntitiesApiClient extends HttpClient {
   async getItems(params?: {
     query?: string;
