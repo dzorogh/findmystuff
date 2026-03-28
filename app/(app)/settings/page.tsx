@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useSettings } from "@/lib/settings/context";
 import { Card, CardContent } from "@/components/ui/card";
 import { EntitySection } from "@/components/settings/entity-section";
+import { ItemSearchIndexCard } from "@/components/settings/item-search-index-card";
 import type { EntityTypesManagerRef } from "@/components/managers/entity-types-manager";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -27,6 +28,8 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <ItemSearchIndexCard />
 
       <EntitySection
         title="Здания"
