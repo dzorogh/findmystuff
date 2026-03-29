@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ItemSearchProjection } from "@/lib/search/types";
+import type {
+  ContainerSearchProjection,
+  ItemSearchProjection,
+} from "@/lib/search/types";
 
 type SearchTransitionRow = {
   item_id?: number | null;
@@ -20,12 +23,20 @@ type ItemProjectionRow = NamedRow & {
   entity_types: { name: string | null } | Array<{ name: string | null }> | null;
 };
 
+type ContainerProjectionRow = NamedRow & {
+  photo_url: string | null;
+  entity_type_id: number | null;
+  entity_types: { name: string | null } | Array<{ name: string | null }> | null;
+};
+
 type FurnitureRow = NamedRow & {
   room_id: number | null;
 };
 
 function normalizeEntityTypeName(
-  relation: ItemProjectionRow["entity_types"]
+  relation:
+    | ItemProjectionRow["entity_types"]
+    | ContainerProjectionRow["entity_types"]
 ): string | null {
   if (Array.isArray(relation)) {
     return relation[0]?.name?.trim() || null;
@@ -496,6 +507,395 @@ export async function searchItemsByNameProjection(
   );
 
   return getItemSearchProjectionByIds(supabase, tenantId, itemIds, {
+    showDeleted,
+  });
+}
+
+type SearchPlaceTransitionRow = {
+  place_id?: number | null;
+  destination_type: "room" | "furniture" | null;
+  destination_id: number | null;
+};
+
+type SearchContainerTransitionRow = {
+  container_id?: number | null;
+  destination_type: "place" | "container" | "room" | "furniture" | null;
+  destination_id: number | null;
+};
+
+export async function getContainerSearchProjectionByIds(
+  supabase: SupabaseClient,
+  tenantId: number,
+  containerIds: number[],
+  options?: { showDeleted?: boolean }
+): Promise<ContainerSearchProjection[]> {
+  if (containerIds.length === 0) {
+    return [];
+  }
+
+  const uniqueContainerIds = Array.from(new Set(containerIds));
+  const showDeleted = options?.showDeleted === true;
+
+  const containersQuery = supabase
+    .from("containers")
+    .select("id, name, photo_url, entity_type_id, entity_types(name)")
+    .eq("tenant_id", tenantId)
+    .in("id", uniqueContainerIds);
+
+  if (showDeleted) {
+    containersQuery.not("deleted_at", "is", null);
+  } else {
+    containersQuery.is("deleted_at", null);
+  }
+
+  const { data: containersData, error: containersError } = await containersQuery;
+
+  if (containersError) {
+    throw new Error(containersError.message);
+  }
+
+  const containers = (containersData as ContainerProjectionRow[] | null) ?? [];
+  if (containers.length === 0) {
+    return [];
+  }
+
+  const containerNameCache = new Map<number, string | null>(
+    containers.map((container) => [container.id, container.name])
+  );
+  const roomNameCache = new Map<number, string | null>();
+  const placeNameCache = new Map<number, string | null>();
+  const furnitureCache = new Map<number, FurnitureRow | null>();
+  const lastPlaceTransitionCache = new Map<number, SearchPlaceTransitionRow | null>();
+  const lastContainerTransitionCache = new Map<number, SearchContainerTransitionRow | null>();
+
+  const loadContainerName = async (containerId: number): Promise<string | null> => {
+    if (containerNameCache.has(containerId)) {
+      return containerNameCache.get(containerId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("containers")
+      .select("id, name")
+      .eq("tenant_id", tenantId)
+      .eq("id", containerId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const name = (data as NamedRow | null)?.name ?? null;
+    containerNameCache.set(containerId, name);
+    return name;
+  };
+
+  const loadRoomName = async (roomId: number): Promise<string | null> => {
+    if (roomNameCache.has(roomId)) {
+      return roomNameCache.get(roomId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("id, name")
+      .eq("tenant_id", tenantId)
+      .eq("id", roomId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const name = (data as NamedRow | null)?.name ?? null;
+    roomNameCache.set(roomId, name);
+    return name;
+  };
+
+  const loadPlaceName = async (placeId: number): Promise<string | null> => {
+    if (placeNameCache.has(placeId)) {
+      return placeNameCache.get(placeId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("places")
+      .select("id, name")
+      .eq("tenant_id", tenantId)
+      .eq("id", placeId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const name = (data as NamedRow | null)?.name ?? null;
+    placeNameCache.set(placeId, name);
+    return name;
+  };
+
+  const loadFurniture = async (furnitureId: number): Promise<FurnitureRow | null> => {
+    if (furnitureCache.has(furnitureId)) {
+      return furnitureCache.get(furnitureId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("furniture")
+      .select("id, name, room_id")
+      .eq("tenant_id", tenantId)
+      .eq("id", furnitureId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const furniture = (data as FurnitureRow | null) ?? null;
+    furnitureCache.set(furnitureId, furniture);
+    return furniture;
+  };
+
+  const loadLastPlaceTransition = async (
+    placeId: number
+  ): Promise<SearchPlaceTransitionRow | null> => {
+    if (lastPlaceTransitionCache.has(placeId)) {
+      return lastPlaceTransitionCache.get(placeId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("transitions")
+      .select("place_id, destination_type, destination_id")
+      .eq("place_id", placeId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const transition = (data as SearchPlaceTransitionRow | null) ?? null;
+    lastPlaceTransitionCache.set(placeId, transition);
+    return transition;
+  };
+
+  const loadLastContainerTransition = async (
+    containerId: number
+  ): Promise<SearchContainerTransitionRow | null> => {
+    if (lastContainerTransitionCache.has(containerId)) {
+      return lastContainerTransitionCache.get(containerId) ?? null;
+    }
+
+    const { data, error } = await supabase
+      .from("transitions")
+      .select("container_id, destination_type, destination_id")
+      .eq("container_id", containerId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const transition = (data as SearchContainerTransitionRow | null) ?? null;
+    lastContainerTransitionCache.set(containerId, transition);
+    return transition;
+  };
+
+  const resolveFurnitureHierarchy = async (furnitureId: number) => {
+    const furniture = await loadFurniture(furnitureId);
+    const roomName =
+      furniture?.room_id != null ? await loadRoomName(furniture.room_id) : null;
+
+    return {
+      furniture_name: furniture?.name ?? null,
+      room_name: roomName,
+    };
+  };
+
+  const resolvePlaceHierarchy = async (placeId: number) => {
+    const placeName = await loadPlaceName(placeId);
+    const transition = await loadLastPlaceTransition(placeId);
+    const hierarchy = {
+      place_name: placeName,
+      furniture_name: null as string | null,
+      room_name: null as string | null,
+    };
+
+    if (!transition?.destination_id) {
+      return hierarchy;
+    }
+
+    if (transition.destination_type === "furniture") {
+      const furnitureHierarchy = await resolveFurnitureHierarchy(transition.destination_id);
+      return {
+        place_name: placeName,
+        furniture_name: furnitureHierarchy.furniture_name,
+        room_name: furnitureHierarchy.room_name,
+      };
+    }
+
+    if (transition.destination_type === "room") {
+      hierarchy.room_name = await loadRoomName(transition.destination_id);
+    }
+
+    return hierarchy;
+  };
+
+  const resolveContainerPlacement = async (
+    containerId: number,
+    visited = new Set<number>()
+  ) => {
+    if (visited.has(containerId)) {
+      return {
+        container_name: null as string | null,
+        place_name: null as string | null,
+        furniture_name: null as string | null,
+        room_name: null as string | null,
+      };
+    }
+
+    visited.add(containerId);
+
+    const transition = await loadLastContainerTransition(containerId);
+    if (!transition?.destination_id) {
+      return {
+        container_name: null,
+        place_name: null,
+        furniture_name: null,
+        room_name: null,
+      };
+    }
+
+    if (transition.destination_type === "container") {
+      const parentContainerName = await loadContainerName(transition.destination_id);
+      const parentPlacement = await resolveContainerPlacement(
+        transition.destination_id,
+        visited
+      );
+
+      return {
+        container_name: parentContainerName,
+        place_name: parentPlacement.place_name,
+        furniture_name: parentPlacement.furniture_name,
+        room_name: parentPlacement.room_name,
+      };
+    }
+
+    if (transition.destination_type === "place") {
+      const placeHierarchy = await resolvePlaceHierarchy(transition.destination_id);
+      return {
+        container_name: null,
+        place_name: placeHierarchy.place_name,
+        furniture_name: placeHierarchy.furniture_name,
+        room_name: placeHierarchy.room_name,
+      };
+    }
+
+    if (transition.destination_type === "furniture") {
+      const furnitureHierarchy = await resolveFurnitureHierarchy(transition.destination_id);
+      return {
+        container_name: null,
+        place_name: null,
+        furniture_name: furnitureHierarchy.furniture_name,
+        room_name: furnitureHierarchy.room_name,
+      };
+    }
+
+    if (transition.destination_type === "room") {
+      return {
+        container_name: null,
+        place_name: null,
+        furniture_name: null,
+        room_name: await loadRoomName(transition.destination_id),
+      };
+    }
+
+    return {
+      container_name: null,
+      place_name: null,
+      furniture_name: null,
+      room_name: null,
+    };
+  };
+
+  const containersMap = new Map(containers.map((container) => [container.id, container]));
+
+  return uniqueContainerIds
+    .map(async (containerId) => {
+      const container = containersMap.get(containerId);
+      if (!container) {
+        return null;
+      }
+
+      const hierarchy = await resolveContainerPlacement(container.id);
+
+      return {
+        id: container.id,
+        name: container.name,
+        photo_url: container.photo_url,
+        container_type_name: normalizeEntityTypeName(container.entity_types),
+        room_name: hierarchy.room_name,
+        furniture_name: hierarchy.furniture_name,
+        place_name: hierarchy.place_name,
+        container_name: hierarchy.container_name,
+      } satisfies ContainerSearchProjection;
+    })
+    .reduce<Promise<Array<ContainerSearchProjection | null>>>(
+      async (promise, next) => {
+        const resolved = await promise;
+        resolved.push(await next);
+        return resolved;
+      },
+      Promise.resolve([])
+    )
+    .then((results) =>
+      results.filter(
+        (container): container is ContainerSearchProjection => container != null
+      )
+    );
+}
+
+export async function searchContainersByNameProjection(
+  supabase: SupabaseClient,
+  tenantId: number,
+  query: string,
+  options?: { limit?: number; showDeleted?: boolean }
+): Promise<ContainerSearchProjection[]> {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    return [];
+  }
+
+  const limit = options?.limit ?? 10;
+  const showDeleted = options?.showDeleted === true;
+
+  const containersQuery = supabase
+    .from("containers")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .ilike("name", `%${trimmedQuery}%`)
+    .limit(limit);
+
+  if (showDeleted) {
+    containersQuery.not("deleted_at", "is", null);
+  } else {
+    containersQuery.is("deleted_at", null);
+  }
+
+  const { data, error } = await containersQuery;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const containerIds = ((data as Array<{ id: number }> | null) ?? []).map(
+    (container) => container.id
+  );
+
+  return getContainerSearchProjectionByIds(supabase, tenantId, containerIds, {
     showDeleted,
   });
 }

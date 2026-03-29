@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { HttpClient } from "@/lib/shared/api/http-client";
 import { appendSortParams } from "@/lib/shared/api/list-params";
 import type { SortBy, SortDirection } from "@/types/api";
+import type { SearchIndexEntityType } from "@/lib/search/search-index-server";
 import type {
   Item,
   Transition,
@@ -77,6 +78,30 @@ export function searchItemsByEmbeddingRpc(
     furniture_id: params.furniture_id,
     has_photo: params.has_photo,
     filter_item_type_id: params.filter_item_type_id,
+    similarity_threshold: params.similarity_threshold ?? 0.25,
+  });
+}
+
+/** RPC search_entities_by_embedding (вызывать из app/api). */
+export function searchEntitiesByEmbeddingRpc(
+  supabase: SupabaseClient,
+  params: {
+    query_embedding_text: string;
+    filter_tenant_id: number;
+    entity_types?: SearchIndexEntityType[];
+    show_deleted: boolean;
+    page_limit: number;
+    page_offset: number;
+    similarity_threshold?: number;
+  }
+) {
+  return supabase.rpc("search_entities_by_embedding", {
+    query_embedding_text: params.query_embedding_text,
+    filter_tenant_id: params.filter_tenant_id,
+    entity_types: params.entity_types ?? ["item", "container"],
+    show_deleted: params.show_deleted,
+    page_limit: params.page_limit,
+    page_offset: params.page_offset,
     similarity_threshold: params.similarity_threshold ?? 0.25,
   });
 }

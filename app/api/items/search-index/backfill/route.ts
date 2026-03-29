@@ -3,7 +3,7 @@ import { createClient } from "@/lib/shared/supabase/server";
 import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
-import { backfillItemSearchDocuments } from "@/lib/entities/items/search-index-server";
+import { backfillEntitySearchDocuments } from "@/lib/search/search-index-server";
 
 const MAX_BACKFILL_LIMIT = 100;
 
@@ -15,23 +15,29 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const body = await request.json().catch(() => ({}));
     const limitValue = Number(body?.limit);
-    const afterIdValue = Number(body?.afterId);
 
     const limit = Number.isFinite(limitValue)
       ? Math.min(Math.max(Math.trunc(limitValue), 1), MAX_BACKFILL_LIMIT)
       : 20;
-    const afterId = Number.isFinite(afterIdValue)
-      ? Math.max(Math.trunc(afterIdValue), 0)
-      : 0;
+    const cursor =
+      body?.cursor &&
+      typeof body.cursor === "object" &&
+      (body.cursor.entityType === "item" || body.cursor.entityType === "container") &&
+      Number.isFinite(Number(body.cursor.afterId))
+        ? {
+            entityType: body.cursor.entityType,
+            afterId: Math.max(Math.trunc(Number(body.cursor.afterId)), 0),
+          }
+        : null;
 
-    const result = await backfillItemSearchDocuments(supabase, auth.tenantId, {
+    const result = await backfillEntitySearchDocuments(supabase, auth.tenantId, {
       limit,
-      afterId,
+      cursor,
     });
 
     return NextResponse.json({
       processed: result.processed,
-      nextAfterId: result.nextAfterId,
+      nextCursor: result.nextCursor,
     });
   } catch (error) {
     const message =

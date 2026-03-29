@@ -8,6 +8,7 @@ import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import type { Item } from "@/types/entity";
 import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import { syncEntitySearchDocumentsByItemId } from "@/lib/search/search-index-server";
 import { logError } from "@/lib/shared/logger";
 
 export async function GET(
@@ -141,6 +142,12 @@ export async function PUT(
       await syncItemSearchDocumentsByItemId(supabase, itemId, tenantId);
     } catch (error) {
       logError("Ошибка синхронизации поискового индекса вещи после обновления:", error);
+    }
+
+    try {
+      await syncEntitySearchDocumentsByItemId(supabase, itemId, tenantId);
+    } catch (error) {
+      logError("Ошибка синхронизации общего поискового индекса вещи после обновления:", error);
     }
 
     return NextResponse.json({ data });

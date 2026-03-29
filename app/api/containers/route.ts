@@ -12,6 +12,8 @@ import { validateDestinationType } from "@/lib/shared/api/validate-destination-t
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Container, DestinationType } from "@/types/entity";
 import type { ContainerRow } from "@/types/db-rows";
+import { syncEntitySearchDocumentsByContainerId } from "@/lib/search/search-index-server";
+import { logError } from "@/lib/shared/logger";
 
 /**
  * Retrieve a list of containers with optional search, deleted filtering, sorting, and last-location data.
@@ -150,6 +152,12 @@ export async function POST(request: NextRequest) {
         { error: result.error },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
+    }
+
+    try {
+      await syncEntitySearchDocumentsByContainerId(supabase, result.data.id, tenantId);
+    } catch (error) {
+      logError("Ошибка синхронизации общего поискового индекса контейнера после создания:", error);
     }
 
     return NextResponse.json({ data: result.data });

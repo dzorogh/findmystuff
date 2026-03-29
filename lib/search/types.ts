@@ -72,3 +72,26 @@ export interface ItemSearchProjection {
     source: SearchMatchSource;
   } | null;
 }
+
+export interface ContainerSearchProjection {
+  id: number;
+  name: string | null;
+  photo_url: string | null;
+  container_type_name: string | null;
+  room_name: string | null;
+  furniture_name: string | null;
+  place_name: string | null;
+  container_name: string | null;
+  search_match?: {
+    similarity: number;
+    source: SearchMatchSource;
+  } | null;
+}
+
+export interface EntitySearchRpcRow {
+  entity_type: "item" | "container";
+  entity_id: number;
+  similarity: number | null;
+  match_source: SearchMatchSource | null;
+  total_count?: number | null;
+}

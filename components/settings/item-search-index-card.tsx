@@ -17,7 +17,7 @@ export function ItemSearchIndexCard() {
 
   const detailsText = useMemo(() => {
     if (!statusText) {
-      return "Перестраивает AI-индекс вещей для поиска по фото и умным совпадениям по названиям.";
+      return "Перестраивает AI-индекс вещей и контейнеров для поиска по фото и умным совпадениям по названиям.";
     }
     return statusText;
   }, [statusText]);
@@ -28,21 +28,23 @@ export function ItemSearchIndexCard() {
     setBatchCount(0);
     setStatusText("Запуск переиндексации...");
 
-    let afterId = 0;
+    let cursor: { entityType: "item" | "container"; afterId: number } | null = null;
     let total = 0;
     let batches = 0;
 
     try {
       while (true) {
         const nextBatchNumber = batches + 1;
+        const cursorLabel =
+          cursor?.entityType === "container" ? "контейнеров" : "вещей";
         setStatusText(
           total === 0
-            ? `Запущен батч ${nextBatchNumber}. Первый ответ может занять время, если у вещей есть фото.`
-            : `Запущен батч ${nextBatchNumber}. Уже обработано ${total} вещей.`
+            ? `Запущен батч ${nextBatchNumber}. Первый ответ может занять время, если у сущностей есть фото.`
+            : `Запущен батч ${nextBatchNumber}. Уже обработано ${total} сущностей, сейчас очередь ${cursorLabel}.`
         );
 
         const result = await runItemSearchIndexBackfillBatch({
-          afterId,
+          cursor,
           limit: DEFAULT_BATCH_LIMIT,
         });
 
@@ -51,17 +53,17 @@ export function ItemSearchIndexCard() {
         setProcessedTotal(total);
         setBatchCount(batches);
         setStatusText(
-          result.nextAfterId == null
-            ? `Готово. Обработано ${total} вещей за ${batches} батч(ей).`
-            : `Обработано ${total} вещей, батч ${batches}...`
+          result.nextCursor == null
+            ? `Готово. Обработано ${total} сущностей за ${batches} батч(ей).`
+            : `Обработано ${total} сущностей, батч ${batches}...`
         );
 
-        if (result.nextAfterId == null) {
-          toast.success(`Переиндексация завершена. Обработано ${total} вещей.`);
+        if (result.nextCursor == null) {
+          toast.success(`Переиндексация завершена. Обработано ${total} сущностей.`);
           break;
         }
 
-        afterId = result.nextAfterId;
+        cursor = result.nextCursor;
       }
     } catch (error) {
       const message =
@@ -85,7 +87,7 @@ export function ItemSearchIndexCard() {
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <CardTitle>Переиндексация эмбедингов вещей</CardTitle>
+              <CardTitle>Переиндексация эмбедингов поиска</CardTitle>
               <p className="text-sm text-muted-foreground">{detailsText}</p>
             </div>
             <Button

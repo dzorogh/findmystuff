@@ -47,7 +47,7 @@ describe("Home page photo search", () => {
     jest.useRealTimers();
   });
 
-  it("показывает кнопку поиска по фото и выводит найденные вещи", async () => {
+  it("показывает кнопку поиска по фото и выводит найденные вещи и контейнеры", async () => {
     searchApiClient.searchByPhoto.mockResolvedValue({
       data: [
         {
@@ -61,12 +61,23 @@ describe("Home page photo search", () => {
             { key: "room", label: "Помещение", value: "Гардеробная" },
           ],
         },
+        {
+          entityType: "container",
+          entityId: 9,
+          title: "Контейнер Dyson",
+          subtitle: "Коробка",
+          href: "/containers/9",
+          badges: [{ label: "Контейнер", variant: "secondary" }],
+          locationLines: [
+            { key: "room", label: "Помещение", value: "Гардеробная" },
+          ],
+        },
       ],
-      totalCount: 1,
+      totalCount: 2,
       meta: {
         mode: "image",
         scope: "global",
-        totalCount: 1,
+        totalCount: 2,
         noMatches: false,
       },
     });
@@ -89,8 +100,9 @@ describe("Home page photo search", () => {
     await waitFor(() => {
       expect(searchApiClient.searchByPhoto).toHaveBeenCalled();
       expect(screen.getByText("Пылесос Dyson")).toBeInTheDocument();
+      expect(screen.getByText("Контейнер Dyson")).toBeInTheDocument();
       expect(screen.getByText(/Результаты поиска по фото/i)).toBeInTheDocument();
-      expect(screen.getByText(/Найдено 1 результатов по фото/i)).toBeInTheDocument();
+      expect(screen.getByText(/Найдено 2 результатов по фото/i)).toBeInTheDocument();
     });
   });
 
@@ -122,7 +134,7 @@ describe("Home page photo search", () => {
 
     fireEvent.change(
       screen.getByPlaceholderText(
-        /Введите название вещи, места, контейнера, мебели или помещения/i
+        /Введите название вещи или контейнера/i
       ),
       { target: { value: "у" } }
     );

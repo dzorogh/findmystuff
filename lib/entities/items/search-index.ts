@@ -1,10 +1,15 @@
+export interface SearchIndexBackfillCursor {
+  entityType: "item" | "container";
+  afterId: number;
+}
+
 export interface ItemSearchIndexBackfillResponse {
   processed: number;
-  nextAfterId: number | null;
+  nextCursor: SearchIndexBackfillCursor | null;
 }
 
 export async function runItemSearchIndexBackfillBatch(params?: {
-  afterId?: number;
+  cursor?: SearchIndexBackfillCursor | null;
   limit?: number;
 }): Promise<ItemSearchIndexBackfillResponse> {
   const response = await fetch("/api/items/search-index/backfill", {
@@ -13,7 +18,7 @@ export async function runItemSearchIndexBackfillBatch(params?: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      afterId: params?.afterId ?? 0,
+      cursor: params?.cursor ?? null,
       limit: params?.limit ?? 20,
     }),
   });
@@ -33,7 +38,12 @@ export async function runItemSearchIndexBackfillBatch(params?: {
 
   return {
     processed: typeof data?.processed === "number" ? data.processed : 0,
-    nextAfterId:
-      typeof data?.nextAfterId === "number" ? data.nextAfterId : null,
+    nextCursor:
+      data?.nextCursor &&
+      typeof data.nextCursor === "object" &&
+      (data.nextCursor.entityType === "item" || data.nextCursor.entityType === "container") &&
+      typeof data.nextCursor.afterId === "number"
+        ? data.nextCursor
+        : null,
   };
 }

@@ -14,6 +14,7 @@ import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { parseOptionalInt } from "@/lib/shared/api/parse-optional-int";
 import { validateDestinationType } from "@/lib/shared/api/validate-destination-type";
 import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import { syncEntitySearchDocumentsByItemId } from "@/lib/search/search-index-server";
 import { logError } from "@/lib/shared/logger";
 
 /**
@@ -181,6 +182,12 @@ export async function POST(request: NextRequest) {
       await syncItemSearchDocumentsByItemId(supabase, result.data.id, tenantId);
     } catch (error) {
       logError("Ошибка синхронизации поискового индекса вещи после создания:", error);
+    }
+
+    try {
+      await syncEntitySearchDocumentsByItemId(supabase, result.data.id, tenantId);
+    } catch (error) {
+      logError("Ошибка синхронизации общего поискового индекса вещи после создания:", error);
     }
 
     return NextResponse.json({ data: result.data });

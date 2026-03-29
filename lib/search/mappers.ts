@@ -1,5 +1,6 @@
 import type { EntityTypeName } from "@/types/entity";
 import type {
+  ContainerSearchProjection,
   ItemSearchProjection,
   SearchBadge,
   SearchHit,
@@ -158,5 +159,34 @@ export function mapNamedEntityToSearchHit(input: {
     locationLines: [],
     match: null,
     preview: null,
+  };
+}
+
+export function mapContainerProjectionToSearchHit(
+  container: ContainerSearchProjection,
+  options?: { semanticOnly?: boolean }
+): SearchHit {
+  return {
+    entityType: "container",
+    entityId: container.id,
+    title: container.name?.trim() || `Контейнер #${container.id}`,
+    subtitle: container.container_type_name?.trim() || null,
+    href: buildHref("container", container.id),
+    badges: [
+      buildEntityBadge("container"),
+      ...buildMatchBadges(container.search_match, options),
+    ],
+    locationLines: getSearchHitLocationLines(container),
+    match: container.search_match
+      ? {
+          score: container.search_match.similarity,
+          source: container.search_match.source,
+        }
+      : null,
+    preview: container.photo_url
+      ? {
+          imageUrl: container.photo_url,
+        }
+      : null,
   };
 }

@@ -4,11 +4,13 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@/lib/shared/api/constants";
-import { mapNamedEntityToSearchHit } from "@/lib/search/mappers";
-import { searchGlobalItemsByImage, searchGlobalItemsByText } from "@/lib/entities/items/search-service";
+import {
+  searchHomeEntitiesByImage,
+  searchHomeEntitiesByText,
+} from "@/lib/search/search-service";
 import type { SearchResponse } from "@/lib/search/types";
 
-async function searchNamedEntities(
+async function searchHomeEntities(
   request: NextRequest,
   query: string
 ): Promise<SearchResponse | NextResponse> {
@@ -33,84 +35,7 @@ async function searchNamedEntities(
     };
   }
 
-  const [itemResults, placesResult, containersResult, roomsResult, furnitureResult, buildingsResult] =
-    await Promise.all([
-      searchGlobalItemsByText(supabase, tenantId, trimmedQuery),
-      supabase
-        .from("places")
-        .select("id, name")
-        .eq("tenant_id", tenantId)
-        .ilike("name", `%${trimmedQuery}%`)
-        .is("deleted_at", null)
-        .limit(10),
-      supabase
-        .from("containers")
-        .select("id, name")
-        .eq("tenant_id", tenantId)
-        .ilike("name", `%${trimmedQuery}%`)
-        .is("deleted_at", null)
-        .limit(10),
-      supabase
-        .from("rooms")
-        .select("id, name")
-        .eq("tenant_id", tenantId)
-        .ilike("name", `%${trimmedQuery}%`)
-        .is("deleted_at", null)
-        .limit(10),
-      supabase
-        .from("furniture")
-        .select("id, name")
-        .eq("tenant_id", tenantId)
-        .ilike("name", `%${trimmedQuery}%`)
-        .is("deleted_at", null)
-        .limit(10),
-      supabase
-        .from("buildings")
-        .select("id, name")
-        .eq("tenant_id", tenantId)
-        .ilike("name", `%${trimmedQuery}%`)
-        .is("deleted_at", null)
-        .limit(10),
-    ]);
-
-  const namedResults = [
-    { entityType: "place" as const, data: placesResult.data, error: placesResult.error },
-    { entityType: "container" as const, data: containersResult.data, error: containersResult.error },
-    { entityType: "room" as const, data: roomsResult.data, error: roomsResult.error },
-    { entityType: "furniture" as const, data: furnitureResult.data, error: furnitureResult.error },
-    { entityType: "building" as const, data: buildingsResult.data, error: buildingsResult.error },
-  ];
-
-  for (const result of namedResults) {
-    if (result.error) {
-      throw new Error(result.error.message);
-    }
-  }
-
-  const namedHits = namedResults.flatMap((result) =>
-    ((result.data as Array<{ id: number; name: string | null }> | null) ?? []).map(
-      (entity) =>
-        mapNamedEntityToSearchHit({
-          entityType: result.entityType,
-          entityId: entity.id,
-          name: entity.name,
-        })
-    )
-  );
-
-  const hits = [...itemResults.data, ...namedHits];
-
-  return {
-    data: hits,
-    totalCount: hits.length,
-    meta: {
-      mode: "text",
-      scope: "global",
-      query: trimmedQuery,
-      totalCount: hits.length,
-      noMatches: hits.length === 0,
-    },
-  };
+  return searchHomeEntitiesByText(supabase, tenantId, trimmedQuery);
 }
 
 export async function GET(request: NextRequest) {
@@ -132,7 +57,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const result = await searchNamedEntities(request, query);
+    const result = await searchHomeEntities(request, query);
     if (result instanceof NextResponse) {
       return result;
     }
@@ -178,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const result = await searchGlobalItemsByImage(supabase, tenantId, {
+    const result = await searchHomeEntitiesByImage(supabase, tenantId, {
       buffer: Buffer.from(arrayBuffer),
       mimeType: file.type,
     });

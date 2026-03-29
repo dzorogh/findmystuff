@@ -76,13 +76,21 @@ export function isItemMultimodalSearchConfigured(): boolean {
   return getOpenAiApiKey() != null;
 }
 
-export async function embedItemSearchText(text: string): Promise<MultimodalEmbeddingResult> {
+export function isSearchMultimodalConfigured(): boolean {
+  return isItemMultimodalSearchConfigured();
+}
+
+export async function embedSearchText(text: string): Promise<MultimodalEmbeddingResult> {
   const normalizedText = text.trim();
   if (!normalizedText) {
     throw new Error("Нельзя построить embedding для пустого текста");
   }
 
   return requestTextEmbedding(normalizedText);
+}
+
+export async function embedItemSearchText(text: string): Promise<MultimodalEmbeddingResult> {
+  return embedSearchText(text);
 }
 
 async function describeImageForSearch(
@@ -152,4 +160,12 @@ export async function embedItemSearchImage(
     ...embedding,
     model: `${OPENAI_VISION_MODEL}+${OPENAI_EMBEDDING_MODEL}`,
   };
+}
+
+export async function embedSearchImage(
+  imageBuffer: Buffer,
+  mimeType: string,
+  inputType: "query" | "document" = "document"
+): Promise<MultimodalEmbeddingResult> {
+  return embedItemSearchImage(imageBuffer, mimeType, inputType);
 }

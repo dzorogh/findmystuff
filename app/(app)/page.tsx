@@ -213,23 +213,20 @@ export default function Home() {
     effectiveMode === "image" ? "Результаты поиска по фото" : "Результаты поиска";
   const emptyMessage =
     effectiveMode === "image"
-      ? "Похожих вещей не найдено"
+      ? "Похожих вещей или контейнеров не найдено"
       : `Ничего не найдено по запросу "${searchQuery.trim()}"`;
   const bannerStatusText = isSearching
     ? effectiveMode === "image"
-      ? "Ищем похожие вещи..."
+      ? "Ищем похожие вещи и контейнеры..."
       : `Ищем по запросу "${searchQuery.trim()}"...`
     : effectiveMode === "image"
       ? totalCount > 0
         ? `Найдено ${totalCount} результатов по фото`
-        : "Похожих вещей не найдено"
+        : "Похожих вещей или контейнеров не найдено"
       : totalCount > 0
         ? `Найдено ${totalCount} результатов`
         : `Ничего не найдено по запросу "${searchQuery.trim()}"`;
-  const bannerDescription =
-    effectiveMode === "image"
-      ? "Поиск по фото использует единый search pipeline и нормализованные карточки результатов."
-      : "";
+  const bannerDescription = "";
 
   return (
     <div className="flex flex-col gap-4">
@@ -246,7 +243,7 @@ export default function Home() {
                 setSearchQuery(e.target.value);
               }}
               value={searchQuery}
-              placeholder="Введите название вещи, места, контейнера, мебели или помещения..."
+              placeholder="Введите название вещи или контейнера..."
             />
             <InputGroupAddon>
               <Search />

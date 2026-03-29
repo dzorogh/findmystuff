@@ -21,12 +21,16 @@ jest.mock("sonner", () => ({
 describe("ItemSearchIndexCard", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRunItemSearchIndexBackfillBatch.mockReset();
   });
 
   it("запускает переиндексацию по батчам и показывает итог", async () => {
     mockRunItemSearchIndexBackfillBatch
-      .mockResolvedValueOnce({ processed: 20, nextAfterId: 20 })
-      .mockResolvedValueOnce({ processed: 7, nextAfterId: null });
+      .mockResolvedValueOnce({
+        processed: 20,
+        nextCursor: { entityType: "item", afterId: 20 },
+      })
+      .mockResolvedValueOnce({ processed: 7, nextCursor: null });
 
     const user = userEvent.setup();
 
@@ -36,11 +40,14 @@ describe("ItemSearchIndexCard", () => {
 
     await waitFor(() => {
       expect(mockRunItemSearchIndexBackfillBatch).toHaveBeenNthCalledWith(1, {
-        afterId: 0,
+        cursor: null,
         limit: 5,
       });
       expect(mockRunItemSearchIndexBackfillBatch).toHaveBeenNthCalledWith(2, {
-        afterId: 20,
+        cursor: {
+          entityType: "item",
+          afterId: 20,
+        },
         limit: 5,
       });
     });
@@ -49,12 +56,12 @@ describe("ItemSearchIndexCard", () => {
       expect(screen.getByText("Обработано: 27")).toBeInTheDocument();
       expect(screen.getByText("Батчей: 2")).toBeInTheDocument();
       expect(
-        screen.getByText("Готово. Обработано 27 вещей за 2 батч(ей).")
+        screen.getByText("Готово. Обработано 27 сущностей за 2 батч(ей).")
       ).toBeInTheDocument();
     });
 
     expect(mockToastSuccess).toHaveBeenCalledWith(
-      "Переиндексация завершена. Обработано 27 вещей."
+      "Переиндексация завершена. Обработано 27 сущностей."
     );
   });
 

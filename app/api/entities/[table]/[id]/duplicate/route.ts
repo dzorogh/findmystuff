@@ -5,6 +5,10 @@ import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
+import {
+  syncEntitySearchDocumentsByContainerId,
+  syncEntitySearchDocumentsByItemId,
+} from "@/lib/search/search-index-server";
 import { logError } from "@/lib/shared/logger";
 /** Имена таблиц API (путь [table]), не путать с EntityTypeName (item, place, ...). */
 type ApiTableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
@@ -205,6 +209,20 @@ export async function POST(
         await syncItemSearchDocumentsByItemId(supabase, duplicatedEntity.id, tenantId);
       } catch (error) {
         logError("Ошибка синхронизации поискового индекса вещи после дублирования:", error);
+      }
+
+      try {
+        await syncEntitySearchDocumentsByItemId(supabase, duplicatedEntity.id, tenantId);
+      } catch (error) {
+        logError("Ошибка синхронизации общего поискового индекса вещи после дублирования:", error);
+      }
+    }
+
+    if (table === "containers") {
+      try {
+        await syncEntitySearchDocumentsByContainerId(supabase, duplicatedEntity.id, tenantId);
+      } catch (error) {
+        logError("Ошибка синхронизации общего поискового индекса контейнера после дублирования:", error);
       }
     }
 
