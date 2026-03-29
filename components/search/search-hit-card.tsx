@@ -74,11 +74,11 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
       : SCORE_RING_CIRCUMFERENCE - (scorePercent / 100) * SCORE_RING_CIRCUMFERENCE;
 
   return (
-    <Link href={hit.href} className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <Card className="h-[11.5rem] overflow-hidden border-border/60 bg-card/95 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-xl group-hover:shadow-primary/5 group-focus-visible:border-primary/40 group-focus-visible:shadow-xl group-focus-visible:shadow-primary/5 sm:h-[12.25rem]">
-        <CardContent className="h-full p-0">
-          <div className="flex h-full min-w-0 items-start">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden border-r border-border/60 bg-muted/60 sm:h-28 sm:w-28">
+    <Link href={hit.href} className="group">
+      <Card className="overflow-hidden">
+        <CardContent className="h-full">
+          <div className="flex h-full min-w-0 items-start gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden sm:h-28 sm:w-28">
               {hit.preview?.imageUrl ? (
                 <>
                   <Image
@@ -105,7 +105,7 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
               </div>
             </div>
 
-            <div className="flex h-full min-w-0 flex-1 flex-col p-4">
+            <div className="flex h-full min-w-0 flex-1 flex-col">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-2">
                   <CardTitle className="line-clamp-2 text-lg font-semibold sm:text-xl">
