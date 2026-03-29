@@ -3,12 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Home,
-  DoorOpen,
-  Sofa,
   LayoutGrid,
-  Container,
-  Box,
   Plus,
   Search,
   ArrowLeftRight,
@@ -29,25 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-const ENTITY_ITEMS = [
-  {
-    group: "Расположения",
-    items: [
-      { href: "/buildings", label: "Здания", icon: Home },
-      { href: "/rooms", label: "Помещения", icon: DoorOpen },
-      { href: "/furniture", label: "Мебель", icon: Sofa },
-      { href: "/places", label: "Места", icon: LayoutGrid },
-    ],
-  },
-  {
-    group: "Объекты",
-    items: [
-      { href: "/containers", label: "Контейнеры", icon: Container },
-      { href: "/items", label: "Вещи", icon: Box },
-    ],
-  },
-] as const;
+import { PRIMARY_NAVIGATION_GROUPS } from "@/components/navigation/navigation-groups";
 
 /** Кнопка действия в нижней панели — единый стиль для всех иконок. */
 function BarActionButton({
@@ -99,7 +76,7 @@ export function MobileBottomBar() {
             }
           />
           <DropdownMenuContent side="top" align="start" className="w-48">
-            {ENTITY_ITEMS.map((group) => (
+            {PRIMARY_NAVIGATION_GROUPS.map((group) => (
               <DropdownMenuGroup key={group.group}>
                 <DropdownMenuLabel>{group.group}</DropdownMenuLabel>
                 {group.items.map((item) => (
@@ -146,7 +123,7 @@ export function MobileBottomBar() {
       <div className="min-w-0 flex">
         <BarActionButton
           nativeButton={false}
-          render={<Link href="/" />}
+          render={<Link href="/search" />}
           aria-label="Поиск"
         >
           <Search data-icon="inline-start" />

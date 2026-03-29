@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/sidebar"
 import { SecondaryMenu } from "./secondary-menu";
 import { PrimaryMenu } from "./primary-menu";
-import Link from "next/link";
-import { QrCodeIcon, ArrowLeftRight, Warehouse, ChevronDown, Home, Check, Plus } from "lucide-react";
+import { QrCodeIcon, ArrowLeftRight, Warehouse, ChevronDown, Check, Plus } from "lucide-react";
 import { useQuickMove } from "@/lib/app/contexts/quick-move-context";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenant } from "@/contexts/tenant-context";
@@ -81,11 +80,6 @@ const AppSidebar = () => {
               </Tooltip>
             </SidebarMenuItem>
             <DropdownMenuContent side="right" align="start" className="min-w-48">
-              <DropdownMenuItem render={<Link href="/" />} onClick={closeMobileSidebar}>
-                <Home className="size-4" />
-                Главная
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               {tenants.map((tenant) => (
                 <DropdownMenuItem
                   key={tenant.id}

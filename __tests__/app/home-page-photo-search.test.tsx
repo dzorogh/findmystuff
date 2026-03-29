@@ -35,7 +35,7 @@ jest.mock("sonner", () => ({
 const searchApiClient = jest.requireMock("@/lib/shared/api/search")
   .searchApiClient as { searchText: jest.Mock; searchByPhoto: jest.Mock };
 
-describe("Home page photo search", () => {
+describe("Home and search pages", () => {
   beforeEach(() => {
     jest.resetAllMocks();
     Object.keys(cameraDialogProps).forEach((key) => delete cameraDialogProps[key]);
@@ -47,7 +47,20 @@ describe("Home page photo search", () => {
     jest.useRealTimers();
   });
 
-  it("показывает кнопку поиска по фото и выводит найденные вещи и контейнеры", async () => {
+  it("на главной показывает только плитки переходов", async () => {
+    const { default: HomePage } = await import("@/app/(app)/page");
+    render(<HomePage />);
+
+    expect(screen.getByRole("heading", { name: "Главная" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Вещи/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Контейнеры/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Поиск по фото/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText(/Введите название вещи или контейнера/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("на странице поиска показывает кнопку поиска по фото и выводит найденные вещи", async () => {
     searchApiClient.searchByPhoto.mockResolvedValue({
       data: [
         {
@@ -61,29 +74,18 @@ describe("Home page photo search", () => {
             { key: "room", label: "Помещение", value: "Гардеробная" },
           ],
         },
-        {
-          entityType: "container",
-          entityId: 9,
-          title: "Контейнер Dyson",
-          subtitle: "Коробка",
-          href: "/containers/9",
-          badges: [{ label: "Контейнер", variant: "secondary" }],
-          locationLines: [
-            { key: "room", label: "Помещение", value: "Гардеробная" },
-          ],
-        },
       ],
-      totalCount: 2,
+      totalCount: 1,
       meta: {
         mode: "image",
         scope: "global",
-        totalCount: 2,
+        totalCount: 1,
         noMatches: false,
       },
     });
 
-    const { default: HomePage } = await import("@/app/(app)/page");
-    render(<HomePage />);
+    const { default: SearchPage } = await import("@/app/(app)/search/page");
+    render(<SearchPage />);
 
     fireEvent.click(screen.getByRole("button", { name: /Поиск по фото/i }));
     expect(screen.getByTestId("home-photo-search-dialog")).toHaveAttribute(
@@ -100,13 +102,12 @@ describe("Home page photo search", () => {
     await waitFor(() => {
       expect(searchApiClient.searchByPhoto).toHaveBeenCalled();
       expect(screen.getByText("Пылесос Dyson")).toBeInTheDocument();
-      expect(screen.getByText("Контейнер Dyson")).toBeInTheDocument();
       expect(screen.getByText(/Результаты поиска по фото/i)).toBeInTheDocument();
-      expect(screen.getByText(/Найдено 2 результатов по фото/i)).toBeInTheDocument();
+      expect(screen.getByText(/Найдено 1 результатов по фото/i)).toBeInTheDocument();
     });
   });
 
-  it("не запускает повторный текстовый поиск после первого успешного ответа", async () => {
+  it("на странице поиска не запускает повторный текстовый поиск после первого успешного ответа", async () => {
     jest.useFakeTimers();
 
     searchApiClient.searchText.mockResolvedValue({
@@ -129,8 +130,8 @@ describe("Home page photo search", () => {
       },
     });
 
-    const { default: HomePage } = await import("@/app/(app)/page");
-    render(<HomePage />);
+    const { default: SearchPage } = await import("@/app/(app)/search/page");
+    render(<SearchPage />);
 
     fireEvent.change(
       screen.getByPlaceholderText(

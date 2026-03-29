@@ -4,8 +4,8 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { MAX_UPLOAD_FILE_SIZE_BYTES } from "@/lib/shared/api/constants";
+import { searchGlobalItemsByImage } from "@/lib/entities/items/search-service";
 import {
-  searchHomeEntitiesByImage,
   searchHomeEntitiesByText,
 } from "@/lib/search/search-service";
 import type { SearchResponse } from "@/lib/search/types";
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const result = await searchHomeEntitiesByImage(supabase, tenantId, {
+    const result = await searchGlobalItemsByImage(supabase, tenantId, {
       buffer: Buffer.from(arrayBuffer),
       mimeType: file.type,
     });
