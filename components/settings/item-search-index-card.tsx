@@ -7,7 +7,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { runItemSearchIndexBackfillBatch } from "@/lib/entities/items/search-index";
 
-const DEFAULT_BATCH_LIMIT = 20;
+const DEFAULT_BATCH_LIMIT = 5;
 
 export function ItemSearchIndexCard() {
   const [isRunning, setIsRunning] = useState(false);
@@ -34,6 +34,13 @@ export function ItemSearchIndexCard() {
 
     try {
       while (true) {
+        const nextBatchNumber = batches + 1;
+        setStatusText(
+          total === 0
+            ? `Запущен батч ${nextBatchNumber}. Первый ответ может занять время, если у вещей есть фото.`
+            : `Запущен батч ${nextBatchNumber}. Уже обработано ${total} вещей.`
+        );
+
         const result = await runItemSearchIndexBackfillBatch({
           afterId,
           limit: DEFAULT_BATCH_LIMIT,

@@ -1,49 +1,53 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { searchApiClient } from "@/lib/shared/api/search";
 import { logError } from "@/lib/shared/logger";
-import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Package, LayoutGrid, Container, DoorOpen, Sofa, ArrowRight, Loader2, ScanSearch, X } from "lucide-react";
-import type { Item, SearchResult } from "@/types/entity";
-import Link from "next/link";
+import {
+  ArrowRight,
+  Building2,
+  Container,
+  DoorOpen,
+  LayoutGrid,
+  Loader2,
+  Package,
+  ScanSearch,
+  Search,
+  Sofa,
+} from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { PageHeader } from "@/components/layout/page-header";
 import { CameraCaptureDialog } from "@/components/common/camera-capture-dialog";
-import { itemPhotoSearchApiClient } from "@/lib/shared/api/item-photo-search";
 import { toast } from "sonner";
+import type { SearchHit, SearchMode } from "@/lib/search/types";
+import { SearchResultsSection } from "@/components/search/search-results-section";
+import { SearchSessionBanner } from "@/components/search/search-session-banner";
 
-const ENTITY_CONFIG = {
-  item: { Icon: Package, label: "Вещи" },
-  place: { Icon: LayoutGrid, label: "Места" },
-  container: { Icon: Container, label: "Контейнеры" },
-  room: { Icon: DoorOpen, label: "Помещения" },
-  furniture: { Icon: Sofa, label: "Мебель" },
-} as const;
+interface ActiveSearchSession {
+  mode: SearchMode;
+  previewUrl?: string | null;
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchHit[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isPhotoSearchOpen, setIsPhotoSearchOpen] = useState(false);
-  const [isPhotoSearching, setIsPhotoSearching] = useState(false);
-  const [photoSearchResults, setPhotoSearchResults] = useState<Item[]>([]);
-  const [photoSearchPreviewUrl, setPhotoSearchPreviewUrl] = useState<string | null>(null);
-  const [photoSearchTotalCount, setPhotoSearchTotalCount] = useState(0);
-  const [photoSearchNoMatches, setPhotoSearchNoMatches] = useState(false);
-  const router = useRouter();
+  const [activeSession, setActiveSession] = useState<ActiveSearchSession | null>(
+    null
+  );
+  const [totalCount, setTotalCount] = useState(0);
+  const activeTextSearchAbortRef = useRef<AbortController | null>(null);
 
-  const clearPhotoSearch = useCallback(() => {
-    setPhotoSearchResults([]);
-    setPhotoSearchTotalCount(0);
-    setPhotoSearchNoMatches(false);
-    setPhotoSearchPreviewUrl((prev) => {
-      if (prev) {
-        URL.revokeObjectURL(prev);
+  const clearSearchSession = useCallback(() => {
+    setSearchResults([]);
+    setTotalCount(0);
+    setActiveSession((prev) => {
+      if (prev?.previewUrl) {
+        URL.revokeObjectURL(prev.previewUrl);
       }
       return null;
     });
@@ -51,46 +55,74 @@ export default function Home() {
 
   useEffect(() => {
     return () => {
-      if (photoSearchPreviewUrl) {
-        URL.revokeObjectURL(photoSearchPreviewUrl);
+      if (activeSession?.previewUrl) {
+        URL.revokeObjectURL(activeSession.previewUrl);
       }
     };
-  }, [photoSearchPreviewUrl]);
+  }, [activeSession?.previewUrl]);
 
-  const performSearch = async (queryToSearch: string) => {
-    if (!queryToSearch.trim()) {
+  const performTextSearch = useCallback(async (queryToSearch: string, signal: AbortSignal) => {
+    const trimmedQuery = queryToSearch.trim();
+    if (!trimmedQuery) {
       setSearchResults([]);
+      setTotalCount(0);
       return;
     }
 
     setIsSearching(true);
 
     try {
-      const response = await searchApiClient.search(queryToSearch.trim());
-      // API возвращает { data: SearchResult[] }
-      // request возвращает это напрямую, поэтому response будет { data: SearchResult[] }
-      // И response.data будет SearchResult[]
-      setSearchResults(response.data || []);
+      const response = await searchApiClient.searchText(trimmedQuery, { signal });
+      setSearchResults(response.data);
+      setTotalCount(response.totalCount);
+      setActiveSession({ mode: "text" });
     } catch (error) {
+      if (signal.aborted) {
+        return;
+      }
       logError("Ошибка поиска:", error);
       setSearchResults([]);
+      setTotalCount(0);
     } finally {
-      setIsSearching(false);
+      if (!signal.aborted) {
+        setIsSearching(false);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([]);
+      activeTextSearchAbortRef.current?.abort();
+      activeTextSearchAbortRef.current = null;
+      setIsSearching(false);
+      clearSearchSession();
       return;
     }
 
+    setActiveSession((prev) => {
+      if (prev?.mode === "image") {
+        return prev;
+      }
+      return { mode: "text" };
+    });
+    setIsSearching(true);
+
+    activeTextSearchAbortRef.current?.abort();
+    const abortController = new AbortController();
+    activeTextSearchAbortRef.current = abortController;
+
     const timer = setTimeout(() => {
-      performSearch(searchQuery);
+      void performTextSearch(searchQuery, abortController.signal);
     }, 300);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+      if (activeTextSearchAbortRef.current === abortController) {
+        activeTextSearchAbortRef.current = null;
+      }
+    };
+  }, [clearSearchSession, performTextSearch, searchQuery]);
 
   const handlePhotoSearchCapture = useCallback(
     async (blob: Blob) => {
@@ -102,108 +134,37 @@ export default function Home() {
             });
 
       const previewUrl = URL.createObjectURL(file);
-      setPhotoSearchPreviewUrl((prev) => {
-        if (prev) {
-          URL.revokeObjectURL(prev);
-        }
-        return previewUrl;
-      });
       setSearchQuery("");
       setSearchResults([]);
-      setIsPhotoSearching(true);
+      setTotalCount(0);
+      setIsSearching(true);
+      setActiveSession((prev) => {
+        if (prev?.previewUrl) {
+          URL.revokeObjectURL(prev.previewUrl);
+        }
+        return {
+          mode: "image",
+          previewUrl,
+        };
+      });
 
       try {
-        const result = await itemPhotoSearchApiClient.search({ file });
-        setPhotoSearchResults(result.data);
-        setPhotoSearchTotalCount(result.totalCount);
-        setPhotoSearchNoMatches(result.noSimilarFound);
+        const result = await searchApiClient.searchByPhoto(file);
+        setSearchResults(result.data);
+        setTotalCount(result.totalCount);
       } catch (error) {
         const message =
           error instanceof Error
             ? error.message
             : "Не удалось выполнить поиск по фото";
         toast.error(message);
-        clearPhotoSearch();
+        clearSearchSession();
       } finally {
-        setIsPhotoSearching(false);
+        setIsSearching(false);
       }
     },
-    [clearPhotoSearch]
+    [clearSearchSession]
   );
-
-  const getIcon = (type: string) => {
-    const config = ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG];
-    if (!config) return null;
-    const Icon = config.Icon;
-    return <Icon className="h-4 w-4" />;
-  };
-
-  const getTypeLabel = (type: string) => ENTITY_CONFIG[type as keyof typeof ENTITY_CONFIG]?.label ?? type;
-
-  const getLocationDetails = (result: SearchResult) => {
-    const details = [
-      {
-        key: "room",
-        label: "Помещение",
-        Icon: DoorOpen,
-        value: result.room_name,
-      },
-      {
-        key: "furniture",
-        label: "Мебель",
-        Icon: Sofa,
-        value: result.furniture_name,
-      },
-      {
-        key: "place",
-        label: "Место",
-        Icon: LayoutGrid,
-        value: result.place_name,
-      },
-      {
-        key: "container",
-        label: "Контейнер",
-        Icon: Container,
-        value: result.container_name,
-      },
-    ].filter((detail) => detail.value?.trim());
-
-    if (details.length > 0) {
-      return details;
-    }
-
-    if (!result.location || !result.locationType) {
-      return [];
-    }
-
-    if (result.locationType === "room") {
-      return [{ key: "room", label: "Помещение", Icon: DoorOpen, value: result.location }];
-    }
-
-    if (result.locationType === "furniture") {
-      return [{ key: "furniture", label: "Мебель", Icon: Sofa, value: result.location }];
-    }
-
-    if (result.locationType === "place") {
-      return [{ key: "place", label: "Место", Icon: LayoutGrid, value: result.location }];
-    }
-
-    return [{ key: "container", label: "Контейнер", Icon: Container, value: result.location }];
-  };
-
-  const handleResultClick = (result: SearchResult) => {
-    if (result.type === "item") {
-      router.push(`/items/${result.id}`);
-    } else if (result.type === "place") {
-      router.push(`/places/${result.id}`);
-    } else if (result.type === "container") {
-      router.push(`/containers/${result.id}`);
-    } else if (result.type === "room") {
-      router.push(`/rooms/${result.id}`);
-    } else if (result.type === "furniture") {
-      router.push(`/furniture/${result.id}`);
-    }
-  };
 
   const quickActions = [
     {
@@ -231,28 +192,56 @@ export default function Home() {
       description: "Просмотр всех помещений",
     },
     {
+      label: "Здания",
+      icon: Building2,
+      href: "/buildings",
+      description: "Просмотр всех зданий",
+    },
+    {
       label: "Мебель",
       icon: Sofa,
       href: "/furniture",
       description: "Просмотр всей мебели",
     },
   ];
-  const isPhotoSearchActive =
-    photoSearchPreviewUrl != null || isPhotoSearching || photoSearchResults.length > 0;
+
+  const isTextQueryActive = searchQuery.trim().length > 0;
+  const isSearchActive = activeSession != null || isTextQueryActive;
+  const effectiveMode: SearchMode | null = activeSession?.mode ?? (isTextQueryActive ? "text" : null);
+  const isPhotoSearchActive = effectiveMode === "image";
+  const searchTitle =
+    effectiveMode === "image" ? "Результаты поиска по фото" : "Результаты поиска";
+  const emptyMessage =
+    effectiveMode === "image"
+      ? "Похожих вещей не найдено"
+      : `Ничего не найдено по запросу "${searchQuery.trim()}"`;
+  const bannerStatusText = isSearching
+    ? effectiveMode === "image"
+      ? "Ищем похожие вещи..."
+      : `Ищем по запросу "${searchQuery.trim()}"...`
+    : effectiveMode === "image"
+      ? totalCount > 0
+        ? `Найдено ${totalCount} результатов по фото`
+        : "Похожих вещей не найдено"
+      : totalCount > 0
+        ? `Найдено ${totalCount} результатов`
+        : `Ничего не найдено по запросу "${searchQuery.trim()}"`;
+  const bannerDescription =
+    effectiveMode === "image"
+      ? "Поиск по фото использует единый search pipeline и нормализованные карточки результатов."
+      : "";
 
   return (
     <div className="flex flex-col gap-4">
-
       <PageHeader title="Поиск" />
 
-      {/* Поиск */}
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <InputGroup>
             <InputGroupInput
               onChange={(e) => {
                 if (isPhotoSearchActive) {
-                  clearPhotoSearch();
+                  clearSearchSession();
                 }
                 setSearchQuery(e.target.value);
               }}
@@ -268,9 +257,9 @@ export default function Home() {
           type="button"
           variant={isPhotoSearchActive ? "default" : "outline"}
           onClick={() => setIsPhotoSearchOpen(true)}
-          disabled={isPhotoSearching}
+          disabled={isSearching && isPhotoSearchActive}
         >
-          {isPhotoSearching ? (
+          {isSearching && isPhotoSearchActive ? (
             <Loader2 className="animate-spin" data-icon="inline-start" />
           ) : (
             <ScanSearch data-icon="inline-start" />
@@ -279,199 +268,52 @@ export default function Home() {
         </Button>
       </div>
 
-      {isPhotoSearchActive && (
-        <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            {photoSearchPreviewUrl && (
-              <div className="relative h-16 w-16 overflow-hidden rounded-md border bg-muted">
-                <Image
-                  src={photoSearchPreviewUrl}
-                  alt="Фото для поиска"
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="font-medium">
-                {isPhotoSearching
-                  ? "Ищем похожие вещи..."
-                  : photoSearchNoMatches
-                    ? "Похожих вещей не найдено"
-                    : `Найдено ${photoSearchTotalCount} похожих вещей`}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Поиск учитывает и фото вещей, и умные совпадения по их названию.
-              </p>
-            </div>
-          </div>
-          <Button type="button" variant="outline" onClick={clearPhotoSearch}>
-            <X data-icon="inline-start" />
-            Сбросить поиск по фото
-          </Button>
-        </Card>
+      {isSearchActive && effectiveMode && (
+        <SearchSessionBanner
+          mode={effectiveMode}
+          previewUrl={activeSession?.previewUrl ?? null}
+          statusText={bannerStatusText}
+          description={bannerDescription}
+          onReset={() => {
+            clearSearchSession();
+            setSearchQuery("");
+          }}
+        />
       )}
 
-      {/* Результаты поиска */}
-      {searchQuery && !isPhotoSearchActive && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold">
-              Результаты поиска
-              {searchResults.length > 0 && (
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  ({searchResults.length})
-                </span>
-              )}
-            </h2>
-          </div>
-
-          {searchResults.length === 0 && !isSearching ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">
-                  Ничего не найдено по запросу &quot;{searchQuery}&quot;
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
-              {searchResults.map((result) => (
-                <Card
-                  key={`${result.type}-${result.id}`}
-                  className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50"
-                  onClick={() => handleResultClick(result)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        {getIcon(result.type)}
-                        <CardTitle className="text-lg">
-                          {result.name || `${getTypeLabel(result.type)} #${result.id}`}
-                        </CardTitle>
-                      </div>
-                      <Badge variant="secondary">{getTypeLabel(result.type)}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {getLocationDetails(result).length > 0 && (
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        {getLocationDetails(result).map(({ key, label, Icon, value }) => (
-                          <div key={key} className="flex items-center gap-2">
-                            <Icon className="h-3 w-3 flex-shrink-0" />
-                            <span>{label}: {value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-3 flex items-center text-sm text-primary">
-                      Открыть
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+      {isSearchActive && effectiveMode && (
+        <SearchResultsSection
+          title={searchTitle}
+          hits={searchResults}
+          isLoading={isSearching}
+          mode={effectiveMode}
+          emptyMessage={emptyMessage}
+        />
       )}
 
-      {isPhotoSearchActive && !isPhotoSearching && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold">
-              Результаты поиска по фото
-              {photoSearchResults.length > 0 && (
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  ({photoSearchResults.length})
-                </span>
-              )}
-            </h2>
-          </div>
-
-          {photoSearchResults.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <ScanSearch className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">
-                  Похожих вещей не найдено
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {photoSearchResults.map((item) => (
-                <Card
-                  key={item.id}
-                  className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
-                  onClick={() => router.push(`/items/${item.id}`)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <CardTitle className="text-lg">
-                          {item.name || `Вещь #${item.id}`}
-                        </CardTitle>
-                        {item.item_type?.name && (
-                          <CardDescription>{item.item_type.name}</CardDescription>
-                        )}
-                      </div>
-                      <Badge variant="secondary">
-                        {item.search_match?.source === "image"
-                          ? "Совпадение по фото"
-                          : "Умное совпадение"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {item.last_location?.room_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <DoorOpen className="h-3 w-3 flex-shrink-0" />
-                        <span>Помещение: {item.last_location.room_name}</span>
-                      </div>
-                    )}
-                    {item.search_match && (
-                      <div className="mt-3">
-                        <Badge variant="outline">
-                          Релевантность {Math.round(item.search_match.similarity * 100)}%
-                        </Badge>
-                      </div>
-                    )}
-                    <div className="mt-3 flex items-center text-sm text-primary">
-                      Открыть вещь
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Быстрые действия */}
-      {!searchQuery && !isPhotoSearchActive && (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {!searchQuery && !isSearchActive && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href} className="group">
               <Card className="group-hover:bg-primary/10">
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 rounded-lg bg-primary/10">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="rounded-lg bg-primary/10 p-2">
                       <action.icon className="h-5 w-5" />
                     </div>
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <CardTitle className="text-lg">{action.label}</CardTitle>
-                  <CardDescription className="text-sm">{action.description}</CardDescription>
+                  <CardDescription className="text-sm">
+                    {action.description}
+                  </CardDescription>
                 </CardHeader>
               </Card>
             </Link>
           ))}
         </div>
       )}
+
       <CameraCaptureDialog
         open={isPhotoSearchOpen}
         onClose={() => setIsPhotoSearchOpen(false)}

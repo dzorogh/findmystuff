@@ -4,8 +4,6 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Item } from "@/types/entity";
-
 // --- Sort / list params ---
 
 export type SortBy = "name" | "created_at";
@@ -34,12 +32,6 @@ export interface RecognizeItemPhotoResponse {
   itemName: string | null;
   itemTypeId: number | null;
   error?: string;
-}
-
-export interface ItemPhotoSearchResponse {
-  data: Item[];
-  totalCount: number;
-  noSimilarFound: boolean;
 }
 
 export interface ItemMoneyFields {

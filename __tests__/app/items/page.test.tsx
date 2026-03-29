@@ -1,7 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-
-const cameraDialogProps: Record<string, unknown> = {};
+import { render, screen } from "@testing-library/react";
 
 jest.mock("@/lib/app/hooks/use-list-page", () => ({
   useListPage: jest.fn(),
@@ -23,12 +21,6 @@ jest.mock("@/lib/entities/api", () => ({
   updateItem: jest.fn(),
 }));
 
-jest.mock("@/lib/shared/api/item-photo-search", () => ({
-  itemPhotoSearchApiClient: {
-    search: jest.fn(),
-  },
-}));
-
 jest.mock("@/components/layout/page-header", () => ({
   PageHeader: ({ title, actions }: { title: string; actions?: React.ReactNode }) => (
     <div>
@@ -40,17 +32,11 @@ jest.mock("@/components/layout/page-header", () => ({
 
 jest.mock("@/components/lists/entity-list", () => ({
   EntityList: ({
-    toolbarActions,
-    toolbarContent,
     data,
   }: {
-    toolbarActions?: React.ReactNode;
-    toolbarContent?: React.ReactNode;
     data: Array<{ id: number; name: string | null }>;
   }) => (
     <div>
-      <div>{toolbarActions}</div>
-      <div>{toolbarContent}</div>
       <div>
         {data.map((item) => (
           <div key={item.id}>{item.name}</div>
@@ -62,18 +48,6 @@ jest.mock("@/components/lists/entity-list", () => ({
 
 jest.mock("@/components/lists/list-pagination", () => ({
   ListPagination: () => null,
-}));
-
-jest.mock("@/components/common/camera-capture-dialog", () => ({
-  CameraCaptureDialog: (props: unknown) => {
-    Object.assign(cameraDialogProps, props);
-    return (
-      <div
-        data-testid="photo-search-dialog"
-        data-open={String((props as { open: boolean }).open)}
-      />
-    );
-  },
 }));
 
 jest.mock("sonner", () => ({
@@ -88,18 +62,13 @@ const useAddItem = jest.requireMock("@/lib/app/contexts/add-item-context")
   .useAddItem as jest.Mock;
 const useItemListActions = jest.requireMock("@/lib/entities/hooks/use-item-list-actions")
   .useItemListActions as jest.Mock;
-const itemPhotoSearchApiClient = jest.requireMock("@/lib/shared/api/item-photo-search")
-  .itemPhotoSearchApiClient as { search: jest.Mock };
 
-describe("ItemsPage photo search", () => {
+describe("ItemsPage", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    Object.keys(cameraDialogProps).forEach((key) => delete cameraDialogProps[key]);
-    URL.createObjectURL = jest.fn(() => "blob:photo-search-preview");
-    URL.revokeObjectURL = jest.fn();
 
     useListPage.mockReturnValue({
-      data: [],
+      data: [{ id: 11, name: "Беспроводные наушники" }],
       isLoading: false,
       error: null,
       searchQuery: "",
@@ -156,41 +125,11 @@ describe("ItemsPage photo search", () => {
     });
   });
 
-  it("открывает диалог поиска по фото и показывает найденные результаты", async () => {
-    itemPhotoSearchApiClient.search.mockResolvedValue({
-      data: [
-        {
-          id: 11,
-          name: "Беспроводные наушники",
-          search_match: {
-            similarity: 0.91,
-            source: "text",
-          },
-        },
-      ],
-      totalCount: 1,
-      noSimilarFound: false,
-    });
-
+  it("не показывает поиск по фото и рендерит обычный список вещей", async () => {
     const { default: ItemsPage } = await import("@/app/(app)/items/page");
     render(<ItemsPage />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Поиск по фото/i }));
-    expect(screen.getByTestId("photo-search-dialog")).toHaveAttribute(
-      "data-open",
-      "true"
-    );
-
-    await act(async () => {
-      await (cameraDialogProps.onCapture as (blob: Blob) => Promise<void>)(
-        new File(["img"], "query.jpg", { type: "image/jpeg" })
-      );
-    });
-
-    await waitFor(() => {
-      expect(itemPhotoSearchApiClient.search).toHaveBeenCalled();
-      expect(screen.getByText("Беспроводные наушники")).toBeInTheDocument();
-      expect(screen.getByText(/Найдено 1 похожих вещей/i)).toBeInTheDocument();
-    });
+    expect(screen.queryByRole("button", { name: /Поиск по фото/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Беспроводные наушники")).toBeInTheDocument();
   });
 });

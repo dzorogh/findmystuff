@@ -37,11 +37,11 @@ describe("ItemSearchIndexCard", () => {
     await waitFor(() => {
       expect(mockRunItemSearchIndexBackfillBatch).toHaveBeenNthCalledWith(1, {
         afterId: 0,
-        limit: 20,
+        limit: 5,
       });
       expect(mockRunItemSearchIndexBackfillBatch).toHaveBeenNthCalledWith(2, {
         afterId: 20,
-        limit: 20,
+        limit: 5,
       });
     });
 

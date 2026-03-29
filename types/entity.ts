@@ -138,19 +138,6 @@ export interface Furniture extends BaseEntity {
   purchaseDate?: string | null;
 }
 
-// Типы для поиска
-export interface SearchResult {
-  id: number;
-  name: string | null;
-  type: EntityTypeName;
-  location?: string | null;
-  locationType?: "place" | "container" | "room" | "furniture";
-  container_name?: string | null;
-  furniture_name?: string | null;
-  place_name?: string | null;
-  room_name?: string | null;
-}
-
 // Типы для пользователей
 export interface User {
   id: string;
