@@ -377,10 +377,11 @@ export const EntityRow = memo(function EntityRow({
           <TableCell
             key={col.key}
             className={cn(
-              col.key === "actions" && "text-right",
+              col.key === "actions"
+                ? "text-right w-[1%] whitespace-nowrap"
+                : "overflow-hidden text-ellipsis max-w-0",
               col.width,
-              responsiveHidden,
-              "overflow-hidden text-ellipsis max-w-0"
+              responsiveHidden
             )}
           >
             {cellContent}

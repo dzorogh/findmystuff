@@ -35,13 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
-    if (data?.entity_category === "item") {
-      try {
-        await syncItemSearchDocumentsForEntityType(supabase, tenantId, data.id);
-      } catch (error) {
-        logError("Ошибка синхронизации item search index после обновления типа вещи:", error);
-      }
-    }
+
 
     return NextResponse.json({ data });
   } catch (error) {
@@ -129,6 +123,14 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    }
+
+    if (data?.entity_category === "item") {
+      try {
+        await syncItemSearchDocumentsForEntityType(supabase, tenantId, data.id);
+      } catch (error) {
+        logError("Ошибка синхронизации item search index после обновления типа вещи:", error);
+      }
     }
 
     return NextResponse.json({ data });

@@ -747,7 +747,12 @@ export async function getContainerSearchProjectionByIds(
   const resolveContainerPlacement = async (
     containerId: number,
     visited = new Set<number>()
-  ) => {
+  ): Promise<{
+    container_name: string | null;
+    place_name: string | null;
+    furniture_name: string | null;
+    room_name: string | null;
+  }> => {
     if (visited.has(containerId)) {
       return {
         container_name: null as string | null,

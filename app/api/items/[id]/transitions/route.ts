@@ -115,8 +115,8 @@ export async function GET(
           .order("created_at", { ascending: false })
       : { data: [] };
 
-    const lastPlaceTransitions = new Map<number, TransitionRow>();
-    (placeTransitionsData || []).forEach((t: TransitionRow) => {
+    const lastPlaceTransitions = new Map<number, Partial<TransitionRow>>();
+    (placeTransitionsData || []).forEach((t: Partial<TransitionRow>) => {
       if (t.place_id && !lastPlaceTransitions.has(t.place_id)) {
         lastPlaceTransitions.set(t.place_id, t);
       }

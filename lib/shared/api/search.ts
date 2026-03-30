@@ -3,33 +3,33 @@
  */
 
 import { HttpClient } from "./http-client";
-import type { SearchResponse } from "@/lib/search/types";
+import type { SearchResponse, SearchResponseMeta } from "@/lib/search/types";
 
 export class SearchApiClient extends HttpClient {
   async searchText(
     query: string,
     options?: { signal?: AbortSignal }
   ): Promise<SearchResponse> {
-    const response = await this.request<SearchResponse["data"]>(
+    const rawResponse = await this.request<SearchResponse["data"]>(
       `/search?q=${encodeURIComponent(query)}`,
       {
         signal: options?.signal,
       }
     );
 
+    const response = rawResponse as unknown as SearchResponse;
+
     return {
       data: Array.isArray(response.data) ? response.data : [],
       totalCount: typeof response.totalCount === "number" ? response.totalCount : 0,
       meta:
-        "meta" in response && response.meta
-          ? response.meta
-          : {
-              mode: "text",
-              scope: "global",
-              query,
-              totalCount: typeof response.totalCount === "number" ? response.totalCount : 0,
-              noMatches: !Array.isArray(response.data) || response.data.length === 0,
-            },
+        response.meta ?? {
+          mode: "text",
+          scope: "global",
+          query,
+          totalCount: typeof response.totalCount === "number" ? response.totalCount : 0,
+          noMatches: !Array.isArray(response.data) || response.data.length === 0,
+        },
     };
   }
 
@@ -53,16 +53,18 @@ export class SearchApiClient extends HttpClient {
       );
     }
 
+    const parsed = data as Partial<SearchResponse> | null;
+
     return {
-      data: Array.isArray(data?.data) ? data.data : [],
-      totalCount: typeof data?.totalCount === "number" ? data.totalCount : 0,
+      data: Array.isArray(parsed?.data) ? parsed.data : [],
+      totalCount: typeof parsed?.totalCount === "number" ? parsed.totalCount : 0,
       meta:
-        data?.meta ?? {
+        parsed?.meta ?? ({
           mode: "image",
           scope: "global",
-          totalCount: typeof data?.totalCount === "number" ? data.totalCount : 0,
-          noMatches: !Array.isArray(data?.data) || data.data.length === 0,
-        },
+          totalCount: typeof parsed?.totalCount === "number" ? parsed.totalCount : 0,
+          noMatches: !Array.isArray(parsed?.data) || parsed.data.length === 0,
+        } as SearchResponseMeta),
     };
   }
 

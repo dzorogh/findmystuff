@@ -113,7 +113,7 @@ async function loadSemanticEntityProjections(
   const itemMap = new Map(items.map((item) => [item.id, item]));
   const containerMap = new Map(containers.map((container) => [container.id, container]));
 
-  const ordered = rows.flatMap((row) => {
+  const ordered = rows.flatMap((row): MixedSearchProjection[] => {
     const match =
       row.similarity != null && row.match_source
         ? {

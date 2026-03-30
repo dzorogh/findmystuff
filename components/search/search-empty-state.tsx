@@ -1,7 +1,6 @@
 "use client";
 
 import { PackageSearch, Sofa, Box, FileText, Monitor } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 interface SearchEmptyStateProps {
