@@ -10,7 +10,7 @@ import {
   searchItemsByNameProjection,
 } from "@/lib/entities/items/search-projection-server";
 import { mapItemProjectionToSearchHit } from "@/lib/search/mappers";
-import type { ItemSearchProjection, SearchHit, SearchResponse } from "@/lib/search/types";
+import type { ItemSearchProjection, SearchResponse } from "@/lib/search/types";
 import { logError } from "@/lib/shared/logger";
 import type { ItemsRpcRow } from "@/types/entity";
 

@@ -10,7 +10,7 @@ interface RpcResponseLike {
 }
 
 export interface SearchIndexQueueRpcClient {
-  rpc(fn: string, args?: Record<string, unknown>): Promise<RpcResponseLike>;
+  rpc(fn: string, args?: Record<string, unknown>): PromiseLike<RpcResponseLike>;
 }
 
 export async function enqueueSearchIndexJob(

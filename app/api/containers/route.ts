@@ -147,9 +147,9 @@ export async function POST(request: NextRequest) {
       transitionPayload,
     });
 
-    if (result.error) {
+    if (result.error || !result.data) {
       return NextResponse.json(
-        { error: result.error },
+        { error: result.error || "Не удалось создать контейнер" },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }

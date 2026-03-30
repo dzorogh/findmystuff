@@ -3,7 +3,7 @@
  * Используется в POST /api/items, /api/places, /api/containers.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+
 import type { InsertEntityWithTransitionParams, InsertEntityWithTransitionResult } from "@/types/api";
 
 export type { InsertEntityWithTransitionParams, InsertEntityWithTransitionResult };
@@ -14,7 +14,7 @@ const TRANSITION_ID_COLUMN_BY_TABLE = {
   items: "item_id",
 } as const;
 
-type EntityTable = keyof typeof TRANSITION_ID_COLUMN_BY_TABLE;
+
 
 /**
  * Вставляет запись в table, при наличии transitionPayload создаёт transition.

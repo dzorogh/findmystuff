@@ -1,248 +1,203 @@
-import {
-  getPlacesList,
-  mapRpcPlaceToPlace,
-  type GetPlacesListParams,
-  type RpcPlaceRow,
-} from "@/lib/places/get-places-list";
-import * as placesApi from "@/lib/places/api";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getPlacesList, mapRpcPlaceToPlace } from "@/lib/places/get-places-list";
+import { getPlacesWithRoomRpc } from "@/lib/places/api";
+import type { RpcPlaceRow } from "@/types/entity";
 
 jest.mock("@/lib/places/api", () => ({
   getPlacesWithRoomRpc: jest.fn(),
 }));
 
-const getPlacesWithRoomRpc = placesApi.getPlacesWithRoomRpc as jest.MockedFunction<
-  typeof placesApi.getPlacesWithRoomRpc
->;
-
-const defaultParams: GetPlacesListParams = {
-  query: null,
-  showDeleted: false,
-  sortBy: "name",
-  sortDirection: "asc",
-  entityTypeId: null,
-  roomId: null,
-  furnitureId: null,
-  tenantId: 1,
-};
-
-/** Цепочка Supabase-подобного запроса, при await возвращает переданный результат. */
-const createSupabaseChainMock = (result: { data: unknown; error: unknown }) => {
-  const chain: Record<string, unknown> = {
-    select: () => chain,
-    order: () => chain,
-    limit: () => chain,
-    is: () => chain,
-    not: () => chain,
-    eq: () => chain,
-    in: () => chain,
-    then: (resolve: (v: unknown) => void) => {
-      resolve(result);
-      return Promise.resolve();
-    },
-  };
-  return {
-    from: () => chain,
-  };
-};
-
-describe("getPlacesList", () => {
-  const supabase = {} as Parameters<typeof getPlacesList>[0];
+describe("lib/places/get-places-list", () => {
+  let supabase: jest.Mocked<SupabaseClient>;
 
   beforeEach(() => {
-    getPlacesWithRoomRpc.mockReset();
+    jest.clearAllMocks();
+    supabase = {
+      from: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      not: jest.fn().mockReturnThis(),
+      is: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      then: jest.fn().mockImplementation((cb) => cb({ data: [], error: null })),
+    } as unknown as jest.Mocked<SupabaseClient>;
   });
 
-  it("возвращает список мест при успешном RPC", async () => {
-    const rpcRow: RpcPlaceRow = {
-      id: 1,
-      name: "Полка",
-      entity_type_id: 2,
-      entity_type_name: "Стеллаж",
-      created_at: "2024-01-01T00:00:00Z",
-      deleted_at: null,
-      photo_url: null,
-      room_id: 10,
-      room_name: "Гостиная",
-      furniture_id: 5,
-      furniture_name: "Шкаф",
-      items_count: 3,
-      containers_count: 1,
-    };
-    getPlacesWithRoomRpc.mockResolvedValue({
-      data: [rpcRow],
-      error: null,
-    });
-
-    const result = await getPlacesList(supabase, defaultParams);
-
-    expect(result.error).toBeNull();
-    expect(result.data).toHaveLength(1);
-    expect(result.data?.[0]).toMatchObject({
-      id: 1,
-      name: "Полка",
-      entity_type_id: 2,
-      entity_type: { name: "Стеллаж" },
-      room_id: 10,
-      room_name: "Гостиная",
-      furniture_id: 5,
-      furniture_name: "Шкаф",
-      items_count: 3,
-      containers_count: 1,
-    });
-    expect(result.data?.[0].room).toEqual({ id: 10, name: "Гостиная" });
-  });
-
-  it("возвращает пустой массив при успешном RPC без данных", async () => {
-    getPlacesWithRoomRpc.mockResolvedValue({ data: [], error: null });
-
-    const result = await getPlacesList(supabase, defaultParams);
-
-    expect(result.error).toBeNull();
-    expect(result.data).toEqual([]);
-  });
-
-  it("возвращает null и сообщение при ошибке RPC (не code column)", async () => {
-    getPlacesWithRoomRpc.mockResolvedValue({
-      data: null,
-      error: { message: "Connection failed" },
-    });
-
-    const result = await getPlacesList(supabase, defaultParams);
-
-    expect(result.data).toBeNull();
-    expect(result.error).toBe("Connection failed");
-  });
-
-  it("при ошибке «column code does not exist» переходит на fallback и возвращает результат fallback", async () => {
-    getPlacesWithRoomRpc.mockResolvedValue({
-      data: null,
-      error: {
-        message: 'column "code" does not exist',
-      },
-    });
-
-    const supabaseFallback = createSupabaseChainMock({
-      data: [],
-      error: null,
-    }) as Parameters<typeof getPlacesList>[0];
-
-    const result = await getPlacesList(supabaseFallback, defaultParams);
-
-    expect(result.error).toBeNull();
-    expect(result.data).toEqual([]);
-  });
-
-  it("возвращает несколько мест при успешном RPC с несколькими строками", async () => {
-    const rows: RpcPlaceRow[] = [
-      {
+  describe("mapRpcPlaceToPlace", () => {
+    it("maps fully populated rpc row", () => {
+      const row: RpcPlaceRow = {
         id: 1,
-        name: "Полка A",
-        entity_type_id: 1,
-        entity_type_name: "Стеллаж",
-        created_at: "2024-01-01T00:00:00Z",
-        deleted_at: null,
-        photo_url: null,
-        room_id: 10,
-        room_name: "Гостиная",
-        furniture_id: 5,
-        furniture_name: "Шкаф",
-        items_count: 0,
-        containers_count: 0,
-      },
-      {
-        id: 2,
-        name: "Ящик",
+        name: "Place A",
         entity_type_id: 2,
-        entity_type_name: "Ящик",
-        created_at: "2024-01-02T00:00:00Z",
+        entity_type_name: "Type 2",
+        created_at: "2023-01-01",
         deleted_at: null,
-        photo_url: null,
-        room_id: 10,
-        room_name: "Гостиная",
-        furniture_id: 5,
-        furniture_name: "Шкаф",
-        items_count: 1,
-        containers_count: 0,
-      },
-    ];
-    getPlacesWithRoomRpc.mockResolvedValue({ data: rows, error: null });
+        photo_url: "url",
+        room_id: 3,
+        room_name: "Room 3",
+        furniture_id: 4,
+        furniture_name: "Furn 4",
+        items_count: 5,
+        containers_count: 6,
+        is_container_location: false,
+        tenant_id: 1,
+      };
+      const res = mapRpcPlaceToPlace(row);
+      expect(res.id).toBe(1);
+      expect(res.entity_type?.name).toBe("Type 2");
+      expect(res.room?.id).toBe(3);
+      expect(res.furniture_name).toBe("Furn 4");
+    });
 
-    const result = await getPlacesList(supabase, defaultParams);
-
-    expect(result.error).toBeNull();
-    expect(result.data).toHaveLength(2);
-    expect(result.data?.[0].name).toBe("Полка A");
-    expect(result.data?.[1].name).toBe("Ящик");
-    expect(result.data?.[1].items_count).toBe(1);
-  });
-});
-
-describe("mapRpcPlaceToPlace", () => {
-  it("маппирует RpcPlaceRow в Place с полными полями", () => {
-    const row: RpcPlaceRow = {
-      id: 1,
-      name: "Полка",
-      entity_type_id: 2,
-      entity_type_name: "Стеллаж",
-      created_at: "2024-01-01T00:00:00Z",
-      deleted_at: null,
-      photo_url: "https://example.com/photo.jpg",
-      room_id: 10,
-      room_name: "Гостиная",
-      furniture_id: 5,
-      furniture_name: "Шкаф",
-      items_count: 3,
-      containers_count: 1,
-    };
-
-    const place = mapRpcPlaceToPlace(row);
-
-    expect(place).toEqual({
-      id: 1,
-      name: "Полка",
-      entity_type_id: 2,
-      entity_type: { name: "Стеллаж" },
-      created_at: "2024-01-01T00:00:00Z",
-      deleted_at: null,
-      photo_url: "https://example.com/photo.jpg",
-      room_id: 10,
-      room_name: "Гостиная",
-      furniture_id: 5,
-      furniture_name: "Шкаф",
-      room: { id: 10, name: "Гостиная" },
-      items_count: 3,
-      containers_count: 1,
+    it("maps empty fields gracefully", () => {
+      const row = {
+        id: 1,
+        name: null,
+        created_at: "2023",
+      } as unknown as RpcPlaceRow;
+      const res = mapRpcPlaceToPlace(row);
+      expect(res.room).toBeNull();
+      expect(res.entity_type).toBeNull();
+      expect(res.items_count).toBe(0);
     });
   });
 
-  it("обрабатывает null/отсутствующие поля", () => {
-    const row: RpcPlaceRow = {
-      id: 2,
-      name: null,
-      entity_type_id: null,
-      entity_type_name: null,
-      created_at: "2024-01-01T00:00:00Z",
-      deleted_at: null,
-      photo_url: null,
-      room_id: null,
-      room_name: null,
-      furniture_id: null,
-      furniture_name: null,
-      items_count: 0,
-      containers_count: 0,
+  describe("getPlacesList", () => {
+    const defaultParams = {
+      query: null,
+      showDeleted: false,
+      sortBy: "name" as const,
+      sortDirection: "asc" as const,
+      entityTypeId: null,
+      roomId: null,
+      furnitureId: null,
+      tenantId: 10,
     };
 
-    const place = mapRpcPlaceToPlace(row);
+    it("fetches list using rpc successfully", async () => {
+      (getPlacesWithRoomRpc as jest.Mock).mockResolvedValue({
+        data: [{ id: 1, name: "RPC Place", created_at: "2023" }],
+        error: null,
+      });
 
-    expect(place.name).toBeNull();
-    expect(place.entity_type_id).toBeNull();
-    expect(place.entity_type).toBeNull();
-    expect(place.room_id).toBeNull();
-    expect(place.room_name).toBeNull();
-    expect(place.furniture_id).toBeNull();
-    expect(place.furniture_name).toBeNull();
-    expect(place.room).toBeNull();
-    expect(place.items_count).toBe(0);
-    expect(place.containers_count).toBe(0);
+      const res = await getPlacesList(supabase, defaultParams);
+      expect(getPlacesWithRoomRpc).toHaveBeenCalled();
+      expect(res.error).toBeNull();
+      expect(res.data).toHaveLength(1);
+    });
+
+    it("returns error if rpc fails with unexpected message", async () => {
+      (getPlacesWithRoomRpc as jest.Mock).mockResolvedValue({
+        data: null,
+        error: new Error("Random DB error"),
+      });
+
+      const res = await getPlacesList(supabase, defaultParams);
+      expect(res.error).toBe("Random DB error");
+    });
+
+    it("triggers fallback if rpc fails with column error", async () => {
+      (getPlacesWithRoomRpc as jest.Mock).mockResolvedValue({
+        data: null,
+        error: new Error('column "code" does not exist bla bla'),
+      });
+
+      // Mock fallback queries
+      (supabase.from as jest.Mock).mockImplementation((table) => {
+        if (table === "places") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            not: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            in: jest.fn().mockReturnThis(),
+            then: (cb: any) =>
+              cb({
+                data: [
+                  { id: 1, name: "Fallback Place", entity_type: null },
+                  { id: 2, name: "Secret Place", entity_type: { name: "Type" } },
+                ],
+                error: null,
+              }),
+          };
+        }
+        if (table === "v_place_last_room_transition") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            in: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            then: (cb: any) =>
+              cb({
+                data: [{ place_id: 1, room_id: 100 }],
+                error: null,
+              }),
+          };
+        }
+        // Rooms and counts
+        return {
+          select: jest.fn().mockReturnThis(),
+          in: jest.fn().mockReturnThis(),
+          is: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          then: (cb: any) => cb({ data: [], error: null }),
+        };
+      });
+
+      const res = await getPlacesList(supabase, {
+        ...defaultParams,
+        query: "Secret",
+        roomId: 100,
+        entityTypeId: 5,
+        showDeleted: true,
+      });
+
+      expect(supabase.from).toHaveBeenCalledWith("places");
+      expect(res.data).toHaveLength(1);
+      expect(res.data![0].name).toBe("Secret Place");
+    });
+
+    it("returns empty array when fallback yields no rows", async () => {
+        (getPlacesWithRoomRpc as jest.Mock).mockResolvedValue({
+            data: null,
+            error: new Error('column "code" does not exist'),
+        });
+        
+        (supabase.from as jest.Mock).mockImplementation(() => {
+            return {
+                select: jest.fn().mockReturnThis(),
+                order: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                is: jest.fn().mockReturnThis(),
+                then: (cb: any) => cb({ data: [], error: null })
+            }
+        });
+
+        const res = await getPlacesList(supabase, { ...defaultParams, sortBy: "created_at" });
+        expect(res.data).toEqual([]);
+    });
+
+    it("returns error when fallback fails directly", async () => {
+        (getPlacesWithRoomRpc as jest.Mock).mockResolvedValue({
+            data: null,
+            error: new Error('column "code" does not exist'),
+        });
+        
+        (supabase.from as jest.Mock).mockImplementation(() => {
+            return {
+                select: jest.fn().mockReturnThis(),
+                order: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                is: jest.fn().mockReturnThis(),
+                then: (cb: any) => cb({ data: null, error: new Error("Fallback failed") })
+            }
+        });
+
+        const res = await getPlacesList(supabase, defaultParams);
+        expect(res.error).toBe("Fallback failed");
+    });
   });
 });

@@ -12,6 +12,7 @@ export async function runItemSearchIndexBackfillBatch(params?: {
   cursor?: SearchIndexBackfillCursor | null;
   limit?: number;
 }): Promise<ItemSearchIndexBackfillResponse> {
+  // eslint-disable-next-line no-restricted-syntax
   const response = await fetch("/api/items/search-index/backfill", {
     method: "POST",
     headers: {
@@ -36,14 +37,16 @@ export async function runItemSearchIndexBackfillBatch(params?: {
     );
   }
 
+  const successData = data as ItemSearchIndexBackfillResponse | null;
+
   return {
-    processed: typeof data?.processed === "number" ? data.processed : 0,
+    processed: typeof successData?.processed === "number" ? successData.processed : 0,
     nextCursor:
-      data?.nextCursor &&
-      typeof data.nextCursor === "object" &&
-      (data.nextCursor.entityType === "item" || data.nextCursor.entityType === "container") &&
-      typeof data.nextCursor.afterId === "number"
-        ? data.nextCursor
+      successData?.nextCursor &&
+      typeof successData.nextCursor === "object" &&
+      (successData.nextCursor.entityType === "item" || successData.nextCursor.entityType === "container") &&
+      typeof successData.nextCursor.afterId === "number"
+        ? successData.nextCursor
         : null,
   };
 }

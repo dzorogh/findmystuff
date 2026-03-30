@@ -106,10 +106,6 @@ export async function POST(request: NextRequest) {
       room_id,
       furniture_type_id,
       photo_url,
-      price_amount,
-      price_currency,
-      current_value_amount,
-      current_value_currency,
       purchase_date,
     } = body;
 

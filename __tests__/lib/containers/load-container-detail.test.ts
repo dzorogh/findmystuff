@@ -215,5 +215,84 @@ describe("loadContainerDetail", () => {
     expect(data.transitions[0].room_name).toBe("Room B");
     expect(data.items).toEqual([]);
   });
-});
 
+  it("возвращает данные со всеми типами переходов и предметами внутри контейнера", async () => {
+    const containerId = 10;
+    const supabase = createTableAwareSupabaseMock({
+      containers: [
+        {
+          data: {
+            id: containerId,
+            name: "Master Container",
+            entity_type_id: null,
+            entity_types: null,
+            photo_url: null,
+            created_at: "2024-01-01T00:00:00.000Z",
+            deleted_at: null,
+          },
+          error: null,
+        },
+        // Call for containerIds
+        { data: [{ id: 66, name: "Sub Container" }], error: null }
+      ],
+      transitions: [
+        // 1. Initial transitions for the container itself
+        {
+          data: [
+            { id: 1, created_at: "2024-01-02", destination_type: "furniture", destination_id: 200 },
+            { id: 2, created_at: "2024-01-01", destination_type: "container", destination_id: 66 },
+            { id: 3, created_at: "2023-12-31", destination_type: "room", destination_id: 300 },
+            { id: 4, created_at: "2023-12-30", destination_type: "place", destination_id: 400 }
+          ],
+          error: null
+        },
+        // 2. placesTransitionsData
+        { data: [{ place_id: 400, destination_id: 300 }], error: null },
+        // 3. itemsTransitionsData
+        { data: [{ item_id: 888 }, { item_id: 999 }, { item_id: null }], error: null },
+        // 4. allItemTransitionsData
+        { 
+          data: [
+            { item_id: 888, destination_type: "container", destination_id: containerId, created_at: "2024-02-01" },
+            { item_id: 999, destination_type: "place", destination_id: 111, created_at: "2024-02-02" } // Moved out
+          ],
+          error: null
+        }
+      ],
+      places: [
+        { data: [{ id: 400, name: "Storage unit" }], error: null }
+      ],
+      furniture: [
+        { data: [{ id: 200, name: "Desk", room_id: 300 }], error: null }
+      ],
+      rooms: [
+        { data: [{ id: 300, name: "Office" }], error: null },
+        { data: [{ id: 300, name: "Office" }], error: null }, // placeRoomsData or furnitureRoomsData
+        { data: [{ id: 300, name: "Office" }], error: null }
+      ],
+      items: [
+        { data: [{ id: 888, name: "Pencil", photo_url: null, created_at: "2024-02-01", deleted_at: null }], error: null }
+      ]
+    });
+
+    const res = await loadContainerDetail(supabase as any, containerId);
+
+    expect("error" in res).toBe(false);
+    const data = res as ContainerDetailData;
+
+    expect(data.container.id).toBe(containerId);
+    expect(data.container.last_location?.destination_type).toBe("furniture");
+
+    expect(data.transitions).toHaveLength(4);
+    expect(data.transitions[0].destination_name).toBe("Desk");
+    expect(data.transitions[0].room_name).toBe("Office");
+
+    expect(data.transitions[1].destination_name).toBe("Sub Container");
+    expect(data.transitions[2].destination_name).toBe("Office");
+    expect(data.transitions[3].destination_name).toBe("Storage unit");
+    expect(data.transitions[3].room_name).toBe("Office");
+
+    expect(data.items).toHaveLength(1);
+    expect(data.items[0].id).toBe(888);
+  });
+});

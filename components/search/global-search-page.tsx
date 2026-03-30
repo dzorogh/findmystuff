@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import type { SearchHit, SearchMode } from "@/lib/search/types";
 import { SearchResultsSection } from "@/components/search/search-results-section";
 import { SearchSessionBanner } from "@/components/search/search-session-banner";
+import { SearchEmptyState } from "@/components/search/search-empty-state";
 
 interface ActiveSearchSession {
   mode: SearchMode;
@@ -189,6 +190,7 @@ export function GlobalSearchPage() {
         <div className="min-w-0 flex-1">
           <InputGroup>
             <InputGroupInput
+              autoFocus
               onChange={(event) => {
                 if (isPhotoSearchActive) {
                   clearSearchSession();
@@ -240,7 +242,9 @@ export function GlobalSearchPage() {
           mode={effectiveMode}
           emptyMessage={emptyMessage}
         />
-      ) : null}
+      ) : (
+        <SearchEmptyState onSuggest={setSearchQuery} />
+      )}
 
       <CameraCaptureDialog
         open={isPhotoSearchOpen}

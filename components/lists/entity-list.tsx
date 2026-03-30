@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useCallback } from "react";
+import { Fragment, useState, useCallback, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -110,7 +110,10 @@ export function EntityList({
   onRename,
   onEditItemType,
 }: EntityListProps) {
-  const resolvedGetName = getName ?? ((e: EntityDisplay) => getEntityDisplayName(kind, e.id, e.name));
+  const resolvedGetName = useMemo(
+    () => getName ?? ((e: EntityDisplay) => getEntityDisplayName(kind, e.id, e.name)),
+    [getName, kind]
+  );
   const list = Array.isArray(data) ? data : [];
   const isEmpty = !isLoading && list.length === 0;
 
