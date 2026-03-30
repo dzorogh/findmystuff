@@ -79,7 +79,7 @@ export function GlobalSearchPage() {
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      activeTextSearchAbortRef.current?.abort("Empty search query");
+      activeTextSearchAbortRef.current?.abort();
       activeTextSearchAbortRef.current = null;
       setIsSearching(false);
       clearSearchSession();
@@ -95,7 +95,7 @@ export function GlobalSearchPage() {
     });
     setIsSearching(true);
 
-    activeTextSearchAbortRef.current?.abort("New search query");
+    activeTextSearchAbortRef.current?.abort();
     const abortController = new AbortController();
     activeTextSearchAbortRef.current = abortController;
 
@@ -105,7 +105,7 @@ export function GlobalSearchPage() {
 
     return () => {
       clearTimeout(timer);
-      abortController.abort("Effect cleanup");
+      abortController.abort();
       if (activeTextSearchAbortRef.current === abortController) {
         activeTextSearchAbortRef.current = null;
       }

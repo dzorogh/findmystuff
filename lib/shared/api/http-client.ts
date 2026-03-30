@@ -41,6 +41,7 @@ export class HttpClient {
     } catch (error) {
       if (
         process.env.NODE_ENV === "development" &&
+        !restOptions.signal?.aborted &&
         (error as Error)?.name !== "AbortError"
       ) {
         console.error(`API request failed: ${endpoint}`, error);
