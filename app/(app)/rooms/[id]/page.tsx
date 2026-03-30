@@ -16,8 +16,7 @@ import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader
 import { useEntityTypes } from "@/lib/entities/hooks/use-entity-types";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
-import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
-import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
+import { EntityDetailLayout } from "@/components/entity-detail/entity-detail-layout";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { resolveActions } from "@/lib/entities/resolve-actions";
 import { EntityContentBlock } from "@/components/entity-detail/entity-content-block";
@@ -152,18 +151,6 @@ export default function RoomDetailPage() {
     [loadRoomData, printLabel, handleDelete, handleRestore]
   );
 
-  if (isInvalidId) {
-    return <EntityDetailError error="Некорректный ID помещения" entityName="Помещение" />;
-  }
-
-  if (error && !isLoading) {
-    return <EntityDetailError error={error} entityName="Помещение" />;
-  }
-
-  if (!isLoading && !room) {
-    return null;
-  }
-
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!room) return;
@@ -195,158 +182,174 @@ export default function RoomDetailPage() {
     ) : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        isLoading={isPageLoading}
-        title={room?.name ?? (room ? `Помещение #${room.id}` : "Помещение")}
-        ancestors={[
-          { label: "Помещения", href: "/rooms" },
-        ]}
-        actions={headerActions}
-      />
-      {room && (
-        <EntityRelatedLinks
-          links={[
-            { href: `/furniture?roomId=${room.id}`, label: "Мебель" },
-            { href: `/items?roomId=${room.id}`, label: "Вещи" },
-          ]}
+    <EntityDetailLayout
+      isLoading={isPageLoading}
+      isInvalidId={isInvalidId}
+      error={error}
+      entityName="Помещение"
+      hasEntity={!!room}
+      header={
+        <PageHeader
+          isLoading={isPageLoading}
+          title={room?.name ?? (room ? `Помещение #${room.id}` : "Помещение")}
+          ancestors={[{ label: "Помещения", href: "/rooms" }]}
+          actions={headerActions}
         />
-      )}
-      {isPageLoading ? (
-        <EntityDetailSkeleton />
-      ) : room ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Редактирование помещения</CardTitle>
-                <CardDescription className="flex items-center gap-2 flex-wrap">
-                  ID: #{room.id}
-                  {room.deleted_at && (
-                    <>
-                      <span className="text-muted-foreground">•</span>
-                      <Badge variant="destructive">Удалено</Badge>
-                    </>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form id={`room-form-${room.id}`} onSubmit={handleEditSubmit}>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor={`room-name-${room.id}`}>Название помещения</FieldLabel>
-                      <Input
-                        id={`room-name-${room.id}`}
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Введите название помещения"
-                        disabled={isSubmitting}
-                      />
-                    </Field>
-
-                    <BuildingCombobox
-                      selectedBuildingId={buildingId}
-                      onBuildingIdChange={setBuildingId}
+      }
+      relatedLinks={
+        room && (
+          <EntityRelatedLinks
+            links={[
+              { href: `/furniture?roomId=${room.id}`, label: "Мебель" },
+              { href: `/items?roomId=${room.id}`, label: "Вещи" },
+            ]}
+          />
+        )
+      }
+      editForm={
+        room && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Редактирование помещения</CardTitle>
+              <CardDescription className="flex flex-wrap items-center gap-2">
+                ID: #{room.id}
+                {room.deleted_at && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <Badge variant="destructive">Удалено</Badge>
+                  </>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form id={`room-form-${room.id}`} onSubmit={handleEditSubmit}>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor={`room-name-${room.id}`}>
+                      Название помещения
+                    </FieldLabel>
+                    <Input
+                      id={`room-name-${room.id}`}
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Введите название помещения"
                       disabled={isSubmitting}
-                      label="Здание (необязательно)"
                     />
+                  </Field>
 
-                    <EntityTypeSelect
-                      type="room"
-                      value={roomTypeId ? parseInt(roomTypeId) : null}
-                      onValueChange={(v) => setRoomTypeId(v ?? "")}
-                    />
+                  <BuildingCombobox
+                    selectedBuildingId={buildingId}
+                    onBuildingIdChange={setBuildingId}
+                    disabled={isSubmitting}
+                    label="Здание (необязательно)"
+                  />
 
-                    <ErrorMessage message={formError ?? ""} />
-                  </FieldGroup>
-                </form>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button type="submit" form={`room-form-${room.id}`} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
-                    </>
-                  ) : (
-                    "Сохранить"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+                  <EntityTypeSelect
+                    type="room"
+                    value={roomTypeId ? parseInt(roomTypeId) : null}
+                    onValueChange={(v) => setRoomTypeId(v ?? "")}
+                  />
 
-            <EntityImageCard
-              entityType="room"
-              entityId={room.id}
-              entityName={name}
-              photoUrl={room.photo_url ?? null}
-              onPhotoChange={async (url) => {
-                const res = await updateRoom(room.id, { photo_url: url });
-                if (res.error) throw new Error(res.error);
-                await loadRoomData({ silent: true });
-              }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <EntityContentBlock
-              title="Мебель"
-              description="Мебель в этом помещении"
-              items={roomFurniture}
-              entityType="furniture"
-              emptyMessage="Нет мебели"
-              addButton={{
-                label: "Добавить мебель",
-                onClick: () => setAddFurnitureOpen(true),
-              }}
-            />
-            <EntityContentBlock
-              title="Вещи"
-              description="Вещи, которые находятся в этом помещении"
-              items={roomItems}
-              entityType="items"
-              emptyMessage="Нет вещей"
-              addButton={{
-                label: "Добавить вещь",
-                onClick: () => setAddItemOpen(true),
-              }}
-            />
-            <EntityContentBlock
-              title="Контейнеры"
-              description="Контейнеры, которые находятся в этом помещении"
-              items={roomContainers}
-              entityType="containers"
-              emptyMessage="Нет контейнеров"
-              addButton={{
-                label: "Добавить контейнер",
-                onClick: () => setAddContainerOpen(true),
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      <AddFurnitureForm
-        open={addFurnitureOpen}
-        onOpenChange={setAddFurnitureOpen}
-        onSuccess={() => loadRoomData({ silent: true })}
-        initialRoomId={room?.id ?? undefined}
-      />
-      <AddItemForm
-        open={addItemOpen}
-        onOpenChange={setAddItemOpen}
-        onSuccess={() => loadRoomData({ silent: true })}
-        initialDestinationType="room"
-        initialDestinationId={room?.id ?? undefined}
-      />
-      <AddContainerForm
-        open={addContainerOpen}
-        onOpenChange={setAddContainerOpen}
-        onSuccess={() => loadRoomData({ silent: true })}
-        initialDestinationType="room"
-        initialDestinationId={room?.id ?? undefined}
-      />
-    </div>
+                  <ErrorMessage message={formError ?? ""} />
+                </FieldGroup>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                type="submit"
+                form={`room-form-${room.id}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        )
+      }
+      imageCard={
+        room && (
+          <EntityImageCard
+            entityType="room"
+            entityId={room.id}
+            entityName={name}
+            photoUrl={room.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updateRoom(room.id, { photo_url: url });
+              if (res.error) throw new Error(res.error);
+              await loadRoomData({ silent: true });
+            }}
+          />
+        )
+      }
+      contentBlocks={
+        <>
+          <EntityContentBlock
+            title="Мебель"
+            description="Мебель в этом помещении"
+            items={roomFurniture}
+            entityType="furniture"
+            emptyMessage="Нет мебели"
+            addButton={{
+              label: "Добавить мебель",
+              onClick: () => setAddFurnitureOpen(true),
+            }}
+          />
+          <EntityContentBlock
+            title="Вещи"
+            description="Вещи, которые находятся в этом помещении"
+            items={roomItems}
+            entityType="items"
+            emptyMessage="Нет вещей"
+            addButton={{
+              label: "Добавить вещь",
+              onClick: () => setAddItemOpen(true),
+            }}
+          />
+          <EntityContentBlock
+            title="Контейнеры"
+            description="Контейнеры, которые находятся в этом помещении"
+            items={roomContainers}
+            entityType="containers"
+            emptyMessage="Нет контейнеров"
+            addButton={{
+              label: "Добавить контейнер",
+              onClick: () => setAddContainerOpen(true),
+            }}
+          />
+        </>
+      }
+      modals={
+        <>
+          <AddFurnitureForm
+            open={addFurnitureOpen}
+            onOpenChange={setAddFurnitureOpen}
+            onSuccess={() => loadRoomData({ silent: true })}
+            initialRoomId={room?.id ?? undefined}
+          />
+          <AddItemForm
+            open={addItemOpen}
+            onOpenChange={setAddItemOpen}
+            onSuccess={() => loadRoomData({ silent: true })}
+            initialDestinationType="room"
+            initialDestinationId={room?.id ?? undefined}
+          />
+          <AddContainerForm
+            open={addContainerOpen}
+            onOpenChange={setAddContainerOpen}
+            onSuccess={() => loadRoomData({ silent: true })}
+            initialDestinationType="room"
+            initialDestinationId={room?.id ?? undefined}
+          />
+        </>
+      }
+    />
   );
 }

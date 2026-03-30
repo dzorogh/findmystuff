@@ -75,83 +75,40 @@ async function fetchRemoteImage(
   };
 }
 
-async function loadItemSearchRow(
-  supabase: SupabaseClient,
-  entityId: number,
-  tenantId: number
-): Promise<SearchIndexEntityRow | null> {
-  const { data, error } = await supabase
-    .from("items")
-    .select("id, name, photo_url, tenant_id, deleted_at, entity_types(name)")
-    .eq("id", entityId)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  const entityTypeRelation =
-    Array.isArray(data.entity_types) ? data.entity_types[0] : data.entity_types;
-
-  return {
-    id: data.id,
-    name: data.name,
-    photo_url: data.photo_url,
-    tenant_id: data.tenant_id,
-    deleted_at: data.deleted_at,
-    type_name: entityTypeRelation?.name?.trim() || null,
-  };
-}
-
-async function loadContainerSearchRow(
-  supabase: SupabaseClient,
-  entityId: number,
-  tenantId: number
-): Promise<SearchIndexEntityRow | null> {
-  const { data, error } = await supabase
-    .from("containers")
-    .select("id, name, photo_url, tenant_id, deleted_at, entity_types(name)")
-    .eq("id", entityId)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  const entityTypeRelation =
-    Array.isArray(data.entity_types) ? data.entity_types[0] : data.entity_types;
-
-  return {
-    id: data.id,
-    name: data.name,
-    photo_url: data.photo_url,
-    tenant_id: data.tenant_id,
-    deleted_at: data.deleted_at,
-    type_name: entityTypeRelation?.name?.trim() || null,
-  };
-}
-
 async function loadSearchIndexEntityRow(
   supabase: SupabaseClient,
   entityType: SearchIndexEntityType,
   entityId: number,
   tenantId: number
 ): Promise<SearchIndexEntityRow | null> {
-  if (entityType === "item") {
-    return loadItemSearchRow(supabase, entityId, tenantId);
+  const table = entityType === "item" ? "items" : "containers";
+  
+  const { data, error } = await supabase
+    .from(table)
+    .select("id, name, photo_url, tenant_id, deleted_at, entity_types(name)")
+    .eq("id", entityId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
   }
 
-  return loadContainerSearchRow(supabase, entityId, tenantId);
+  if (!data) {
+    return null;
+  }
+
+  const entityTypeRelation =
+    Array.isArray(data.entity_types) ? data.entity_types[0] : data.entity_types;
+
+  return {
+    id: data.id,
+    name: data.name,
+    photo_url: data.photo_url,
+    tenant_id: data.tenant_id,
+    deleted_at: data.deleted_at,
+    type_name: entityTypeRelation?.name?.trim() || null,
+  };
 }
 
 async function buildSearchDocuments(
@@ -263,21 +220,7 @@ export async function syncSearchDocumentsByEntityId(
   await replaceSearchDocuments(supabase, entityType, entityId, tenantId, documents);
 }
 
-export async function syncEntitySearchDocumentsByItemId(
-  supabase: SupabaseClient,
-  itemId: number,
-  tenantId: number
-): Promise<void> {
-  await syncSearchDocumentsByEntityId(supabase, "item", itemId, tenantId);
-}
 
-export async function syncEntitySearchDocumentsByContainerId(
-  supabase: SupabaseClient,
-  containerId: number,
-  tenantId: number
-): Promise<void> {
-  await syncSearchDocumentsByEntityId(supabase, "container", containerId, tenantId);
-}
 
 async function loadBackfillBatchIds(
   supabase: SupabaseClient,

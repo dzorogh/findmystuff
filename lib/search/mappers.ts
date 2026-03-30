@@ -68,11 +68,8 @@ function buildMatchBadges(
   return badges;
 }
 
-export function getEntityLabel(entityType: EntityTypeName): string {
-  return ENTITY_LABELS[entityType];
-}
 
-export function getSearchHitLocationLines(input: {
+function getSearchHitLocationLines(input: {
   room_name?: string | null;
   furniture_name?: string | null;
   place_name?: string | null;
@@ -144,23 +141,7 @@ export function mapItemProjectionToSearchHit(
   };
 }
 
-export function mapNamedEntityToSearchHit(input: {
-  entityType: Exclude<EntityTypeName, "item">;
-  entityId: number;
-  name: string | null;
-}): SearchHit {
-  return {
-    entityType: input.entityType,
-    entityId: input.entityId,
-    title: input.name?.trim() || `${getEntityLabel(input.entityType)} #${input.entityId}`,
-    subtitle: null,
-    href: buildHref(input.entityType, input.entityId),
-    badges: [buildEntityBadge(input.entityType)],
-    locationLines: [],
-    match: null,
-    preview: null,
-  };
-}
+
 
 export function mapContainerProjectionToSearchHit(
   container: ContainerSearchProjection,

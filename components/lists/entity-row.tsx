@@ -91,12 +91,10 @@ function formatRuDate(date: string): string {
 }
 
 function renderNameCell(
-  entity: ListEntity,
-  editHref: string | undefined,
-  icon: IconComponent | undefined,
-  getName: ((entity: { id: number; name: string | null }) => string) | undefined,
-  onRenameClick: ((entity: ListEntity) => void) | undefined,
+  props: EntityRowProps,
+  editHref: string | undefined
 ): ReactNode {
+  const { entity, icon, getName, onRenameClick } = props;
   const Icon = icon ?? Package;
   const displayName = getName?.(entity);
   const searchMatch =
@@ -162,7 +160,8 @@ function renderNameCell(
   );
 }
 
-function renderRoomCell(entity: ListEntity, roomLabel: string | undefined): ReactNode {
+function renderRoomCell(props: EntityRowProps): ReactNode {
+  const { entity, roomLabel } = props;
   if (roomLabel !== undefined && entity.last_location != null) {
     const label = roomLabel ?? ROOM_EMPTY_LABEL;
     return (
@@ -212,10 +211,8 @@ function renderItemTypeCell(entity: ListEntity): ReactNode {
   return <span className="text-sm">{itemTypeName}</span>;
 }
 
-function renderEditableItemTypeCell(
-  entity: ListEntity,
-  onEditItemTypeClick: ((entity: ListEntity) => void) | undefined
-): ReactNode {
+function renderEditableItemTypeCell(props: EntityRowProps): ReactNode {
+  const { entity, onEditItemTypeClick } = props;
   if (!("item_type" in entity)) return renderItemTypeCell(entity);
 
   const itemTypeName = entity.item_type?.name?.trim() || "—";
@@ -248,8 +245,8 @@ function renderEditableItemTypeCell(
   );
 }
 
-function renderCountsCell(entity: ListEntity, counts: CountsConfig | undefined): ReactNode {
-  return renderCountLinks(entity, counts);
+function renderCountsCell(props: EntityRowProps): ReactNode {
+  return renderCountLinks(props.entity, props.counts);
 }
 
 function getEditHref(actions: Action[]): string | undefined {
@@ -259,22 +256,16 @@ function getEditHref(actions: Action[]): string | undefined {
 
 function renderCellContent(
   columnKey: string,
-  entity: ListEntity,
-  actions: Action[],
-  roomLabel: string | undefined,
-  editHref: string | undefined,
-  icon: IconComponent | undefined,
-  getName: ((entity: { id: number; name: string | null }) => string) | undefined,
-  counts: CountsConfig | undefined,
-  onRenameClick: ((entity: ListEntity) => void) | undefined,
-  onEditItemTypeClick: ((entity: ListEntity) => void) | undefined
+  props: EntityRowProps,
+  editHref: string | undefined
 ): ReactNode {
+  const { entity, actions } = props;
   switch (columnKey) {
     case "id":
       return (
         <div className="flex items-center gap-2">
           {entity.deleted_at && (
-            <Badge variant="destructive" className="text-xs">
+             <Badge variant="destructive" className="text-xs">
               Удалено
             </Badge>
           )}
@@ -286,19 +277,19 @@ function renderCellContent(
       );
 
     case "name":
-      return renderNameCell(entity, editHref, icon, getName, onRenameClick);
+      return renderNameCell(props, editHref);
 
     case "room":
-      return renderRoomCell(entity, roomLabel);
+      return renderRoomCell(props);
 
     case "itemType":
-      return renderEditableItemTypeCell(entity, onEditItemTypeClick);
+      return renderEditableItemTypeCell(props);
 
     case "movedAt":
       return renderMovedAtCell(entity);
 
     case "counts":
-      return renderCountsCell(entity, counts);
+      return renderCountsCell(props);
 
     case "actions":
       return <EntityActions actions={actions} />;
@@ -313,17 +304,8 @@ function getResponsiveHiddenClass(column: ListColumnConfig): string {
   return "";
 }
 
-export const EntityRow = memo(function EntityRow({
-  entity,
-  columnsConfig,
-  actions,
-  icon,
-  getName,
-  roomLabel,
-  counts,
-  onRenameClick,
-  onEditItemTypeClick,
-}: EntityRowProps) {
+export const EntityRow = memo(function EntityRow(props: EntityRowProps) {
+  const { entity, columnsConfig, actions } = props;
   const router = useRouter();
   const pointerStartedOnRowRef = useRef(false);
   const editHref = getEditHref(actions);
@@ -359,18 +341,7 @@ export const EntityRow = memo(function EntityRow({
       onClick={handleRowClick}
     >
       {columnsConfig.map((col) => {
-        const cellContent = renderCellContent(
-          col.key,
-          entity,
-          actions,
-          roomLabel,
-          editHref,
-          icon,
-          getName,
-          counts,
-          onRenameClick,
-          onEditItemTypeClick
-        );
+        const cellContent = renderCellContent(col.key, props, editHref);
         const responsiveHidden = getResponsiveHiddenClass(col);
 
         return (

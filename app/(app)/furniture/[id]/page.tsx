@@ -14,8 +14,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
 import { useEntityActions } from "@/lib/entities/hooks/use-entity-actions";
 import { usePrintEntityLabel } from "@/lib/entities/hooks/use-print-entity-label";
-import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
-import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
+import { EntityDetailLayout } from "@/components/entity-detail/entity-detail-layout";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { resolveActions } from "@/lib/entities/resolve-actions";
 import { furnitureEntityConfig } from "@/lib/entities/furniture/entity-config";
@@ -203,18 +202,6 @@ export default function FurnitureDetailPage() {
     [loadFurnitureData, printLabel, handleDelete, handleDuplicate, handleRestore]
   );
 
-  if (isInvalidId) {
-    return <EntityDetailError error="Некорректный ID мебели" entityName="Мебель" />;
-  }
-
-  if (error && !isLoading) {
-    return <EntityDetailError error={error} entityName="Мебель" />;
-  }
-
-  if (!isLoading && !furniture) {
-    return null;
-  }
-
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!furniture) return;
@@ -245,205 +232,246 @@ export default function FurnitureDetailPage() {
 
   const headerActions =
     furniture != null ? (
-      <EntityActions actions={resolveActions(furnitureEntityConfig.actions, furniture, furnitureCtx)} />
+      <EntityActions
+        actions={resolveActions(
+          furnitureEntityConfig.actions,
+          furniture,
+          furnitureCtx
+        )}
+      />
     ) : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        isLoading={isLoading || isLoadingRooms}
-        title={furniture?.name ?? (furniture ? `Мебель #${furniture.id}` : "Мебель")}
-        ancestors={[
-          { label: "Мебель", href: "/furniture" },
-          ...(furniture?.room && furniture.room.name
-            ? [
-              {
-                label: furniture.room.name,
-                href: `/rooms/${furniture.room.id}`,
-              },
-            ]
-            : []),
-        ]}
-        actions={headerActions}
-      />
-      {furniture && (
-        <EntityRelatedLinks
-          links={[
-            { href: `/places?furnitureId=${furniture.id}`, label: "Места" },
-            { href: `/items?locationType=furniture&furnitureId=${furniture.id}`, label: "Вещи" },
-            { href: `/containers?locationType=furniture&furnitureId=${furniture.id}`, label: "Контейнеры" },
+    <EntityDetailLayout
+      isLoading={isLoading || isLoadingRooms}
+      isInvalidId={isInvalidId}
+      error={error}
+      entityName="Мебель"
+      hasEntity={!!furniture}
+      header={
+        <PageHeader
+          isLoading={isLoading || isLoadingRooms}
+          title={
+            furniture?.name ?? (furniture ? `Мебель #${furniture.id}` : "Мебель")
+          }
+          ancestors={[
+            { label: "Мебель", href: "/furniture" },
+            ...(furniture?.room && furniture.room.name
+              ? [
+                  {
+                    label: furniture.room.name,
+                    href: `/rooms/${furniture.room.id}`,
+                  },
+                ]
+              : []),
           ]}
+          actions={headerActions}
         />
-      )}
-      {isLoading || isLoadingRooms ? (
-        <EntityDetailSkeleton />
-      ) : furniture ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Редактирование мебели</CardTitle>
-                <CardDescription className="flex items-center gap-2 flex-wrap">
-                  ID: #{furniture.id}
-                  {furniture.deleted_at && (
-                    <>
-                      <span className="text-muted-foreground">•</span>
-                      <Badge variant="destructive">Удалено</Badge>
-                    </>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form id={`furniture-form-${furniture.id}`} onSubmit={handleEditSubmit}>
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor={`furniture-name-${furniture.id}`}>Название мебели</FieldLabel>
-                      <Input
-                        id={`furniture-name-${furniture.id}`}
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Введите название мебели"
-                        disabled={isSubmitting}
-                      />
-                    </Field>
-
-                    <RoomCombobox
-                      selectedRoomId={roomId}
-                      onRoomIdChange={setRoomId}
-                      disabled={isSubmitting}
-                      label="Помещение"
-                      id={`furniture-room-${furniture.id}`}
-                      required
-                    />
-
-                    <EntityTypeSelect
-                      type="furniture"
-                      value={furnitureTypeId ? parseInt(furnitureTypeId) : null}
-                      onValueChange={(v) => setFurnitureTypeId(v ?? "")}
-                    />
-
-                    <PriceInput
-                      value={price}
-                      onChange={setPrice}
-                      disabled={isSubmitting}
-                      id={`furniture-price-${furniture.id}`}
-                      label="Стоимость покупки (необязательно)"
-                    />
-
-                    <PriceInput
-                      value={currentValue}
-                      onChange={setCurrentValue}
-                      id={`furniture-current-value-${furniture.id}`}
-                      label="Текущая оценочная стоимость (необязательно)"
+      }
+      relatedLinks={
+        furniture && (
+          <EntityRelatedLinks
+            links={[
+              { href: `/places?furnitureId=${furniture.id}`, label: "Места" },
+              {
+                href: `/items?locationType=furniture&furnitureId=${furniture.id}`,
+                label: "Вещи",
+              },
+              {
+                href: `/containers?locationType=furniture&furnitureId=${furniture.id}`,
+                label: "Контейнеры",
+              },
+            ]}
+          />
+        )
+      }
+      editForm={
+        furniture && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Редактирование мебели</CardTitle>
+              <CardDescription className="flex flex-wrap items-center gap-2">
+                ID: #{furniture.id}
+                {furniture.deleted_at && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <Badge variant="destructive">Удалено</Badge>
+                  </>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                id={`furniture-form-${furniture.id}`}
+                onSubmit={handleEditSubmit}
+              >
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor={`furniture-name-${furniture.id}`}>
+                      Название мебели
+                    </FieldLabel>
+                    <Input
+                      id={`furniture-name-${furniture.id}`}
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Введите название мебели"
                       disabled={isSubmitting}
                     />
+                  </Field>
 
-                    <DatePicker
-                      value={purchaseDate}
-                      onChange={setPurchaseDate}
-                      id={`furniture-purchase-date-${furniture.id}`}
-                      label="Дата покупки"
-                      placeholder="Выберите дату"
-                      disabled={isSubmitting}
-                    />
+                  <RoomCombobox
+                    selectedRoomId={roomId}
+                    onRoomIdChange={setRoomId}
+                    disabled={isSubmitting}
+                    label="Помещение"
+                    id={`furniture-room-${furniture.id}`}
+                    required
+                  />
 
-                    <ErrorMessage message={formError ?? ""} />
-                  </FieldGroup>
-                </form>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button type="submit" form={`furniture-form-${furniture.id}`} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
-                    </>
-                  ) : (
-                    "Сохранить"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+                  <EntityTypeSelect
+                    type="furniture"
+                    value={furnitureTypeId ? parseInt(furnitureTypeId) : null}
+                    onValueChange={(v) => setFurnitureTypeId(v ?? "")}
+                  />
 
-            <EntityImageCard
-              entityType="furniture"
-              entityId={furniture.id}
-              entityName={name}
-              photoUrl={furniture.photo_url ?? null}
-              onPhotoChange={async (url) => {
-                const res = await updateFurniture(furniture.id, { photo_url: url });
-                if (res.error) throw new Error(res.error);
-                await loadFurnitureData({ silent: true });
-              }}
-            />
-          </div>
+                  <PriceInput
+                    value={price}
+                    onChange={setPrice}
+                    disabled={isSubmitting}
+                    id={`furniture-price-${furniture.id}`}
+                    label="Стоимость покупки (необязательно)"
+                  />
 
-          <div className="flex flex-col gap-6">
-            <EntityContentBlock
-              title="Места в мебели"
-              description="Места размещения, которые находятся в этой мебели"
-              items={furniturePlaces}
-              entityType="places"
-              emptyMessage="В мебели пока нет мест"
-              addButton={{
-                label: "Добавить место",
-                onClick: () => setAddPlaceOpen(true),
-              }}
-              getItemActions={(place) => [
-                {
-                  key: "printLabel",
-                  label: "Печать этикетки",
-                  icon: Printer,
-                  onClick: () => printPlaceLabel(place.id, place.name),
-                },
-              ]}
-            />
-            <EntityContentBlock
-              title="Вещи в мебели"
-              description="Вещи, привязанные напрямую к этой мебели"
-              items={furnitureItems}
-              entityType="items"
-              emptyMessage="В мебели пока нет вещей"
-              addButton={{
-                label: "Добавить вещь",
-                onClick: () => setAddItemOpen(true),
-              }}
-            />
-            <EntityContentBlock
-              title="Контейнеры в мебели"
-              description="Контейнеры, привязанные напрямую к этой мебели"
-              items={furnitureContainers}
-              entityType="containers"
-              emptyMessage="В мебели пока нет контейнеров"
-              addButton={{
-                label: "Добавить контейнер",
-                onClick: () => setAddContainerOpen(true),
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
+                  <PriceInput
+                    value={currentValue}
+                    onChange={setCurrentValue}
+                    id={`furniture-current-value-${furniture.id}`}
+                    label="Текущая оценочная стоимость (необязательно)"
+                    disabled={isSubmitting}
+                  />
 
-      <AddPlaceForm
-        key={addPlaceOpen ? `add-place-open-${furniture?.id ?? "none"}` : "add-place-closed"}
-        open={addPlaceOpen}
-        onOpenChange={setAddPlaceOpen}
-        onSuccess={() => loadFurnitureData({ silent: true })}
-        initialFurnitureId={furniture?.id ?? undefined}
-      />
-      <AddItemForm
-        open={addItemOpen}
-        onOpenChange={setAddItemOpen}
-        onSuccess={() => loadFurnitureData({ silent: true })}
-        initialFurnitureId={furniture?.id ?? undefined}
-      />
-      <AddContainerForm
-        open={addContainerOpen}
-        onOpenChange={setAddContainerOpen}
-        onSuccess={() => loadFurnitureData({ silent: true })}
-        initialFurnitureId={furniture?.id ?? undefined}
-      />
-    </div>
+                  <DatePicker
+                    value={purchaseDate}
+                    onChange={setPurchaseDate}
+                    id={`furniture-purchase-date-${furniture.id}`}
+                    label="Дата покупки"
+                    placeholder="Выберите дату"
+                    disabled={isSubmitting}
+                  />
+
+                  <ErrorMessage message={formError ?? ""} />
+                </FieldGroup>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                type="submit"
+                form={`furniture-form-${furniture.id}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить"
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        )
+      }
+      imageCard={
+        furniture && (
+          <EntityImageCard
+            entityType="furniture"
+            entityId={furniture.id}
+            entityName={name}
+            photoUrl={furniture.photo_url ?? null}
+            onPhotoChange={async (url) => {
+              const res = await updateFurniture(furniture.id, {
+                photo_url: url,
+              });
+              if (res.error) throw new Error(res.error);
+              await loadFurnitureData({ silent: true });
+            }}
+          />
+        )
+      }
+      contentBlocks={
+        <>
+          <EntityContentBlock
+            title="Места в мебели"
+            description="Места размещения, которые находятся в этой мебели"
+            items={furniturePlaces}
+            entityType="places"
+            emptyMessage="В мебели пока нет мест"
+            addButton={{
+              label: "Добавить место",
+              onClick: () => setAddPlaceOpen(true),
+            }}
+            getItemActions={(place) => [
+              {
+                key: "printLabel",
+                label: "Печать этикетки",
+                icon: Printer,
+                onClick: () => printPlaceLabel(place.id, place.name),
+              },
+            ]}
+          />
+          <EntityContentBlock
+            title="Вещи в мебели"
+            description="Вещи, привязанные напрямую к этой мебели"
+            items={furnitureItems}
+            entityType="items"
+            emptyMessage="В мебели пока нет вещей"
+            addButton={{
+              label: "Добавить вещь",
+              onClick: () => setAddItemOpen(true),
+            }}
+          />
+          <EntityContentBlock
+            title="Контейнеры в мебели"
+            description="Контейнеры, привязанные напрямую к этой мебели"
+            items={furnitureContainers}
+            entityType="containers"
+            emptyMessage="В мебели пока нет контейнеров"
+            addButton={{
+              label: "Добавить контейнер",
+              onClick: () => setAddContainerOpen(true),
+            }}
+          />
+        </>
+      }
+      modals={
+        <>
+          <AddPlaceForm
+            key={
+              addPlaceOpen
+                ? `add-place-open-${furniture?.id ?? "none"}`
+                : "add-place-closed"
+            }
+            open={addPlaceOpen}
+            onOpenChange={setAddPlaceOpen}
+            onSuccess={() => loadFurnitureData({ silent: true })}
+            initialFurnitureId={furniture?.id ?? undefined}
+          />
+          <AddItemForm
+            open={addItemOpen}
+            onOpenChange={setAddItemOpen}
+            onSuccess={() => loadFurnitureData({ silent: true })}
+            initialFurnitureId={furniture?.id ?? undefined}
+          />
+          <AddContainerForm
+            open={addContainerOpen}
+            onOpenChange={setAddContainerOpen}
+            onSuccess={() => loadFurnitureData({ silent: true })}
+            initialFurnitureId={furniture?.id ?? undefined}
+          />
+        </>
+      }
+    />
   );
 }

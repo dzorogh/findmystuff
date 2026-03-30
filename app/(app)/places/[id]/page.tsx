@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useEntityDataLoader } from "@/lib/entities/hooks/use-entity-data-loader";
-import { EntityDetailSkeleton } from "@/components/entity-detail/entity-detail-skeleton";
-import { EntityDetailError } from "@/components/entity-detail/entity-detail-error";
+import { EntityDetailLayout } from "@/components/entity-detail/entity-detail-layout";
 import { EntityActions } from "@/components/entity-detail/entity-actions";
 import { resolveActions } from "@/lib/entities/resolve-actions";
 import { TransitionsTable } from "@/components/entity-detail/transitions-table";
@@ -140,13 +139,7 @@ export default function PlaceDetailPage() {
     return base;
   }, [place?.furniture_id, place?.furniture_name]);
 
-  if (error && !isLoading) {
-    return <EntityDetailError error={error} entityName="Место" />;
-  }
 
-  if (!isLoading && !place) {
-    return null;
-  }
 
   const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -177,30 +170,36 @@ export default function PlaceDetailPage() {
     ) : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        isLoading={isPageLoading}
-        title={place?.name ?? (place ? `Место #${place.id}` : "Место")}
-        ancestors={breadcrumbAncestors}
-        actions={headerActions}
-      />
-      {place && (
-        <EntityRelatedLinks
-          links={[
-            { href: `/items?placeId=${place.id}`, label: "Вещи" },
-            { href: `/containers?placeId=${place.id}`, label: "Контейнеры" },
-          ]}
+    <EntityDetailLayout
+      isLoading={isPageLoading}
+      isInvalidId={Number.isNaN(placeId)}
+      error={error}
+      entityName="Место"
+      hasEntity={!!place}
+      header={
+        <PageHeader
+          isLoading={isPageLoading}
+          title={place?.name ?? (place ? `Место #${place.id}` : "Место")}
+          ancestors={breadcrumbAncestors}
+          actions={headerActions}
         />
-      )}
-      {isPageLoading ? (
-        <EntityDetailSkeleton />
-      ) : place ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-6">
+      }
+      relatedLinks={
+        place && (
+          <EntityRelatedLinks
+            links={[
+              { href: `/items?placeId=${place.id}`, label: "Вещи" },
+              { href: `/containers?placeId=${place.id}`, label: "Контейнеры" },
+            ]}
+          />
+        )
+      }
+      editForm={
+        place && (
           <Card>
             <CardHeader>
               <CardTitle>Редактирование места</CardTitle>
-              <CardDescription className="flex items-center gap-2 flex-wrap">
+              <CardDescription className="flex flex-wrap items-center gap-2">
                 ID: #{place.id}
                 {place.deleted_at && (
                   <>
@@ -214,7 +213,9 @@ export default function PlaceDetailPage() {
               <form id={`place-form-${place.id}`} onSubmit={handleEditSubmit}>
                 <FieldGroup>
                   <Field>
-                    <FieldLabel htmlFor={`place-name-${place.id}`}>Название места</FieldLabel>
+                    <FieldLabel htmlFor={`place-name-${place.id}`}>
+                      Название места
+                    </FieldLabel>
                     <Input
                       id={`place-name-${place.id}`}
                       type="text"
@@ -228,7 +229,9 @@ export default function PlaceDetailPage() {
                   <EntityTypeSelect
                     type="place"
                     value={placeTypeId}
-                    onValueChange={(v) => setPlaceTypeId(v ? parseInt(v) : null)}
+                    onValueChange={(v) =>
+                      setPlaceTypeId(v ? parseInt(v) : null)
+                    }
                   />
 
                   <ErrorMessage message={formError ?? ""} />
@@ -236,7 +239,11 @@ export default function PlaceDetailPage() {
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button type="submit" form={`place-form-${place.id}`} disabled={isSubmitting}>
+              <Button
+                type="submit"
+                form={`place-form-${place.id}`}
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -248,7 +255,10 @@ export default function PlaceDetailPage() {
               </Button>
             </CardFooter>
           </Card>
-
+        )
+      }
+      imageCard={
+        place && (
           <EntityImageCard
             entityType="place"
             entityId={place.id}
@@ -260,89 +270,91 @@ export default function PlaceDetailPage() {
               await loadPlaceData({ silent: true });
             }}
           />
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {place.furniture_id && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Мебель</CardTitle>
-                  <CardDescription>
-                    Место находится в этой мебели
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/furniture/${place.furniture_id}`}
-                      className="text-primary hover:underline font-medium"
-                    >
-                      {place.furniture_name ?? `Мебель #${place.furniture_id}`}
-                    </Link>
-                    <MovePlaceForm
-                      title={placesEntityConfig.labels.moveTitle}
-                      entityDisplayName={place.name ?? `Место #${place.id}`}
-                      placeId={place.id}
-                      getSuccessMessage={placesEntityConfig.labels.moveSuccess}
-                      getErrorMessage={() => placesEntityConfig.labels.moveError}
-                      onSuccess={() => loadPlaceData({ silent: true })}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            <EntityContentBlock
-              title="Вещи"
-              description="Вещи, которые находятся в этом месте"
-              items={placeItems}
-              entityType="items"
-              emptyMessage="Нет вещей"
-              addButton={{
-                label: "Добавить вещь",
-                onClick: () => setAddItemOpen(true),
-              }}
-            />
-            <EntityContentBlock
-              title="Контейнеры"
-              description="Контейнеры, которые находятся в этом месте"
-              items={placeContainers}
-              entityType="containers"
-              emptyMessage="Нет контейнеров"
-              addButton={{
-                label: "Добавить контейнер",
-                onClick: () => setAddContainerOpen(true),
-              }}
-            />
+        )
+      }
+      contentBlocks={
+        <>
+          {place?.furniture_id && (
             <Card>
               <CardHeader>
-                <CardTitle>История перемещений</CardTitle>
+                <CardTitle>Мебель</CardTitle>
+                <CardDescription>
+                  Место находится в этой мебели
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <TransitionsTable
-                  transitions={transitions}
-                  emptyMessage="История перемещений пуста"
-                />
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/furniture/${place.furniture_id}`}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    {place.furniture_name ?? `Мебель #${place.furniture_id}`}
+                  </Link>
+                  <MovePlaceForm
+                    title={placesEntityConfig.labels.moveTitle}
+                    entityDisplayName={place.name ?? `Место #${place.id}`}
+                    placeId={place.id}
+                    getSuccessMessage={placesEntityConfig.labels.moveSuccess}
+                    getErrorMessage={() => placesEntityConfig.labels.moveError}
+                    onSuccess={() => loadPlaceData({ silent: true })}
+                  />
+                </div>
               </CardContent>
             </Card>
-          </div>
-
-        </div>
-      ) : null}
-
-      <AddItemForm
-        open={addItemOpen}
-        onOpenChange={setAddItemOpen}
-        onSuccess={() => loadPlaceData({ silent: true })}
-        initialDestinationType="place"
-        initialDestinationId={place?.id ?? undefined}
-      />
-      <AddContainerForm
-        open={addContainerOpen}
-        onOpenChange={setAddContainerOpen}
-        onSuccess={() => loadPlaceData({ silent: true })}
-        initialDestinationType="place"
-        initialDestinationId={place?.id ?? undefined}
-      />
-    </div>
+          )}
+          <EntityContentBlock
+            title="Вещи"
+            description="Вещи, которые находятся в этом месте"
+            items={placeItems}
+            entityType="items"
+            emptyMessage="Нет вещей"
+            addButton={{
+              label: "Добавить вещь",
+              onClick: () => setAddItemOpen(true),
+            }}
+          />
+          <EntityContentBlock
+            title="Контейнеры"
+            description="Контейнеры, которые находятся в этом месте"
+            items={placeContainers}
+            entityType="containers"
+            emptyMessage="Нет контейнеров"
+            addButton={{
+              label: "Добавить контейнер",
+              onClick: () => setAddContainerOpen(true),
+            }}
+          />
+          <Card>
+            <CardHeader>
+              <CardTitle>История перемещений</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TransitionsTable
+                transitions={transitions}
+                emptyMessage="История перемещений пуста"
+              />
+            </CardContent>
+          </Card>
+        </>
+      }
+      modals={
+        <>
+          <AddItemForm
+            open={addItemOpen}
+            onOpenChange={setAddItemOpen}
+            onSuccess={() => loadPlaceData({ silent: true })}
+            initialDestinationType="place"
+            initialDestinationId={place?.id ?? undefined}
+          />
+          <AddContainerForm
+            open={addContainerOpen}
+            onOpenChange={setAddContainerOpen}
+            onSuccess={() => loadPlaceData({ silent: true })}
+            initialDestinationType="place"
+            initialDestinationId={place?.id ?? undefined}
+          />
+        </>
+      }
+    />
   );
 }

@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  syncEntitySearchDocumentsByItemId,
   backfillEntitySearchDocuments,
   syncSearchDocumentsByEntityId,
 } from "@/lib/search/search-index-server";
@@ -62,7 +61,7 @@ describe("search-index-server", () => {
         delete: jest.fn().mockReturnThis(),
       });
 
-      await syncEntitySearchDocumentsByItemId(supabase, 1, 10);
+      await syncSearchDocumentsByEntityId(supabase, "item", 1, 10);
       expect(supabase.from).toHaveBeenCalledWith("items");
       expect(supabase.from("items").delete).toHaveBeenCalled();
     });
@@ -93,7 +92,7 @@ describe("search-index-server", () => {
         embedding: [0.1, 0.2, 0.3],
       });
 
-      await syncEntitySearchDocumentsByItemId(supabase, 1, 10);
+      await syncSearchDocumentsByEntityId(supabase, "item", 1, 10);
 
       expect(embedSearchText).toHaveBeenCalledWith("Test Item, test_type");
       expect(chain.delete).toHaveBeenCalled();
@@ -144,7 +143,7 @@ describe("search-index-server", () => {
             embedding: [0.9]
         });
 
-        await syncEntitySearchDocumentsByItemId(supabase, 1, 10);
+        await syncSearchDocumentsByEntityId(supabase, "item", 1, 10);
   
         expect(embedSearchImage).toHaveBeenCalled();
         expect(chain.insert).toHaveBeenCalledWith(expect.arrayContaining([
@@ -177,7 +176,7 @@ describe("search-index-server", () => {
             status: 404
         });
 
-        await syncEntitySearchDocumentsByItemId(supabase, 1, 10);
+        await syncSearchDocumentsByEntityId(supabase, "item", 1, 10);
   
         expect(logError).toHaveBeenCalledWith(
             expect.stringContaining("Не удалось построить image embedding"),
