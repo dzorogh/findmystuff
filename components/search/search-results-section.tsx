@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { SearchHit, SearchMode } from "@/lib/search/types";
 import { SearchHitCard } from "@/components/search/search-hit-card";
 import { SearchHitSkeleton } from "@/components/search/search-hit-skeleton";
+import { cn } from "@/lib/utils";
 
 interface SearchResultsSectionProps {
   title: string;
@@ -50,11 +51,19 @@ export function SearchResultsSection({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div 
+          className={cn(
+            "grid items-stretch gap-3 lg:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
+            mode === "image" 
+              ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          )}
+        >
           {hits.map((hit) => (
             <SearchHitCard
               key={`${hit.entityType}-${hit.entityId}-${hit.match?.source ?? "base"}`}
               hit={hit}
+              mode={mode}
             />
           ))}
         </div>

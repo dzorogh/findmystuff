@@ -39,11 +39,11 @@ export class HttpClient {
 
       return jsonData;
     } catch (error) {
-      if (
-        process.env.NODE_ENV === "development" &&
-        !restOptions.signal?.aborted &&
-        (error as Error)?.name !== "AbortError"
-      ) {
+      const isAbortError =
+        (error as Error)?.name === "AbortError" ||
+        restOptions.signal?.aborted;
+
+      if (process.env.NODE_ENV === "development" && !isAbortError) {
         console.error(`API request failed: ${endpoint}`, error);
       }
       throw error;

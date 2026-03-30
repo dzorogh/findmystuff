@@ -26,7 +26,15 @@ export function GlobalSearchPage() {
   const [isPhotoSearchOpen, setIsPhotoSearchOpen] = useState(false);
   const [activeSession, setActiveSession] = useState<ActiveSearchSession | null>(null);
   const [totalCount, setTotalCount] = useState(0);
-  const activeTextSearchAbortRef = useRef<AbortController | null>(null);
+  const searchRequestIdRef = useRef(0);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const clearSearchSession = useCallback(() => {
     setSearchResults([]);
@@ -48,40 +56,49 @@ export function GlobalSearchPage() {
     };
   }, [activeSession?.previewUrl]);
 
-  const performTextSearch = useCallback(async (queryToSearch: string, signal: AbortSignal) => {
-    const trimmedQuery = queryToSearch.trim();
-    if (!trimmedQuery) {
-      setSearchResults([]);
-      setTotalCount(0);
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const response = await searchApiClient.searchText(trimmedQuery, { signal });
-      setSearchResults(response.data);
-      setTotalCount(response.totalCount);
-      setActiveSession({ mode: "text" });
-    } catch (error) {
-      if (signal.aborted) {
+  const performTextSearch = useCallback(
+    async (queryToSearch: string) => {
+      const trimmedQuery = queryToSearch.trim();
+      if (!trimmedQuery) {
+        setSearchResults([]);
+        setTotalCount(0);
         return;
       }
 
-      logError("Ошибка поиска:", error);
-      setSearchResults([]);
-      setTotalCount(0);
-    } finally {
-      if (!signal.aborted) {
-        setIsSearching(false);
+      const requestId = ++searchRequestIdRef.current;
+      setIsSearching(true);
+
+      try {
+        const response = await searchApiClient.searchText(trimmedQuery);
+
+        // Ignore stale results
+        if (requestId !== searchRequestIdRef.current || !isMountedRef.current) {
+          return;
+        }
+
+        setSearchResults(response.data);
+        setTotalCount(response.totalCount);
+        setActiveSession({ mode: "text" });
+      } catch (error) {
+        if (requestId !== searchRequestIdRef.current || !isMountedRef.current) {
+          return;
+        }
+
+        logError("Ошибка поиска:", error);
+        setSearchResults([]);
+        setTotalCount(0);
+      } finally {
+        if (requestId === searchRequestIdRef.current && isMountedRef.current) {
+          setIsSearching(false);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      activeTextSearchAbortRef.current?.abort();
-      activeTextSearchAbortRef.current = null;
+      searchRequestIdRef.current++;
       setIsSearching(false);
       clearSearchSession();
       return;
@@ -96,20 +113,12 @@ export function GlobalSearchPage() {
     });
     setIsSearching(true);
 
-    activeTextSearchAbortRef.current?.abort();
-    const abortController = new AbortController();
-    activeTextSearchAbortRef.current = abortController;
-
     const timer = setTimeout(() => {
-      void performTextSearch(searchQuery, abortController.signal);
+      void performTextSearch(searchQuery);
     }, 300);
 
     return () => {
       clearTimeout(timer);
-      abortController.abort();
-      if (activeTextSearchAbortRef.current === abortController) {
-        activeTextSearchAbortRef.current = null;
-      }
     };
   }, [clearSearchSession, performTextSearch, searchQuery]);
 
@@ -177,10 +186,7 @@ export function GlobalSearchPage() {
       : totalCount > 0
         ? `Найдено ${totalCount} результатов`
         : `Ничего не найдено по запросу "${searchQuery.trim()}"`;
-  const bannerDescription =
-    effectiveMode === "image"
-      ? "Поиск по фото использует текущий pipeline и ищет только по вещам."
-      : "";
+  const bannerDescription = "";
 
   return (
     <div className="flex flex-col gap-4">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Building2, Container, DoorOpen, LayoutGrid, Package, Sofa } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SearchHit, SearchLocationLine } from "@/lib/search/types";
+import type { SearchHit, SearchLocationLine, SearchMode } from "@/lib/search/types";
 import { cn } from "@/lib/utils";
 
 const ICONS = {
@@ -62,7 +62,7 @@ function renderLocationLine(line: SearchLocationLine, entityId: number) {
   );
 }
 
-export function SearchHitCard({ hit }: { hit: SearchHit }) {
+export function SearchHitCard({ hit, mode = "text" }: { hit: SearchHit; mode?: SearchMode }) {
   const Icon = ICONS[hit.entityType];
   const entityLabel = ENTITY_LABELS[hit.entityType];
   const scoreLabel = getScoreLabel(hit.match?.score);
@@ -72,6 +72,74 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
     scorePercent == null
       ? SCORE_RING_CIRCUMFERENCE
       : SCORE_RING_CIRCUMFERENCE - (scorePercent / 100) * SCORE_RING_CIRCUMFERENCE;
+
+  if (mode === "image") {
+    return (
+      <Link href={hit.href} className="group block h-full">
+        <Card className="h-full flex flex-col overflow-hidden transition-all hover:bg-muted/30 hover:shadow-md">
+          <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-muted">
+            {hit.preview?.imageUrl ? (
+              <>
+                <Image
+                  src={hit.preview.imageUrl}
+                  alt={hit.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted via-muted/80 to-background/50">
+                <Icon className="h-10 w-10 text-muted-foreground/60 transition-transform duration-300 group-hover:scale-110" />
+              </div>
+            )}
+            
+            <div className="absolute left-2 top-2">
+              <Badge variant="secondary" className="rounded-full shadow-sm bg-background/90 backdrop-blur">
+                {entityLabel}
+              </Badge>
+            </div>
+            
+            {scoreLabel && scorePercent != null ? (
+              <div className="absolute right-2 top-2">
+                <Badge variant="default" className="rounded-full shadow-sm bg-primary/90 text-primary-foreground backdrop-blur">
+                  {scoreLabel}
+                </Badge>
+              </div>
+            ) : null}
+          </div>
+
+          <CardContent className="flex flex-1 flex-col p-3 sm:p-4">
+            <CardTitle className="line-clamp-2 text-base font-semibold transition-colors group-hover:text-primary">
+              {hit.title}
+            </CardTitle>
+            {hit.subtitle && (
+              <p className="mt-1 line-clamp-1 text-xs font-medium text-muted-foreground">
+                {hit.subtitle}
+              </p>
+            )}
+            
+            {visibleLocationLines.length > 0 && (
+              <div className="mt-auto pt-3">
+                <div className="flex flex-col gap-1.5 overflow-hidden border-t pt-3 border-border/50">
+                  {visibleLocationLines.map((line) => {
+                    const LineIcon = ICONS[line.key];
+                    return (
+                      <div key={`${hit.entityId}-${line.key}`} className="flex items-center gap-1.5 min-w-0 text-muted-foreground/80">
+                        <LineIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate text-xs font-medium text-foreground/80">{line.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  }
 
   return (
     <Link href={hit.href} className="group block h-full">
