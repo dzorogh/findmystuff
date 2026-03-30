@@ -12,7 +12,7 @@ import { validateDestinationType } from "@/lib/shared/api/validate-destination-t
 import { DEFAULT_PAGE_LIMIT } from "@/lib/shared/api/constants";
 import type { Container, DestinationType } from "@/types/entity";
 import type { ContainerRow } from "@/types/db-rows";
-import { syncEntitySearchDocumentsByContainerId } from "@/lib/search/search-index-server";
+import { enqueueSearchIndexJob } from "@/lib/shared/api/search-index-queue";
 import { logError } from "@/lib/shared/logger";
 
 /**
@@ -155,9 +155,13 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await syncEntitySearchDocumentsByContainerId(supabase, result.data.id, tenantId);
+      await enqueueSearchIndexJob(supabase, {
+        tenantId,
+        entityType: "container",
+        entityId: result.data.id,
+      });
     } catch (error) {
-      logError("Ошибка синхронизации общего поискового индекса контейнера после создания:", error);
+      logError("Ошибка постановки контейнера в очередь индексации после создания:", error);
     }
 
     return NextResponse.json({ data: result.data });

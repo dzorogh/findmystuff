@@ -15,6 +15,9 @@ jest.mock("@/lib/containers/api", () => ({
 jest.mock("@/lib/shared/api/insert-entity-with-transition", () => ({
   insertEntityWithTransition: jest.fn(),
 }));
+jest.mock("@/lib/shared/api/search-index-queue", () => ({
+  enqueueSearchIndexJob: jest.fn(),
+}));
 
 const requireAuthAndTenant = jest.requireMock("@/lib/shared/api/require-auth")
   .requireAuthAndTenant as jest.Mock;
@@ -22,6 +25,8 @@ const getContainersWithLocationRpc = jest.requireMock("@/lib/containers/api")
   .getContainersWithLocationRpc as jest.Mock;
 const insertEntityWithTransition = jest.requireMock("@/lib/shared/api/insert-entity-with-transition")
   .insertEntityWithTransition as jest.Mock;
+const enqueueSearchIndexJob = jest.requireMock("@/lib/shared/api/search-index-queue")
+  .enqueueSearchIndexJob as jest.Mock;
 
 const createGetRequest = (searchParams?: string) =>
   ({ url: `http://localhost/api/containers${searchParams ? `?${searchParams}` : ""}`, method: "GET", headers: new Headers() } as unknown as Request);
@@ -92,6 +97,7 @@ describe("POST /api/containers", () => {
     jest.resetAllMocks();
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
     jest.requireMock("@/lib/shared/supabase/server").createClient.mockResolvedValue({});
+    enqueueSearchIndexJob.mockResolvedValue(null);
   });
 
   it("возвращает 400 при недопустимом destination_type", async () => {
@@ -116,5 +122,13 @@ describe("POST /api/containers", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.data).toEqual({ id: 1, name: "C1" });
+    expect(enqueueSearchIndexJob).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        tenantId: 1,
+        entityType: "container",
+        entityId: 1,
+      }
+    );
   });
 });

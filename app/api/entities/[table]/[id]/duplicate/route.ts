@@ -4,11 +4,7 @@ import { requireAuthAndTenant } from "@/lib/shared/api/require-auth";
 import { parseId } from "@/lib/shared/api/parse-id";
 import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
-import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
-import {
-  syncEntitySearchDocumentsByContainerId,
-  syncEntitySearchDocumentsByItemId,
-} from "@/lib/search/search-index-server";
+import { enqueueSearchIndexJob } from "@/lib/shared/api/search-index-queue";
 import { logError } from "@/lib/shared/logger";
 /** Имена таблиц API (путь [table]), не путать с EntityTypeName (item, place, ...). */
 type ApiTableName = "items" | "places" | "containers" | "rooms" | "buildings" | "furniture";
@@ -206,23 +202,25 @@ export async function POST(
 
     if (table === "items") {
       try {
-        await syncItemSearchDocumentsByItemId(supabase, duplicatedEntity.id, tenantId);
+        await enqueueSearchIndexJob(supabase, {
+          tenantId,
+          entityType: "item",
+          entityId: duplicatedEntity.id,
+        });
       } catch (error) {
-        logError("Ошибка синхронизации поискового индекса вещи после дублирования:", error);
-      }
-
-      try {
-        await syncEntitySearchDocumentsByItemId(supabase, duplicatedEntity.id, tenantId);
-      } catch (error) {
-        logError("Ошибка синхронизации общего поискового индекса вещи после дублирования:", error);
+        logError("Ошибка постановки вещи в очередь индексации после дублирования:", error);
       }
     }
 
     if (table === "containers") {
       try {
-        await syncEntitySearchDocumentsByContainerId(supabase, duplicatedEntity.id, tenantId);
+        await enqueueSearchIndexJob(supabase, {
+          tenantId,
+          entityType: "container",
+          entityId: duplicatedEntity.id,
+        });
       } catch (error) {
-        logError("Ошибка синхронизации общего поискового индекса контейнера после дублирования:", error);
+        logError("Ошибка постановки контейнера в очередь индексации после дублирования:", error);
       }
     }
 

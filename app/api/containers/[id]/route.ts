@@ -6,7 +6,7 @@ import { apiErrorResponse } from "@/lib/shared/api/api-error-response";
 import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { loadContainerDetail } from "@/lib/containers/load-container-detail";
 import { buildPlaceLikeUpdateBody } from "@/lib/shared/api/build-place-like-update-body";
-import { syncEntitySearchDocumentsByContainerId } from "@/lib/search/search-index-server";
+import { enqueueSearchIndexJob } from "@/lib/shared/api/search-index-queue";
 import { logError } from "@/lib/shared/logger";
 
 export async function GET(
@@ -67,9 +67,13 @@ export async function PUT(
     }
 
     try {
-      await syncEntitySearchDocumentsByContainerId(supabase, containerId, auth.tenantId);
+      await enqueueSearchIndexJob(supabase, {
+        tenantId: auth.tenantId,
+        entityType: "container",
+        entityId: containerId,
+      });
     } catch (syncError) {
-      logError("Ошибка синхронизации общего поискового индекса контейнера после обновления:", syncError);
+      logError("Ошибка постановки контейнера в очередь индексации после обновления:", syncError);
     }
 
     return NextResponse.json({ data });

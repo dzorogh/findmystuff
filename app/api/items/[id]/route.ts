@@ -7,8 +7,7 @@ import { HTTP_STATUS } from "@/lib/shared/api/http-status";
 import { validateItemMoney } from "@/lib/shared/api/validate-item-money";
 import { normalizeEntityTypeRelation } from "@/lib/shared/api/normalize-entity-type-relation";
 import type { Item } from "@/types/entity";
-import { syncItemSearchDocumentsByItemId } from "@/lib/entities/items/search-index-server";
-import { syncEntitySearchDocumentsByItemId } from "@/lib/search/search-index-server";
+import { enqueueSearchIndexJob } from "@/lib/shared/api/search-index-queue";
 import { logError } from "@/lib/shared/logger";
 
 export async function GET(
@@ -139,15 +138,13 @@ export async function PUT(
     }
 
     try {
-      await syncItemSearchDocumentsByItemId(supabase, itemId, tenantId);
+      await enqueueSearchIndexJob(supabase, {
+        tenantId,
+        entityType: "item",
+        entityId: itemId,
+      });
     } catch (error) {
-      logError("Ошибка синхронизации поискового индекса вещи после обновления:", error);
-    }
-
-    try {
-      await syncEntitySearchDocumentsByItemId(supabase, itemId, tenantId);
-    } catch (error) {
-      logError("Ошибка синхронизации общего поискового индекса вещи после обновления:", error);
+      logError("Ошибка постановки вещи в очередь индексации после обновления:", error);
     }
 
     return NextResponse.json({ data });

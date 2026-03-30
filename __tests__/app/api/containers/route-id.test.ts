@@ -9,8 +9,8 @@ jest.mock("@/lib/shared/api/require-auth", () => ({
   requireAuthAndTenant: jest.fn(),
 }));
 
-jest.mock("@/lib/shared/api/parse-id", () => ({
-  parseId: jest.fn(),
+jest.mock("@/lib/shared/api/require-id-param", () => ({
+  requireIdParam: jest.fn(),
 }));
 
 jest.mock("@/lib/shared/supabase/server", () => ({
@@ -20,14 +20,20 @@ jest.mock("@/lib/shared/supabase/server", () => ({
 jest.mock("@/lib/containers/load-container-detail", () => ({
   loadContainerDetail: jest.fn(),
 }));
+jest.mock("@/lib/shared/api/search-index-queue", () => ({
+  enqueueSearchIndexJob: jest.fn(),
+}));
 
 const requireAuthAndTenant = jest.requireMock("@/lib/shared/api/require-auth")
   .requireAuthAndTenant as jest.Mock;
-const parseId = jest.requireMock("@/lib/shared/api/parse-id").parseId as jest.Mock;
+const requireIdParam = jest.requireMock("@/lib/shared/api/require-id-param")
+  .requireIdParam as jest.Mock;
 const createClient = jest.requireMock("@/lib/shared/supabase/server")
   .createClient as jest.Mock;
 const loadContainerDetail = jest.requireMock("@/lib/containers/load-container-detail")
   .loadContainerDetail as jest.Mock;
+const enqueueSearchIndexJob = jest.requireMock("@/lib/shared/api/search-index-queue")
+  .enqueueSearchIndexJob as jest.Mock;
 
 const createRequest = (url = "http://localhost/api/containers/1") => ({
   url,
@@ -48,12 +54,12 @@ describe("GET /api/containers/[id]", () => {
     const { GET } = await import("@/app/api/containers/[id]/route");
     const response = await GET(createRequest(), { params: Promise.resolve({ id: "1" }) });
     expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
-    expect(parseId).not.toHaveBeenCalled();
+    expect(requireIdParam).not.toHaveBeenCalled();
   });
 
   it("возвращает 400 при невалидном id", async () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
-    parseId.mockReturnValue(
+    requireIdParam.mockResolvedValue(
       NextResponse.json({ error: "Некорректный id контейнера" }, { status: HTTP_STATUS.BAD_REQUEST })
     );
     const { GET } = await import("@/app/api/containers/[id]/route");
@@ -64,7 +70,7 @@ describe("GET /api/containers/[id]", () => {
 
   it("возвращает 404, если контейнер не найден", async () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
-    parseId.mockReturnValue({ id: 999 });
+    requireIdParam.mockResolvedValue({ id: 999 });
     createClient.mockResolvedValue({});
     loadContainerDetail.mockResolvedValue({
       error: "Контейнер не найден",
@@ -79,7 +85,7 @@ describe("GET /api/containers/[id]", () => {
 
   it("возвращает 200 и данные при успешной загрузке", async () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
-    parseId.mockReturnValue({ id: 1 });
+    requireIdParam.mockResolvedValue({ id: 1 });
     createClient.mockResolvedValue({});
     const containerData = {
       container: { id: 1, name: "Контейнер" },
@@ -99,6 +105,7 @@ describe("GET /api/containers/[id]", () => {
 describe("PUT /api/containers/[id]", () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    enqueueSearchIndexJob.mockResolvedValue(null);
   });
 
   it("возвращает 401, если пользователь не авторизован", async () => {
@@ -118,7 +125,7 @@ describe("PUT /api/containers/[id]", () => {
 
   it("возвращает 500 при ошибке обновления в БД", async () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
-    parseId.mockReturnValue({ id: 1 });
+    requireIdParam.mockResolvedValue({ id: 1 });
     const updateChain = {
       update: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
@@ -141,7 +148,7 @@ describe("PUT /api/containers/[id]", () => {
 
   it("возвращает 200 и данные при успешном обновлении", async () => {
     requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
-    parseId.mockReturnValue({ id: 1 });
+    requireIdParam.mockResolvedValue({ id: 1 });
     const updatedContainer = {
       id: 1,
       name: "Updated Container",
@@ -166,5 +173,13 @@ describe("PUT /api/containers/[id]", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.data).toEqual(updatedContainer);
+    expect(enqueueSearchIndexJob).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        tenantId: 1,
+        entityType: "container",
+        entityId: 1,
+      }
+    );
   });
 });

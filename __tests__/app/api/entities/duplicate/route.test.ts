@@ -12,10 +12,15 @@ jest.mock("@/lib/shared/api/require-auth", () => ({
 jest.mock("@/lib/shared/supabase/server", () => ({
   createClient: jest.fn(),
 }));
+jest.mock("@/lib/shared/api/search-index-queue", () => ({
+  enqueueSearchIndexJob: jest.fn(),
+}));
 
 const requireAuthAndTenant = jest.requireMock("@/lib/shared/api/require-auth")
   .requireAuthAndTenant as jest.Mock;
 const createClient = jest.requireMock("@/lib/shared/supabase/server").createClient as jest.Mock;
+const enqueueSearchIndexJob = jest.requireMock("@/lib/shared/api/search-index-queue")
+  .enqueueSearchIndexJob as jest.Mock;
 
 const createRequest = () => ({
   url: "http://localhost/api/entities/places/1/duplicate",
@@ -27,6 +32,7 @@ const createRequest = () => ({
 describe("POST /api/entities/[table]/[id]/duplicate", () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    enqueueSearchIndexJob.mockResolvedValue(null);
   });
 
   it("возвращает 401, если пользователь не авторизован", async () => {
@@ -133,5 +139,67 @@ describe("POST /api/entities/[table]/[id]/duplicate", () => {
     expect(data.data).toBeDefined();
     expect(data.data.id).toBe(2);
     expect(data.data.name).toBe("Место (копия)");
+  });
+
+  it("ставит контейнер в очередь индексации после успешного дублирования", async () => {
+    requireAuthAndTenant.mockResolvedValue({ tenantId: 1 });
+    const sourceRow = {
+      id: 1,
+      name: "Контейнер",
+      photo_url: null,
+      entity_type_id: 1,
+      deleted_at: null,
+    };
+    const duplicatedRow = {
+      id: 2,
+      name: "Контейнер (копия)",
+      photo_url: null,
+      entity_type_id: 1,
+      tenant_id: 1,
+    };
+    let containersFromCalls = 0;
+    const selectChain = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: sourceRow, error: null }),
+    };
+    const insertChain = {
+      insert: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: duplicatedRow, error: null }),
+    };
+    const transitionsChain = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    };
+
+    createClient.mockResolvedValue({
+      from: jest.fn((table: string) => {
+        if (table === "transitions") return transitionsChain;
+        if (table === "containers") {
+          containersFromCalls += 1;
+          return containersFromCalls === 1 ? selectChain : insertChain;
+        }
+        return selectChain;
+      }),
+    });
+
+    const { POST } = await import("@/app/api/entities/[table]/[id]/duplicate/route");
+    const response = await POST(createRequest() as never, {
+      params: Promise.resolve({ table: "containers", id: "1" }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.CREATED);
+    expect(enqueueSearchIndexJob).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        tenantId: 1,
+        entityType: "container",
+        entityId: 2,
+      }
+    );
   });
 });
