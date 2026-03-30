@@ -74,8 +74,8 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
       : SCORE_RING_CIRCUMFERENCE - (scorePercent / 100) * SCORE_RING_CIRCUMFERENCE;
 
   return (
-    <Link href={hit.href} className="group">
-      <Card className="overflow-hidden">
+    <Link href={hit.href} className="group block h-full">
+      <Card className="h-full overflow-hidden">
         <CardContent className="h-full">
           <div className="flex h-full min-w-0 items-start gap-4">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden sm:h-28 sm:w-28">
@@ -120,12 +120,13 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
 
                 {scoreLabel && scorePercent != null ? (
                   <div
+                    title={`Релевантность ${scoreLabel}`}
                     aria-label={`Релевантность ${scoreLabel}`}
-                    className="relative flex size-12 shrink-0 items-center justify-center"
+                    className="relative flex size-5 shrink-0 items-center justify-center opacity-60 transition-opacity hover:opacity-100"
                   >
                     <svg
                       viewBox="0 0 44 44"
-                      className="-rotate-90 size-12"
+                      className="-rotate-90 size-5"
                       aria-hidden="true"
                     >
                       <circle
@@ -134,7 +135,7 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
                         r={SCORE_RING_RADIUS}
                         fill="none"
                         className="stroke-border/70"
-                        strokeWidth="3"
+                        strokeWidth="5"
                       />
                       <circle
                         cx="22"
@@ -142,15 +143,12 @@ export function SearchHitCard({ hit }: { hit: SearchHit }) {
                         r={SCORE_RING_RADIUS}
                         fill="none"
                         className="stroke-primary"
-                        strokeWidth="3"
+                        strokeWidth="5"
                         strokeLinecap="round"
                         strokeDasharray={SCORE_RING_CIRCUMFERENCE}
                         strokeDashoffset={scoreStrokeOffset}
                       />
                     </svg>
-                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-primary">
-                      {scoreLabel}
-                    </span>
                   </div>
                 ) : null}
               </div>
