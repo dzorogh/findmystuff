@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import sonarjs from "eslint-plugin-sonarjs";
 
 
 /** Пути, где разрешены прямые запросы к Supabase и fetch (в остальных местах запрещены) */
@@ -31,6 +32,18 @@ const fetchAndSupabaseRestrictedSyntax = [
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  sonarjs.configs.recommended,
+  {
+    files: [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "hooks/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "sonarjs/cognitive-complexity": ["warn", 15],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
