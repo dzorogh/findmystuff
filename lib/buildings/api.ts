@@ -45,7 +45,8 @@ class BuildingsApiClient extends HttpClient {
     if (params?.showDeleted) searchParams.set("showDeleted", "true");
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Building[]>(`/buildings${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/buildings?${queryString}` : "/buildings";
+    return this.request<Building[]>(url, {
       tenantId: params?.tenantId,
     });
   }

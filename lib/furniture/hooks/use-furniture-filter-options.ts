@@ -12,12 +12,13 @@ export function useFurnitureFilterOptions() {
     if (furniture?.length) {
       return [
         ALL_FURNITURE_OPTION,
-        ...furniture.map((f) => ({
-          value: f.id.toString(),
-          label: f.room?.name
-            ? `${f.name || `Мебель #${f.id}`} (${f.room.name})`
-            : f.name || `Мебель #${f.id}`,
-        })),
+        ...furniture.map((f) => {
+          const defaultName = f.name || `Мебель #${f.id}`;
+          return {
+            value: f.id.toString(),
+            label: f.room?.name ? `${defaultName} (${f.room.name})` : defaultName,
+          };
+        }),
       ];
     }
     return [ALL_FURNITURE_OPTION];

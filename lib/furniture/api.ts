@@ -49,7 +49,8 @@ class FurnitureApiClient extends HttpClient {
     if (params?.roomId != null) searchParams.set("roomId", String(params.roomId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Furniture[]>(`/furniture${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/furniture?${queryString}` : "/furniture";
+    return this.request<Furniture[]>(url, {
       tenantId: params?.tenantId,
     });
   }

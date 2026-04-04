@@ -19,21 +19,13 @@ export const applyNameSearch = <T extends { ilike: (column: string, pattern: str
   }
 
   const searchTerm = query.trim();
-  const searchNumber = isNaN(Number(searchTerm)) ? null : Number(searchTerm);
 
   if (searchFields.length === 1) {
     return queryBuilder.ilike(searchFields[0], `%${searchTerm}%`);
   }
 
-  if (searchNumber !== null) {
-    const orConditions = searchFields
-      .map((field) => `${field}.ilike.%${searchTerm}%`)
-      .join(",");
-    return queryBuilder.or(orConditions);
-  } else {
-    const orConditions = searchFields
-      .map((field) => `${field}.ilike.%${searchTerm}%`)
-      .join(",");
-    return queryBuilder.or(orConditions);
-  }
+  const orConditions = searchFields
+    .map((field) => `${field}.ilike.%${searchTerm}%`)
+    .join(",");
+  return queryBuilder.or(orConditions);
 };

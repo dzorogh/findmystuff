@@ -11,8 +11,17 @@ import type { Filters } from "@/types/entity";
 
 /** Parser for yesNoAll filter: true | false | null, stored as "true" | "false" in URL. */
 const yesNoAllParser = createParser<boolean | null>({
-  parse: (v) => (!v ? null : v === "true" ? true : v === "false" ? false : null),
-  serialize: (v) => (v === true ? "true" : v === false ? "false" : ""),
+  parse: (v) => {
+    if (!v) return null;
+    if (v === "true") return true;
+    if (v === "false") return false;
+    return null;
+  },
+  serialize: (v) => {
+    if (v === true) return "true";
+    if (v === false) return "false";
+    return "";
+  },
 });
 
 const SORT_VALUES = ["name", "created_at"] as const;

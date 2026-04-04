@@ -14,6 +14,13 @@ jest.mock("@/components/layout/page-header", () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
+jest.mock("@/lib/app/contexts/add-item-context", () => ({
+  useAddItem: () => ({
+    processPhotoAndOpenForm: jest.fn().mockResolvedValue(undefined),
+    isRecognizeLoading: false,
+  }),
+}));
+
 jest.mock("@/components/common/camera-capture-dialog", () => ({
   CameraCaptureDialog: (props: unknown) => {
     Object.assign(cameraDialogProps, props);
@@ -51,7 +58,7 @@ describe("Home and search pages", () => {
     const { default: HomePage } = await import("@/app/(app)/page");
     render(<HomePage />);
 
-    expect(screen.getByRole("heading", { name: "Главная" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /FindMyStuff/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Вещи/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Контейнеры/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Поиск по фото/i })).not.toBeInTheDocument();

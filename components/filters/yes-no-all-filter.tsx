@@ -16,7 +16,9 @@ const YES_NO_ALL_OPTIONS = [
 ] as const;
 
 export const YesNoAllFilter = ({ label, value, onChange }: YesNoAllFilterProps) => {
-  const stringValue = value === null ? "all" : value ? "yes" : "no";
+  let stringValue = "all";
+  if (value === true) stringValue = "yes";
+  else if (value === false) stringValue = "no";
 
   const handleValueChange = (newValue: string) => {
     onChange(newValue === "all" ? null : newValue === "yes");

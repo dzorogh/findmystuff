@@ -52,7 +52,7 @@ export default function ContainerDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [addItemOpen, setAddItemOpen] = useState(false);
 
-  const { types: _containerTypes } = useEntityTypes("container");
+  useEntityTypes("container");
   const [name, setName] = useState("");
   const [containerTypeId, setContainerTypeId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

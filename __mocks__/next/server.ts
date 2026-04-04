@@ -22,5 +22,6 @@ export class NextResponse {
 
 // Тип-заглушка для совместимости с type import'ами.
 // В тестах конкретная структура запроса не используется.
+// eslint-disable-next-line sonarjs/redundant-type-aliases
 export type NextRequest = unknown;
 

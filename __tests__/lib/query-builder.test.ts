@@ -8,7 +8,7 @@ describe('query-builder', () => {
         not: jest.fn().mockReturnThis(),
       }
 
-      const result = applyDeletedFilter(mockQueryBuilder as any, false)
+      applyDeletedFilter(mockQueryBuilder as any, false)
 
       expect(mockQueryBuilder.is).toHaveBeenCalledWith('deleted_at', null)
       expect(mockQueryBuilder.not).not.toHaveBeenCalled()
@@ -20,7 +20,7 @@ describe('query-builder', () => {
         not: jest.fn().mockReturnThis(),
       }
 
-      const result = applyDeletedFilter(mockQueryBuilder as any, true)
+      applyDeletedFilter(mockQueryBuilder as any, true)
 
       expect(mockQueryBuilder.not).toHaveBeenCalledWith('deleted_at', 'is', null)
       expect(mockQueryBuilder.is).not.toHaveBeenCalled()
@@ -34,7 +34,7 @@ describe('query-builder', () => {
         or: jest.fn().mockReturnThis(),
       }
 
-      const result = applyNameSearch(mockQueryBuilder as any, '')
+      applyNameSearch(mockQueryBuilder as any, '')
 
       expect(mockQueryBuilder.ilike).not.toHaveBeenCalled()
       expect(mockQueryBuilder.or).not.toHaveBeenCalled()
@@ -46,7 +46,7 @@ describe('query-builder', () => {
         or: jest.fn().mockReturnThis(),
       }
 
-      const result = applyNameSearch(mockQueryBuilder as any, 'тест', ['name'])
+      applyNameSearch(mockQueryBuilder as any, 'тест', ['name'])
 
       expect(mockQueryBuilder.ilike).toHaveBeenCalledWith('name', '%тест%')
     })
@@ -57,7 +57,7 @@ describe('query-builder', () => {
         or: jest.fn().mockReturnThis(),
       }
 
-      const result = applyNameSearch(mockQueryBuilder as any, 'тест', [
+      applyNameSearch(mockQueryBuilder as any, 'тест', [
         'name',
         'description',
       ])
@@ -71,7 +71,7 @@ describe('query-builder', () => {
         or: jest.fn().mockReturnThis(),
       }
 
-      const result = applyNameSearch(mockQueryBuilder as any, '123', [
+      applyNameSearch(mockQueryBuilder as any, '123', [
         'name',
         'id',
       ])
@@ -85,7 +85,7 @@ describe('query-builder', () => {
         or: jest.fn().mockReturnThis(),
       }
 
-      const result = applyNameSearch(mockQueryBuilder as any, '  тест  ', [
+      applyNameSearch(mockQueryBuilder as any, '  тест  ', [
         'name',
       ])
 

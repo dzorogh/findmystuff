@@ -60,7 +60,7 @@ export default function RoomDetailPage() {
   const [isLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { types: _roomTypes } = useEntityTypes("room");
+  useEntityTypes("room");
   useBuildings();
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState("");

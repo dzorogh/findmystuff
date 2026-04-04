@@ -32,9 +32,9 @@ describe('createClient (supabase/server)', () => {
   it('создает серверный клиент с cookies', async () => {
     const { createServerClient } = require('@supabase/ssr')
     const { cookies } = require('next/headers')
-    const cookieStore = await cookies()
+    await cookies()
     
-    const client = await createClient()
+    await createClient()
     
     expect(createServerClient).toHaveBeenCalledWith(
       'https://project.supabase.co',

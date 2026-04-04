@@ -66,12 +66,12 @@ export async function loadRoomDetail(
 
   const entityType = normalizeEntityTypeRelation(roomData.entity_types);
   const buildingsData = roomData.buildings;
-  const buildingData =
-    Array.isArray(buildingsData) && buildingsData.length > 0
-      ? buildingsData[0]
-      : buildingsData && !Array.isArray(buildingsData)
-        ? buildingsData
-        : null;
+  let buildingData = null;
+  if (Array.isArray(buildingsData) && buildingsData.length > 0) {
+    buildingData = buildingsData[0];
+  } else if (buildingsData && !Array.isArray(buildingsData)) {
+    buildingData = buildingsData;
+  }
   const room: RoomDetailData["room"] = {
     id: roomData.id,
     name: roomData.name,

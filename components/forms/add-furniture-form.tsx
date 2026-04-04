@@ -33,7 +33,7 @@ interface AddFurnitureFormProps {
 
 const AddFurnitureForm = ({ open, onOpenChange, onSuccess, initialRoomId }: AddFurnitureFormProps) => {
   const { isLoading } = useUser();
-  const { types: _furnitureTypes, isLoading: isLoadingTypes } = useEntityTypes("furniture");
+  const { isLoading: isLoadingTypes } = useEntityTypes("furniture");
   const [name, setName] = useState("");
   const [roomId, setRoomId] = useState<string>("");
 

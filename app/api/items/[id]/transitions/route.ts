@@ -214,8 +214,26 @@ export async function GET(
       return hierarchy;
     };
 
-    // Формируем transitions с названиями
-    const transitionsWithNames = (transitionsData || []).map((t): Transition => {
+    const resolveContainerTransition = (transition: Transition, containerId: number) => {
+      transition.destination_name = containersMap.get(containerId) || null;
+      const containerTransition = lastContainerTransitions.get(containerId);
+      if (containerTransition) {
+        if (containerTransition.destination_type === "place" && containerTransition.destination_id) {
+          const placeHierarchy = resolvePlaceHierarchy(containerTransition.destination_id);
+          transition.place_name = placeHierarchy.place_name;
+          transition.furniture_name = placeHierarchy.furniture_name;
+          transition.room_name = placeHierarchy.room_name;
+        } else if (containerTransition.destination_type === "furniture" && containerTransition.destination_id) {
+          const furnitureHierarchy = resolveFurnitureHierarchy(containerTransition.destination_id);
+          transition.furniture_name = furnitureHierarchy.furniture_name;
+          transition.room_name = furnitureHierarchy.room_name;
+        } else if (containerTransition.destination_type === "room" && containerTransition.destination_id) {
+          transition.room_name = roomsMap.get(containerTransition.destination_id) || null;
+        }
+      }
+    };
+
+    const populateTransitionNames = (t: TransitionRow): Transition => {
       const transition: Transition = {
         id: t.id,
         created_at: t.created_at,
@@ -229,22 +247,7 @@ export async function GET(
         transition.furniture_name = placeHierarchy.furniture_name;
         transition.room_name = placeHierarchy.room_name;
       } else if (t.destination_type === "container" && t.destination_id) {
-        transition.destination_name = containersMap.get(t.destination_id) || null;
-        const containerTransition = lastContainerTransitions.get(t.destination_id);
-        if (containerTransition) {
-          if (containerTransition.destination_type === "place" && containerTransition.destination_id) {
-            const placeHierarchy = resolvePlaceHierarchy(containerTransition.destination_id);
-            transition.place_name = placeHierarchy.place_name;
-            transition.furniture_name = placeHierarchy.furniture_name;
-            transition.room_name = placeHierarchy.room_name;
-          } else if (containerTransition.destination_type === "furniture" && containerTransition.destination_id) {
-            const furnitureHierarchy = resolveFurnitureHierarchy(containerTransition.destination_id);
-            transition.furniture_name = furnitureHierarchy.furniture_name;
-            transition.room_name = furnitureHierarchy.room_name;
-          } else if (containerTransition.destination_type === "room" && containerTransition.destination_id) {
-            transition.room_name = roomsMap.get(containerTransition.destination_id) || null;
-          }
-        }
+        resolveContainerTransition(transition, t.destination_id);
       } else if (t.destination_type === "room" && t.destination_id) {
         transition.destination_name = roomsMap.get(t.destination_id) || null;
       } else if (t.destination_type === "furniture" && t.destination_id) {
@@ -254,7 +257,10 @@ export async function GET(
       }
 
       return transition;
-    });
+    };
+
+    // Формируем transitions с названиями
+    const transitionsWithNames = (transitionsData || []).map(populateTransitionNames);
 
     return NextResponse.json({
       data: transitionsWithNames,

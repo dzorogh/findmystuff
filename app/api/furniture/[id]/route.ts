@@ -14,6 +14,48 @@ import { getItemsWithRoomRpc } from "@/lib/entities/api";
 import { getContainersWithLocationRpc } from "@/lib/containers/api";
 import type { Furniture } from "@/types/entity";
 
+type MoneyValidation = {
+  price_amount: number | null;
+  price_currency: string | null;
+  current_value_amount: number | null;
+  current_value_currency: string | null;
+};
+
+type FurnitureUpdateBody = {
+  name?: string;
+  room_id?: string | number;
+  furniture_type_id?: string | number | null;
+  photo_url?: string | null;
+  purchase_date?: string | null;
+  price_amount?: string | number | null;
+  price_currency?: string | null;
+  current_value_amount?: string | number | null;
+  current_value_currency?: string | null;
+};
+
+function buildUpdateData(
+  body: FurnitureUpdateBody,
+  moneyValidation: MoneyValidation
+) {
+  const updateData: Record<string, string | number | null> = {};
+  
+  const add = (key: string, value: string | number | null) => {
+    updateData[key] = value;
+  };
+
+  if ("name" in body) add("name", body.name?.trim() || null);
+  if ("room_id" in body) add("room_id", Number(body.room_id));
+  if ("furniture_type_id" in body) add("furniture_type_id", body.furniture_type_id != null ? (Number(body.furniture_type_id) || null) : null);
+  if ("photo_url" in body) add("photo_url", body.photo_url || null);
+  if ("price_amount" in body) add("price_amount", moneyValidation.price_amount);
+  if ("price_currency" in body) add("price_currency", moneyValidation.price_currency);
+  if ("current_value_amount" in body) add("current_value_amount", moneyValidation.current_value_amount);
+  if ("current_value_currency" in body) add("current_value_currency", moneyValidation.current_value_currency);
+  if ("purchase_date" in body) add("purchase_date", body.purchase_date?.trim() || null);
+
+  return updateData;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -168,45 +210,9 @@ export async function PUT(
     const supabase = await createClient();
 
     const body = await request.json();
-    const {
-      name,
-      room_id,
-      furniture_type_id,
-      photo_url,
-      price_amount,
-      price_currency,
-      current_value_amount,
-      current_value_currency,
-      purchase_date,
-    } = body;
-
     const moneyValidation = validateItemMoney(body);
     if (moneyValidation instanceof NextResponse) return moneyValidation;
-
-    const updateData: {
-      name?: string | null;
-      room_id?: number;
-      furniture_type_id?: number | null;
-      photo_url?: string | null;
-      price_amount?: number | null;
-      price_currency?: string | null;
-      current_value_amount?: number | null;
-      current_value_currency?: string | null;
-      purchase_date?: string | null;
-    } = {};
-    if (name !== undefined) updateData.name = name?.trim() || null;
-    if (room_id !== undefined) updateData.room_id = Number(room_id);
-    if (furniture_type_id !== undefined)
-      updateData.furniture_type_id = furniture_type_id != null ? (Number(furniture_type_id) || null) : null;
-    if (photo_url !== undefined) updateData.photo_url = photo_url || null;
-    if (price_amount !== undefined) updateData.price_amount = moneyValidation.price_amount;
-    if (price_currency !== undefined) updateData.price_currency = moneyValidation.price_currency;
-    if (current_value_amount !== undefined)
-      updateData.current_value_amount = moneyValidation.current_value_amount;
-    if (current_value_currency !== undefined)
-      updateData.current_value_currency = moneyValidation.current_value_currency;
-    if (purchase_date !== undefined)
-      updateData.purchase_date = purchase_date && purchase_date.trim() ? purchase_date.trim() : null;
+    const updateData = buildUpdateData(body, moneyValidation);
 
     const { data, error } = await supabase
       .from("furniture")

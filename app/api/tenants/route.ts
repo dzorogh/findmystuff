@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;
-    const { user: _user } = auth;
 
     const body = await request.json();
     const name = body?.name?.trim() ?? "Мой склад";

@@ -77,7 +77,8 @@ class RoomsApiClient extends HttpClient {
       searchParams.set("buildingId", String(params.buildingId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Room[]>(`/rooms${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/rooms?${queryString}` : "/rooms";
+    return this.request<Room[]>(url, {
       tenantId: params?.tenantId,
     });
   }

@@ -117,9 +117,8 @@ export default function ItemDetailPage() {
         ]}
         actions={headerActions}
       />
-      {isLoading ? (
-        <EntityDetailSkeleton />
-      ) : item ? (
+      {isLoading && <EntityDetailSkeleton />}
+      {!isLoading && item && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
           <Card>
@@ -248,7 +247,7 @@ export default function ItemDetailPage() {
             />
           )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -31,7 +31,8 @@ export function getContainersWithLocationRpc(
     p_furniture_id?: number | null;
   }
 ) {
-  const { p_place_id: _p_place_id, ...rpcParams } = params;
+  const rpcParams = { ...params } as Record<string, unknown>;
+  delete rpcParams.p_place_id;
   return supabase.rpc("get_containers_with_location", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
@@ -63,7 +64,8 @@ class ContainersApiClient extends HttpClient {
     if (params?.placeId != null) searchParams.set("placeId", String(params.placeId));
     if (params?.furnitureId != null) searchParams.set("furnitureId", String(params.furnitureId));
     const queryString = searchParams.toString();
-    return this.request<Container[]>(`/containers${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/containers?${queryString}` : "/containers";
+    return this.request<Container[]>(url, {
       tenantId: params?.tenantId,
     });
   }

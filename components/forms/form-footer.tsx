@@ -27,19 +27,19 @@ export const FormFooter = ({
         {cancelLabel}
       </Button>
       <Button type="submit" disabled={isSubmitting || disabled}>
-        {isSubmitting ? (
+        {isSubmitting && (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Сохранение...
           </>
-        ) : SubmitIcon ? (
+        )}
+        {!isSubmitting && SubmitIcon && (
           <>
             <SubmitIcon className="mr-2 h-4 w-4" />
             {submitLabel}
           </>
-        ) : (
-          submitLabel
         )}
+        {!isSubmitting && !SubmitIcon && submitLabel}
       </Button>
     </SheetFooter>
   );

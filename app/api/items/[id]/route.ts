@@ -10,6 +10,48 @@ import type { Item } from "@/types/entity";
 import { enqueueSearchIndexJob } from "@/lib/shared/api/search-index-queue";
 import { logError } from "@/lib/shared/logger";
 
+type MoneyValidation = {
+  price_amount: number | null;
+  price_currency: string | null;
+  current_value_amount: number | null;
+  current_value_currency: string | null;
+};
+
+type ItemUpdateBody = {
+  name?: string;
+  photo_url?: string | null;
+  item_type_id?: string | number | null;
+  purchase_date?: string | null;
+  quantity?: string | number | null;
+  price_amount?: string | number | null;
+  price_currency?: string | null;
+  current_value_amount?: string | number | null;
+  current_value_currency?: string | null;
+};
+
+function buildUpdateData(
+  body: ItemUpdateBody,
+  moneyValidation: MoneyValidation
+) {
+  const updateData: Record<string, string | number | null> = {};
+
+  const add = (key: string, value: string | number | null) => {
+    updateData[key] = value;
+  };
+
+  if ("name" in body) add("name", body.name?.trim() || null);
+  if ("photo_url" in body) add("photo_url", body.photo_url || null);
+  if ("item_type_id" in body) add("item_type_id", body.item_type_id != null ? (Number(body.item_type_id) || null) : null);
+  if ("price_amount" in body) add("price_amount", moneyValidation.price_amount);
+  if ("price_currency" in body) add("price_currency", moneyValidation.price_currency);
+  if ("current_value_amount" in body) add("current_value_amount", moneyValidation.current_value_amount);
+  if ("current_value_currency" in body) add("current_value_currency", moneyValidation.current_value_currency);
+  if ("quantity" in body) add("quantity", body.quantity != null && String(body.quantity) !== "" ? Number(body.quantity) : 1);
+  if ("purchase_date" in body) add("purchase_date", body.purchase_date?.trim() || null);
+
+  return updateData;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -46,7 +88,8 @@ export async function GET(
     }
 
     const itemEntityType = normalizeEntityTypeRelation(itemData.entity_types);
-    const { entity_types: _et, price_amount, price_currency, current_value_amount, current_value_currency, quantity, purchase_date, ...restItemData } = itemData;
+    const { price_amount, price_currency, current_value_amount, current_value_currency, quantity, purchase_date, ...restItemDataRaw } = itemData;
+    const restItemData = restItemDataRaw as Omit<typeof restItemDataRaw, "entity_types">;
     const item: Item = {
       ...restItemData,
       item_type_id: itemData.item_type_id ?? null,
@@ -86,35 +129,13 @@ export async function PUT(
     const supabase = await createClient();
 
     const body = await request.json();
-    const { name, photo_url, item_type_id, quantity, purchase_date } = body;
-
     const moneyValidation = validateItemMoney(body);
     if (moneyValidation instanceof NextResponse) return moneyValidation;
-
-    const updateData: {
-      name?: string | null;
-      photo_url?: string | null;
-      item_type_id?: number | null;
-      price_amount?: number | null;
-      price_currency?: string | null;
-      current_value_amount?: number | null;
-      current_value_currency?: string | null;
-      quantity?: number | null;
-      purchase_date?: string | null;
-    } = {};
-    if (name !== undefined) updateData.name = name?.trim() || null;
-    if (photo_url !== undefined) updateData.photo_url = photo_url || null;
-    if (item_type_id !== undefined) updateData.item_type_id = item_type_id != null ? (Number(item_type_id) || null) : null;
-    if (body.price_amount !== undefined) updateData.price_amount = moneyValidation.price_amount;
-    if (body.price_currency !== undefined) updateData.price_currency = moneyValidation.price_currency;
-    if (body.current_value_amount !== undefined) updateData.current_value_amount = moneyValidation.current_value_amount;
-    if (body.current_value_currency !== undefined) updateData.current_value_currency = moneyValidation.current_value_currency;
-    if (quantity !== undefined) updateData.quantity = quantity != null && quantity !== "" ? Number(quantity) : 1;
-    if (purchase_date !== undefined) updateData.purchase_date = purchase_date && purchase_date.trim() ? purchase_date.trim() : null;
+    const updateData = buildUpdateData(body, moneyValidation);
 
     if (
       updateData.quantity != null &&
-      (updateData.quantity < 1 || !Number.isInteger(updateData.quantity))
+      (Number(updateData.quantity) < 1 || !Number.isInteger(Number(updateData.quantity)))
     ) {
       return NextResponse.json(
         { error: "Количество должно быть целым числом не менее 1" },

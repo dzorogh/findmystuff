@@ -13,12 +13,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const raw = body?.tenantId;
-    const tenantIdNum =
-      typeof raw === "number"
-        ? raw
-        : typeof raw === "string"
-          ? parseInt(raw, 10)
-          : NaN;
+    let tenantIdNum = NaN;
+    if (typeof raw === "number") {
+      tenantIdNum = raw;
+    } else if (typeof raw === "string") {
+      tenantIdNum = parseInt(raw, 10);
+    }
     if (!Number.isInteger(tenantIdNum) || tenantIdNum <= 0) {
       return NextResponse.json(
         { error: "tenantId required" },

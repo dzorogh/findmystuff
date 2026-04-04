@@ -37,7 +37,9 @@ export function getItemsWithRoomRpc(
     filter_item_type_id?: number | null;
   }
 ) {
-  const { place_id: _place_id, container_id: _container_id, ...rpcParams } = params;
+  const rpcParams = { ...params } as Record<string, unknown>;
+  delete rpcParams.place_id;
+  delete rpcParams.container_id;
   return supabase.rpc("get_items_with_room", {
     ...rpcParams,
     filter_tenant_id: params.filter_tenant_id ?? null,
@@ -139,7 +141,8 @@ class EntitiesApiClient extends HttpClient {
     }
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Item[]>(`/items${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/items?${queryString}` : "/items";
+    return this.request<Item[]>(url, {
       tenantId: params?.tenantId,
     });
   }

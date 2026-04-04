@@ -30,6 +30,97 @@ interface TransitionRow {
 }
 
 /**
+ * Загружает содержимое (вещи, контейнеры) в месте
+ */
+async function fetchPlaceItemsAndContainers(
+  supabase: SupabaseClient,
+  placeId: number,
+  itemIds: number[],
+  containerIds: number[]
+): Promise<{ placeItems: Item[]; placeContainers: Container[] }> {
+  let placeItems: Item[] = [];
+  let placeContainers: Container[] = [];
+  if (itemIds.length === 0 && containerIds.length === 0) {
+    return { placeItems, placeContainers };
+  }
+
+  let allTransitionsQuery = supabase
+    .from("transitions")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (itemIds.length > 0 && containerIds.length > 0) {
+    allTransitionsQuery = allTransitionsQuery.or(
+      `item_id.in.(${itemIds.join(",")}),container_id.in.(${containerIds.join(",")})`
+    );
+  } else if (itemIds.length > 0) {
+    allTransitionsQuery = allTransitionsQuery.in("item_id", itemIds);
+  } else {
+    allTransitionsQuery = allTransitionsQuery.in("container_id", containerIds);
+  }
+
+  const { data: allTransitions } = await allTransitionsQuery;
+  const lastItemTransitions = new Map<number, Transition>();
+  const lastContainerTransitions = new Map<number, Transition>();
+
+  (allTransitions || []).forEach((t: TransitionRow) => {
+    const transition: Transition = {
+      id: t.id,
+      created_at: t.created_at,
+      item_id: t.item_id ?? null,
+      container_id: t.container_id ?? null,
+      place_id: t.place_id ?? null,
+      destination_type: (t.destination_type ?? null) as DestinationType | null,
+      destination_id: t.destination_id ?? null,
+    };
+    if (t.item_id && !lastItemTransitions.has(t.item_id)) {
+      lastItemTransitions.set(t.item_id, transition);
+    }
+    if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
+      lastContainerTransitions.set(t.container_id, transition);
+    }
+  });
+
+  const itemsInPlace = Array.from(lastItemTransitions.entries())
+    .filter(
+      ([, transition]) =>
+        transition.destination_type === "place" &&
+        transition.destination_id === placeId
+    )
+    .map(([itemId]) => itemId);
+
+  if (itemsInPlace.length > 0) {
+    const { data: itemsData } = await supabase
+      .from("items")
+      .select("id, name, photo_url, created_at, deleted_at")
+      .in("id", itemsInPlace)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    placeItems = itemsData || [];
+  }
+
+  const containersInPlace = Array.from(lastContainerTransitions.entries())
+    .filter(
+      ([, transition]) =>
+        transition.destination_type === "place" &&
+        transition.destination_id === placeId
+    )
+    .map(([containerId]) => containerId);
+
+  if (containersInPlace.length > 0) {
+    const { data: containersData } = await supabase
+      .from("containers")
+      .select("id, name, photo_url, created_at, deleted_at, entity_type_id")
+      .in("id", containersInPlace)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    placeContainers = containersData || [];
+  }
+
+  return { placeItems, placeContainers };
+}
+
+/**
  * Загружает данные места по id. При ошибке БД или отсутствии места возвращает { error, status }.
  */
 export async function loadPlaceDetail(
@@ -175,83 +266,12 @@ export async function loadPlaceDetail(
   const itemIds = Array.from(itemIdsSet);
   const containerIds = Array.from(containerIdsSet);
 
-  let placeItems: Item[] = [];
-  let placeContainers: Container[] = [];
-
-  if (itemIds.length > 0 || containerIds.length > 0) {
-    let allTransitionsQuery = supabase
-      .from("transitions")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (itemIds.length > 0 && containerIds.length > 0) {
-      allTransitionsQuery = allTransitionsQuery.or(
-        `item_id.in.(${itemIds.join(",")}),container_id.in.(${containerIds.join(",")})`
-      );
-    } else if (itemIds.length > 0) {
-      allTransitionsQuery = allTransitionsQuery.in("item_id", itemIds);
-    } else {
-      allTransitionsQuery = allTransitionsQuery.in("container_id", containerIds);
-    }
-
-    const { data: allTransitions } = await allTransitionsQuery;
-    const lastItemTransitions = new Map<number, Transition>();
-    const lastContainerTransitions = new Map<number, Transition>();
-
-    (allTransitions || []).forEach((t: TransitionRow) => {
-      const transition: Transition = {
-        id: t.id,
-        created_at: t.created_at,
-        item_id: t.item_id ?? null,
-        container_id: t.container_id ?? null,
-        place_id: t.place_id ?? null,
-        destination_type: (t.destination_type ?? null) as DestinationType | null,
-        destination_id: t.destination_id ?? null,
-      };
-      if (t.item_id && !lastItemTransitions.has(t.item_id)) {
-        lastItemTransitions.set(t.item_id, transition);
-      }
-      if (t.container_id && !lastContainerTransitions.has(t.container_id)) {
-        lastContainerTransitions.set(t.container_id, transition);
-      }
-    });
-
-    const itemsInPlace = Array.from(lastItemTransitions.entries())
-      .filter(
-        ([, transition]) =>
-          transition.destination_type === "place" &&
-          transition.destination_id === placeId
-      )
-      .map(([itemId]) => itemId);
-
-    if (itemsInPlace.length > 0) {
-      const { data: itemsData } = await supabase
-        .from("items")
-        .select("id, name, photo_url, created_at, deleted_at")
-        .in("id", itemsInPlace)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-      placeItems = itemsData || [];
-    }
-
-    const containersInPlace = Array.from(lastContainerTransitions.entries())
-      .filter(
-        ([, transition]) =>
-          transition.destination_type === "place" &&
-          transition.destination_id === placeId
-      )
-      .map(([containerId]) => containerId);
-
-    if (containersInPlace.length > 0) {
-      const { data: containersData } = await supabase
-        .from("containers")
-        .select("id, name, photo_url, created_at, deleted_at, entity_type_id")
-        .in("id", containersInPlace)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-      placeContainers = containersData || [];
-    }
-  }
+  const { placeItems, placeContainers } = await fetchPlaceItemsAndContainers(
+    supabase,
+    placeId,
+    itemIds,
+    containerIds
+  );
 
   return {
     place,

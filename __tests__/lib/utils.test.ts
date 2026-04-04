@@ -8,7 +8,8 @@ describe('cn', () => {
   })
 
   it('обрабатывает условные классы', () => {
-    const result = cn('base', true && 'conditional', false && 'hidden')
+    const condition = true
+    const result = cn('base', condition && 'conditional', !condition && 'hidden')
     expect(result).toContain('base')
     expect(result).toContain('conditional')
     expect(result).not.toContain('hidden')

@@ -38,6 +38,95 @@ interface BarcodeScannerProps {
   onScanSuccess: (barcode: string) => void;
 }
 
+function clearScannerElement(elementId: string) {
+  const element = document.getElementById(elementId);
+  if (!element) throw new Error("Элемент для сканера не найден в DOM");
+  element.innerHTML = "";
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+}
+
+interface Html5QrcodeCamera {
+  id: string;
+  label?: string;
+}
+
+interface Html5QrcodeCtor {
+  getCameras(): Promise<Html5QrcodeCamera[]>;
+}
+
+async function getScannerCamera(Html5QrcodeCtor: Html5QrcodeCtor): Promise<string> {
+  const devices = await Html5QrcodeCtor.getCameras();
+  if (devices.length === 0) {
+    throw new Error("Камера не найдена.");
+  }
+  const backCamera = devices.find(
+    (d: Html5QrcodeCamera) =>
+      d.label?.toLowerCase().includes("back") ||
+      d.label?.toLowerCase().includes("rear") ||
+      d.label?.toLowerCase().includes("environment"),
+  );
+  const selectedCamera = backCamera || devices[0];
+  if (!selectedCamera?.id) {
+    throw new Error("Не удалось выбрать камеру");
+  }
+  return selectedCamera.id;
+}
+
+async function createHtml5QrcodeScanner(elementId: string, mode: ScannerMode) {
+  const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+
+  const Html5QrcodeCtor =
+    typeof Html5Qrcode === "function"
+      ? Html5Qrcode
+      : (Html5Qrcode as { Html5Qrcode?: typeof Html5Qrcode }).Html5Qrcode;
+
+  if (!Html5QrcodeCtor) {
+    throw new Error("Не удалось найти Html5Qrcode в модуле.");
+  }
+
+  const formats =
+    mode === "qr"
+      ? [Html5QrcodeSupportedFormats.QR_CODE]
+      : [Html5QrcodeSupportedFormats.EAN_13];
+
+  const scanner = new Html5QrcodeCtor(elementId, {
+    verbose: false,
+    formatsToSupport: formats,
+  });
+
+  return { scanner, Html5QrcodeCtor };
+}
+
+function getScanSuccessHandler(
+  mode: ScannerMode,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  scanSuccessCallbackRef: React.MutableRefObject<any>,
+  stopScanner: () => void,
+  setError: (msg: string | null) => void
+) {
+  return (decodedText: string) => {
+    const trimmed = decodedText.trim();
+    if (mode === "qr") {
+      const parsed = parseEntityQrPayload(trimmed);
+      if (parsed) {
+        scanSuccessCallbackRef.current(parsed);
+        stopScanner();
+      } else {
+        setError("Неверный формат QR-кода. Ожидается формат этикетки: тип:id (например, item:123).");
+      }
+    } else {
+      if (EAN_13_REGEX.test(trimmed)) {
+        scanSuccessCallbackRef.current(trimmed);
+        stopScanner();
+      } else {
+        setError("Распознан неверный формат. Ожидается штрихкод EAN-13 (13 цифр).");
+      }
+    }
+  };
+}
+
 function ScannerBase({
   open,
   onClose,
@@ -84,13 +173,10 @@ function ScannerBase({
       scannerRef.current = null;
     }
     isInitializingRef.current = false;
-
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.innerHTML = "";
-      while (element.firstChild) {
-        element.removeChild(element.firstChild);
-      }
+    try {
+      clearScannerElement(elementId);
+    } catch {
+      // Игнорируем ошибку при очистке, если элемент не найден
     }
   }, [elementId]);
 
@@ -124,14 +210,10 @@ function ScannerBase({
       try {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const element = document.getElementById(elementId);
-        if (!element) {
-          throw new Error("Элемент для сканера не найден в DOM");
-        }
-
-        element.innerHTML = "";
-        while (element.firstChild) {
-          element.removeChild(element.firstChild);
+        try {
+          clearScannerElement(elementId);
+        } catch (e) {
+          throw new Error(e instanceof Error ? e.message : "Элемент для сканера не найден в DOM");
         }
 
         if (currentAttempt !== initAttemptRef.current) {
@@ -139,89 +221,32 @@ function ScannerBase({
           return;
         }
 
-        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import(
-          "html5-qrcode"
-        );
+        const { scanner, Html5QrcodeCtor } = await createHtml5QrcodeScanner(elementId, mode);
 
-        const Html5QrcodeCtor =
-          typeof Html5Qrcode === "function"
-            ? Html5Qrcode
-            : (Html5Qrcode as { Html5Qrcode?: typeof Html5Qrcode }).Html5Qrcode;
+        const cameraId = await getScannerCamera(Html5QrcodeCtor);
 
-        if (!Html5QrcodeCtor) {
-          throw new Error("Не удалось найти Html5Qrcode в модуле.");
-        }
+        const handleScanSuccess = getScanSuccessHandler(mode, scanSuccessCallbackRef, stopScanner, setError);
 
-        const formats =
-          mode === "qr"
-            ? [Html5QrcodeSupportedFormats.QR_CODE]
-            : [Html5QrcodeSupportedFormats.EAN_13];
-
-        const scanner = new Html5QrcodeCtor(elementId, {
-          verbose: false,
-          formatsToSupport: formats,
-        });
-
-        scannerRef.current = scanner;
-
-        const devices = await Html5QrcodeCtor.getCameras();
-        if (devices.length === 0) {
-          setError("Камера не найдена.");
-          isInitializingRef.current = false;
-          return;
-        }
-
-        const backCamera = devices.find(
-          (d) =>
-            d.label?.toLowerCase().includes("back") ||
-            d.label?.toLowerCase().includes("rear") ||
-            d.label?.toLowerCase().includes("environment"),
-        );
-        const selectedCamera = backCamera || devices[0];
-        if (!selectedCamera?.id) {
-          throw new Error("Не удалось выбрать камеру");
-        }
+        const handleScanError = (errorMessage: string) => {
+          if (
+            errorMessage &&
+            !errorMessage.includes("NotFoundException") &&
+            !errorMessage.includes("No QR code found") &&
+            process.env.NODE_ENV === "development"
+          ) {
+            console.debug("Scanner error:", errorMessage);
+          }
+        };
 
         await scanner.start(
-          selectedCamera.id,
+          cameraId,
           {
             fps: FPS,
             aspectRatio: 1.0,
             disableFlip: false,
           },
-          (decodedText: string) => {
-            const trimmed = decodedText.trim();
-            if (mode === "qr") {
-              const parsed = parseEntityQrPayload(trimmed);
-              if (parsed) {
-                scanSuccessCallbackRef.current(parsed);
-                stopScanner();
-              } else {
-                setError(
-                  "Неверный формат QR-кода. Ожидается формат этикетки: тип:id (например, item:123).",
-                );
-              }
-            } else {
-              if (EAN_13_REGEX.test(trimmed)) {
-                scanSuccessCallbackRef.current(trimmed);
-                stopScanner();
-              } else {
-                setError(
-                  "Распознан неверный формат. Ожидается штрихкод EAN-13 (13 цифр).",
-                );
-              }
-            }
-          },
-          (errorMessage: string) => {
-            if (
-              errorMessage &&
-              !errorMessage.includes("NotFoundException") &&
-              !errorMessage.includes("No QR code found") &&
-              process.env.NODE_ENV === "development"
-            ) {
-              console.debug("Scanner error:", errorMessage);
-            }
-          },
+          handleScanSuccess,
+          handleScanError
         );
 
         if (currentAttempt !== initAttemptRef.current) {

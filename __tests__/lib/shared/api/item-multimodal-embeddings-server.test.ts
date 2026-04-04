@@ -34,7 +34,6 @@ jest.mock("openai", () => {
   });
 });
 
-import OpenAI from "openai";
 
 describe("item-multimodal-embeddings-server", () => {
   const originalEnv = process.env;

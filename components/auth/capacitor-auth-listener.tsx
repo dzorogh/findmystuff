@@ -105,11 +105,11 @@ const CapacitorAuthListener = () => {
     };
 
     log("listener init");
-    void handleInitialUrl();
+    handleInitialUrl().catch(console.error);
 
     const appUrlListenerPromise = App.addListener("appUrlOpen", ({ url }) => {
       log("appUrlOpen", url);
-      void handleAuthUrl(url);
+      handleAuthUrl(url).catch(console.error);
     });
 
     const appStateListenerPromise = App.addListener("appStateChange", async ({ isActive }) => {
@@ -124,13 +124,13 @@ const CapacitorAuthListener = () => {
       }
 
       log("appStateChange launchUrl", url);
-      void handleAuthUrl(url);
+      handleAuthUrl(url).catch(console.error);
     });
 
     return () => {
       log("listener removed");
-      void appUrlListenerPromise.then((listener) => listener.remove());
-      void appStateListenerPromise.then((listener) => listener.remove());
+      appUrlListenerPromise.then((listener) => listener.remove()).catch(console.error);
+      appStateListenerPromise.then((listener) => listener.remove()).catch(console.error);
     };
   }, [router]);
 

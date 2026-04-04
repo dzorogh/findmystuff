@@ -32,7 +32,10 @@ export default function AccountPage() {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
-  const ThemeIcon = mounted ? (resolvedTheme === "dark" ? Moon : Sun) : null;
+  let ThemeIcon = null;
+  if (mounted) {
+    ThemeIcon = resolvedTheme === "dark" ? Moon : Sun;
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

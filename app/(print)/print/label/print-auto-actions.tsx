@@ -22,7 +22,6 @@ export const PrintAutoActions = () => {
 
     const handleAfterPrint = () => {
       window.setTimeout(() => {
-        // window.close();
       }, CLOSE_DELAY_MS);
     };
 

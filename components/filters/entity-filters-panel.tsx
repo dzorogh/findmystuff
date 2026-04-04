@@ -110,13 +110,12 @@ export function EntityFiltersPanel({
             value={(value as number | null | undefined) ?? null}
             onValueChange={setNumericValue}
             label={
-              field.entityKind === "item"
-                ? "Категория"
-                : field.entityKind === "place"
-                ? "Тип места"
-                : field.entityKind === "furniture"
-                  ? "Тип мебели"
-                  : "Тип контейнера"
+              ({
+                item: "Категория",
+                place: "Тип места",
+                furniture: "Тип мебели",
+                container: "Тип контейнера",
+              })[field.entityKind] || ""
             }
           />
         );

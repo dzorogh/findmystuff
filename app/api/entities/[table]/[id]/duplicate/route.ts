@@ -61,6 +61,94 @@ const getDuplicateName = (name: string | null): string | null => {
   return `${normalizedName} (копия)`;
 };
 
+function buildInsertData(table: string, source: SourceRow, duplicateName: string | null, tenantId: number): Record<string, unknown> {
+  const baseData: Record<string, unknown> = {
+    name: duplicateName,
+    photo_url: source.photo_url || null,
+    tenant_id: tenantId,
+  };
+
+  switch (table) {
+    case "items":
+      return {
+        ...baseData,
+        item_type_id: source.item_type_id ?? null,
+        price_amount: source.price_amount ?? null,
+        price_currency: source.price_currency ?? null,
+        current_value_amount: source.current_value_amount ?? null,
+        current_value_currency: source.current_value_currency ?? null,
+        quantity: source.quantity ?? 1,
+        purchase_date: source.purchase_date ?? null,
+      };
+    case "rooms":
+      return {
+        ...baseData,
+        room_type_id: source.room_type_id ?? null,
+        building_id: source.building_id ?? null,
+      };
+    case "buildings":
+      return {
+        ...baseData,
+        building_type_id: source.building_type_id ?? null,
+      };
+    case "furniture":
+      return {
+        ...baseData,
+        room_id: source.room_id ?? null,
+        furniture_type_id: source.furniture_type_id ?? null,
+        price_amount: source.price_amount ?? null,
+        price_currency: source.price_currency ?? null,
+        current_value_amount: source.current_value_amount ?? null,
+        current_value_currency: source.current_value_currency ?? null,
+        purchase_date: source.purchase_date ?? null,
+      };
+    default:
+      return {
+        ...baseData,
+        entity_type_id: source.entity_type_id ?? null,
+      };
+  }
+}
+
+async function handleTransitionDuplicate(
+  supabase: ReturnType<typeof createClient> extends Promise<infer U> ? U : unknown,
+  table: ApiTableName,
+  sourceId: number,
+  duplicatedEntityId: number,
+  tenantId: number
+) {
+  const transitionIdColumn = TRANSITION_ID_COLUMN_BY_TABLE[table];
+  if (!transitionIdColumn) return null;
+
+  const { data: lastTransition, error: transitionLoadError } = await supabase
+    .from("transitions")
+    .select("destination_type, destination_id")
+    .eq(transitionIdColumn, sourceId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (transitionLoadError) return { error: transitionLoadError.message };
+
+  const transition = lastTransition as LastTransitionRow | null;
+  const skipTransition = table === "places" && transition?.destination_type === "room";
+  
+  if (transition?.destination_type && transition.destination_id && !skipTransition) {
+    const { error: transitionInsertError } = await supabase
+      .from("transitions")
+      .insert({
+        [transitionIdColumn]: duplicatedEntityId,
+        destination_type: transition.destination_type,
+        destination_id: transition.destination_id,
+        tenant_id: tenantId,
+      });
+
+    if (transitionInsertError) return { error: transitionInsertError.message };
+  }
+  
+  return { error: null };
+}
+
 export async function POST(
   request: NextRequest,
   context: DuplicateParams
@@ -104,52 +192,7 @@ export async function POST(
     }
 
     const duplicateName = getDuplicateName(source.name);
-
-    let insertData: Record<string, unknown> = {
-      name: duplicateName,
-      photo_url: source.photo_url || null,
-      tenant_id: tenantId,
-    };
-
-    if (table === "items") {
-      insertData = {
-        ...insertData,
-        item_type_id: source.item_type_id ?? null,
-        price_amount: source.price_amount ?? null,
-        price_currency: source.price_currency ?? null,
-        current_value_amount: source.current_value_amount ?? null,
-        current_value_currency: source.current_value_currency ?? null,
-        quantity: source.quantity ?? 1,
-        purchase_date: source.purchase_date ?? null,
-      };
-    } else if (table === "rooms") {
-      insertData = {
-        ...insertData,
-        room_type_id: source.room_type_id ?? null,
-        building_id: source.building_id ?? null,
-      };
-    } else if (table === "buildings") {
-      insertData = {
-        ...insertData,
-        building_type_id: source.building_type_id ?? null,
-      };
-    } else if (table === "furniture") {
-      insertData = {
-        ...insertData,
-        room_id: source.room_id ?? null,
-        furniture_type_id: source.furniture_type_id ?? null,
-        price_amount: source.price_amount ?? null,
-        price_currency: source.price_currency ?? null,
-        current_value_amount: source.current_value_amount ?? null,
-        current_value_currency: source.current_value_currency ?? null,
-        purchase_date: source.purchase_date ?? null,
-      };
-    } else {
-      insertData = {
-        ...insertData,
-        entity_type_id: source.entity_type_id ?? null,
-      };
-    }
+    const insertData = buildInsertData(table, source, duplicateName, tenantId);
 
     const { data: duplicatedEntity, error: insertError } = await supabase
       .from(table)
@@ -164,70 +207,26 @@ export async function POST(
       );
     }
 
-    const transitionIdColumn = TRANSITION_ID_COLUMN_BY_TABLE[table];
-    if (transitionIdColumn) {
-      const { data: lastTransition, error: transitionLoadError } = await supabase
-        .from("transitions")
-        .select("destination_type, destination_id")
-        .eq(transitionIdColumn, sourceId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (transitionLoadError) {
-        await supabase.from(table).delete().eq("id", duplicatedEntity.id);
-        return NextResponse.json({ error: transitionLoadError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
-      }
-
-      const transition = lastTransition as LastTransitionRow | null;
-      // Места могут быть только в мебели — пропускаем устаревшие room-переходы
-      const skipTransition =
-        table === "places" && transition?.destination_type === "room";
-      if (transition?.destination_type && transition.destination_id && !skipTransition) {
-        const { error: transitionInsertError } = await supabase
-          .from("transitions")
-          .insert({
-            [transitionIdColumn]: duplicatedEntity.id,
-            destination_type: transition.destination_type,
-            destination_id: transition.destination_id,
-            tenant_id: tenantId,
-          });
-
-        if (transitionInsertError) {
-          await supabase.from(table).delete().eq("id", duplicatedEntity.id);
-          return NextResponse.json({ error: transitionInsertError.message }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
-        }
-      }
+    const transitionResult = await handleTransitionDuplicate(supabase, table, sourceId, duplicatedEntity.id, tenantId);
+    if (transitionResult?.error) {
+      await supabase.from(table).delete().eq("id", duplicatedEntity.id);
+      return NextResponse.json({ error: transitionResult.error }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
     }
 
-    if (table === "items") {
+    if (table === "items" || table === "containers") {
       try {
         await enqueueSearchIndexJob(supabase, {
           tenantId,
-          entityType: "item",
+          entityType: table === "items" ? "item" : "container",
           entityId: duplicatedEntity.id,
         });
       } catch (error) {
-        logError("Ошибка постановки вещи в очередь индексации после дублирования:", error);
-      }
-    }
-
-    if (table === "containers") {
-      try {
-        await enqueueSearchIndexJob(supabase, {
-          tenantId,
-          entityType: "container",
-          entityId: duplicatedEntity.id,
-        });
-      } catch (error) {
-        logError("Ошибка постановки контейнера в очередь индексации после дублирования:", error);
+        logError(`Ошибка постановки ${table} в очередь индексации после дублирования:`, error);
       }
     }
 
     return NextResponse.json(
-      {
-        data: duplicatedEntity,
-      },
+      { data: duplicatedEntity },
       { status: HTTP_STATUS.CREATED }
     );
   } catch (error) {

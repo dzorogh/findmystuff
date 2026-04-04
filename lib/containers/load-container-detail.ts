@@ -20,6 +20,63 @@ export type { ContainerDetailData, LoadDetailError };
 /**
  * Загружает данные контейнера по id. При ошибке БД или отсутствии контейнера возвращает { error, status }.
  */
+async function fetchContainerItems(supabase: SupabaseClient, containerId: number): Promise<Item[]> {
+  const { data: itemsTransitionsData } = await supabase
+    .from("transitions")
+    .select("item_id")
+    .eq("destination_type", "container")
+    .eq("destination_id", containerId);
+
+  if (!itemsTransitionsData || itemsTransitionsData.length === 0) {
+    return [];
+  }
+
+  const itemIds = Array.from(
+    new Set(
+      itemsTransitionsData
+        .map((t) => t.item_id)
+        .filter((id): id is number => id !== null && id !== undefined)
+    )
+  );
+
+  if (itemIds.length === 0) {
+    return [];
+  }
+
+  const { data: allItemTransitionsData } = await supabase
+    .from("transitions")
+    .select("*")
+    .in("item_id", itemIds)
+    .order("created_at", { ascending: false });
+
+  const lastItemTransitions = new Map<number, Transition>();
+  (allItemTransitionsData || []).forEach((t) => {
+    if (t.item_id && !lastItemTransitions.has(t.item_id)) {
+      lastItemTransitions.set(t.item_id, t as Transition);
+    }
+  });
+
+  const itemsInContainer = Array.from(lastItemTransitions.entries())
+    .filter(
+      ([, transition]) =>
+        transition.destination_type === "container" &&
+        transition.destination_id === containerId
+    )
+    .map(([itemId]) => itemId);
+
+  if (itemsInContainer.length === 0) {
+    return [];
+  }
+
+  const { data: itemsData } = await supabase
+    .from("items")
+    .select("id, name, photo_url, created_at, deleted_at")
+    .in("id", itemsInContainer)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  return (itemsData || []) as Item[];
+}
 export async function loadContainerDetail(
   supabase: SupabaseClient,
   containerId: number
@@ -231,56 +288,7 @@ export async function loadContainerDetail(
     last_location: lastLocation,
   };
 
-  const { data: itemsTransitionsData } = await supabase
-    .from("transitions")
-    .select("item_id")
-    .eq("destination_type", "container")
-    .eq("destination_id", containerId);
-
-  let containerItems: Item[] = [];
-  if (itemsTransitionsData && itemsTransitionsData.length > 0) {
-    const itemIds = Array.from(
-      new Set(
-        itemsTransitionsData
-          .map((t) => t.item_id)
-          .filter((id): id is number => id !== null && id !== undefined)
-      )
-    );
-
-    if (itemIds.length > 0) {
-      const { data: allItemTransitionsData } = await supabase
-        .from("transitions")
-        .select("*")
-        .in("item_id", itemIds)
-        .order("created_at", { ascending: false });
-
-      const lastItemTransitions = new Map<number, Transition>();
-      (allItemTransitionsData || []).forEach((t) => {
-        if (t.item_id && !lastItemTransitions.has(t.item_id)) {
-          lastItemTransitions.set(t.item_id, t as Transition);
-        }
-      });
-
-      const itemsInContainer = Array.from(lastItemTransitions.entries())
-        .filter(
-          ([, transition]) =>
-            transition.destination_type === "container" &&
-            transition.destination_id === containerId
-        )
-        .map(([itemId]) => itemId);
-
-      if (itemsInContainer.length > 0) {
-        const { data: itemsData } = await supabase
-          .from("items")
-          .select("id, name, photo_url, created_at, deleted_at")
-          .in("id", itemsInContainer)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false });
-
-        containerItems = (itemsData || []) as Item[];
-      }
-    }
-  }
+  const containerItems: Item[] = await fetchContainerItems(supabase, containerId);
 
   return {
     container,

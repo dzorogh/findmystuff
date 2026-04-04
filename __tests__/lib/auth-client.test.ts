@@ -1,4 +1,3 @@
-import { authClient } from '@/lib/auth/config/client'
 
 jest.mock('better-auth/react', () => ({
   createAuthClient: jest.fn((config) => ({

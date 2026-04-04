@@ -66,14 +66,13 @@ const LocationCombobox = ({
         onDestinationTypeChange(payload.type as DestinationType);
         onDestinationIdChange(String(payload.id));
         setScanLocationQrOpen(false);
-        const typeLabel =
-          payload.type === "place"
-            ? "Место"
-            : payload.type === "room"
-              ? "Помещение"
-              : payload.type === "container"
-                ? "Контейнер"
-                : "Мебель";
+        const labelMap: Record<string, string> = {
+          place: "Место",
+          room: "Помещение",
+          container: "Контейнер",
+          furniture: "Мебель",
+        };
+        const typeLabel = labelMap[payload.type] || "Место";
         toast.success("Место задано по QR-коду", {
           description: `${typeLabel} #${payload.id}`,
         });
@@ -120,6 +119,14 @@ const LocationCombobox = ({
   };
   const destinationLabel = destinationType ? labelByType[destinationType] : "";
 
+  const emptyMessageMap: Record<DestinationType, string> = {
+    container: "Контейнеры не найдены",
+    place: "Местоположения не найдены",
+    furniture: "Мебель не найдена",
+    room: "Помещения не найдены",
+  };
+  const emptyMessageText = destinationType ? emptyMessageMap[destinationType] : "";
+
   const buttonOrderOptions = [
     { type: "room" as const, label: "Помещение", icon: DoorOpen },
     { type: "place" as const, label: "Место", icon: LayoutGrid },
@@ -140,12 +147,12 @@ const LocationCombobox = ({
     const fallback = destinationType ? fallbackByType[destinationType] : "Объект";
     return destinations.map((dest) => {
       const displayName = dest.name || `${fallback} #${dest.id}`;
-      const typeName =
-        destinationType === "container" || destinationType === "place"
-          ? (dest as Container | Place).entity_type?.name
-          : destinationType === "furniture"
-            ? (dest as Furniture).furniture_type?.name
-            : null;
+      let typeName: string | null = null;
+      if (destinationType === "container" || destinationType === "place") {
+        typeName = (dest as Container | Place).entity_type?.name ?? null;
+      } else if (destinationType === "furniture") {
+        typeName = (dest as Furniture).furniture_type?.name ?? null;
+      }
       const label = typeName ? `${displayName} (${typeName})` : displayName;
       return { value: dest.id.toString(), label };
     });
@@ -218,13 +225,7 @@ const LocationCombobox = ({
             )}
             <ComboboxContent>
               <ComboboxEmpty>
-                {destinationType === "container"
-                  ? "Контейнеры не найдены"
-                  : destinationType === "place"
-                    ? "Местоположения не найдены"
-                    : destinationType === "furniture"
-                      ? "Мебель не найдена"
-                      : "Помещения не найдены"}
+                {emptyMessageText}
               </ComboboxEmpty>
               <ComboboxList>
                 {(item: { value: string; label: string }) => (
@@ -237,13 +238,7 @@ const LocationCombobox = ({
           </Combobox>
             {!isLoading && destinations.length === 0 && (
             <p className="text-xs text-muted-foreground">
-              {destinationType === "container"
-                ? "Контейнеры не найдены"
-                : destinationType === "place"
-                  ? "Местоположения не найдены"
-                  : destinationType === "furniture"
-                    ? "Мебель не найдена"
-                    : "Помещения не найдены"}
+              {emptyMessageText}
             </p>
           )}
         </Field>

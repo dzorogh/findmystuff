@@ -54,7 +54,7 @@ const SignUpPage = () => {
       setError("Введите пароль");
       return;
     }
-    if (password.length < 12 || !/[0-9]/.test(password) || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[!@#$%^&*]/.test(password)) {
+    if (password.length < 12 || !/\\d/.test(password) || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[!@#$%^&*]/.test(password)) {
       setError("Пароль должен быть не менее 12 символов и содержать хотя бы одну цифру, одну букву и один специальный символ");
       return;
     }

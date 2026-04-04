@@ -54,9 +54,8 @@ export function EntityDetailLayout({
       {header}
       {hasEntity && relatedLinks}
       
-      {isLoading ? (
-        <EntityDetailSkeleton />
-      ) : hasEntity ? (
+      {isLoading && <EntityDetailSkeleton />}
+      {!isLoading && hasEntity && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
             {editForm}
@@ -68,7 +67,7 @@ export function EntityDetailLayout({
             </div>
           )}
         </div>
-      ) : null}
+      )}
 
       {modals}
     </div>

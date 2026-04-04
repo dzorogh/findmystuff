@@ -43,7 +43,10 @@ export async function GET(request: NextRequest) {
     const placeId = parseOptionalInt(searchParams.get("placeId"));
     const containerId = parseOptionalInt(searchParams.get("containerId"));
     const furnitureId = parseOptionalInt(searchParams.get("furnitureId"));
-    const hasPhoto = searchParams.get("hasPhoto") === "true" ? true : searchParams.get("hasPhoto") === "false" ? false : null;
+    let hasPhoto: boolean | null = null;
+    const hasPhotoParam = searchParams.get("hasPhoto");
+    if (hasPhotoParam === "true") hasPhoto = true;
+    else if (hasPhotoParam === "false") hasPhoto = false;
     const { sortBy, sortDirection } = normalizeSortParams(
       searchParams.get("sortBy"),
       searchParams.get("sortDirection")

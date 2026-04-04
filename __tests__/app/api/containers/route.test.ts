@@ -28,8 +28,10 @@ const insertEntityWithTransition = jest.requireMock("@/lib/shared/api/insert-ent
 const enqueueSearchIndexJob = jest.requireMock("@/lib/shared/api/search-index-queue")
   .enqueueSearchIndexJob as jest.Mock;
 
-const createGetRequest = (searchParams?: string) =>
-  ({ url: `http://localhost/api/containers${searchParams ? `?${searchParams}` : ""}`, method: "GET", headers: new Headers() } as unknown as Request);
+const createGetRequest = (searchParams?: string) => {
+  const url = searchParams ? `http://localhost/api/containers?${searchParams}` : "http://localhost/api/containers";
+  return { url, method: "GET", headers: new Headers() } as unknown as Request;
+};
 
 describe("GET /api/containers", () => {
   beforeEach(() => {

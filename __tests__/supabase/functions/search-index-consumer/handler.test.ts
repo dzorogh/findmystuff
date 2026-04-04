@@ -50,12 +50,11 @@ const createRequest = (init?: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
     }),
-    json: async () =>
-      init?.body === undefined
-        ? {}
-        : typeof init.body === "string"
-          ? JSON.parse(init.body)
-          : init.body,
+    json: async () => {
+      if (init?.body === undefined) return {};
+      if (typeof init.body === "string") return JSON.parse(init.body);
+      return init.body;
+    },
   } as unknown as Request);
 
 describe("search-index-consumer handler", () => {

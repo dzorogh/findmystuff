@@ -126,6 +126,20 @@ export function useListPage(config: EntityConfig) {
 
       startLoading(isInitialLoad);
 
+      const handleFetchSuccess = (result: { error?: string; data?: unknown[]; totalCount?: number } | null | undefined) => {
+        if (result?.error) {
+          setError(result.error);
+          setData([]);
+          if (hasPagination) setTotalCount(0);
+          return;
+        }
+        setError(null);
+        setData(Array.isArray(result?.data) ? (result.data as EntityDisplay[]) : []);
+        if (hasPagination && result?.totalCount != null) {
+          setTotalCount(result.totalCount);
+        }
+      };
+
       try {
         const params = {
           query: query?.trim(),
@@ -137,18 +151,7 @@ export function useListPage(config: EntityConfig) {
         };
         const result = await fetchData(params);
         if (!isMountedRef.current || !isLatest(requestKey)) return;
-        if (result?.error) {
-          setError(result.error);
-          setData([]);
-          if (hasPagination) setTotalCount(0);
-        } else {
-          setError(null);
-          const list = Array.isArray(result?.data) ? result.data : [];
-          setData(list);
-          if (hasPagination && result?.totalCount != null) {
-            setTotalCount(result.totalCount);
-          }
-        }
+        handleFetchSuccess(result);
         finishLoading(isInitialLoad);
       } catch (err) {
         if (isMountedRef.current && isLatest(requestKey)) {

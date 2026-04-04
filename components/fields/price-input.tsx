@@ -49,11 +49,12 @@ export function PriceInput({
   const hasPrice = value != null;
   const currency = hasPrice ? value.currency : pendingCurrency;
 
-  const displayValue = isFocused
-    ? localInput
-    : hasPrice
-      ? formatAmountDisplay(value.amount, value.currency)
-      : "";
+  let displayValue = "";
+  if (isFocused) {
+    displayValue = localInput;
+  } else if (hasPrice && value) {
+    displayValue = formatAmountDisplay(value.amount, value.currency);
+  }
 
   const handleFocus = () => {
     setIsFocused(true);

@@ -84,7 +84,7 @@ describe("lib/entities/items/search-index-server", () => {
           data: {
             id: 1,
             name: "Test Name",
-            photo_url: "http://photo.com/1",
+            photo_url: "https://photo.com/1",
             tenant_id: 10,
             item_type_id: 2,
             entity_types: [{ name: "Test Type" }],
@@ -120,7 +120,7 @@ describe("lib/entities/items/search-index-server", () => {
       expect(chain.insert).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ source_type: "text", content: "Test Name, Test Type" }),
-          expect.objectContaining({ source_type: "image", photo_url: "http://photo.com/1" }),
+          expect.objectContaining({ source_type: "image", photo_url: "https://photo.com/1" }),
         ])
       );
     });

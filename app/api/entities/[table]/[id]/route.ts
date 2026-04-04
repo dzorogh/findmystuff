@@ -14,7 +14,6 @@ export async function DELETE(
   try {
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
-    const { tenantId: _tenantId } = auth;
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(params);
     const { table, id: idString } = resolvedParams;
@@ -58,7 +57,6 @@ export async function POST(
   try {
     const auth = await requireAuthAndTenant(request);
     if (auth instanceof NextResponse) return auth;
-    const { tenantId: _tenantId } = auth;
     const supabase = await createClient();
     const resolvedParams = await Promise.resolve(params);
     const { table, id: idString } = resolvedParams;

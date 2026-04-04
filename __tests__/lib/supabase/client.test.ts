@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/shared/supabase/client'
 
 jest.mock('@supabase/ssr', () => ({
   createBrowserClient: jest.fn((url, key) => ({

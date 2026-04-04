@@ -44,12 +44,12 @@ function buildMatchBadges(
     return [];
   }
 
-  const sourceLabel =
-    match.source === "image"
-      ? "Совпадение по фото"
-      : options?.semanticOnly
-        ? "Семантическое совпадение"
-        : "Умное совпадение";
+  let sourceLabel = "Умное совпадение";
+  if (match.source === "image") {
+    sourceLabel = "Совпадение по фото";
+  } else if (options?.semanticOnly) {
+    sourceLabel = "Семантическое совпадение";
+  }
 
   const badges: SearchBadge[] = [
     {

@@ -31,7 +31,7 @@ interface AddRoomFormProps {
 
 const AddRoomForm = ({ open, onOpenChange, onSuccess, initialBuildingId }: AddRoomFormProps) => {
   const { isLoading } = useUser();
-  const { types: _roomTypes, isLoading: isLoadingTypes } = useEntityTypes("room");
+  const { isLoading: isLoadingTypes } = useEntityTypes("room");
   const [name, setName] = useState("");
   const [roomTypeId, setRoomTypeId] = useState<string>("");
   const [buildingId, setBuildingId] = useState<string>("");

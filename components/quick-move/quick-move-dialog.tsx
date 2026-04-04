@@ -83,7 +83,7 @@ const LOG = (open: boolean, msg: string, data?: object) => {
 const QuickMoveDialogInner = ({ open, onOpenChange, onSuccess }: QuickMoveDialogProps) => {
   const [step, setStep] = useState<Step>("scan_first");
   const [first, setFirst] = useState<EntityQrPayload | null>(null);
-  const [_second, setSecond] = useState<EntityQrPayload | null>(null);
+  const [, setSecond] = useState<EntityQrPayload | null>(null);
   const [move, setMove] = useState<QuickMoveResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scannerRemountKey, setScannerRemountKey] = useState(0);

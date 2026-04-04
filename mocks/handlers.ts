@@ -33,6 +33,7 @@ export const handlers = [
     const body = await request.json() as { name?: string }
     return HttpResponse.json({
       data: {
+        // eslint-disable-next-line sonarjs/pseudo-random
         id: Math.floor(Math.random() * 1000),
         name: body.name || 'Новая вещь',
         created_at: new Date().toISOString(),

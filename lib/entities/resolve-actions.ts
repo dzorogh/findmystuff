@@ -48,12 +48,10 @@ export function resolveActions(
   entity: EntityDisplay,
   ctx: ActionsContext
 ): Action[] {
-  const configs =
-    entity.deleted_at && actions.whenDeleted?.length
-      ? actions.whenDeleted
-      : entity.deleted_at
-        ? []
-        : actions.whenActive;
+  let configs = actions.whenActive;
+  if (entity.deleted_at) {
+    configs = actions.whenDeleted?.length ? actions.whenDeleted : [];
+  }
 
   return configs.map((ac) => resolveOne(ac, entity, ctx));
 }

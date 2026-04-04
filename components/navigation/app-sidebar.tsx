@@ -30,7 +30,7 @@ import { CreateTenantDialog } from "@/components/tenant-onboarding/create-tenant
 
 const AppSidebar = () => {
   const { setOpen: setQuickMoveOpen } = useQuickMove();
-  const { open: _open, state, isMobile, setOpenMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const { tenants, activeTenantId, isLoading, setActiveTenant } = useTenant();
   const [createTenantDialogOpen, setCreateTenantDialogOpen] = useState(false);
 

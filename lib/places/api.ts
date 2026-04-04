@@ -55,7 +55,8 @@ class PlacesApiClient extends HttpClient {
     if (params?.furnitureId != null) searchParams.set("furnitureId", String(params.furnitureId));
     appendSortParams(searchParams, params?.sortBy, params?.sortDirection);
     const queryString = searchParams.toString();
-    return this.request<Place[]>(`/places${queryString ? `?${queryString}` : ""}`, {
+    const url = queryString ? `/places?${queryString}` : "/places";
+    return this.request<Place[]>(url, {
       tenantId: params?.tenantId,
     });
   }

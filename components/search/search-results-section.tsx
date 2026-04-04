@@ -37,20 +37,24 @@ export function SearchResultsSection({
         </h2>
       </div>
 
-      {isLoading && hits.length === 0 ? (
+      {isLoading && hits.length === 0 && (
         <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <SearchHitSkeleton key={i} />
           ))}
         </div>
-      ) : hits.length === 0 ? (
+      )}
+      
+      {!isLoading && hits.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <EmptyIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">{emptyMessage}</p>
           </CardContent>
         </Card>
-      ) : (
+      )}
+
+      {hits.length > 0 && (
         <div 
           className={cn(
             "grid items-stretch gap-3 lg:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300",

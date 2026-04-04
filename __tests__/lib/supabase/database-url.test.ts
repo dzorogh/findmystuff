@@ -1,4 +1,3 @@
-import { getDatabaseUrl } from '@/lib/shared/supabase/database-url'
 
 describe('getDatabaseUrl', () => {
   const originalEnv = process.env

@@ -186,9 +186,8 @@ export default function BuildingDetailPage() {
           links={[{ href: `/rooms?buildingId=${building.id}`, label: "Помещения" }]}
         />
       )}
-      {isLoading ? (
-        <EntityDetailSkeleton />
-      ) : building ? (
+      {isLoading && <EntityDetailSkeleton />}
+      {!isLoading && building && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
           <Card>
@@ -270,7 +269,7 @@ export default function BuildingDetailPage() {
             />
           </div>
         </div>
-      ) : null}
+      )}
 
       <AddRoomForm
         open={addRoomOpen}
