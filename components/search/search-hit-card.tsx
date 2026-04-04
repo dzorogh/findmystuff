@@ -76,7 +76,7 @@ export function SearchHitCard({ hit, mode = "text" }: { hit: SearchHit; mode?: S
   if (mode === "image") {
     return (
       <Link href={hit.href} className="group block h-full">
-        <Card className="h-full flex flex-col overflow-hidden transition-all hover:bg-muted/30 hover:shadow-md">
+        <Card className="h-full flex flex-col gap-0 p-0 overflow-hidden transition-all hover:bg-muted/30 hover:shadow-md">
           <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-muted">
             {hit.preview?.imageUrl ? (
               <>

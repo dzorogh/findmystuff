@@ -24,6 +24,7 @@ interface AddItemContextValue {
   setOnSuccess: (callback: (() => void) | null) => void;
   isBarcodeLookupLoading: boolean;
   isRecognizeLoading: boolean;
+  processPhotoAndOpenForm: (blob: Blob) => Promise<void>;
 }
 
 const AddItemContext = createContext<AddItemContextValue | undefined>(undefined);
@@ -148,6 +149,7 @@ export function AddItemProvider({ children }: { children: ReactNode }) {
     openByPhoto,
     openByBarcode,
     openByForm,
+    processPhotoAndOpenForm: handleCameraCapture,
     setOnSuccess,
     isBarcodeLookupLoading,
     isRecognizeLoading,
